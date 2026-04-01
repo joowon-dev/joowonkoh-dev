@@ -3,6 +3,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import rehypePrettyCode from "rehype-pretty-code";
 import { getAllPosts, getPostBySlug } from "@/lib/mdx";
 import mdxComponents from "@/components/MDXComponents";
+import AdSense from "@/components/AdSense";
 import type { Metadata } from "next";
 
 interface Props {
@@ -69,6 +70,7 @@ export default async function BlogPostPage({ params }: Props) {
           },
         }}
       />
+      <AdSense adSlot="1234567890" />
     </article>
   );
 }
