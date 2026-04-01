@@ -1,0 +1,76 @@
+---
+title: "기술 스택 선택기: Next.js + Cloudflare Pages"
+description: "블로그의 프레임워크, 호스팅, 스타일링을 결정한 과정과 각 선택의 이유를 정리합니다."
+date: "2026-04-02"
+tags: ["Dev", "Blog"]
+---
+
+## 프레임워크: Next.js
+
+React 기반 프레임워크 중에서 Next.js를 선택했다. 이유는 간단하다.
+
+- **SSG 지원**: 블로그 글은 빌드 타임에 정적으로 생성하면 된다. 속도가 빠르고 서버 비용이 없다.
+- **App Router**: 파일 기반 라우팅이 직관적이다. `/blog/[slug]` 같은 동적 라우트도 쉽게 만들 수 있다.
+- **MDX 지원**: 마크다운으로 글을 쓰면서 필요할 때 React 컴포넌트를 삽입할 수 있다.
+- **SEO**: `generateMetadata`로 페이지별 메타데이터를 쉽게 관리할 수 있다.
+
+Astro도 고려했지만, React 생태계를 그대로 쓸 수 있는 Next.js가 더 익숙하고 확장성도 좋았다.
+
+## 호스팅: Cloudflare Pages
+
+처음에는 Vercel을 생각했다. Next.js를 만든 회사니까 호환성이 최고다. 하지만 한 가지 문제가 있었다.
+
+**Vercel Hobby 플랜은 상업적 용도로 사용할 수 없다.**
+
+광고를 붙여서 수익화하려면 Pro 플랜(월 $20)이 필요하다. 아직 수익이 나기 전인데 매달 $20을 내기는 부담스러웠다.
+
+그래서 찾은 대안이 **Cloudflare Pages**다.
+
+- 무료 플랜에서 **상업적 사용 제한 없음**
+- 대역폭 **무제한**
+- 글로벌 CDN으로 속도도 빠름
+- `@cloudflare/next-on-pages`로 Next.js 배포 지원
+
+도메인도 Cloudflare Registrar에서 사면 DNS 설정까지 한 번에 해결된다.
+
+## 스타일링: Tailwind CSS v4
+
+CSS 프레임워크는 Tailwind CSS를 선택했다. v4부터는 별도의 `tailwind.config.ts` 없이 CSS 파일에서 직접 테마를 정의한다.
+
+```css
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #0a0a0a;
+  --color-card-bg: #111111;
+  --color-text-primary: #ededed;
+  --font-sans: "Pretendard", system-ui, sans-serif;
+}
+```
+
+이전 버전보다 훨씬 직관적이고, CSS 변수와 자연스럽게 통합된다.
+
+## 폰트: Pretendard
+
+한글 웹 폰트로 Pretendard를 선택했다. 이유는 명확하다.
+
+- Apple SD Gothic Neo와 비슷한 느낌이라 깔끔하다
+- 웹 폰트 최적화가 잘 되어 있다
+- CDN으로 쉽게 로드할 수 있다
+- 한글 + 영문 모두 예쁘다
+
+## 콘텐츠: MDX
+
+블로그 글은 MDX로 작성한다. 마크다운의 편리함에 React 컴포넌트를 삽입할 수 있는 확장성을 더했다. `next-mdx-remote`를 사용해서 `content/blog/` 디렉토리의 MDX 파일을 빌드 타임에 파싱한다.
+
+코드 하이라이팅은 `rehype-pretty-code` + `shiki`를 사용한다. VS Code와 동일한 문법 강조를 웹에서도 볼 수 있다.
+
+## 정리
+
+| 영역 | 선택 | 이유 |
+|------|------|------|
+| 프레임워크 | Next.js 15 | SSG, App Router, MDX, SEO |
+| 호스팅 | Cloudflare Pages | 무료 상업적 사용, 무제한 대역폭 |
+| 스타일링 | Tailwind CSS v4 | CSS 기반 테마, 빠른 개발 |
+| 폰트 | Pretendard | 깔끔한 한글, CDN 제공 |
+| 콘텐츠 | MDX | 마크다운 + React 컴포넌트 |

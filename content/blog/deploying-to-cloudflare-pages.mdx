@@ -1,0 +1,105 @@
+---
+title: "Next.js를 Cloudflare Pages에 배포하면서 겪은 일들"
+description: "Cloudflare Pages에 Next.js 프로젝트를 배포하면서 만난 문제들과 해결 과정을 공유합니다."
+date: "2026-04-05"
+tags: ["Dev", "Tech"]
+---
+
+## Vercel 대신 Cloudflare Pages를 선택한 이유
+
+Next.js를 배포하려면 가장 먼저 떠오르는 건 Vercel이다. Next.js를 만든 회사니까 호환성이 완벽하다. 하지만 한 가지 제약이 있었다.
+
+**Vercel Hobby 플랜은 상업적 용도로 사용할 수 없다.**
+
+블로그에 광고를 붙여서 수익화하려면 Pro 플랜(월 $20)이 필요하다. 아직 수익이 0원인 상태에서 매달 호스팅비를 내고 싶지 않았다.
+
+Cloudflare Pages는 무료 플랜에서도 상업적 사용이 가능하고, 대역폭도 무제한이다.
+
+## @cloudflare/next-on-pages
+
+Cloudflare Pages에 Next.js를 배포하려면 `@cloudflare/next-on-pages` 패키지가 필요하다. 이 패키지가 Next.js의 빌드 출력을 Cloudflare Pages가 이해할 수 있는 형태로 변환해준다.
+
+```bash
+npm install -D @cloudflare/next-on-pages
+```
+
+`package.json`에 빌드 스크립트를 추가한다.
+
+```json
+{
+  "scripts": {
+    "pages:build": "npx @cloudflare/next-on-pages"
+  }
+}
+```
+
+Cloudflare 대시보드에서 Build command를 `npm run pages:build`로 설정하면 된다.
+
+## 트러블슈팅: nodejs_compat 에러
+
+배포 후 첫 번째로 만난 에러가 이것이었다.
+
+```
+Node.JS Compatibility Error
+no nodejs_compat compatibility flag set
+```
+
+Next.js는 내부적으로 Node.js API를 사용하는데, Cloudflare Workers는 기본적으로 Node.js 호환 모드가 꺼져 있다.
+
+### 시도 1: wrangler.toml 추가
+
+```toml
+name = "joowonkoh-dev"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+```
+
+프로젝트 루트에 `wrangler.toml`을 추가하고 push했지만, **적용되지 않았다.** Cloudflare Pages는 `wrangler.toml`의 모든 설정을 읽지 않는 경우가 있다.
+
+### 시도 2: 대시보드에서 직접 설정 (해결)
+
+결국 Cloudflare 대시보드에서 직접 설정했다.
+
+1. Workers & Pages → 프로젝트 선택
+2. Settings → Runtime
+3. Compatibility flags에 `nodejs_compat` 추가
+4. Compatibility date를 `2024-09-23`으로 설정
+5. 재배포
+
+이렇게 하니 정상적으로 배포가 되었다.
+
+**교훈: Cloudflare Pages의 일부 설정은 대시보드에서 직접 해야 한다.** 코드로 관리하고 싶은 마음은 이해하지만, 플랫폼이 아직 모든 설정의 코드 기반 관리를 지원하지는 않는다.
+
+## next.config.ts 설정
+
+Cloudflare Pages와 호환되려면 두 가지 설정이 필요하다.
+
+```typescript
+const nextConfig = {
+  output: "standalone",    // 독립 실행 가능한 빌드
+  images: {
+    unoptimized: true,     // Cloudflare는 Next.js Image Optimization 미지원
+  },
+};
+```
+
+`images.unoptimized`를 `true`로 안 하면 이미지 최적화 API 관련 에러가 난다. Cloudflare에서는 자체 CDN이 이미지를 캐싱하고 최적화하니까, Next.js의 이미지 최적화는 끄는 게 맞다.
+
+## SSG vs SSR
+
+Cloudflare Pages에서 정적 페이지(SSG)는 아무 문제 없이 동작한다. SSR이 필요한 페이지는 Cloudflare Workers가 처리한다. `@cloudflare/next-on-pages`가 빌드 시 자동으로 분리해준다.
+
+이 블로그는 대부분 SSG로 충분하다. 블로그 글, 프로젝트 목록, 소개 페이지 모두 빌드 타임에 생성된다. 나중에 플레이그라운드에 인터랙티브한 기능을 넣으면 그때 SSR을 부분적으로 사용할 계획이다.
+
+## 배포 플로우
+
+최종적으로 배포 과정은 이렇게 된다.
+
+1. 코드 수정 또는 새 글 작성
+2. `git push`
+3. Cloudflare Pages가 자동 감지 → 빌드 시작
+4. `npm run pages:build` 실행
+5. 빌드 결과물 배포
+6. 커스텀 도메인(joowonkoh.dev)으로 접근 가능
+
+PR을 올리면 프리뷰 URL도 자동으로 생성된다. 글을 올리기 전에 미리 확인할 수 있어서 편하다.

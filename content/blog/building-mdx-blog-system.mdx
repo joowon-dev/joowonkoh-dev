@@ -1,0 +1,134 @@
+---
+title: "Next.js에서 MDX 블로그 시스템 구축하기"
+description: "next-mdx-remote로 MDX 파싱, gray-matter로 frontmatter 추출, rehype-pretty-code로 코드 하이라이팅을 구현한 과정입니다."
+date: "2026-04-04"
+tags: ["Dev", "Tech"]
+---
+
+## MDX란?
+
+MDX는 마크다운에 JSX를 삽입할 수 있는 포맷이다. 일반 마크다운으로 글을 쓰다가, 필요한 순간에 React 컴포넌트를 넣을 수 있다.
+
+```mdx
+# 일반 마크다운 제목
+
+일반 문단입니다.
+
+<InteractiveChart data={chartData} />
+
+다시 일반 문단으로 돌아옵니다.
+```
+
+개발 블로그에서 인터랙티브 데모나 커스텀 UI를 글 안에 넣고 싶을 때 유용하다.
+
+## 파일 기반 콘텐츠 관리
+
+CMS를 쓰지 않고, `content/blog/` 디렉토리에 `.mdx` 파일을 직접 관리한다.
+
+```
+content/
+└── blog/
+    ├── hello-world.mdx
+    ├── why-i-built-my-own-blog.mdx
+    └── choosing-tech-stack.mdx
+```
+
+각 파일 상단에는 frontmatter로 메타데이터를 정의한다.
+
+```yaml
+---
+title: "글 제목"
+description: "글 설명"
+date: "2026-04-01"
+tags: ["Dev", "Blog"]
+---
+```
+
+이 방식의 장점은 Git으로 버전 관리가 되고, 에디터에서 바로 수정할 수 있다는 것이다.
+
+## MDX 파싱 유틸리티
+
+핵심은 `src/lib/mdx.ts` 파일이다. 두 가지 라이브러리를 사용한다.
+
+- **gray-matter**: frontmatter(YAML 헤더)를 파싱
+- **next-mdx-remote**: MDX를 React 컴포넌트로 변환
+
+```typescript
+import fs from "fs";
+import path from "path";
+import matter from "gray-matter";
+
+const BLOG_DIR = path.join(process.cwd(), "content/blog");
+
+export function getAllPosts() {
+  const files = fs.readdirSync(BLOG_DIR).filter(f => f.endsWith(".mdx"));
+
+  return files.map(filename => {
+    const { data } = matter(
+      fs.readFileSync(path.join(BLOG_DIR, filename), "utf-8")
+    );
+    return {
+      slug: filename.replace(/\.mdx$/, ""),
+      title: data.title,
+      date: data.date,
+      tags: data.tags,
+    };
+  }).sort((a, b) => (a.date > b.date ? -1 : 1));
+}
+```
+
+`getAllPosts()`는 모든 글의 메타데이터를 날짜 역순으로 반환한다. `getPostBySlug()`는 특정 글의 본문까지 포함해서 반환한다.
+
+## 코드 하이라이팅
+
+개발 블로그에서 코드 하이라이팅은 필수다. `rehype-pretty-code`와 `shiki`를 조합했다.
+
+```typescript
+<MDXRemote
+  source={post.content}
+  options={{
+    mdxOptions: {
+      rehypePlugins: [
+        [rehypePrettyCode, { theme: "github-dark-default" }],
+      ],
+    },
+  }}
+/>
+```
+
+`shiki`는 VS Code와 동일한 TextMate 문법을 사용해서, VS Code에서 보는 것과 똑같은 코드 하이라이팅을 웹에서 볼 수 있다.
+
+## 태그 필터링
+
+블로그 목록 페이지에서 태그로 글을 필터링할 수 있다. 구현 방식은 간단하다.
+
+서버 컴포넌트에서 모든 글과 태그 목록을 가져오고, 클라이언트 컴포넌트에서 필터 상태를 관리한다.
+
+```typescript
+// 서버 컴포넌트 (page.tsx)
+const posts = getAllPosts();
+const tags = getAllTags();
+return <BlogList posts={posts} tags={tags} />;
+
+// 클라이언트 컴포넌트 (blog-list.tsx)
+const [selectedTag, setSelectedTag] = useState(null);
+const filtered = selectedTag
+  ? posts.filter(p => p.tags.includes(selectedTag))
+  : posts;
+```
+
+API route를 만들 필요 없이, 서버/클라이언트 컴포넌트 패턴으로 깔끔하게 해결했다.
+
+## 글 추가하는 법
+
+새 글을 쓰려면 `content/blog/` 에 `.mdx` 파일을 추가하고 Git push하면 끝이다.
+
+```bash
+# 새 글 작성
+vi content/blog/new-post.mdx
+
+# 배포
+git add . && git commit -m "post: 새 글" && git push
+```
+
+Cloudflare Pages가 자동으로 빌드하고 배포한다. CMS 없이도 충분히 편하다.
