@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias=\\\"@/*\\\" --use-npm --yes 2>&1\",\"timeout\":120000,\"description\":\"Run create-next-app in exis...",
+  "error": "Exit code 1\nnpm warn exec The following package was not found and will be installed: create-next-app@16.2.2\nThe directory joowonkoh-dev contains files that could conflict:\n\n  .omc/\n\nEither try using a new directory name, or remove the files listed above.",
+  "timestamp": "2026-04-01T13:08:15.770Z",
+  "retry_count": 1
+}

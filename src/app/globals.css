@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+@theme inline {
+  --color-bg: #0a0a0a;
+  --color-card-bg: #111111;
+  --color-border: #222222;
+  --color-text-primary: #ededed;
+  --color-text-secondary: #888888;
+  --color-text-muted: #666666;
+  --color-tag-bg: #1a1a1a;
+  --font-sans: "Pretendard", system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
