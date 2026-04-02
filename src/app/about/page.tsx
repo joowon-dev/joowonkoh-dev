@@ -50,7 +50,7 @@ export default function AboutPage() {
             GitHub
           </a>
           <a
-            href="mailto:hello@joowonkoh.dev"
+            href="mailto:hello@joowonkoh.com"
             className="text-sm font-medium text-text-secondary spring-transition hover:text-accent"
           >
             Email

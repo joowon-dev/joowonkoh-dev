@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s | Joowon Koh",
   },
   description: "Developer & Creator — 새로운 것을 만들고 공유합니다.",
-  metadataBase: new URL("https://joowonkoh.dev"),
+  metadataBase: new URL("https://joowonkoh.com"),
 };
 
 export default function RootLayout({
