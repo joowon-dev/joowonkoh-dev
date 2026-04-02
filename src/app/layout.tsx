@@ -11,6 +11,27 @@ export const metadata: Metadata = {
   },
   description: "Developer & Creator — 새로운 것을 만들고 공유합니다.",
   metadataBase: new URL("https://joowonkoh.com"),
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: "Joowon Koh",
+    title: "Joowon Koh",
+    description: "Developer & Creator — 새로운 것을 만들고 공유합니다.",
+    url: "https://joowonkoh.com",
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Joowon Koh" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Joowon Koh",
+    description: "Developer & Creator — 새로운 것을 만들고 공유합니다.",
+    images: ["/logo.png"],
+  },
+  alternates: {
+    canonical: "https://joowonkoh.com",
+  },
+  verification: {
+    google: "G-924W0S77PX",
+  },
 };
 
 export default function RootLayout({
