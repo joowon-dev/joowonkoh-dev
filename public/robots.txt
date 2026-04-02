@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://joowonkoh.com
+
+# Sitemaps
+Sitemap: https://joowonkoh.com/sitemap.xml
