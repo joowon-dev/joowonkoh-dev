@@ -1,0 +1,127 @@
+---
+title: "클로드 코드(Claude Code) 설치부터 첫 실행까지: 맥/윈도우 가이드"
+description: "2026년 기준 Claude Code를 맥과 윈도우에 설치하는 방법을 정리한다. 터미널 한 줄이면 끝나는 설치 과정과 실제 사용 후기까지."
+date: "2026-04-02"
+tags: ["Dev", "Claude Code", "AI"]
+---
+
+## 클로드 코드가 뭔가
+
+Claude Code는 Anthropic이 만든 AI 코딩 에이전트다. 터미널에서 `claude` 한 줄 치면 프로젝트 전체를 이해하고, 파일을 수정하고, 커밋까지 해준다. Cursor나 GitHub Copilot과 다르게 에디터가 아니라 CLI 기반이라서 터미널에서 바로 쓸 수 있다.
+
+나는 올해 초 "클로드 코드 사용해보기"를 목표로 적어뒀는데, 실제로 이 블로그 자체를 Claude Code로 만들었다. Next.js 프로젝트 초기 세팅부터 컴포넌트 작성, 배포까지 거의 전 과정을 터미널에서 대화하면서 진행했다.
+
+## 맥(macOS) 설치
+
+### 요구사항
+
+- macOS 13.0 (Ventura) 이상
+- 4GB 이상 RAM
+
+### 설치 명령어
+
+터미널을 열고 한 줄만 입력하면 된다.
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+2026년부터는 Node.js가 필요 없다. 예전에는 `npm install -g @anthropic-ai/claude-code`로 설치했는데, 지금은 네이티브 바이너리로 바뀌어서 의존성 없이 바로 설치된다. 자동 업데이트도 지원한다.
+
+Homebrew를 쓴다면 이것도 가능하다.
+
+```bash
+brew install --cask claude-code
+```
+
+다만 Homebrew는 자동 업데이트가 안 되니까 `brew upgrade claude-code`를 직접 해야 한다. 개인적으로는 공식 설치 스크립트를 추천한다.
+
+## 윈도우(Windows) 설치
+
+### 요구사항
+
+- Windows 10 (버전 1809 이상)
+- 4GB 이상 RAM
+- **Git for Windows 필수** — 이게 없으면 설치가 실패한다
+
+Git이 없다면 [git-scm.com](https://git-scm.com/downloads/win)에서 먼저 설치하자.
+
+### 설치 명령어
+
+PowerShell을 관리자 권한으로 열고 입력한다.
+
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
+CMD를 쓴다면 이 명령어를 사용한다.
+
+```batch
+curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd
+```
+
+WinGet으로도 설치할 수 있다.
+
+```powershell
+winget install Anthropic.ClaudeCode
+```
+
+WSL을 쓰고 있다면 맥/리눅스와 동일한 `curl` 명령어를 사용하면 된다. WSL 2에서는 샌드박싱도 지원돼서 보안 면에서도 좋다.
+
+## 설치 확인과 첫 실행
+
+설치가 끝나면 터미널에서 확인한다.
+
+```bash
+claude --version
+```
+
+버전이 출력되면 설치 성공이다. 문제가 있다면 `claude doctor`로 진단할 수 있다.
+
+이제 프로젝트 폴더로 이동해서 실행하면 된다.
+
+```bash
+cd my-project
+claude
+```
+
+처음 실행하면 브라우저가 열리면서 Anthropic 계정 로그인을 요청한다. 로그인하면 바로 사용할 수 있다.
+
+## 요금제
+
+한 가지 주의할 점이 있다. **무료 계정으로는 Claude Code를 쓸 수 없다.**
+
+| 플랜 | 가격 | Claude Code |
+|------|------|-------------|
+| Free | 무료 | 사용 불가 |
+| **Pro** | **$20/월** | **사용 가능** |
+| Max 5x | $100/월 | 사용 가능 |
+| Max 20x | $200/월 | 사용 가능 |
+
+Pro 플랜이 최소 조건이다. 나는 Pro로 시작했는데, 하루 종일 코딩하다 보면 사용량 제한에 걸릴 때가 있다. 그럴 때는 Max 플랜을 고려해볼 만하다.
+
+API를 직접 연결해서 종량제로 쓰는 방법도 있다. 쓴 만큼만 내는 거라 가끔 쓰는 사람에게 적합하다.
+
+## 실제로 써보니
+
+이 블로그가 Claude Code로 만든 프로젝트다. Git 커밋 로그를 보면 초기 세팅, 메인 페이지, 블로그 상세 페이지, 레이아웃까지 Claude Code와 함께 작업한 흔적이 남아있다.
+
+내가 느낀 장점은 이렇다.
+
+- **프로젝트 전체를 이해한다.** 파일 하나만 보는 게 아니라 디렉토리 구조, 설정 파일, 의존성까지 파악해서 맥락에 맞는 코드를 작성한다.
+- **터미널에서 끝난다.** 에디터를 왔다갔다 할 필요 없이 터미널에서 대화하면서 코드 수정, 빌드, 커밋까지 한다.
+- **반복 작업이 빠르다.** 비슷한 컴포넌트를 여러 개 만들거나, 스타일을 일괄 변경할 때 특히 좋다.
+
+처음 쓸 때는 "진짜 이게 되나?" 싶었는데, 프로젝트 하나를 처음부터 끝까지 만들어보니 확실히 개발 속도가 달라졌다. 특히 Next.js처럼 파일 구조가 정해진 프레임워크에서는 보일러플레이트를 거의 안 쳐도 된다.
+
+## 정리
+
+| 항목 | macOS | Windows |
+|------|-------|---------|
+| 설치 명령어 | `curl -fsSL https://claude.ai/install.sh \| bash` | `irm https://claude.ai/install.ps1 \| iex` |
+| 사전 준비 | 없음 | Git for Windows |
+| 최소 OS | macOS 13.0 | Windows 10 (1809+) |
+| 최소 RAM | 4GB | 4GB |
+| 최소 요금제 | Pro ($20/월) | Pro ($20/월) |
+
+설치는 1분이면 끝난다. AI 코딩 도구를 한번 써보고 싶다면 Claude Code부터 시작해보는 걸 추천한다.

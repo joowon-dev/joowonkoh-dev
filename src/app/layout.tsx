@@ -19,9 +19,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-bg text-text-primary font-sans antialiased">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+        />
+      </head>
+      <body className="noise-overlay min-h-[100dvh] bg-bg text-text-primary font-sans antialiased">
         <Header />
-        <main className="mx-auto max-w-3xl px-6 py-12">{children}</main>
+        <main className="mx-auto max-w-3xl px-6 py-16">{children}</main>
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"

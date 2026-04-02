@@ -8,13 +8,13 @@ interface TagFilterProps {
 
 export default function TagFilter({ tags, selected, onChange }: TagFilterProps) {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <button
         onClick={() => onChange(null)}
-        className={`rounded-full px-3 py-1 text-xs transition-colors ${
+        className={`rounded-full px-4 py-1.5 text-xs font-medium spring-transition ${
           selected === null
-            ? "bg-text-primary text-bg font-medium"
-            : "bg-tag-bg text-text-secondary hover:text-text-primary"
+            ? "bg-text-primary text-bg shadow-ambient"
+            : "bg-tag-bg text-text-secondary hover:text-text-primary hover:bg-border"
         }`}
       >
         All
@@ -23,10 +23,10 @@ export default function TagFilter({ tags, selected, onChange }: TagFilterProps) 
         <button
           key={tag}
           onClick={() => onChange(tag)}
-          className={`rounded-full px-3 py-1 text-xs transition-colors ${
+          className={`rounded-full px-4 py-1.5 text-xs font-medium spring-transition ${
             selected === tag
-              ? "bg-text-primary text-bg font-medium"
-              : "bg-tag-bg text-text-secondary hover:text-text-primary"
+              ? "bg-text-primary text-bg shadow-ambient"
+              : "bg-tag-bg text-text-secondary hover:text-text-primary hover:bg-border"
           }`}
         >
           {tag}

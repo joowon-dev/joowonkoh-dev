@@ -7,23 +7,28 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div>
-      <h1 className="text-[22px] font-bold">About</h1>
-      <p className="mt-4 leading-7 text-text-secondary">
+    <div className="animate-fade-in-up">
+      <span className="mb-4 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-accent">
+        About
+      </span>
+      <h1 className="font-display text-3xl font-bold leading-snug tracking-tight md:text-4xl">
+        고주원
+      </h1>
+      <p className="mt-4 max-w-[55ch] leading-[1.8] text-text-secondary">
         안녕하세요, 개발자 고주원입니다.
         <br />
         새로운 것을 만들고 공유하는 것을 좋아합니다.
       </p>
 
-      <section className="mt-10">
-        <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
+      <section className="mt-14">
+        <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-text-muted">
           Tech Stack
         </h2>
         <div className="flex flex-wrap gap-2">
           {["TypeScript", "React", "Next.js", "Node.js", "Tailwind CSS"].map((tech) => (
             <span
               key={tech}
-              className="rounded-lg border border-border bg-card-bg px-3 py-1.5 text-sm text-text-primary"
+              className="rounded-full border border-border bg-card-bg px-4 py-2 text-sm font-medium text-text-primary shadow-ambient spring-transition hover:shadow-ambient-hover"
             >
               {tech}
             </span>
@@ -31,22 +36,22 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="mt-10">
-        <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
+      <section className="mt-14">
+        <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-text-muted">
           Contact
         </h2>
-        <div className="flex gap-4">
+        <div className="flex gap-5">
           <a
             href="https://github.com/joowonkoh"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+            className="text-sm font-medium text-text-secondary spring-transition hover:text-accent"
           >
             GitHub
           </a>
           <a
             href="mailto:hello@joowonkoh.dev"
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+            className="text-sm font-medium text-text-secondary spring-transition hover:text-accent"
           >
             Email
           </a>

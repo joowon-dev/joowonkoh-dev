@@ -39,24 +39,24 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   return (
-    <article>
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold">{post!.meta.title}</h1>
-        <div className="mt-2 flex items-center gap-3">
-          <span className="text-sm text-text-muted">
-            {post!.meta.date.replace(/-/g, ".")}
-          </span>
-          <div className="flex gap-1">
-            {post!.meta.tags.map((tag: string) => (
-              <span
-                key={tag}
-                className="rounded bg-tag-bg px-2 py-0.5 text-[10px] text-text-secondary"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+    <article className="animate-fade-in-up">
+      <header className="mb-10">
+        <div className="flex flex-wrap gap-2">
+          {post!.meta.tags.map((tag: string) => (
+            <span
+              key={tag}
+              className="rounded-full bg-accent-soft px-3 py-1 text-[10px] font-medium uppercase tracking-[0.1em] text-accent"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
+        <h1 className="mt-4 font-display text-3xl font-bold leading-snug tracking-tight md:text-4xl">
+          {post!.meta.title}
+        </h1>
+        <span className="mt-3 block text-sm text-text-muted">
+          {post!.meta.date.replace(/-/g, ".")}
+        </span>
       </header>
 
       <MDXRemote
@@ -65,7 +65,7 @@ export default async function BlogPostPage({ params }: Props) {
         options={{
           mdxOptions: {
             rehypePlugins: [
-              [rehypePrettyCode, { theme: "github-dark-default" }],
+              [rehypePrettyCode, { theme: "github-light" }],
             ],
           },
         }}
