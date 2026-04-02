@@ -12,11 +12,17 @@ export interface PostMeta {
   tags: string[];
 }
 
+function extractSlug(filename: string): string {
+  const name = filename.replace(/\.mdx$/, "");
+  const match = name.match(/^(\d+)/);
+  return match ? match[1] : name;
+}
+
 export function getAllPosts(): PostMeta[] {
   const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith(".mdx"));
 
   const posts = files.map((filename) => {
-    const slug = filename.replace(/\.mdx$/, "");
+    const slug = extractSlug(filename);
     const filePath = path.join(BLOG_DIR, filename);
     const fileContent = fs.readFileSync(filePath, "utf-8");
     const { data } = matter(fileContent);
@@ -33,8 +39,16 @@ export function getAllPosts(): PostMeta[] {
   return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
 }
 
+function findFileBySlug(slug: string): string | null {
+  const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith(".mdx"));
+  return files.find((f) => extractSlug(f) === slug) ?? null;
+}
+
 export function getPostBySlug(slug: string) {
-  const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+  const filename = findFileBySlug(slug);
+  if (!filename) throw new Error(`Post not found: ${slug}`);
+
+  const filePath = path.join(BLOG_DIR, filename);
   const fileContent = fs.readFileSync(filePath, "utf-8");
   const { data, content } = matter(fileContent);
 
