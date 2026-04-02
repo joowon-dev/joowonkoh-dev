@@ -5,6 +5,7 @@ import { getAllPosts, getPostBySlug } from "@/lib/mdx";
 import mdxComponents from "@/components/MDXComponents";
 import AdSense from "@/components/AdSense";
 import PostNavigation from "@/components/PostNavigation";
+import TableOfContents from "@/components/TableOfContents";
 import type { Metadata } from "next";
 
 interface Props {
@@ -45,8 +46,12 @@ export default async function BlogPostPage({ params }: Props) {
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
 
   return (
-    <article className="animate-fade-in-up">
-      <header className="mb-10">
+    <div className="relative">
+      <aside className="absolute -left-60 top-0 hidden xl:block">
+        <TableOfContents content={post!.content} />
+      </aside>
+      <article className="animate-fade-in-up">
+        <header className="mb-10">
         <div className="flex flex-wrap gap-2">
           {post!.meta.tags.map((tag: string) => (
             <span
@@ -79,5 +84,6 @@ export default async function BlogPostPage({ params }: Props) {
       <AdSense adSlot="1234567890" />
       <PostNavigation prev={prevPost} next={nextPost} />
     </article>
+    </div>
   );
 }
