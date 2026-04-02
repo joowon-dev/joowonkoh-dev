@@ -21,9 +21,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
     const { meta } = getPostBySlug(slug);
+    const url = `https://joowonkoh.com/blog/${slug}`;
     return {
       title: meta.title,
       description: meta.description,
+      openGraph: {
+        type: "article",
+        title: meta.title,
+        description: meta.description,
+        url,
+        siteName: "Joowon Koh",
+        locale: "ko_KR",
+        publishedTime: meta.date,
+        authors: ["고주원"],
+        images: [{ url: "/logo.png", width: 512, height: 512, alt: meta.title }],
+      },
+      twitter: {
+        card: "summary",
+        title: meta.title,
+        description: meta.description,
+        images: ["/logo.png"],
+      },
+      alternates: {
+        canonical: url,
+      },
     };
   } catch {
     return { title: "Not Found" };
