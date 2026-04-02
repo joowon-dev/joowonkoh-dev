@@ -4,6 +4,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import { getAllPosts, getPostBySlug } from "@/lib/mdx";
 import mdxComponents from "@/components/MDXComponents";
 import AdSense from "@/components/AdSense";
+import PostNavigation from "@/components/PostNavigation";
 import type { Metadata } from "next";
 
 interface Props {
@@ -38,6 +39,11 @@ export default async function BlogPostPage({ params }: Props) {
     notFound();
   }
 
+  const allPosts = getAllPosts();
+  const currentIndex = allPosts.findIndex((p) => p.slug === slug);
+  const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+  const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+
   return (
     <article className="animate-fade-in-up">
       <header className="mb-10">
@@ -71,6 +77,7 @@ export default async function BlogPostPage({ params }: Props) {
         }}
       />
       <AdSense adSlot="1234567890" />
+      <PostNavigation prev={prevPost} next={nextPost} />
     </article>
   );
 }

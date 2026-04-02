@@ -1,4 +1,8 @@
 import type { MDXComponents } from "mdx/types";
+import CompareCard from "./CompareCard";
+import PlanCard from "./PlanCard";
+import ClaudeCodePlanCard from "./ClaudeCodePlanCard";
+import ClaudeCodeCompareCard from "./ClaudeCodeCompareCard";
 
 const components: MDXComponents = {
   h2: (props) => (
@@ -53,6 +57,10 @@ const components: MDXComponents = {
     }
     return <code {...props} />;
   },
+  CompareCard,
+  PlanCard,
+  ClaudeCodePlanCard,
+  ClaudeCodeCompareCard,
 };
 
 export default components;
