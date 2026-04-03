@@ -7,13 +7,13 @@ import ClaudeCodeCompareCard from "./ClaudeCodeCompareCard";
 const components: MDXComponents = {
   h2: (props) => (
     <h2
-      className="mt-12 mb-4 font-display text-xl font-bold leading-snug tracking-tight text-text-primary"
+      className="mt-12 mb-4 scroll-mt-24 font-display text-xl font-bold leading-snug tracking-tight text-text-primary"
       {...props}
     />
   ),
   h3: (props) => (
     <h3
-      className="mt-10 mb-3 font-display text-lg font-semibold leading-snug text-text-primary"
+      className="mt-10 mb-3 scroll-mt-24 font-display text-lg font-semibold leading-snug text-text-primary"
       {...props}
     />
   ),

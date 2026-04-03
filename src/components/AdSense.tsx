@@ -17,7 +17,7 @@ export default function AdSense({ adSlot }: AdSenseProps) {
   }, []);
 
   return (
-    <div className="my-8">
+    <div className="mt-6 mb-2">
       <ins
         className="adsbygoogle"
         style={{ display: "block" }}

@@ -49,7 +49,7 @@ export default function TableOfContents({ content }: { content: string }) {
   if (headings.length === 0) return null;
 
   return (
-    <nav className="sticky top-32 w-52 text-sm">
+    <nav className="text-sm">
       <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-text-muted">
         목차
       </p>

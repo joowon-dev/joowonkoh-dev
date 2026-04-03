@@ -10,7 +10,7 @@ export default function PostNavigation({ prev, next }: PostNavigationProps) {
   if (!prev && !next) return null;
 
   return (
-    <nav className="mt-16 grid grid-cols-2 gap-4">
+    <nav className="mt-4 grid grid-cols-2 gap-4">
       {prev ? (
         <Link
           href={`/blog/${prev.slug}`}
