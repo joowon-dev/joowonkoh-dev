@@ -67,11 +67,13 @@ export default async function BlogPostPage({ params }: Props) {
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
 
   return (
-    <div className="relative">
-      <aside className="absolute -left-60 top-0 hidden xl:block">
-        <TableOfContents content={post!.content} />
+    <div className="relative flex gap-0">
+      <aside className="hidden xl:block w-0">
+        <div className="sticky top-32 -ml-60 w-52">
+          <TableOfContents content={post!.content} />
+        </div>
       </aside>
-      <article className="animate-fade-in-up">
+      <article className="animate-fade-in-up min-w-0 flex-1">
         <header className="mb-10">
         <div className="flex flex-wrap gap-2">
           {post!.meta.tags.map((tag: string) => (
