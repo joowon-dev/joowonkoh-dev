@@ -5,6 +5,8 @@ import ClaudeCodePlanCard from "./ClaudeCodePlanCard";
 import ClaudeCodeCompareCard from "./ClaudeCodeCompareCard";
 import SuperpowersSkillCard from "./SuperpowersSkillCard";
 import SuperpowersFlowCard from "./SuperpowersFlowCard";
+import OmcFeatureCard from "./OmcFeatureCard";
+import OmcAgentCard from "./OmcAgentCard";
 
 const components: MDXComponents = {
   h2: (props) => (
@@ -65,6 +67,8 @@ const components: MDXComponents = {
   ClaudeCodeCompareCard,
   SuperpowersSkillCard,
   SuperpowersFlowCard,
+  OmcFeatureCard,
+  OmcAgentCard,
 };
 
 export default components;
