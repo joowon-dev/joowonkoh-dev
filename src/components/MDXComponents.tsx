@@ -3,6 +3,7 @@ import CompareCard from "./CompareCard";
 import PlanCard from "./PlanCard";
 import ClaudeCodePlanCard from "./ClaudeCodePlanCard";
 import ClaudeCodeCompareCard from "./ClaudeCodeCompareCard";
+import StatuslineCompareCard from "./StatuslineCompareCard";
 import SuperpowersSkillCard from "./SuperpowersSkillCard";
 import SuperpowersFlowCard from "./SuperpowersFlowCard";
 import OmcFeatureCard from "./OmcFeatureCard";
@@ -65,6 +66,7 @@ const components: MDXComponents = {
   PlanCard,
   ClaudeCodePlanCard,
   ClaudeCodeCompareCard,
+  StatuslineCompareCard,
   SuperpowersSkillCard,
   SuperpowersFlowCard,
   OmcFeatureCard,

@@ -1,0 +1,259 @@
+---
+title: "클로드 코드 Statusline 완전 정복: 설정법과 추천 구성"
+description: "Claude Code 하단의 상태 표시줄(Statusline)을 설정하는 3가지 방법과, 실전에서 쓰기 좋은 추천 구성을 정리한다."
+date: "2026-04-03"
+tags: ["Dev", "Claude Code", "AI"]
+---
+
+## Statusline이 뭔가
+
+Claude Code를 쓰다 보면 터미널 하단에 모델명이나 컨텍스트 사용량이 표시되는 걸 본 적 있을 거다. 이게 **Statusline**이다.
+
+현재 세션의 상태를 한눈에 보여주는 표시줄인데, 기본 상태로도 쓸 수 있지만 직접 커스텀하면 훨씬 유용해진다. 모델명, 컨텍스트 사용률, Git 브랜치, 세션 비용, 레이트 리밋까지 원하는 정보를 자유롭게 넣을 수 있다.
+
+## 설정하는 3가지 방법
+
+<StatuslineCompareCard />
+
+### 방법 1: /statusline 명령어 (가장 쉬움)
+
+Claude Code 안에서 자연어로 설명하면 알아서 스크립트를 만들어준다.
+
+```text
+/statusline 모델명과 컨텍스트 퍼센트를 프로그레스 바로 보여줘
+/statusline Git 브랜치와 변경 파일 수를 표시해줘
+/statusline 삭제해줘
+```
+
+처음 시작할 때는 이 방법이 가장 간편하다. 다만 세밀한 커스텀이 필요하면 직접 스크립트를 작성하는 게 낫다.
+
+### 방법 2: settings.json에 인라인으로 설정
+
+`~/.claude/settings.json`에 직접 추가하는 방법이다.
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "jq -r '\"[\\(.model.display_name)] ctx: \\(.context_window.used_percentage // 0)%\"'"
+  }
+}
+```
+
+별도 파일 없이 `jq` 한 줄로 끝나는 간단한 구성에 적합하다.
+
+### 방법 3: 외부 스크립트 파일 (추천)
+
+복잡한 로직이 필요하면 별도 스크립트 파일을 만드는 게 좋다.
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline.sh"
+  }
+}
+```
+
+그리고 `~/.claude/statusline.sh`에 원하는 로직을 작성한다. 색상, 조건 분기, 멀티라인 모두 가능하다.
+
+## Statusline이 받는 데이터
+
+스크립트는 stdin으로 JSON 데이터를 받는다. 어떤 정보를 꺼내 쓸 수 있는지 알아보자.
+
+### 모델 정보
+
+- `model.display_name` — 현재 모델 이름 (Opus 4.6, Sonnet 4.6 등)
+- `model.id` — 모델 ID
+
+### 컨텍스트 윈도우
+
+- `context_window.used_percentage` — 컨텍스트 사용률 (0~100)
+- `context_window.remaining_percentage` — 남은 비율
+- `context_window.context_window_size` — 최대 컨텍스트 크기
+- `context_window.total_input_tokens` — 누적 입력 토큰
+- `context_window.total_output_tokens` — 누적 출력 토큰
+
+### 비용과 시간
+
+- `cost.total_cost_usd` — 세션 총 비용 (API 사용 시)
+- `cost.total_duration_ms` — 세션 경과 시간
+- `cost.total_lines_added` / `total_lines_removed` — 변경된 라인 수
+
+### 레이트 리밋 (Pro/Max 구독)
+
+- `rate_limits.five_hour.used_percentage` — 5시간 윈도우 사용률
+- `rate_limits.five_hour.resets_at` — 리셋 시간 (Unix timestamp)
+- `rate_limits.seven_day.used_percentage` — 7일 윈도우 사용률
+
+### 세션 정보
+
+- `session_name` — 세션 이름 (`--name` 또는 `/rename`으로 설정)
+- `vim.mode` — Vim 모드 (`NORMAL` / `INSERT`)
+- `workspace.current_dir` — 현재 작업 디렉토리
+- `version` — Claude Code 버전
+
+## 추천 구성 1: 심플 원라인
+
+가장 기본적인 구성이다. 모델명과 컨텍스트 사용률만 보여준다.
+
+```bash
+#!/bin/bash
+input=$(cat)
+
+MODEL=$(echo "$input" | jq -r '.model.display_name')
+PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
+
+echo "[$MODEL] ctx: $PCT%"
+```
+
+출력 예시: `[Opus 4.6] ctx: 32%`
+
+## 추천 구성 2: 프로그레스 바
+
+컨텍스트 사용량을 시각적으로 확인하고 싶을 때 좋다.
+
+```bash
+#!/bin/bash
+input=$(cat)
+
+MODEL=$(echo "$input" | jq -r '.model.display_name')
+PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
+
+BAR_WIDTH=10
+FILLED=$((PCT * BAR_WIDTH / 100))
+EMPTY=$((BAR_WIDTH - FILLED))
+
+BAR=""
+[ "$FILLED" -gt 0 ] && printf -v FILL "%${FILLED}s" && BAR="${FILL// /▓}"
+[ "$EMPTY" -gt 0 ] && printf -v PAD "%${EMPTY}s" && BAR="${BAR}${PAD// /░}"
+
+echo "[$MODEL] $BAR $PCT%"
+```
+
+출력 예시: `[Opus 4.6] ▓▓▓░░░░░░░ 32%`
+
+## 추천 구성 3: 색상 코딩 투라인 (실전용)
+
+내가 실제로 쓰고 있는 구성이다. 두 줄로 나눠서 정보를 구분한다.
+
+```bash
+#!/bin/bash
+input=$(cat)
+
+# 색상 정의
+RED='\033[31m'
+GREEN='\033[32m'
+YELLOW='\033[33m'
+BLUE='\033[34m'
+RESET='\033[0m'
+
+# === 1줄: 작업 환경 ===
+DIR=$(echo "$input" | jq -r '.workspace.current_dir // empty')
+DIR_NAME="${DIR##*/}"
+
+BRANCH=$(git branch --show-current 2>/dev/null)
+DIRTY=""
+[ -n "$(git status --porcelain 2>/dev/null)" ] && DIRTY="*"
+
+LINE1="$DIR_NAME"
+[ -n "$BRANCH" ] && LINE1="$LINE1 ($BRANCH$DIRTY)"
+
+echo -e "$LINE1"
+
+# === 2줄: 모델과 사용량 ===
+MODEL=$(echo "$input" | jq -r '.model.display_name // "unknown"')
+PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
+
+# 컨텍스트 색상
+if [ "$PCT" -ge 80 ]; then
+  CTX_COLOR="$RED"
+elif [ "$PCT" -ge 50 ]; then
+  CTX_COLOR="$YELLOW"
+else
+  CTX_COLOR="$GREEN"
+fi
+
+LINE2="[$MODEL] ${CTX_COLOR}ctx:${PCT}%${RESET}"
+
+# 레이트 리밋 (있을 때만)
+RATE_5H=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty' | cut -d. -f1)
+if [ -n "$RATE_5H" ]; then
+  if [ "$RATE_5H" -ge 80 ]; then
+    RATE_COLOR="$RED"
+  elif [ "$RATE_5H" -ge 50 ]; then
+    RATE_COLOR="$YELLOW"
+  else
+    RATE_COLOR="$RESET"
+  fi
+  LINE2="$LINE2 ${RATE_COLOR}5h:${RATE_5H}%${RESET}"
+fi
+
+echo -e "$LINE2"
+```
+
+출력 예시:
+
+```text
+joowonkoh-dev (master)
+[Opus 4.6] ctx:32% 5h:15%
+```
+
+컨텍스트 사용률이 50% 넘으면 노란색, 80% 넘으면 빨간색으로 바뀌어서 교체 타이밍을 직관적으로 알 수 있다.
+
+## 설정할 때 팁
+
+### 실행 권한 잊지 말 것
+
+스크립트 파일을 만들었으면 실행 권한을 줘야 한다.
+
+```bash
+chmod +x ~/.claude/statusline.sh
+```
+
+이걸 빼먹으면 statusline이 아무것도 표시 안 된다.
+
+### null 값 처리
+
+세션 시작 직후에는 일부 필드가 null일 수 있다. `jq`에서 `// 0`이나 `// empty`로 기본값을 넣어주는 게 안전하다.
+
+```bash
+# 이렇게 하면 null일 때 0으로 대체된다
+PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0')
+```
+
+### 느린 명령어는 캐싱
+
+`git status` 같은 명령어는 큰 레포에서 느릴 수 있다. 캐시를 써서 해결한다.
+
+```bash
+CACHE_FILE="/tmp/statusline-git-cache"
+CACHE_MAX_AGE=5
+
+if [ ! -f "$CACHE_FILE" ] || \
+   [ $(($(date +%s) - $(stat -f %m "$CACHE_FILE" 2>/dev/null || echo 0))) -gt $CACHE_MAX_AGE ]; then
+  git branch --show-current > "$CACHE_FILE" 2>/dev/null
+fi
+
+BRANCH=$(cat "$CACHE_FILE")
+```
+
+### 테스트 방법
+
+설정을 바꾼 뒤에는 직접 테스트할 수 있다.
+
+```bash
+echo '{"model":{"display_name":"Opus 4.6"},"context_window":{"used_percentage":45}}' | bash ~/.claude/statusline.sh
+```
+
+Claude Code를 재시작하지 않아도 mock 데이터로 바로 확인 가능하다.
+
+## Statusline 삭제하기
+
+더 이상 필요 없으면 Claude Code에서 `/statusline delete`를 입력하거나, `~/.claude/settings.json`에서 `statusLine` 항목을 삭제하면 된다.
+
+## 정리
+
+Statusline은 작은 기능이지만 설정해두면 세션 관리가 훨씬 편해진다. 컨텍스트가 얼마나 찼는지, 레이트 리밋에 얼마나 가까운지를 계속 터미널을 벗어나서 확인할 필요가 없어진다.
+
+처음이라면 `/statusline` 명령어로 간단하게 시작하고, 익숙해지면 스크립트 파일로 옮겨서 자기만의 구성을 만들어보자.
