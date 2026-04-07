@@ -41,3 +41,9 @@ yarn-error.log*
 
 # superpowers
 .superpowers/
+
+# oh-my-claudecode
+.omc/
+
+# claude local settings
+.claude/settings.local.json
