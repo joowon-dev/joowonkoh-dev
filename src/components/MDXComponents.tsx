@@ -8,6 +8,10 @@ import SuperpowersSkillCard from "./SuperpowersSkillCard";
 import SuperpowersFlowCard from "./SuperpowersFlowCard";
 import OmcFeatureCard from "./OmcFeatureCard";
 import OmcAgentCard from "./OmcAgentCard";
+import OmcSuperpowersSynergyCard from "./OmcSuperpowersSynergyCard";
+import TerminalToolCard from "./TerminalToolCard";
+import ClaudeCodeCommandCard from "./ClaudeCodeCommandCard";
+import ClaudeCodeShortcutCard from "./ClaudeCodeShortcutCard";
 
 const components: MDXComponents = {
   h2: (props) => (
@@ -71,6 +75,10 @@ const components: MDXComponents = {
   SuperpowersFlowCard,
   OmcFeatureCard,
   OmcAgentCard,
+  OmcSuperpowersSynergyCard,
+  TerminalToolCard,
+  ClaudeCodeCommandCard,
+  ClaudeCodeShortcutCard,
 };
 
 export default components;
