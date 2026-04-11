@@ -1,0 +1,214 @@
+---
+title: "2026년 개발자 터미널 생산성 도구 세팅"
+description: "cd, ls, cat을 대체하는 모던 CLI 도구 8가지를 소개한다. Starship, zoxide, fzf, ripgrep, bat, eza, lazygit, Atuin까지 한 번에 세팅하는 방법."
+date: "2026-04-08"
+tags: ["Dev", "터미널", "생산성"]
+---
+
+## 터미널 앱은 골랐는데
+
+[이전 글](/blog/2026040204-warp-to-cmux)에서 터미널 앱을 Warp에서 cmux로 바꾼 이야기를 했다. 그런데 터미널 "앱"을 바꾸는 것과 터미널 "안에서" 쓰는 도구를 바꾸는 건 별개의 문제다.
+
+터미널 앱이 집이라면, CLI 도구는 가구다. 좋은 집에 이사했는데 가구가 기본 제공 플라스틱 의자뿐이면 의미가 없다. `ls`, `cd`, `cat`, `grep` — Unix 기본 명령어들은 수십 년 전에 만들어졌다. 잘 동작하지만, 2026년 기준으로 더 좋은 대안이 있다.
+
+8개 도구를 소개한다. 전부 `brew install` 한 줄이면 설치되고, 합쳐도 쉘 시작 시간에 30ms 정도밖에 영향을 주지 않는다.
+
+<TerminalToolCard />
+
+## Starship — 프롬프트를 바꾸면 터미널이 달라진다
+
+Oh My Zsh를 쓰고 있다면 한 번쯤 느꼈을 거다. 터미널을 열 때 은근히 느리다는 것. Oh My Zsh는 플러그인을 로드하면서 500ms~1초까지 걸리는 경우가 있다. 매번 새 탭을 열 때마다 1초씩 기다리면 하루에 수십 번은 기다리는 셈이다.
+
+Starship은 Rust로 만들어진 크로스쉘 프롬프트다. 시작 시간이 5~15ms다. Oh My Zsh 대비 최대 200배 빠르다.
+
+```bash
+brew install starship
+echo 'eval "$(starship init zsh)"' >> ~/.zshrc
+```
+
+이 두 줄이면 끝이다. 기본 설정만으로도 Git 브랜치, Node 버전, Python 가상환경, 명령어 실행 시간을 자동으로 표시해준다. Zsh, Bash, Fish 어디서든 동일하게 동작한다.
+
+커스텀이 필요하면 `~/.config/starship.toml`을 수정한다. 하지만 기본 설정이 이미 충분해서 나는 거의 건드리지 않는다.
+
+## zoxide — cd를 치던 시간을 돌려받는다
+
+깊은 경로를 이동할 때 `cd ~/projects/company/frontend/src/components/shared`를 매번 치고 있다면, zoxide를 깔아야 한다.
+
+zoxide는 방문한 디렉토리를 학습해서, 경로의 일부만 입력해도 가장 자주 가던 곳으로 점프한다.
+
+```bash
+brew install zoxide
+echo 'eval "$(zoxide init zsh)"' >> ~/.zshrc
+```
+
+설치 후:
+
+```bash
+z shared       # ~/projects/company/frontend/src/components/shared로 점프
+z blog         # ~/joowonkoh-dev로 점프 (최근 자주 갔으면)
+zi             # fzf 연동 — 후보 목록에서 선택
+```
+
+처음에는 학습 데이터가 없으니 `cd`로 몇 번 이동하면 된다. 하루만 쓰면 경로가 쌓이고, 그 이후로는 `cd`를 거의 안 치게 된다.
+
+## fzf — 모든 것을 퍼지 검색한다
+
+fzf는 "퍼지 파인더"다. 목록이 있으면 뭐든 실시간으로 검색할 수 있게 해준다. GitHub 스타 79,000개 이상으로, 이 글에서 소개하는 도구 중 가장 인기가 많다.
+
+```bash
+brew install fzf
+```
+
+설치하면 바로 쓸 수 있는 기능 세 가지:
+
+- **Ctrl+R** — 명령어 히스토리 퍼지 검색. 기본 Ctrl+R은 한 줄씩 뒤로 가야 하는데, fzf는 전체 히스토리에서 실시간 검색한다.
+- **Ctrl+T** — 현재 디렉토리 아래 파일을 퍼지 검색해서 경로를 삽입한다.
+- **Alt+C** — 디렉토리를 퍼지 검색해서 이동한다.
+
+fzf의 진가는 다른 도구와 조합할 때 나타난다. Git 브랜치 선택, Docker 컨테이너 선택, 프로세스 킬 등 선택이 필요한 모든 상황에 fzf를 끼울 수 있다.
+
+```bash
+# Git 브랜치 퍼지 검색 후 체크아웃
+git branch | fzf | xargs git checkout
+```
+
+## ripgrep — grep은 잊어도 된다
+
+ripgrep(명령어는 `rg`)은 `grep`을 대체하는 초고속 검색 도구다. Rust로 만들어져서 빠르고, `.gitignore`를 자동으로 존중해서 `node_modules` 같은 폴더를 알아서 건너뛴다.
+
+```bash
+brew install ripgrep
+```
+
+```bash
+# 프로젝트에서 "useState" 검색
+rg "useState"
+
+# 특정 파일 타입만 검색
+rg "fetchUser" -t ts
+
+# 대소문자 무시
+rg -i "error" --glob "*.log"
+```
+
+`grep -r`로 검색하면 `node_modules`까지 뒤져서 결과가 쏟아지는 경험을 해봤을 거다. ripgrep은 그런 일이 없다.
+
+참고로 Claude Code도 내부적으로 ripgrep을 사용한다. AI 코딩 에이전트가 코드를 검색할 때 선택한 도구가 ripgrep이라는 건, 속도와 정확성 면에서 이미 검증됐다는 뜻이다.
+
+## bat — cat에 구문 강조를 입힌다
+
+`cat`으로 파일을 열면 흰 글씨가 쏟아진다. bat은 같은 일을 하면서 구문 강조, 줄 번호, Git diff 표시를 추가한다.
+
+```bash
+brew install bat
+```
+
+```bash
+bat src/app/layout.tsx
+```
+
+터미널에서 코드를 빠르게 확인할 때 구문 강조가 있고 없고의 차이는 크다. 특히 PR 리뷰 중에 파일 내용을 터미널에서 확인할 때 유용하다.
+
+`--style=plain`을 붙이면 줄번호 없이 깔끔하게 출력할 수도 있다.
+
+## eza — ls가 예뻐진다
+
+`ls`의 대체재. 파일 아이콘, Git 상태, 트리뷰를 지원한다.
+
+```bash
+brew install eza
+```
+
+```bash
+eza -la              # 아이콘 + 상세 정보
+eza --tree --level=2 # 트리뷰 (2단계 깊이)
+eza --git-ignore     # .gitignore 파일 제외
+```
+
+`ls -la`의 출력이 밋밋하게 느껴졌다면 eza를 써보자. 디렉토리 구조를 파악할 때 트리뷰가 특히 편하다.
+
+## lazygit — 터미널을 떠나지 않고 Git 작업
+
+`git log`, `git add -p`, `git rebase -i` 같은 복잡한 Git 명령어를 터미널 UI로 처리할 수 있게 해준다.
+
+```bash
+brew install lazygit
+```
+
+터미널에서 `lazygit`을 실행하면 패널이 나뉘면서 변경 파일, 스테이징 영역, 커밋 로그, 브랜치를 한눈에 볼 수 있다. 키보드만으로 스테이징, 커밋, 리베이스, 체리픽이 가능하다.
+
+나는 주로 이런 상황에서 쓴다.
+
+- 변경 사항을 부분적으로 스테이징할 때 (hunk 단위)
+- 인터랙티브 리베이스로 커밋 정리할 때
+- 브랜치 간 diff를 확인할 때
+
+GUI 앱(Fork, GitKraken)을 쓰지 않고 터미널 안에서 해결하고 싶다면 lazygit이 답이다.
+
+## Atuin — 쉘 히스토리의 끝판왕
+
+쉘 히스토리를 SQLite 데이터베이스로 관리한다. 기본 히스토리는 최근 명령어 몇 천 개만 저장하는데, Atuin은 전부 저장하고 퍼지 검색까지 된다.
+
+```bash
+brew install atuin
+```
+
+```bash
+# 풀스크린 히스토리 검색 (Ctrl+R 대체)
+atuin search
+
+# 특정 디렉토리에서 실행했던 명령어만
+atuin search --cwd ~/joowonkoh-dev
+
+# 디바이스 간 히스토리 동기화
+atuin sync
+```
+
+fzf의 Ctrl+R과 겹친다고 느낄 수 있는데, Atuin은 히스토리 "저장"에 강점이 있다. 명령어를 실행한 시간, 경로, 실행 시간, 종료 코드까지 기록한다. "지난달에 이 프로젝트에서 실행한 Docker 명령어가 뭐였지?" 같은 질문에 답할 수 있다.
+
+## 한 방에 세팅하기
+
+전부 한 줄로 설치한다.
+
+```bash
+brew install starship zoxide fzf ripgrep bat eza lazygit atuin
+```
+
+`~/.zshrc`에 아래를 추가한다.
+
+```bash
+# 프롬프트
+eval "$(starship init zsh)"
+
+# 디렉토리 이동
+eval "$(zoxide init zsh)"
+
+# 퍼지 검색
+source <(fzf --zsh)
+
+# 히스토리
+eval "$(atuin init zsh)"
+
+# alias
+alias ls="eza"
+alias ll="eza -la"
+alias tree="eza --tree"
+alias cat="bat --style=plain"
+alias lg="lazygit"
+```
+
+적용한다.
+
+```bash
+source ~/.zshrc
+```
+
+전체 과정이 5분이면 끝난다. 쉘 시작 시간은 약 30ms 정도 늘어나는데, Oh My Zsh 플러그인 하나보다 가볍다.
+
+## 정리
+
+8개 도구의 공통점이 있다. **기본 Unix 명령어를 대체하면서, 학습 비용이 거의 없다**는 것이다. `cd` 대신 `z`, `ls` 대신 `eza`, `cat` 대신 `bat` — 기존 습관에서 명령어 이름만 바꾸면 된다. alias를 걸어두면 이름조차 바꿀 필요 없다.
+
+8개 중 6개가 Rust로 만들어졌다는 것도 눈에 띈다. 모던 CLI 생태계가 Rust 중심으로 재편되고 있다는 걸 보여준다. 빠르고, 안정적이고, 크로스 플랫폼이라는 Rust의 장점이 CLI 도구에 딱 맞기 때문이다.
+
+전부 한꺼번에 설치할 필요는 없다. 가장 체감이 큰 것부터 하나씩 추가해보자. 나라면 **zoxide → fzf → bat** 순서를 추천한다. 디렉토리 이동, 검색, 파일 확인 — 매일 수백 번 하는 동작이 먼저 바뀌면 나머지도 자연스럽게 따라오게 된다.
