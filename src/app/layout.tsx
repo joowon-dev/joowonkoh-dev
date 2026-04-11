@@ -7,7 +7,7 @@ import Script from "next/script";
 export const metadata: Metadata = {
   title: {
     default: "Joowon Koh",
-    template: "%s | Joowon Koh",
+    template: "%s",
   },
   description: "Developer & Creator — 새로운 것을 만들고 공유합니다.",
   metadataBase: new URL("https://joowonkoh.com"),

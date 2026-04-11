@@ -12,6 +12,7 @@ import OmcSuperpowersSynergyCard from "./OmcSuperpowersSynergyCard";
 import TerminalToolCard from "./TerminalToolCard";
 import ClaudeCodeCommandCard from "./ClaudeCodeCommandCard";
 import ClaudeCodeShortcutCard from "./ClaudeCodeShortcutCard";
+import GitCommandCard from "./GitCommandCard";
 
 const components: MDXComponents = {
   h2: (props) => (
@@ -79,6 +80,7 @@ const components: MDXComponents = {
   TerminalToolCard,
   ClaudeCodeCommandCard,
   ClaudeCodeShortcutCard,
+  GitCommandCard,
 };
 
 export default components;

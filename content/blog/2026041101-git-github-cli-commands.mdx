@@ -1,0 +1,386 @@
+---
+title: "개발자라면 알아야 할 Git & GitHub CLI 명령어 30선"
+date: "2026-04-11"
+description: "git init부터 gh pr merge까지, 실제 개발 워크플로우 순서로 정리한 Git & GitHub CLI 명령어 30개. 매일 쓰는 것부터 위기 탈출용까지."
+tags: ["git", "github", "cli", "명령어"]
+---
+
+import GitCommandCard from "@/components/GitCommandCard";
+
+## Git을 10개 명령어로만 쓰고 있다면
+
+나도 한동안 `add`, `commit`, `push`만 반복했다. 브랜치도 `main` 하나로 버텼고, 뭔가 꼬이면 폴더를 지우고 다시 클론했다. 부끄럽지만 사실이다.
+
+그러다 `rebase`, `stash`, `reflog`를 쓰기 시작하면서 작업 흐름이 달라졌다. 특히 GitHub CLI(`gh`)를 알게 된 뒤로는 브라우저를 열 일이 크게 줄었다.
+
+30개 명령어를 실제 개발 흐름 순서로 정리한다. 전부 외울 필요 없다. 자기 워크플로우에서 빠진 것만 채우면 된다.
+
+<GitCommandCard />
+
+## 프로젝트 시작
+
+### git init
+
+```bash
+git init my-project
+cd my-project
+```
+
+새 저장소를 만든다. 실무에서는 `gh repo create`로 대체하는 경우가 많다.
+
+### git clone
+
+```bash
+git clone https://github.com/user/repo.git
+git clone --depth 1 https://github.com/user/repo.git  # 최신 커밋만
+```
+
+`--depth 1`은 CI/CD에서 빌드 시간을 줄일 때 유용하다. 전체 히스토리가 필요 없으면 shallow clone으로 충분하다.
+
+### git remote
+
+```bash
+git remote -v                         # 연결된 원격 저장소 확인
+git remote add upstream <url>         # fork한 레포에 원본 추가
+git remote set-url origin <new-url>   # HTTPS → SSH 전환
+```
+
+fork 기반 워크플로우에서 `upstream`을 추가할 때 쓴다.
+
+## 브랜치 전략
+
+### git branch
+
+```bash
+git branch                    # 로컬 브랜치 목록
+git branch -a                 # 원격 브랜치 포함
+git branch feature/login      # 새 브랜치 생성
+git branch -d feature/login   # 머지된 브랜치 삭제
+git branch -D feature/login   # 강제 삭제
+```
+
+`-d`는 머지된 브랜치만 삭제한다. 머지 안 된 브랜치를 지우려면 `-D`가 필요하다.
+
+### git switch
+
+```bash
+git switch feature/login          # 브랜치 전환
+git switch -c feature/signup      # 생성과 동시에 전환
+git switch -                      # 이전 브랜치로 돌아가기
+```
+
+Git 2.23부터 도입됐다. `checkout`보다 의도가 명확하다. 브랜치 전환은 `switch`, 파일 복원은 `restore`로 역할이 나뉜다.
+
+### git merge
+
+```bash
+git switch main
+git merge feature/login
+git merge --no-ff feature/login   # 머지 커밋 강제 생성
+```
+
+`--no-ff`를 쓰면 fast-forward가 가능해도 머지 커밋을 만든다. 브랜치 히스토리를 보존하고 싶을 때 유용하다.
+
+### git rebase
+
+```bash
+git switch feature/login
+git rebase main                   # main 위로 커밋 재배치
+git rebase -i HEAD~3              # 최근 3개 커밋 편집
+```
+
+인터랙티브 리베이스(`-i`)로 커밋을 합치거나(`squash`), 순서를 바꾸거나, 메시지를 수정할 수 있다. 한 가지 주의할 점이 있다. 이미 push한 커밋에는 쓰지 않는 게 좋다.
+
+## 일상 워크플로우
+
+### git status
+
+```bash
+git status
+git status -s   # 짧은 포맷
+```
+
+나는 커밋 전에 반드시 `git status -s`를 먼저 확인한다.
+
+### git add
+
+```bash
+git add .                     # 전체 스테이징
+git add -p                    # 변경사항을 hunk 단위로 선택
+git add src/components/       # 특정 디렉토리만
+```
+
+`git add -p`는 하나의 파일에서 일부 변경만 커밋하고 싶을 때 쓴다. 처음에는 귀찮다고 느꼈는데, 커밋 단위가 깔끔해지니까 나중에 디버깅할 때 편하다.
+
+### git commit
+
+```bash
+git commit -m "feat: 로그인 폼 추가"
+git commit --amend                      # 마지막 커밋 수정
+git commit --amend --no-edit            # 메시지 유지, 파일만 추가
+```
+
+`--amend`는 push 전에만 써야 한다. push 후에 amend하면 force push가 필요해진다.
+
+### git pull
+
+```bash
+git pull
+git pull --rebase            # 불필요한 머지 커밋 방지
+git pull origin main         # 특정 브랜치에서 가져오기
+```
+
+`--rebase`를 기본값으로 설정하면 편하다.
+
+```bash
+git config --global pull.rebase true
+```
+
+### git push
+
+```bash
+git push
+git push -u origin feature/login   # 원격 브랜치 연결 + 푸시
+git push --force-with-lease        # 안전한 강제 푸시
+```
+
+`--force-with-lease`는 `--force`보다 안전하다. 다른 사람이 그 사이에 push한 커밋이 있으면 거부한다.
+
+### git stash
+
+```bash
+git stash push -m "WIP: 로그인 폼 작업 중"   # 메시지와 함께 저장
+git stash push -u                             # 미추적 파일 포함
+git stash list                                # 저장 목록
+git stash pop                                 # 꺼내면서 삭제
+git stash apply stash@{2}                     # 특정 stash 적용 (삭제 안 함)
+```
+
+급하게 브랜치를 바꿔야 할 때 쓴다. `-m`으로 메시지를 붙여두면 나중에 뭘 저장했는지 찾기 쉽다.
+
+## 히스토리 탐색
+
+### git log
+
+```bash
+git log --oneline --graph --all    # 전체 브랜치 그래프
+git log --oneline -10              # 최근 10개 커밋
+git log --author="joowon"          # 특정 작성자
+git log -- src/utils.ts            # 특정 파일 이력
+```
+
+`--oneline --graph`는 브랜치 흐름을 한눈에 볼 수 있어서 자주 쓴다.
+
+### git diff
+
+```bash
+git diff                           # 워킹 디렉토리 vs 스테이징
+git diff --staged                  # 스테이징 vs 마지막 커밋
+git diff main..feature/login       # 브랜치 간 비교
+git diff HEAD~3                    # 최근 3개 커밋 변경사항
+```
+
+### git show
+
+```bash
+git show abc1234                   # 특정 커밋 상세 보기
+git show HEAD:src/app.tsx          # 특정 커밋 시점의 파일 내용
+```
+
+`git log`로 커밋을 찾고 `git show`로 상세를 확인하는 흐름이다.
+
+### git blame
+
+```bash
+git blame src/utils.ts             # 줄별 마지막 수정자
+git blame -L 10,20 src/utils.ts   # 10-20줄만
+```
+
+"이 코드 누가 왜 이렇게 짰지?" 할 때 쓴다. 범인 찾기가 아니라 맥락 파악용이다.
+
+## 위기 탈출
+
+실수는 누구나 한다. 중요한 건 복구 방법을 아는 것이다.
+
+### git restore
+
+```bash
+git restore src/app.tsx            # 워킹 디렉토리 변경 취소
+git restore --staged src/app.tsx   # 스테이징 취소 (파일은 유지)
+```
+
+Git 2.23부터 `checkout`에서 분리됐다. 파일 복원은 `restore`, 브랜치 전환은 `switch`다.
+
+### git reset
+
+```bash
+git reset --soft HEAD~1    # 커밋 취소, 변경사항 스테이징에 유지
+git reset --mixed HEAD~1   # 커밋 취소, 변경사항 워킹 디렉토리에 유지 (기본값)
+git reset --hard HEAD~1    # 커밋 + 변경사항 모두 삭제
+```
+
+`--soft`는 커밋 메시지만 바꾸고 싶을 때, `--mixed`는 스테이징을 다시 하고 싶을 때, `--hard`는 완전히 되돌리고 싶을 때 쓴다. `--hard`는 신중하게 써야 한다.
+
+### git revert
+
+```bash
+git revert abc1234         # 특정 커밋을 되돌리는 새 커밋 생성
+git revert HEAD~2..HEAD    # 최근 2개 커밋 되돌리기
+```
+
+`reset`과 다르게 히스토리를 보존한다. 이미 push한 커밋을 되돌릴 때는 `revert`가 맞다.
+
+### git reflog
+
+```bash
+git reflog                 # HEAD 이동 기록 전체
+git reflog show feature/login   # 특정 브랜치
+```
+
+`reset --hard`로 날린 커밋도 reflog에는 남아있다. Git의 최후의 안전망이다.
+
+```bash
+# 실수로 reset --hard 한 경우 복구
+git reflog
+# abc1234 HEAD@{2}: commit: 중요한 커밋
+git reset --hard abc1234   # 복구 완료
+```
+
+### git cherry-pick
+
+```bash
+git cherry-pick abc1234              # 특정 커밋 하나 가져오기
+git cherry-pick abc1234..def5678     # 범위 (abc1234 제외, 그 다음~def5678)
+git cherry-pick abc1234^..def5678    # 범위 (abc1234 포함)
+```
+
+`A..B` 범위에서 A는 제외된다는 점에 주의해야 한다. A를 포함하려면 `A^..B`를 쓴다.
+
+## GitHub CLI
+
+터미널에서 GitHub 작업을 할 수 있게 해주는 공식 CLI다. 브라우저를 열지 않고 PR 생성, 이슈 관리, CI 확인까지 가능하다. 기존 블로그에서 다루지 않았던 영역이다.
+
+### gh auth login
+
+```bash
+gh auth login
+gh auth status   # 현재 인증 상태 확인
+```
+
+처음 한 번만 하면 된다. 이후 모든 `gh` 명령어가 인증된 상태로 동작한다.
+
+### gh repo create / clone
+
+```bash
+gh repo create my-project --public --clone   # 생성 + 클론
+gh repo clone user/repo                      # GitHub 레포 클론
+```
+
+`gh repo create`는 `git init` + 원격 저장소 생성 + 연결을 한 번에 해준다.
+
+### gh pr create
+
+```bash
+gh pr create --title "feat: 로그인 구현" --body "설명"
+gh pr create --fill              # 커밋 메시지로 자동 채움
+gh pr create --reviewer @copilot  # Copilot 코드 리뷰 요청
+gh pr create --draft             # 드래프트 PR
+```
+
+나는 `--fill`을 가장 많이 쓴다. 커밋 메시지를 잘 써두면 PR 제목과 본문을 다시 쓸 필요가 없다.
+
+### gh pr list / view / checkout
+
+```bash
+gh pr list                       # PR 목록
+gh pr view 123                   # PR 상세 보기
+gh pr checkout 123               # 다른 사람의 PR 로컬에서 확인
+```
+
+코드 리뷰할 때 `gh pr checkout`으로 로컬에서 직접 돌려볼 수 있다.
+
+### gh pr merge
+
+```bash
+gh pr merge 123 --squash         # 스쿼시 머지
+gh pr merge 123 --merge          # 일반 머지
+gh pr merge 123 --rebase         # 리베이스 머지
+gh pr merge 123 --auto           # CI 통과 후 자동 머지
+```
+
+`--auto`가 특히 편하다. CI가 돌고 있을 때 걸어두면 통과 즉시 머지된다.
+
+### gh issue create / list
+
+```bash
+gh issue create --title "버그: 로그인 실패" --label "bug"
+gh issue list --assignee @me     # 내게 할당된 이슈
+gh issue list --label "bug"      # 라벨 필터
+```
+
+### gh run list / watch
+
+```bash
+gh run list                      # GitHub Actions 실행 목록
+gh run watch                     # 실시간 모니터링
+gh run view --log-failed         # 실패 로그만 확인
+```
+
+`gh run watch`는 push 후 CI가 도는 동안 터미널에서 실시간으로 상태를 확인할 수 있다. 실패하면 non-zero exit code를 반환해서 스크립트에 연결하기도 좋다.
+
+## 실수 복구 시나리오
+
+명령어를 아는 것과 실전에서 조합하는 건 다른 문제다. 실제로 자주 겪는 상황 3가지를 정리한다.
+
+### 잘못된 브랜치에 커밋한 경우
+
+```bash
+# 1. 커밋을 취소하되 변경사항은 유지
+git reset --soft HEAD~1
+
+# 2. 올바른 브랜치로 이동
+git stash push -m "잘못된 브랜치에서 작업한 내용"
+git switch feature/correct-branch
+
+# 3. 변경사항 적용
+git stash pop
+git add .
+git commit -m "feat: 올바른 브랜치에 커밋"
+```
+
+### push한 커밋에 민감 정보가 들어간 경우
+
+```bash
+# 1. 해당 커밋 되돌리기
+git revert HEAD
+
+# 2. 민감 정보 제거 후 다시 커밋
+git add .
+git commit -m "fix: 민감 정보 제거"
+git push
+```
+
+`revert`를 쓰는 이유는 이미 push한 커밋이기 때문이다. `reset`을 쓰면 force push가 필요하고, 다른 팀원의 히스토리와 충돌한다.
+
+### merge 충돌이 복잡할 때
+
+```bash
+# 머지 취소하고 원래 상태로
+git merge --abort
+
+# rebase로 전환 — 충돌을 커밋 단위로 해결
+git rebase main
+# 충돌 해결 후
+git add .
+git rebase --continue
+```
+
+충돌이 한꺼번에 쏟아지면 `merge --abort`로 되돌리고 `rebase`로 전환하면 커밋 하나씩 충돌을 해결할 수 있다.
+
+## 정리
+
+30개 전부 외울 필요 없다. 매일 쓰는 명령어는 10개 정도다. `status`, `add`, `commit`, `push`, `pull`, `switch`, `stash`, `log`, `diff`, `gh pr create` — 이 정도면 일상 워크플로우는 커버된다.
+
+나머지는 필요할 때 찾아서 쓰면 된다. `reflog`는 망했을 때, `cherry-pick`은 특정 커밋만 옮길 때, `rebase -i`는 커밋 정리할 때. 상황이 오면 자연스럽게 손에 익는다.
+
+터미널 UI로 Git 작업을 하고 싶다면 [lazygit을 포함한 터미널 도구 글](/blog/2026040801)을 참고하자. [터미널 환경](/blog/2026040204)이 잘 갖춰져 있으면 CLI 작업이 훨씬 매끄럽다. [Claude Code](/blog/2026041001)와 함께 쓰면 Git 명령어를 자연어로 실행할 수도 있다.
