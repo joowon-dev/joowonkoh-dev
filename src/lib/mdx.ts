@@ -1,15 +1,15 @@
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
+import { SECTIONS, type PostMeta, type Section } from "./sections";
 
-const BLOG_DIR = path.join(process.cwd(), "content/blog");
+export type { PostMeta, Section } from "./sections";
+export { SECTIONS, SECTION_LABELS, postHref } from "./sections";
 
-export interface PostMeta {
-  slug: string;
-  title: string;
-  description: string;
-  date: string;
-  tags: string[];
+const CONTENT_ROOT = path.join(process.cwd(), "content");
+
+function sectionDir(section: Section): string {
+  return path.join(CONTENT_ROOT, section);
 }
 
 function extractSlug(filename: string): string {
@@ -18,37 +18,49 @@ function extractSlug(filename: string): string {
   return match ? match[1] : name;
 }
 
-export function getAllPosts(): PostMeta[] {
-  const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith(".mdx"));
+function listFiles(section: Section): string[] {
+  const dir = sectionDir(section);
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter((f) => f.endsWith(".mdx"));
+}
 
-  const posts = files.map((filename) => {
-    const slug = extractSlug(filename);
-    const filePath = path.join(BLOG_DIR, filename);
-    const fileContent = fs.readFileSync(filePath, "utf-8");
-    const { data } = matter(fileContent);
+function readPostMeta(section: Section, filename: string): PostMeta {
+  const slug = extractSlug(filename);
+  const filePath = path.join(sectionDir(section), filename);
+  const fileContent = fs.readFileSync(filePath, "utf-8");
+  const { data } = matter(fileContent);
 
-    return {
-      slug,
-      title: data.title ?? slug,
-      description: data.description ?? "",
-      date: data.date ?? "",
-      tags: data.tags ?? [],
-    };
-  });
+  return {
+    slug,
+    title: data.title ?? slug,
+    description: data.description ?? "",
+    date: data.date ?? "",
+    tags: data.tags ?? [],
+    section,
+  };
+}
 
+export function getAllPostsBySection(section: Section): PostMeta[] {
+  const files = listFiles(section);
+  const posts = files.map((filename) => readPostMeta(section, filename));
   return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
 }
 
-function findFileBySlug(slug: string): string | null {
-  const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith(".mdx"));
+export function getAllPosts(): PostMeta[] {
+  const all = SECTIONS.flatMap((s) => getAllPostsBySection(s));
+  return all.sort((a, b) => (a.date > b.date ? -1 : 1));
+}
+
+function findFileBySlug(section: Section, slug: string): string | null {
+  const files = listFiles(section);
   return files.find((f) => extractSlug(f) === slug) ?? null;
 }
 
-export function getPostBySlug(slug: string) {
-  const filename = findFileBySlug(slug);
-  if (!filename) throw new Error(`Post not found: ${slug}`);
+export function getPostBySlugFromSection(section: Section, slug: string) {
+  const filename = findFileBySlug(section, slug);
+  if (!filename) throw new Error(`Post not found in ${section}: ${slug}`);
 
-  const filePath = path.join(BLOG_DIR, filename);
+  const filePath = path.join(sectionDir(section), filename);
   const fileContent = fs.readFileSync(filePath, "utf-8");
   const { data, content } = matter(fileContent);
 
@@ -59,13 +71,14 @@ export function getPostBySlug(slug: string) {
       description: data.description ?? "",
       date: data.date ?? "",
       tags: data.tags ?? [],
-    },
+      section,
+    } satisfies PostMeta,
     content,
   };
 }
 
-export function getAllTags(): string[] {
-  const posts = getAllPosts();
+export function getAllTagsBySection(section: Section): string[] {
+  const posts = getAllPostsBySection(section);
   const tagSet = new Set<string>();
   posts.forEach((post) => post.tags.forEach((tag) => tagSet.add(tag)));
   return Array.from(tagSet);
