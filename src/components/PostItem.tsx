@@ -1,10 +1,11 @@
 import Link from "next/link";
-import type { PostMeta } from "@/lib/mdx";
+import type { PostMeta } from "@/lib/sections";
+import { postHref } from "@/lib/sections";
 
 export default function PostItem({ post }: { post: PostMeta }) {
   return (
     <Link
-      href={`/blog/${post.slug}`}
+      href={postHref(post)}
       className="group block rounded-2xl border border-border bg-card-bg p-5 shadow-ambient spring-transition hover:shadow-ambient-hover hover:scale-[1.01] active:scale-[0.98]"
     >
       <div className="flex items-start justify-between gap-4">

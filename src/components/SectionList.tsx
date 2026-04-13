@@ -3,9 +3,23 @@
 import { useState } from "react";
 import PostItem from "@/components/PostItem";
 import TagFilter from "@/components/TagFilter";
-import type { PostMeta } from "@/lib/mdx";
+import type { PostMeta, Section } from "@/lib/sections";
+import { SECTION_LABELS } from "@/lib/sections";
 
-export default function BlogList({ posts, tags }: { posts: PostMeta[]; tags: string[] }) {
+const SECTION_DESCRIPTIONS: Record<Section, string> = {
+  dev: "개발, 도구, 워크플로우에 대한 글을 모았습니다.",
+  life: "일상에서 직접 겪은 것들을 기록합니다. 맛집, 베이커리, 여행.",
+};
+
+export default function SectionList({
+  section,
+  posts,
+  tags,
+}: {
+  section: Section;
+  posts: PostMeta[];
+  tags: string[];
+}) {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const filtered = selectedTag
@@ -15,13 +29,13 @@ export default function BlogList({ posts, tags }: { posts: PostMeta[]; tags: str
   return (
     <div className="animate-fade-in-up">
       <span className="mb-4 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-accent">
-        Archive
+        {SECTION_LABELS[section]}
       </span>
       <h1 className="font-display text-3xl font-bold leading-snug tracking-tight md:text-4xl">
-        Blog
+        Blog · {SECTION_LABELS[section]}
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-        개발, 일상, 생각을 기록합니다.
+        {SECTION_DESCRIPTIONS[section]}
       </p>
       <div className="mt-8">
         <TagFilter tags={tags} selected={selectedTag} onChange={setSelectedTag} />

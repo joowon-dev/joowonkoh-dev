@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAllPosts } from "@/lib/mdx";
+import { getAllPosts, postHref } from "@/lib/mdx";
 import { projects } from "@/lib/projects";
 import ProjectCard from "@/components/ProjectCard";
 
@@ -42,7 +42,7 @@ export default function Home() {
           {recentPosts.map((post) => (
             <Link
               key={post.slug}
-              href={`/blog/${post.slug}`}
+              href={postHref(post)}
               className="group block rounded-2xl border border-border bg-card-bg p-5 shadow-ambient spring-transition hover:shadow-ambient-hover hover:scale-[1.01]"
             >
               <div className="flex items-center justify-between">

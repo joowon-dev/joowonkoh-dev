@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { PostMeta } from "@/lib/mdx";
+import type { PostMeta } from "@/lib/sections";
+import { postHref } from "@/lib/sections";
 
 interface PostNavigationProps {
   prev: PostMeta | null;
@@ -13,7 +14,7 @@ export default function PostNavigation({ prev, next }: PostNavigationProps) {
     <nav className="mt-4 grid grid-cols-2 gap-4">
       {prev ? (
         <Link
-          href={`/blog/${prev.slug}`}
+          href={postHref(prev)}
           className="group rounded-2xl border border-border bg-card-bg p-5 shadow-ambient spring-transition hover:shadow-ambient-hover hover:scale-[1.01]"
         >
           <span className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
@@ -28,7 +29,7 @@ export default function PostNavigation({ prev, next }: PostNavigationProps) {
       )}
       {next ? (
         <Link
-          href={`/blog/${next.slug}`}
+          href={postHref(next)}
           className="group rounded-2xl border border-border bg-card-bg p-5 text-right shadow-ambient spring-transition hover:shadow-ambient-hover hover:scale-[1.01]"
         >
           <span className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
