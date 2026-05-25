@@ -1,0 +1,250 @@
+---
+title: "MDX에서 표 대신 React 컴포넌트로 시각화하기: 설계와 패턴"
+description: "마크다운 표는 모바일에서 깨진다. MDX의 진짜 가치는 표를 시각화 컴포넌트로 대체하는 데 있다. CompareCard, PlanCard, FlowCard 같은 시각화 컴포넌트의 설계 원칙을 정리한다."
+date: "2026-04-22"
+tags: ["Dev", "MDX", "디자인"]
+---
+
+## 표는 왜 망가지는가
+
+마크다운에 표를 넣으면 데스크톱에서는 그럭저럭 보인다. 모바일에서는 가로 스크롤이 되거나, 칸이 좁아져서 텍스트가 두세 줄씩 깨진다.
+
+표의 본질은 정렬된 격자다. 정보를 한눈에 비교하려는 의도다. 하지만 모바일 화면에서 격자는 좋은 모양이 아니다. 카드, 다이어그램, 강조된 키워드가 더 정보를 잘 전달한다.
+
+이 블로그는 그래서 **표를 거의 안 쓴다.** 대신 React 컴포넌트로 시각화한다. MDX의 진짜 매력은 이 자리다. 마크다운 안에 React 컴포넌트를 박을 수 있다는 건, 표 대신 다른 시각화로 대체할 수 있다는 뜻이다.
+
+이 글은 그 컴포넌트들을 어떻게 설계하는지에 대한 정리다.
+
+## MDX의 컴포넌트 사용 기본
+
+MDX에서는 일반 마크다운 안에 React 컴포넌트를 그냥 박는다.
+
+```mdx
+## CLI 도구 비교
+
+<CompareCard
+  items={[
+    { name: "ripgrep", strength: "속도", weakness: "옵션 기억 어려움" },
+    { name: "ag", strength: "출력 가독성", weakness: "느림" },
+  ]}
+/>
+
+위 도구들 중 ripgrep을 추천한다.
+```
+
+페이지가 렌더되면 `<CompareCard>` 자리에 React 컴포넌트가 들어간다. [App Router MDX 글](/blog/2026042001-nextjs-app-router-mdx-blog)에서 다룬 `MDXRemote` 셋업이 깔려 있어야 한다.
+
+## 표를 대체하는 4가지 패턴
+
+표를 쓰고 싶은 상황은 보통 4가지로 나뉜다. 각각 다른 컴포넌트로 대체한다.
+
+### 패턴 1: 비교 (CompareCard)
+
+"A와 B 중 어느 게 좋은가" 같은 비교용 표.
+
+```tsx
+type CompareItem = {
+  name: string;
+  pros: string[];
+  cons: string[];
+};
+
+export default function CompareCard({ items }: { items: CompareItem[] }) {
+  return (
+    <div className="grid md:grid-cols-2 gap-4 my-6">
+      {items.map((item) => (
+        <div key={item.name} className="rounded-lg border border-zinc-800 p-4">
+          <h4 className="font-bold mb-2">{item.name}</h4>
+          <div className="text-sm">
+            <p className="text-emerald-400 mb-1">+ 장점</p>
+            <ul className="space-y-1 mb-3">
+              {item.pros.map((p) => <li key={p}>{p}</li>)}
+            </ul>
+            <p className="text-rose-400 mb-1">- 단점</p>
+            <ul className="space-y-1">
+              {item.cons.map((c) => <li key={c}>{c}</li>)}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+데스크톱에서는 2열 카드, 모바일에서는 1열로 자연스럽게 떨어진다. 색상으로 장단점이 즉시 구분된다. 표라면 어색했을 정보가 카드라서 자연스럽다.
+
+### 패턴 2: 단계별 흐름 (FlowCard)
+
+"1단계 → 2단계 → 3단계" 식의 절차.
+
+```tsx
+type FlowStep = { number: number; title: string; description: string };
+
+export default function FlowCard({ steps }: { steps: FlowStep[] }) {
+  return (
+    <div className="space-y-3 my-6">
+      {steps.map((step) => (
+        <div key={step.number} className="flex gap-4">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+            {step.number}
+          </div>
+          <div>
+            <h4 className="font-semibold">{step.title}</h4>
+            <p className="text-sm text-zinc-400">{step.description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+번호가 큰 원으로 강조되고, 제목과 설명이 옆에 붙는다. 표보다 훨씬 흐름이 명확하다.
+
+### 패턴 3: 키워드 카드 (KeywordCard)
+
+명령어, 단축키, 약어처럼 짧은 항목과 설명의 조합.
+
+```tsx
+type Keyword = { key: string; desc: string };
+
+export default function KeywordCard({ keywords }: { keywords: Keyword[] }) {
+  return (
+    <div className="grid md:grid-cols-2 gap-2 my-6">
+      {keywords.map((kw) => (
+        <div key={kw.key} className="flex gap-3 items-baseline rounded border border-zinc-800 p-3">
+          <code className="font-mono text-sm bg-zinc-900 px-2 py-1 rounded text-amber-400">{kw.key}</code>
+          <span className="text-sm">{kw.desc}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+[Git 명령어 글](/blog/2026041101-git-github-cli-commands)의 `GitCommandCard`가 이 패턴이다. 표보다 명령어가 시각적으로 두드러진다.
+
+### 패턴 4: 비중 시각화 (BarCard)
+
+비율, 점수, 사용량 같은 수치 비교.
+
+```tsx
+type Bar = { label: string; value: number; max: number };
+
+export default function BarCard({ bars }: { bars: Bar[] }) {
+  return (
+    <div className="space-y-2 my-6">
+      {bars.map((b) => (
+        <div key={b.label}>
+          <div className="flex justify-between text-sm mb-1">
+            <span>{b.label}</span>
+            <span className="text-zinc-400">{b.value}/{b.max}</span>
+          </div>
+          <div className="h-2 bg-zinc-800 rounded">
+            <div
+              className="h-2 bg-blue-500 rounded"
+              style={{ width: `${(b.value / b.max) * 100}%` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+수치 표를 막대 그래프로 대체. 비교가 즉각적이다.
+
+## 컴포넌트 설계 원칙
+
+여러 시각화 컴포넌트를 만들면서 굳어진 원칙이 몇 개 있다.
+
+### 1. 글마다 하나씩 만들지 않는다
+
+처음에는 글 하나에 맞춤형 컴포넌트를 하나씩 만들었다. `OmcAgentCard`, `OmcFeatureCard`, `TerminalToolCard`, `GitCommandCard`... 컴포넌트가 30개 가까이 되니 관리가 안 된다.
+
+지금은 **재사용 가능한 4~5개 패턴**으로 좁혔다. 각 컴포넌트는 데이터를 prop으로 받는다. 새 글을 쓸 때 새 컴포넌트를 만들지 않고, 기존 컴포넌트에 다른 데이터를 넣는다.
+
+### 2. 데이터를 props로 받는다, 자식으로 받지 않는다
+
+```tsx
+// ❌ 어색하다
+<CompareCard>
+  <CompareItem name="A">...</CompareItem>
+  <CompareItem name="B">...</CompareItem>
+</CompareCard>
+
+// ✓ MDX 친화적
+<CompareCard items={[
+  { name: "A", ... },
+  { name: "B", ... },
+]} />
+```
+
+children보다 props가 MDX 안에서 더 깔끔하다. 데이터가 한 곳에 모여 있어서 글 작성 중 한눈에 본다.
+
+### 3. 모바일이 디폴트, 데스크톱이 보강
+
+`grid-cols-1 md:grid-cols-2`처럼 작성한다. 좁은 화면이 기준이다. 표가 깨지는 그 좁은 화면이 결국 가장 많은 사용자가 보는 환경이다.
+
+### 4. 다크모드 친구
+
+`bg-zinc-900`, `text-emerald-400` 같은 색상은 다크모드에서 읽기 좋다. 라이트/다크 둘 다 지원하는 사이트라면 `dark:` variant를 추가한다. [다크모드 디자인 글](/blog/2026042202-tailwind-dark-mode-only)에서 다크 단일 모드의 장점을 다뤘다.
+
+### 5. 한 컴포넌트는 한 파일
+
+복잡해지면 분리하지만, 보통 한 시각화 컴포넌트는 100줄 이내다. 한 파일에 다 적는다. import 경로가 간결해지고, 재사용도 쉽다.
+
+## MDXComponents에 등록
+
+만든 컴포넌트는 `MDXRemote`에 전달해야 MDX 안에서 인식한다.
+
+```tsx
+// src/components/MDXComponents.tsx
+import CompareCard from "./CompareCard";
+import FlowCard from "./FlowCard";
+import KeywordCard from "./KeywordCard";
+import BarCard from "./BarCard";
+
+export const mdxComponents = {
+  CompareCard,
+  FlowCard,
+  KeywordCard,
+  BarCard,
+};
+
+// 사용처
+<MDXRemote source={content} components={mdxComponents} />
+```
+
+이렇게 하면 글 하나하나에 import를 안 적어도 된다. MDX 파일이 깔끔하게 유지된다.
+
+## 흔한 함정
+
+### 함정 1: 너무 많은 시각화
+
+매 섹션마다 카드를 박으면 글 자체가 어수선해진다. 카드는 **표를 대체할 만큼 정보가 정렬돼 있을 때**만 쓴다. 단순한 두세 항목 비교는 그냥 글로 쓰는 게 깔끔하다.
+
+### 함정 2: 시각화 안에 시각화
+
+카드 안에 또 카드를 넣으면 모바일에서 깨진다. 시각화는 한 단계만. 카드 안의 정보가 더 복잡하면 별도 글로 분리한다.
+
+### 함정 3: 색상 의존도가 너무 높다
+
+색상으로만 정보를 구분하면 색맹 사용자에게 의미가 안 전달된다. 색상에 더해 **아이콘이나 레이블**을 같이 둔다. `+ 장점`, `- 단점`처럼 텍스트가 같이 있어야 안전하다.
+
+## 정리
+
+마크다운 표를 React 컴포넌트로 대체하면 모바일 가독성, 시각적 임팩트, 정보 전달력이 모두 올라간다.
+
+이 블로그에서 굳어진 4가지 패턴을 한 줄씩.
+
+1. **CompareCard** — 비교
+2. **FlowCard** — 절차
+3. **KeywordCard** — 명령어/단축키
+4. **BarCard** — 수치 비중
+
+새 글을 쓸 때 표를 박고 싶은 욕구가 들면, 이 4가지 중 하나로 대체할 수 있는지 먼저 본다. 대체할 수 있으면 그게 답이다. 정말 표여야 한다면 그건 1년에 한두 번 정도 있는 예외다.
+
+표는 모바일에서 깨진다. MDX의 진짜 가치는 그 표 자리에 다른 시각화를 넣을 수 있다는 데 있다.

@@ -1,0 +1,207 @@
+---
+title: "MCP 서버 직접 만들어보기: Supabase MCP를 따라 만든 첫 서버"
+description: "Model Context Protocol(MCP) 서버를 직접 만드는 과정을 정리한다. Supabase MCP 구조를 분석하고, TypeScript SDK로 간단한 서버를 만들어 Claude Code에 연결하는 전체 흐름이다."
+date: "2026-04-12"
+tags: ["Dev", "Claude Code", "MCP"]
+---
+
+## MCP를 직접 만들어야겠다고 생각한 순간
+
+Claude Code에 Supabase MCP를 붙여놓고 한 달쯤 썼더니, 새로운 욕심이 생겼다. 사내에서 쓰는 작은 어드민 API를 MCP로 만들면, AI에게 "이 유저 권한 좀 확인해줘"라고 자연어로 물어볼 수 있겠다 싶었다.
+
+문제는 MCP 문서를 처음 읽었을 때 거대한 프로토콜처럼 보였다는 거다. JSON-RPC, 도구, 리소스, 프롬프트, 트랜스포트... 단어만 봐도 일주일짜리 작업처럼 보인다.
+
+**막상 만들어보니 동작하는 최소 서버는 50줄이면 된다.** 이 글은 그 50줄에 도달하기 위한 과정이다.
+
+## MCP가 정확히 무엇인가
+
+Model Context Protocol은 Anthropic이 공개한 오픈 표준이다. 핵심 한 문장으로 요약하면 이렇다.
+
+> "AI 에이전트와 외부 도구 사이를 연결하는 USB-C 포트 같은 표준."
+
+LLM은 자체로는 외부 시스템에 접근하지 못한다. DB를 읽거나, API를 호출하거나, 파일을 수정하려면 누군가 그 작업을 해주는 다리가 필요하다. 기존에는 각 AI 클라이언트가 각자의 방식으로 도구를 정의했다. MCP는 이걸 표준화해서, **한 번 만든 MCP 서버를 Claude Code, Cursor, Windsurf 어디든 그대로 꽂을 수 있게** 한다.
+
+서버는 세 종류의 엔드포인트를 노출한다.
+
+- **Tools**: AI가 호출할 수 있는 함수 (예: `create_branch`, `execute_sql`)
+- **Resources**: AI가 읽을 수 있는 정보 (예: 프로젝트 메타데이터)
+- **Prompts**: 재사용 가능한 프롬프트 템플릿
+
+대부분의 실전 서버는 Tools만 잘 만들어도 충분하다.
+
+## Supabase MCP 구조 분석
+
+내가 참고한 건 Supabase MCP 서버다. [`@supabase/mcp-server-supabase`](https://github.com/supabase-community/supabase-mcp) 레포를 클론해서 코드 구조부터 봤다.
+
+```text
+src/
+  tools/
+    list-projects.ts
+    execute-sql.ts
+    apply-migration.ts
+    ...
+  index.ts        // 서버 진입점
+  server.ts       // MCP 서버 초기화
+```
+
+각 도구가 파일 하나로 분리돼 있고, `index.ts`에서 모아서 등록하는 구조다. 도구 한 개의 본체는 이런 모양이다.
+
+```typescript
+{
+  name: "execute_sql",
+  description: "Execute SQL on a Supabase project",
+  inputSchema: {
+    type: "object",
+    properties: {
+      project_id: { type: "string" },
+      sql: { type: "string" },
+    },
+    required: ["project_id", "sql"],
+  },
+  handler: async ({ project_id, sql }) => {
+    const result = await supabase.rest(project_id).sql(sql);
+    return { content: [{ type: "text", text: JSON.stringify(result) }] };
+  },
+}
+```
+
+핵심은 세 가지다. **이름, 입력 스키마, 핸들러.** AI는 description을 보고 어떤 도구를 쓸지 결정하고, inputSchema대로 인자를 채워서 보내고, 핸들러가 실제 일을 한다.
+
+## 최소 MCP 서버 만들기
+
+이제 직접 만든다. TypeScript SDK를 쓴다.
+
+```bash
+mkdir my-mcp-server && cd my-mcp-server
+npm init -y
+npm install @modelcontextprotocol/sdk
+npm install -D typescript tsx
+npx tsc --init
+```
+
+`src/index.ts`를 만든다.
+
+```typescript
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+
+const server = new Server(
+  { name: "my-first-mcp", version: "0.1.0" },
+  { capabilities: { tools: {} } }
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: [
+    {
+      name: "echo",
+      description: "Echo a message back",
+      inputSchema: {
+        type: "object",
+        properties: { message: { type: "string" } },
+        required: ["message"],
+      },
+    },
+  ],
+}));
+
+server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  if (req.params.name === "echo") {
+    return {
+      content: [{ type: "text", text: `Echo: ${req.params.arguments.message}` }],
+    };
+  }
+  throw new Error("Unknown tool");
+});
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+이걸 실행하면 stdin/stdout으로 JSON-RPC를 받는 서버가 뜬다.
+
+```bash
+npx tsx src/index.ts
+```
+
+## Claude Code에 연결
+
+`claude mcp add` 명령으로 서버를 등록한다. `--` 뒤에 실행 명령과 인자를 적는다.
+
+```bash
+claude mcp add my-first-mcp -- npx tsx /Users/me/my-mcp-server/src/index.ts
+```
+
+등록된 서버는 `claude mcp list`로 확인할 수 있다.
+
+```bash
+claude mcp list
+```
+
+Claude Code를 재시작하고 `/mcp`를 입력하면 등록된 서버 목록에 `my-first-mcp`가 보인다. 거기서 echo 도구를 호출해본다.
+
+```text
+> mcp__my-first-mcp__echo로 "hello" 실행
+```
+
+`Echo: hello`가 돌아오면 끝이다. 50줄짜리 서버가 Claude Code와 연결됐다.
+
+## 실전에서 추가해야 하는 것들
+
+이 최소 서버에서 실전 서버까지 가려면 몇 가지가 더 필요하다.
+
+### 1. 인증 처리
+
+API 키나 토큰은 환경 변수로 받는다. SDK에 토큰을 직접 박지 말고, `process.env.API_KEY`로 읽어서 핸들러 안에서 쓴다. `claude mcp add` 등록 시 `--env` 플래그로 주입한다.
+
+```bash
+claude mcp add my-api --env API_KEY=sk-... -- node /Users/me/my-mcp-server/dist/index.js
+```
+
+### 2. 에러 처리
+
+핸들러에서 에러가 나면 throw 대신 `isError: true`를 포함한 응답을 돌려주는 게 좋다. AI가 "에러가 났으니 인자를 바꿔서 다시 시도"하는 판단을 할 수 있다.
+
+```typescript
+return {
+  isError: true,
+  content: [{ type: "text", text: `Failed: ${err.message}` }],
+};
+```
+
+### 3. 도구 description 정성스럽게
+
+AI는 description을 보고 도구를 고른다. "사용자 정보 조회"보다 "특정 user_id에 해당하는 사용자의 이름, 이메일, 권한을 반환한다. 존재하지 않으면 null"이 훨씬 잘 호출된다. description은 사람이 아니라 AI에게 거는 광고다.
+
+### 4. inputSchema에 예시를 넣는다
+
+JSON Schema의 `examples` 필드를 쓰면 AI가 인자 형식을 더 정확히 맞춘다.
+
+```typescript
+properties: {
+  user_id: {
+    type: "string",
+    description: "UUID format",
+    examples: ["a1b2c3d4-..."],
+  },
+}
+```
+
+## 트러블슈팅 메모
+
+내가 처음 만들면서 막혔던 지점들이다.
+
+- **stdout에 console.log 금지** — MCP는 stdout으로 JSON-RPC를 주고받는다. `console.log`로 디버그 로그를 찍으면 프로토콜이 깨진다. 로그는 `console.error`로 stderr에 보낸다.
+- **상대 경로 금지** — Claude Code가 서버를 띄울 때 CWD가 다를 수 있다. 모든 파일 경로는 `import.meta.url`이나 절대 경로로 처리한다.
+- **재시작 필수** — 서버 코드를 고치면 Claude Code 자체를 재시작해야 새 서버가 로드된다. 핫 리로드는 안 된다.
+
+## 정리
+
+MCP 서버 만들기는 어렵지 않다. **이름, 입력 스키마, 핸들러 세 가지**만 채우면 도구 하나가 된다. 처음에는 echo 같은 걸로 연결만 확인하고, 그 다음에 진짜 필요한 도구를 하나씩 늘리는 게 빠르다.
+
+내가 만든 사내 MCP는 지금 도구 5개를 가지고 있다. 한 번 연결해두니까 "이 유저 권한 알려줘", "지난주 결제 실패 건수 뽑아줘" 같은 질문을 자연어로 던질 수 있다. 작은 서버 하나가 일하는 방식을 바꾼다.
+
+진입 장벽은 50줄이다. 50줄짜리 서버를 한 번 띄워보면, MCP 문서가 갑자기 친근해진다.

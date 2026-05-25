@@ -1,0 +1,194 @@
+---
+title: "PR 리뷰 자동화: ultrareview와 multi-agent 코드 리뷰의 차이"
+description: "Claude Code의 /ultrareview는 multi-agent로 PR을 분석한다. 단일 reviewer 호출과 무엇이 다른가, 어떤 작업에 맞는가, 비용은 얼마나 더 드는가를 실전 비교한다."
+date: "2026-04-24"
+tags: ["Dev", "Claude Code", "코드리뷰"]
+---
+
+## "코드 리뷰 좀 해줘"의 한계
+
+Claude Code에 PR 리뷰를 시키는 가장 단순한 방법은 한 줄이다.
+
+```text
+> 이 PR diff를 리뷰해줘
+```
+
+결과는 그럴듯하다. 보안, 성능, 가독성 같은 항목을 훑어주고 코멘트도 단다. 다만 시간이 지나면서 한계가 보이기 시작했다.
+
+- **놓치는 게 있다** — 한 모델이 한 번에 보면 일부 관점이 빠진다
+- **깊이가 얕다** — 코드 한 줄 한 줄을 깊이 보는 시간이 부족하다
+- **컨벤션 일관성이 떨어진다** — 매번 살짝 다른 기준으로 본다
+
+이걸 보완하는 게 `/ultrareview`다. **여러 전문 에이전트를 동시에 띄워서 같은 PR을 다른 각도에서 보게 한다.**
+
+이 글은 단일 리뷰와 ultrareview의 차이를 직접 비교한 결과다.
+
+## ultrareview가 정확히 무엇인가
+
+[OMC](/blog/2026040701-oh-my-claudecode)에서 제공하는 멀티에이전트 리뷰 모드다. 사용은 한 줄이지만 내부적으로는 여러 에이전트가 병렬로 동작한다.
+
+```text
+> /ultrareview              # 현재 브랜치 리뷰
+> /ultrareview 123          # PR #123 리뷰
+```
+
+내부 동작:
+
+1. PR diff와 변경된 파일 목록 수집
+2. 여러 전문 에이전트(security, performance, style, logic 등)가 **동시에** 분석
+3. 각 에이전트의 결과를 collator가 통합
+4. 우선순위 매겨진 단일 리포트로 출력
+
+각 에이전트는 자기 관점만 본다. security 에이전트는 보안만, performance는 성능만. 한 모델이 모든 걸 다 보려고 할 때 생기는 "광범위하지만 얕은" 리뷰가 아니라, "좁고 깊은" 리뷰가 여러 개 합쳐진다.
+
+## 단일 리뷰와의 차이 — 실측
+
+같은 PR에 두 방식을 적용해본 결과.
+
+### 테스트 케이스: 결제 모듈 리팩토링 PR
+
+- 변경 파일: 12개
+- 추가 라인: 약 350줄
+- 삭제 라인: 약 280줄
+
+### 단일 리뷰 결과
+
+```text
+> Claude Code Plan Mode 끄고 일반 리뷰
+```
+
+- 코멘트 수: 8개
+- 카테고리: 보안 1, 성능 2, 가독성 3, 버그 가능성 2
+- 시간: 약 30초
+- 비용 (대략): $0.15
+
+### ultrareview 결과
+
+```text
+> /ultrareview
+```
+
+- 코멘트 수: 22개
+- 카테고리: 보안 4, 성능 5, 가독성 4, 버그 가능성 5, 테스트 누락 4
+- 시간: 약 2분 (병렬이라 단일의 2배 정도)
+- 비용 (대략): $1.20
+
+코멘트 수가 거의 3배. 무엇보다 **단일 리뷰에서 놓쳤던 항목이 ultrareview에서 잡혔다.**
+
+구체적인 예시:
+- 단일 리뷰가 놓친 race condition (성능 에이전트가 잡음)
+- 단일 리뷰에서 모호하게 넘어갔던 SQL injection 가능성 (security 에이전트가 명확히 지적)
+- 추가 테스트가 필요한 엣지 케이스 4개 (test 에이전트가 별도로 잡음)
+
+## 단점도 명확하다
+
+ultrareview가 모든 상황에 좋은 건 아니다.
+
+### 1. 비용이 8배
+
+단일 리뷰의 8배 가까운 토큰을 쓴다. PR 하나 리뷰에 $1~2가 든다. 매일 PR 10개 리뷰하면 한 달 $300~600.
+
+### 2. 시간
+
+병렬이라 절대 시간은 단일의 2배 정도지만, 사용자 입장에서는 2분이 길게 느껴질 수 있다. 빠른 반복이 필요할 때는 단일 리뷰가 낫다.
+
+### 3. 노이즈
+
+코멘트가 22개면 그중 5개는 "고치는 게 좋지만 절대적이지는 않은" 수준이다. 시간 압박이 있을 때는 noise가 부담이다.
+
+### 4. 토론 능력 부족
+
+ultrareview는 일방향이다. "왜 이렇게 짰어?"라는 사람의 질문에 답하기는 단일 리뷰가 더 자연스럽다. 전문 에이전트들은 자기 관점만 본다.
+
+## 어떤 상황에 무엇을 쓰는가
+
+내 기준은 이렇다.
+
+### ultrareview가 적합한 상황
+
+- **머지 전 마지막 리뷰** — 놓친 것을 찾고 싶을 때
+- **보안에 민감한 코드** — 결제, 인증, 권한 관련
+- **큰 리팩토링** — 변경이 50줄 이상이고 영향 범위가 넓을 때
+- **신규 기능 PR** — 컨벤션부터 엣지 케이스까지 폭넓게 봐야 할 때
+
+### 단일 리뷰가 충분한 상황
+
+- **타이포 수정, 변수명 변경**
+- **디자인 토큰 업데이트**
+- **의존성 업데이트** (lockfile만 변경)
+- **빠른 반복이 필요한 디버깅 사이클**
+
+큰 PR은 ultrareview, 작은 PR은 단일 리뷰. 이 분리만으로도 비용 효율이 크게 달라진다.
+
+## GitHub Actions에 박는 패턴
+
+[gh CLI 글](/blog/2026041902-gh-pr-review-cli-workflow)에서 다룬 워크플로우와 합치면 자동화 가능하다.
+
+```yaml
+# .github/workflows/auto-review.yml
+name: Auto Review
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  ultra-review:
+    if: contains(github.event.label.name, 'needs-review')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ultrareview
+        run: |
+          # Claude Code in headless mode (-p = print/non-interactive)
+          claude -p "/ultrareview ${{ github.event.pull_request.number }}" \
+            > report.md
+      - name: Post comment
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body-file report.md
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+```
+
+`needs-review` 라벨을 PR에 붙이면 자동으로 ultrareview가 돌고 결과가 코멘트로 달린다. 사람 리뷰어를 호출하기 전 1차 자동 리뷰.
+
+비용 폭주를 막으려면:
+- 라벨 기반(자동 트리거 X)
+- 큰 PR만 (lines changed > 100)
+- 일일 한도 설정
+
+## 흔한 함정
+
+### 함정 1: 모든 PR에 무조건 ultrareview
+
+비용이 폭증한다. PR 크기로 분기한다.
+
+```bash
+diff_size=$(gh pr diff $PR_NUMBER | wc -l)
+if [ $diff_size -gt 200 ]; then
+  claude -p "/ultrareview $PR_NUMBER"
+else
+  # 단일 리뷰
+  claude -p "이 PR diff를 리뷰해줘"
+fi
+```
+
+### 함정 2: 코멘트를 곧이곧대로 적용
+
+22개 코멘트를 다 적용하려고 하면 PR이 영원히 안 머지된다. 우선순위 상위 5~7개만 적용하고, 나머지는 follow-up 이슈로 만든다.
+
+### 함정 3: 컨벤션 충돌
+
+각 에이전트가 자기 관점만 보다 보니 가끔 서로 충돌하는 권고를 한다. 예: "이 함수를 분리하라"(가독성) vs "이 함수를 인라인하라"(성능). 사람이 결정해야 한다.
+
+### 함정 4: AI 리뷰만 믿고 사람 리뷰를 빼면 안 된다
+
+ultrareview는 사람 리뷰의 보조다. 도메인 지식, 사용자 경험, 비즈니스 맥락은 사람만 안다. AI 리뷰가 OK라도 사람 리뷰는 따로 받는다.
+
+## 정리
+
+`/ultrareview`는 단일 리뷰의 8배 비용을 들여 깊이를 사는 도구다. 모든 PR에 쓰는 건 비효율이고, 머지 직전 마지막 검증이나 보안 민감 코드에는 가치가 명확하다.
+
+판단 기준은 단순하다. **PR이 크고 중요할수록 ultrareview, 작고 일상적이면 단일 리뷰.** 이 분기만 잡아두면 비용과 효과의 균형이 맞는다.
+
+내 사용 패턴은 일주일에 ultrareview 5~10회 정도. PR이 100개 들어오면 그중 10개만 ultrareview, 나머지는 단일 리뷰나 사람 리뷰로 처리한다. 모든 도구가 그렇듯, 핵심은 언제 안 쓸지를 정하는 것이다.

@@ -1,0 +1,197 @@
+---
+title: "mise(구 rtx)로 Node·Python·Go 버전 관리 통합하기"
+description: "nvm, pyenv, gvm을 따로 깔지 않고 mise 하나로 통합했다. .tool-versions로 프로젝트별 자동 버전 전환, asdf와의 차이, .env 자동 로딩까지 정리한다."
+date: "2026-04-18"
+tags: ["Dev", "버전관리", "도구"]
+---
+
+## 버전 매니저를 세 개 깔던 시절
+
+Node 프로젝트, Python 프로젝트, Go 프로젝트를 동시에 다루다 보면 머신에 nvm, pyenv, gvm이 다 깔린다. 각자 셸 초기화 코드도 따로 박혀 있다. .zshrc가 30줄짜리 버전 매니저 설정으로 시작한다.
+
+문제는 시간이다. 셸을 새로 열 때마다 세 매니저가 초기화되면서 1~2초가 추가된다. 매일 수십 번 새 탭을 여니까 이게 누적된다.
+
+해결책을 찾다가 **mise**(예전 이름 rtx)로 정착했다. nvm + pyenv + gvm + 그 외 모든 버전 매니저를 하나로 합쳐주고, 셸 시작 시간도 줄여준다.
+
+## mise가 무엇인가
+
+asdf의 정신적 후손이다. asdf는 "다언어 버전 매니저"의 원조였는데, mise는 그 컨셉을 Rust로 다시 구현해서 빠르게 만든 도구다.
+
+지원 언어:
+- Node.js, Python, Ruby, Go, Java, Rust, .NET, Deno, Bun, PHP, Elixir, Erlang, ...
+
+거의 모든 주요 언어와 도구가 플러그인으로 들어 있다. 한 도구로 다 관리한다.
+
+## 설치
+
+```bash
+brew install mise
+```
+
+`~/.zshrc`에 한 줄 추가.
+
+```bash
+eval "$(mise activate zsh)"
+```
+
+이게 끝이다. nvm, pyenv, gvm을 다 지워도 된다.
+
+## 기본 사용법
+
+언어와 버전을 글로벌로 설치한다.
+
+```bash
+mise use --global node@22
+mise use --global python@3.13
+mise use --global go@1.23
+```
+
+`mise use`는 두 가지 일을 한다. 해당 버전을 깔고, 현재 위치에서 그 버전을 쓰겠다고 등록한다. `--global`이면 어디서든 쓰는 디폴트가 된다.
+
+설치된 도구 확인.
+
+```bash
+$ mise list
+node       22.10.0  ~/.tool-versions
+python     3.13.1   ~/.tool-versions
+go         1.23.4   ~/.tool-versions
+```
+
+## 프로젝트별 버전 자동 전환
+
+여기가 진짜 매력이다. 프로젝트 루트에 `.tool-versions` 파일을 둔다.
+
+```text
+node 20.18.0
+python 3.11.10
+```
+
+해당 폴더로 `cd` 하는 순간 mise가 자동으로 버전을 전환한다.
+
+```bash
+$ cd ~/legacy-project
+mise: switching to node 20.18.0, python 3.11.10
+$ node -v
+v20.18.0
+```
+
+폴더를 빠져나가면 글로벌 버전으로 돌아간다. nvm처럼 매번 `nvm use`를 칠 필요가 없다.
+
+`.tool-versions`는 [asdf](https://asdf-vm.com/)와 호환된다. 팀에서 asdf를 쓰고 있어도 그대로 같이 쓸 수 있다.
+
+## .env 자동 로딩
+
+mise의 또 다른 매력은 환경 변수 관리다. 프로젝트 루트에 `.mise.toml`을 두면 그 폴더에 들어갈 때마다 환경 변수가 자동 로드된다.
+
+```toml
+[env]
+DATABASE_URL = "postgresql://localhost/myapp"
+NODE_ENV = "development"
+
+[tools]
+node = "22"
+python = "3.13"
+```
+
+`cd` 하는 순간 환경 변수가 셸에 들어간다. `direnv`를 따로 안 깔아도 같은 효과를 낸다. 도구 버전 관리와 환경 변수 관리가 한 파일로 합쳐진다.
+
+비밀 정보는 `.env` 파일에서 로드할 수 있다.
+
+```toml
+[env]
+_.file = ".env"
+```
+
+이렇게 두면 같은 폴더의 `.env` 파일이 자동 로드된다. `.env`는 `.gitignore`에 두고, `.mise.toml`은 git에 올린다.
+
+## asdf와의 차이
+
+같은 컨셉이라 헷갈리는데, 차이가 명확하다.
+
+| 항목 | asdf | mise |
+|------|------|------|
+| 구현 | Bash | Rust |
+| 셸 시작 시간 | ~200ms | ~5ms |
+| 환경 변수 관리 | direnv 별도 필요 | 내장 |
+| 명령어 | `asdf install`, `asdf global`, ... | `mise use`, `mise install`, ... |
+| 호환성 | `.tool-versions` | `.tool-versions` + `.mise.toml` |
+
+이미 asdf를 쓰고 있다면 마이그레이션이 거의 무료다. `.tool-versions` 파일은 그대로 동작한다. mise를 깔고 asdf를 지우면 끝이다.
+
+## 자주 쓰는 명령어
+
+```bash
+# 사용 가능한 모든 버전 보기
+mise ls-remote node
+
+# 특정 버전 설치만
+mise install node@20
+
+# 현재 폴더에서만 쓰는 버전
+mise use node@22
+
+# 글로벌 디폴트
+mise use --global node@22
+
+# 특정 도구 제거
+mise uninstall node@18
+
+# 자동 업데이트
+mise upgrade
+```
+
+내가 가장 자주 쓰는 건 `mise use`다. 새 프로젝트에 들어갔는데 버전이 안 맞으면 `mise use node@20` 한 줄이면 끝난다.
+
+## 셸 시작 시간 비교
+
+내 머신에서 직접 측정한 결과다.
+
+| 셋업 | 셸 시작 시간 |
+|------|--------------|
+| nvm + pyenv + gvm | 약 1.2초 |
+| asdf | 약 0.3초 |
+| mise | 약 0.05초 |
+
+mise는 거의 느낌이 없다. nvm 한 가지만 깔아도 1초 가까이 걸리는 걸 생각하면 효과가 크다. 새 탭을 자주 여는 사람일수록 체감이 크다.
+
+[터미널 도구 글](/blog/2026040801-terminal-productivity-tools)에서 셸 시작 시간이 왜 중요한지 다룬 적이 있다. mise는 그 맥락에서 한 자리 차지하는 도구다.
+
+## 흔한 함정
+
+### 함정 1: nvm/pyenv를 안 지운다
+
+mise를 깔고 기존 버전 매니저를 안 지우면 둘 다 셸을 초기화하려고 한다. 충돌이 나거나 둘 다 느려진다. mise로 갈아탔으면 기존 매니저는 완전히 제거한다.
+
+```bash
+# nvm 제거
+rm -rf ~/.nvm
+# .zshrc에서 nvm 관련 줄 삭제
+
+# pyenv 제거 (brew로 깐 경우)
+brew uninstall pyenv
+rm -rf ~/.pyenv
+```
+
+### 함정 2: shimset을 빌드 경로에 넣는다
+
+mise는 shim이 아니라 PATH 조작 방식으로 동작한다. 그래서 빌드 도구나 IDE에서 mise를 못 찾는 경우가 가끔 있다. 이 경우 `mise activate`가 IDE 설정에 반영됐는지 확인한다.
+
+VS Code에서는 터미널을 열면 .zshrc가 로드되니 자연스럽게 동작한다. 하지만 빌드 작업에서 mise 경로를 직접 잡아야 하는 경우가 있다.
+
+### 함정 3: legacy version 파일을 무시한다
+
+`.nvmrc`, `.python-version` 같은 옛 버전 매니저용 파일이 프로젝트에 있을 수 있다. mise는 이런 파일들을 자동으로 읽어준다.
+
+```bash
+mise settings set legacy_version_file true
+```
+
+이 설정이 켜져 있으면 `.nvmrc`만 있는 프로젝트에서도 mise가 알아서 그 버전을 적용한다.
+
+## 정리
+
+mise는 nvm + pyenv + gvm + direnv를 하나로 합쳐주는 도구다. **셸 시작이 빠르고, 프로젝트별 자동 전환이 매끄럽고, 환경 변수까지 같이 관리한다.**
+
+이미 다른 매니저를 쓰고 있다면, 한 시간만 투자해서 마이그레이션할 가치가 있다. `.tool-versions` 호환이라 대부분의 프로젝트는 그대로 동작한다. 새 머신에서는 처음부터 mise로 시작하면 셋업이 단순해진다.
+
+내 dotfiles의 [Brewfile](/blog/2026041801-dotfiles-gnu-stow)에 mise를 박아둔 다음부터, 새 머신 셋업 시간이 절반으로 줄었다. 도구를 합치면 합칠수록 환경이 가벼워진다는 걸 다시 한 번 확인했다.
