@@ -1,0 +1,204 @@
+---
+title: "Git Worktree로 동시에 3개 브랜치 작업하는 법"
+description: "git stash와 브랜치 스위치 사이에서 멈추지 마라. git worktree로 같은 레포의 다른 브랜치를 다른 폴더에서 동시에 작업한다. 셋업, AI 에이전트와의 조합, 함정까지 정리한다."
+date: "2026-04-23"
+tags: ["Dev", "git", "워크플로우"]
+---
+
+## 브랜치를 갈아탈 때마다 비싼 비용
+
+기능 개발 중에 급한 버그 수정 요청이 들어왔다. 보통 흐름은 이렇다.
+
+```bash
+git stash
+git checkout main
+git pull
+git checkout -b hotfix/login
+# ...수정...
+git checkout feature/dashboard
+git stash pop
+npm install   # 의존성이 다르면
+```
+
+이 사이에 컨텍스트가 흩어진다. 작업 중이던 IDE 상태, 켜둔 dev 서버, 빌드 캐시가 다 흔들린다. 무엇보다 **동시에 두 가지 작업을 진행할 수 없다.**
+
+`git worktree`는 이 문제를 정면으로 푼다. **같은 레포의 다른 브랜치를 다른 폴더에 펼쳐서**, 한 머신에서 동시에 작업할 수 있게 한다.
+
+## git worktree가 무엇인가
+
+git에 기본으로 들어 있는 명령어다. 추가 설치 안 한다.
+
+기본 사용:
+
+```bash
+# 현재 레포에서 새 worktree 생성
+git worktree add ../my-app-hotfix hotfix/login
+```
+
+이러면 `../my-app-hotfix/` 폴더에 같은 레포가 펼쳐진다. 거기는 `hotfix/login` 브랜치, 원래 폴더는 `feature/dashboard` 브랜치 — 두 곳에서 동시에 작업한다.
+
+```bash
+# worktree 목록
+git worktree list
+
+# 작업 끝나면 worktree 제거
+git worktree remove ../my-app-hotfix
+```
+
+`.git` 폴더는 원래 레포에 그대로 있고, worktree는 그걸 공유한다. 디스크 공간도 절약된다.
+
+## 실제 워크플로우
+
+내가 실제로 쓰는 패턴.
+
+### 패턴 1: 메인 작업 + 핫픽스
+
+```bash
+~/joowonkoh-dev          # 메인 폴더, feature/blog-update 브랜치
+~/joowonkoh-dev-hotfix   # worktree, hotfix/typo 브랜치
+```
+
+핫픽스 요청이 오면 `~/joowonkoh-dev-hotfix`에서 작업. 메인 폴더의 dev 서버, IDE 상태는 그대로.
+
+### 패턴 2: PR 리뷰
+
+남의 PR을 빠르게 받아서 동작 확인할 때.
+
+```bash
+git worktree add ../review-pr-123 origin/feature-from-others
+cd ../review-pr-123
+npm install
+npm run dev
+```
+
+내 작업 폴더에 영향 없이 PR을 직접 돌려본다. 끝나면 폴더 삭제.
+
+### 패턴 3: AI 에이전트 병렬 작업
+
+여기가 진짜 강력하다. [tmux 멀티 세션 글](/blog/2026041701-tmux-cmux-multi-session)에서 다룬 멀티 인스턴스 셋업과 worktree를 합친다.
+
+```text
+~/joowonkoh-dev           Claude Code 1: feature/blog-update에서 글 작성
+~/joowonkoh-dev-refactor  Claude Code 2: refactor/components에서 컴포넌트 정리
+~/joowonkoh-dev-deps      Claude Code 3: chore/deps에서 의존성 업데이트
+```
+
+세 개의 Claude Code 인스턴스가 **서로 다른 worktree에서 서로 다른 파일을 수정**한다. 충돌 없음. 작업 처리량이 3배.
+
+각 worktree는 독립된 디렉토리라서 dev 서버, 빌드 캐시, node_modules가 분리된다. 한쪽이 깨져도 다른 쪽에 영향 없다.
+
+## 셋업 스크립트
+
+매번 `git worktree add`를 손으로 치면 귀찮다. 내가 쓰는 함수.
+
+```bash
+# .zshrc에 추가
+function wta() {
+  local branch=$1
+  # 브랜치명의 슬래시는 디렉토리 구분자가 되므로 -로 치환
+  local dir="../$(basename $(pwd))-${branch//\//-}"
+  git worktree add "$dir" "$branch" || git worktree add "$dir" -b "$branch"
+  cd "$dir"
+}
+
+function wtl() {
+  git worktree list
+}
+
+function wtr() {
+  # wta가 만든 규칙과 동일하게 경로를 복원해서 제거
+  local branch=$1
+  local dir="../$(basename $(pwd))-${branch//\//-}"
+  git worktree remove "$dir"
+}
+```
+
+사용:
+
+```bash
+wta hotfix/login    # ../joowonkoh-dev-hotfix-login으로 이동
+wtl                  # worktree 목록
+wtr hotfix/login     # 같은 인자로 제거
+```
+
+## node_modules는 어떻게 처리하나
+
+worktree마다 `node_modules`를 따로 깔면 디스크가 빨리 찬다. 두 가지 해결책이 있다.
+
+### 방법 1: pnpm (권장)
+
+`pnpm`은 의존성을 글로벌 store에 두고 worktree에는 심볼릭 링크만 만든다. 디스크 사용이 거의 없다.
+
+```bash
+brew install pnpm
+pnpm install
+```
+
+`pnpm-lock.yaml`을 git에 올리면 다른 머신에서도 동일하게 동작한다.
+
+### 방법 2: bun
+
+`bun install`도 비슷하게 빠르다. 다만 일부 패키지 호환성 이슈가 가끔 있다.
+
+`npm`으로 worktree마다 `node_modules`를 까는 건 마지막 선택. 디스크가 가장 빨리 찬다.
+
+## AI 에이전트와의 조합
+
+[Claude Code Plan Mode](/blog/2026041201-claude-code-plan-mode)와 worktree를 같이 쓰는 패턴이 강력하다.
+
+```text
+1. 메인 worktree에서 큰 기능 설계 (Plan Mode)
+2. 계획서가 단계 3개로 나뉘면, 각 단계를 다른 worktree에 펼침
+3. 각 worktree에서 독립 인스턴스가 그 단계를 구현
+4. 완료된 worktree부터 차례로 PR 생성, 머지
+5. 머지 안 된 worktree는 main을 rebase로 받아서 충돌 해결
+```
+
+병렬화의 핵심은 **단계 간 의존성을 미리 끊어두는 것**이다. Plan Mode에서 의존성 그래프를 같이 그린 다음, 의존성 없는 단계들을 worktree로 분리한다.
+
+## 흔한 함정
+
+### 함정 1: 같은 브랜치를 두 worktree에 둘 수 없다
+
+```bash
+git worktree add ../foo main
+git worktree add ../bar main   # 에러: fatal: 'main' is already checked out at ...
+```
+
+같은 브랜치를 두 곳에서 체크아웃하는 건 git이 막는다. 로컬에 같은 작업이 두 곳에 있으면 충돌이 뻔하다. 일부러 같은 브랜치의 내용을 두 곳에서 보려면 그중 한쪽을 detached HEAD로 만든다. `--detach`에 브랜치명을 commit-ish로 넘기면 된다.
+
+```bash
+git worktree add --detach ../bar main
+```
+
+이러면 한 곳은 `main`을 추적하고, 한 곳은 `main`이 가리키는 커밋에 분리된 상태로 붙는다. (`cd ../bar`에서 `git checkout main`을 하면 다시 브랜치를 체크아웃하려다 같은 에러가 나니, 처음부터 `--detach`로 만든다.)
+
+### 함정 2: 환경 변수, .env 파일
+
+`.env` 파일은 git에 안 올리니까 worktree마다 따로 만들어야 한다. 잊으면 dev 서버가 안 뜬다. 셋업 스크립트에 `cp ../main/.env .env`를 한 줄 추가한다.
+
+### 함정 3: IDE 인덱싱
+
+VS Code, Cursor, IntelliJ는 새 폴더를 열면 다시 인덱싱한다. 첫 1~2분은 느릴 수 있다. 그래도 한 번 인덱싱되면 그 이후는 빠르다.
+
+### 함정 4: worktree 폴더를 git ignore에 안 넣음
+
+worktree를 부모 폴더 안에 만들면(`./worktrees/hotfix`) 메인 git이 그 폴더를 추적하려 한다. 부모 디렉토리에 만들거나, `.gitignore`에 추가한다.
+
+내 추천은 부모 디렉토리에 만드는 것. 메인 폴더와 형제 관계라서 깔끔하다.
+
+```bash
+git worktree add ../joowonkoh-dev-hotfix hotfix
+```
+
+## 정리
+
+`git worktree`는 git 기본 기능인데 잘 안 쓰인다. 한 번 써보면 `git stash`로 작업 중단하던 시절이 답답하게 느껴진다.
+
+핵심 가치 세 가지:
+
+1. **컨텍스트 보존** — 작업 중인 IDE, dev 서버, 빌드 캐시가 안 흔들린다
+2. **병렬 작업** — 메인 + 핫픽스, 또는 AI 에이전트 멀티 인스턴스
+3. **PR 리뷰가 빨라진다** — 남의 PR을 받아 직접 돌리는 비용이 낮아진다
+
+내가 추천하는 시작점은 단순하다. 다음 핫픽스 요청이 들어왔을 때 `git stash` 대신 `git worktree add`를 써본다. 한 번만 써보면 그 다음부터 자연스럽게 손이 간다. AI 에이전트와 조합하면 효과는 곱절이다.

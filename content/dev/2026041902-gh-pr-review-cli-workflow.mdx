@@ -1,0 +1,242 @@
+---
+title: "터미널에서 GitHub PR 리뷰까지 끝내는 법: gh CLI 워크플로우"
+description: "브라우저를 거치지 않고 PR 생성, 코멘트, 리뷰, 머지를 모두 터미널에서 처리하는 gh CLI 워크플로우. gh pr diff부터 gh pr view --comments까지 실전 명령어 모음."
+date: "2026-04-19"
+tags: ["Dev", "GitHub", "CLI"]
+---
+
+## 브라우저로 PR 보러 가는 시간이 아깝다
+
+PR 작업은 보통 이렇게 흘러간다.
+
+1. 코드 작성 (터미널/에디터)
+2. 커밋, 푸시 (터미널)
+3. **브라우저 열기** → GitHub 접속 → PR 만들기
+4. **브라우저** → 리뷰어 지정, 라벨 추가
+5. **브라우저** → 코멘트 확인, 답변
+6. **브라우저** → 머지
+
+3~6번에서 컨텍스트 전환이 일어난다. 터미널에서 코드 만지다가, 브라우저로 가서 다른 작업을 하고, 다시 돌아와서 코드를 만진다. 매번 약간씩 흐름이 끊긴다.
+
+`gh` CLI를 본격적으로 쓰기 시작한 다음부터 이 흐름이 한 곳에서 끝난다. **PR 생성부터 머지까지 모든 게 터미널 안에서.**
+
+## 설치와 인증
+
+```bash
+brew install gh
+gh auth login
+```
+
+GitHub 계정으로 인증하면 끝. 이후로는 모든 `gh` 명령이 그 계정으로 동작한다. [기존 글](/blog/2026041101-git-github-cli-commands)에서 기본 명령어를 다뤘다. 이 글은 PR 리뷰 워크플로우에 집중한다.
+
+## 작업 1: PR 만들기
+
+작업 브랜치에서 푸시 후 PR 생성.
+
+```bash
+gh pr create --fill
+```
+
+`--fill`은 마지막 커밋 메시지를 PR 제목/본문으로 자동 채운다. 커밋 메시지를 잘 적는 습관이 있으면 이 한 줄로 PR이 생긴다.
+
+좀 더 통제하려면:
+
+```bash
+gh pr create \
+  --title "feat: OAuth 로그인 추가" \
+  --body "$(cat <<'EOF'
+## 변경 사항
+- Google/GitHub OAuth 추가
+- /api/auth/[provider] 엔드포인트
+
+## 테스트
+- [x] 로그인 흐름
+- [x] 토큰 갱신
+EOF
+)" \
+  --base main \
+  --reviewer alice,bob
+```
+
+리뷰어 지정도 한 번에. PR이 만들어지면 URL이 출력된다.
+
+## 작업 2: PR 목록 보기
+
+```bash
+gh pr list                  # 내 레포의 열린 PR
+gh pr list --author "@me"   # 내가 만든 PR
+gh pr list --search "is:open is:pr review-requested:@me"  # 내가 리뷰해야 할 PR
+```
+
+가장 자주 쓰는 건 마지막 줄이다. 리뷰 요청받은 PR을 한눈에 본다. alias로 박아두면 좋다.
+
+```bash
+alias todo-prs='gh pr list --search "is:open is:pr review-requested:@me"'
+```
+
+## 작업 3: PR diff 보기 (브라우저 안 열고)
+
+```bash
+gh pr diff 123
+```
+
+PR 번호를 넣으면 diff가 터미널에 뜬다. delta가 깔려 있으면 자동으로 색상 입혀진 diff가 나온다.
+
+```bash
+gh pr diff 123 --name-only   # 변경된 파일 목록만
+gh pr diff 123 --patch       # patch 포맷으로 출력
+```
+
+`gh pr checkout 123`으로 PR 브랜치를 직접 받아서 로컬에서 실행해볼 수도 있다. 작은 변경은 diff만 봐도 충분하지만, 동작 검증이 필요하면 체크아웃이 답이다.
+
+```bash
+gh pr checkout 123
+npm install
+npm run dev
+```
+
+## 작업 4: 리뷰 코멘트 달기
+
+여기가 가장 강력하다.
+
+```bash
+gh pr review 123 --approve --body "LGTM"
+gh pr review 123 --request-changes --body "테스트 케이스가 빠진 것 같아요"
+gh pr review 123 --comment --body "한 가지만 확인 부탁드립니다"
+```
+
+세 가지 옵션이 있다. `--approve`(승인), `--request-changes`(변경 요청), `--comment`(코멘트만).
+
+라인별 코멘트는 직접은 어렵다. 이런 건 IDE 통합(VS Code GitHub PR 확장)을 쓰는 게 낫다. 또는 [code-review 슬래시 커맨드](/blog/2026042401-ultrareview-multi-agent)로 자동화하는 방법도 있다.
+
+## 작업 5: 코멘트 확인
+
+PR에 달린 코멘트들을 본다.
+
+```bash
+gh pr view 123 --comments
+```
+
+터미널에 코멘트가 시간순으로 출력된다. 누가 뭐라고 했는지 한눈에 본다. 답변도 붙여서 한다.
+
+```bash
+gh pr comment 123 --body "수정했습니다, 다시 확인 부탁드립니다"
+```
+
+## 작업 6: CI 상태 확인
+
+PR이 머지 가능한지 한 번에 본다.
+
+```bash
+gh pr status         # 내 레포의 PR 상태 요약
+gh pr checks 123     # 특정 PR의 CI 상태
+```
+
+CI가 깨져 있으면 어디가 깨졌는지 보여준다.
+
+```bash
+gh run list --branch feature/login   # 해당 브랜치의 워크플로우 실행 목록
+gh run view 12345 --log              # 실패한 잡의 로그
+```
+
+CI 로그를 보러 브라우저 갈 일이 거의 없어진다.
+
+## 작업 7: 머지
+
+```bash
+gh pr merge 123 --squash --delete-branch
+```
+
+`--squash`로 squash merge, `--delete-branch`로 머지 후 브랜치 삭제까지 한 번에. `--rebase`, `--merge`(머지 커밋)도 옵션으로 있다.
+
+자동 머지 (CI 통과 시 자동 머지)도 한 줄.
+
+```bash
+gh pr merge 123 --auto --squash
+```
+
+## 한 화면 워크플로우 예시
+
+PR 하나를 처음부터 끝까지 처리하는 흐름.
+
+```bash
+# 1. 작업 브랜치 만들기
+git checkout -b feature/search
+
+# 2. 작업 후 커밋
+git commit -am "feat: 검색 기능 추가"
+git push -u origin feature/search
+
+# 3. PR 생성
+gh pr create --fill --reviewer alice,bob
+
+# 4. CI 통과 기다리기
+gh pr checks --watch
+
+# 5. 코멘트 확인
+gh pr view --comments
+
+# 6. 추가 커밋, 푸시 (PR이 자동 업데이트됨)
+git commit -am "test: 검색 케이스 추가"
+git push
+
+# 7. 승인 받으면 머지
+gh pr merge --squash --delete-branch
+```
+
+7단계 모두 터미널에서 끝난다. 브라우저는 한 번도 안 열렸다.
+
+## 자주 쓰는 alias
+
+내 .zshrc에 박아둔 것들.
+
+```bash
+alias prc='gh pr create --fill'
+alias prl='gh pr list --author "@me"'
+alias prv='gh pr view --comments'
+alias prd='gh pr diff'
+alias prm='gh pr merge --squash --delete-branch'
+alias prw='gh pr checks --watch'
+alias todo-prs='gh pr list --search "is:open is:pr review-requested:@me"'
+```
+
+`prc` 한 줄로 PR이 만들어지고, `prw`로 CI를 보다가, `prm`으로 머지. 손에 익으면 PR 한 사이클이 분 단위로 짧아진다.
+
+## fzf와 합치면 더 강해진다
+
+PR 번호를 외울 필요 없이 fzf로 고른다.
+
+```bash
+function fpr() {
+  gh pr list | fzf | awk '{print $1}'
+}
+
+# 사용
+gh pr view $(fpr)
+gh pr checkout $(fpr)
+gh pr merge $(fpr) --squash
+```
+
+`fpr` 함수를 쓰면 PR 목록에서 fzf로 검색해서 번호를 뽑아낸다. 그 번호를 다른 명령에 파이프한다. 매우 자주 쓴다.
+
+## 흔한 함정
+
+### 함정 1: 인증 만료
+
+`gh auth login`은 토큰을 발급받는다. 가끔 만료된다. `gh auth status`로 확인하고, 만료됐으면 `gh auth refresh`.
+
+### 함정 2: 여러 GitHub 계정
+
+회사 계정과 개인 계정을 동시에 쓰는 경우, gh는 한 계정만 활성이다. `gh auth switch`로 바꾼다. 또는 두 환경을 환경 변수로 분기한다.
+
+### 함정 3: PR 번호 vs 브랜치 이름
+
+`gh pr view`는 PR 번호 또는 현재 브랜치 둘 다 받는다. 헷갈리면 그냥 PR 번호를 쓰는 게 안전하다.
+
+## 정리
+
+`gh` CLI는 단순히 "터미널에서 PR 만들기"가 아니다. **개발 흐름이 한 곳에서 끝나게 만드는 도구**다. 코드 작성 → 커밋 → PR → 리뷰 → 머지 — 이 사이에 컨텍스트 전환이 사라지면 작업 속도가 분 단위로 빨라진다.
+
+처음에는 명령어가 많아 보인다. 자주 쓰는 5개(`pr create`, `pr list`, `pr view`, `pr diff`, `pr merge`)만 익히면 된다. 나머지는 필요할 때 `gh pr --help`로 찾으면 된다.
+
+이 글의 alias 7개를 .zshrc에 박아두는 것을 추천한다. 한 글자~세 글자로 PR 한 사이클을 다 누를 수 있다. 그쯤 되면 브라우저로 GitHub 가는 횟수가 하루에 한 번 미만으로 떨어진다.

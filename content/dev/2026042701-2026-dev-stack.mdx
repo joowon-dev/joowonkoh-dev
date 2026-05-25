@@ -1,0 +1,182 @@
+---
+title: "2026년 내 개발 스택 정리: 들어오고 나간 것들"
+description: "2026년 4월 기준으로 매일 쓰는 도구를 한 화면에 정리한다. 1년 동안 들어온 것, 나간 것, 살아남은 것을 카테고리별로 비교하며 변화의 패턴을 본다."
+date: "2026-04-27"
+tags: ["Dev", "회고", "스택"]
+---
+
+## 한 해의 마지막에 스택을 정리하는 이유
+
+매년 4월 즈음 한 번씩 내 개발 스택을 정리한다. 이유는 단순하다. **무엇을 쓰는지 의식하지 않고 쓰면, 안 쓰는 도구도 계속 자리만 차지한다.**
+
+한 번 정리해보면 절반쯤은 "이거 안 쓴 지 오래됐는데"가 나온다. 거기서 정리할 게 보인다. 또 새로 들어온 도구가 무엇인지, 그게 어떤 일을 줄였는지 추적할 수 있다.
+
+이 글은 2026년 4월 기준 내 개발 스택의 단면이다. 1년 후에 같은 글을 쓰면 또 달라져 있을 거다. 그게 회고의 가치다.
+
+## 한 화면 요약
+
+| 카테고리 | 2026년 4월 기준 |
+|----------|-----------------|
+| 에디터 | VS Code + Cursor + Claude Code |
+| 터미널 | cmux + tmux + zsh |
+| AI 코딩 | Claude Code (Opus 4.7) + OMC + Superpowers |
+| 언어 | TypeScript / Python / Go |
+| 프레임워크 | Next.js 15 + Tailwind v4 |
+| DB | Supabase (Postgres + Auth + Storage) |
+| 호스팅 | Cloudflare Pages + Cloudflare Workers |
+| 노트 | Obsidian (iCloud 동기화) |
+| 모니터링 | Sentry + GA + Search Console |
+| 패키지 관리 | mise + brew + pnpm |
+| Git | gh CLI + lazygit |
+| 이미지 처리 | sharp |
+| 폰트 | Pretendard |
+
+이게 매일 쓰는 메인 스택이다. 더 깊이는 카테고리별로.
+
+## 들어온 것 (1년 안에)
+
+### 1. Claude Code
+
+올해 가장 큰 변화. 단순 자동완성에서 에이전트 기반 코딩으로 패러다임이 바뀌었다. [Plan Mode](/blog/2026041201-claude-code-plan-mode), [Hooks](/blog/2026041301-claude-code-hooks-automation), [멀티 인스턴스](/blog/2026041701-tmux-cmux-multi-session)를 매일 쓴다.
+
+작년 같은 글을 썼다면 Claude Code는 없었거나 한 줄 언급이었을 거다.
+
+### 2. OMC + Superpowers
+
+Claude Code 위에 얹은 플러그인. autopilot, ultrawork, deep-interview 같은 모드와 워크플로우 스킬이 일하는 방식을 또 한 번 바꿨다. [관련 글](/blog/2026040701-oh-my-claudecode).
+
+### 3. Tailwind v4
+
+`@theme inline`로 CSS 변수와 Tailwind 토큰이 합쳐졌다. `tailwind.config.ts`가 사라지고 CSS 파일에서 직접 테마를 정의한다. [다크모드 글](/blog/2026042202-tailwind-dark-mode-only)에서 다뤘다.
+
+### 4. mise
+
+nvm + pyenv + gvm + direnv를 하나로 합친 도구. 셸 시작이 1초 빨라졌다. [관련 글](/blog/2026041802-mise-version-manager).
+
+### 5. Obsidian
+
+Notion에서 옮겨왔다. AI 도구와 통합이 매끄러워서. 모든 노트가 로컬 마크다운이라 [블로그 글감 파이프라인](/blog/2026042301-obsidian-blog-pipeline)에 그대로 쓸 수 있다.
+
+### 6. cmux
+
+Warp에서 옮겼다. GPU 가속 터미널인데 가벼워서 노트북 발열이 줄었다. [관련 글](/blog/2026040204-warp-to-cmux).
+
+### 7. pnpm
+
+npm에서 갈아탔다. 의존성 설치 속도, 디스크 사용량, [worktree와의 호환성](/blog/2026042302-git-worktree-parallel)이 모두 좋다.
+
+## 나간 것
+
+### 1. Notion
+
+Obsidian으로 갈아탔다. Notion이 나빴던 게 아니라, AI 통합 때문에 단순 마크다운 파일이 필요해졌다.
+
+### 2. Vercel
+
+Cloudflare Pages로 옮겼다. 무료 플랜의 상업적 사용 제한 때문. [관련 글](/blog/2026040501-deploying-to-cloudflare-pages).
+
+### 3. Postman
+
+API 테스트는 httpie와 curl로 충분해졌다. AI가 curl 명령어를 잘 써준다.
+
+### 4. Oh My Zsh
+
+플러그인 4개 + Starship으로 대체했다. 셸 시작 시간이 200ms → 5ms로 줄었다.
+
+### 5. Stack Overflow에 직접 가기
+
+AI가 1차 답을 주니 SO에 직접 가는 횟수가 줄었다. 검증할 때만 가끔.
+
+### 6. fish 셸
+
+6개월 시도 후 zsh로 돌아왔다. POSIX 호환성과 AI 도구 친화성 때문. [관련 글](/blog/2026041702-zsh-to-fish-and-back).
+
+### 7. ESLint 강력한 설정
+
+큰 ESLint 규칙 세트보다, Prettier + 최소 ESLint + AI 코드 리뷰 조합이 더 효과적이라는 걸 알게 됐다.
+
+## 살아남은 것 (몇 년째)
+
+### 1. VS Code
+
+Cursor와 Claude Code를 같이 써도 VS Code가 메인 자리를 지킨다. 안정성과 익스텐션 생태계가 결정적.
+
+### 2. TypeScript
+
+JavaScript에서 TypeScript로 갈아탄 후 돌아갈 일이 없다. AI 도구도 TypeScript에서 더 정확한 코드를 만든다 (타입 정보가 컨텍스트가 된다).
+
+### 3. Pretendard 폰트
+
+한글 + 영문 조합에서 가장 깔끔하다. 다른 한글 웹 폰트로 갈아타고 싶은 욕구가 안 든다.
+
+### 4. brew
+
+macOS 패키지 관리는 여전히 brew. 대안(MacPorts 등)도 있지만 생태계가 비교 안 된다.
+
+### 5. Git CLI
+
+GUI 안 쓰고 CLI 쓴 지 몇 년째. 특히 [gh CLI 도입](/blog/2026041101-git-github-cli-commands) 후 GUI를 쓸 일이 거의 없어졌다.
+
+## 1년 사이 일하는 방식의 변화
+
+스택의 변화가 곧 일하는 방식의 변화다. 1년 사이 가장 크게 변한 3가지.
+
+### 1. AI 도구가 메인이 됐다
+
+작년에는 자동완성 보조 정도였는데, 지금은 코딩의 60% 이상이 AI와의 협업이다. 코드 한 줄을 직접 치는 시간보다 AI에게 지시하고 검증하는 시간이 더 많다.
+
+이게 좋은 일인지 나쁜 일인지는 [AI 의존 부작용 글](/blog/2026042502-ai-dependence-side-effects)에서 따로 다뤘다. 지금 시점에서는 부작용을 의식하면서 잘 쓰는 게 답이라고 생각한다.
+
+### 2. CLI 도구 비중이 커졌다
+
+GUI보다 CLI가 메인. AI 도구가 CLI를 더 잘 다루기 때문에, CLI 친화적인 도구가 자연스럽게 선택된다. tmux, lazygit, gh, brew, mise 모두 CLI다.
+
+### 3. 도구를 줄이려는 의식
+
+도구를 새로 깔기 전에 "정말 필요한가?"를 한 번 더 묻게 됐다. 도구 수가 늘어나면 컨텍스트 전환 비용이 누적된다는 걸 경험으로 안다. [주니어→미들 도구 변화 글](/blog/2026042601-junior-to-mid-tools)에서 같은 패턴을 다뤘다.
+
+## 다음 1년 예측
+
+추측이지만, 다음 1년 내 변화 후보들.
+
+### 들어올 가능성 높은 것
+
+- **AI 모델 다양화**: Claude만이 아니라 Gemini, GPT, 또는 오픈소스 모델 병용
+- **로컬 LLM**: 작은 작업은 노트북에서 돌리는 모델로 (Ollama, LM Studio)
+- **MCP 서버 직접 구축**: [작은 서버 만들기 글](/blog/2026041202-build-mcp-server)에서 다룬 패턴이 일상화될 듯
+- **Bun**: Node 자리를 일부 잠식할 가능성
+
+### 나갈 가능성 있는 것
+
+- **현재 형태의 자동완성**: AI가 워크플로우 단위로 일하면, 라인 단위 자동완성의 역할이 줄어들 수도
+- **PR 코멘트 도구**: AI 자동 리뷰가 사람 1차 리뷰를 대체할 수도
+
+### 살아남을 것
+
+- TypeScript, Pretendard, brew, VS Code, Git CLI는 5년 후에도 쓰고 있을 것 같다
+- Obsidian — 단순함이 강점이라 잘 안 흔들릴 듯
+
+## 도구 정리하는 방법
+
+스택을 정리할 때 쓰는 체크리스트.
+
+1. **마지막 30일 사용 빈도** — 한 달 내 안 썼으면 후보
+2. **대체 가능 여부** — 다른 도구로 같은 일을 할 수 있나
+3. **마찰** — 이 도구를 쓰는 데 드는 비용이 가치보다 큰가
+4. **AI 통합** — AI 도구가 잘 다루는 도구인가
+5. **장기 유지** — 1년 후에도 쓰고 있을 가능성이 있나
+
+이 다섯 질문 중 두 개 이상에서 빨간 신호가 나면 정리 후보다.
+
+## 정리
+
+내 2026년 4월 스택의 핵심을 한 줄씩.
+
+1. **AI 코딩이 메인** — Claude Code + OMC + Superpowers
+2. **CLI 우선** — 모든 도구가 AI 친화적인 형태
+3. **단순함 추구** — 도구 수를 의식적으로 줄임
+4. **로컬 + 클라우드 균형** — 노트는 로컬, 호스팅은 클라우드
+
+이 글이 1년 후의 나에게 줄 메시지는 단순하다. **변화 자체가 지표다.** 1년 사이 들어온 것, 나간 것, 살아남은 것을 보면 내가 어디로 가고 있는지 보인다.
+
+스택은 정답이 없다. 다만 자기 일하는 방식과 맞으면 좋은 스택이다. 1년에 한 번 정리하면, 자기 일하는 방식이 어떻게 변하는지를 거꾸로 알게 된다. 그게 이 회고의 진짜 의미다.

@@ -1,0 +1,217 @@
+---
+title: "블로그 이미지 178MB → 8.5MB로 줄인 압축 파이프라인"
+description: "블로그 글 4개를 추가했더니 레포가 178MB가 됐다. sharp + WebP + 자동 리사이즈 스크립트로 8.5MB까지 줄였다. 이미지 워크플로우와 빌드 통합 방법까지."
+date: "2026-04-21"
+tags: ["Dev", "이미지", "최적화"]
+---
+
+## 레포가 갑자기 178MB가 됐다
+
+주말 동안 카페 후기 글 4개를 썼다. 글 하나에 사진 5~7장이 들어갔다. 푸시하고 나서 `git status`를 보다가 깜짝 놀랐다.
+
+```bash
+$ du -sh public/images
+178M    public/images
+```
+
+178메가. 사진 28장이 평균 6MB씩 차지하고 있었다. iPhone에서 그대로 옮긴 사진들이 4032x3024 해상도, 4~10MB짜리였다.
+
+블로그 페이지가 무겁고, 빌드 시간도 늘어나고, git clone 시간이 길어진다. 압축 파이프라인을 짤 시점이었다. 결과적으로 178MB → 8.5MB(95% 감소)까지 줄였다. 이 글은 그 과정이다.
+
+## 문제 진단
+
+먼저 이미지가 왜 큰지 확인.
+
+- **해상도**: 4032x3024 (iPhone 기본). 실제 블로그에서는 800px 폭이면 충분
+- **포맷**: HEIC 또는 JPEG. WebP는 같은 화질에서 30% 작다
+- **품질**: 100%. 80% 정도로 떨어뜨려도 사람 눈에는 차이 없다
+
+세 가지를 다 잡으면 90% 이상 줄어든다.
+
+## 도구 선택
+
+이미지 처리 라이브러리는 `sharp`가 사실상 표준이다. Node.js 환경에서 가장 빠르고 안정적이다.
+
+```bash
+npm install -D sharp
+```
+
+(`-D`로 devDependency. 빌드/스크립트 용도라 런타임 번들에는 안 들어간다.)
+
+CLI 도구로는 `cwebp`(Google이 만든 WebP 인코더)도 있다. 둘 다 결과는 비슷한데, sharp가 Node 스크립트로 통합하기 편해서 그걸 골랐다.
+
+## 압축 스크립트
+
+`scripts/compress-images.ts`를 만든다.
+
+```typescript
+import sharp from "sharp";
+import fs from "node:fs/promises";
+import path from "node:path";
+
+const INPUT_DIR = "public/images-raw";   // 원본
+const OUTPUT_DIR = "public/images";       // 압축 결과
+const MAX_WIDTH = 1600;                   // 최대 폭
+const QUALITY = 80;                       // WebP 품질
+
+async function processImage(inputPath: string, outputPath: string) {
+  const img = sharp(inputPath);
+  const meta = await img.metadata();
+
+  let pipeline = img;
+
+  // 가로가 MAX_WIDTH보다 크면 리사이즈
+  if (meta.width && meta.width > MAX_WIDTH) {
+    pipeline = pipeline.resize({ width: MAX_WIDTH });
+  }
+
+  // WebP로 변환 + 품질 80
+  await pipeline.webp({ quality: QUALITY }).toFile(outputPath);
+}
+
+async function main() {
+  const dirs = await fs.readdir(INPUT_DIR);
+  for (const dir of dirs) {
+    const inDir = path.join(INPUT_DIR, dir);
+    const outDir = path.join(OUTPUT_DIR, dir);
+    await fs.mkdir(outDir, { recursive: true });
+
+    const files = await fs.readdir(inDir);
+    for (const file of files) {
+      const ext = path.extname(file).toLowerCase();
+      if (![".jpg", ".jpeg", ".png", ".heic"].includes(ext)) continue;
+
+      const outName = file.replace(/\.\w+$/, ".webp");
+      const inPath = path.join(inDir, file);
+      const outPath = path.join(outDir, outName);
+
+      await processImage(inPath, outPath);
+      console.log(`✓ ${file} → ${outName}`);
+    }
+  }
+}
+
+main();
+```
+
+`tsx scripts/compress-images.ts`로 실행. 원본은 `public/images-raw`에 두고, 압축 결과는 `public/images`로 나간다.
+
+`.gitignore`에 raw 폴더를 추가한다.
+
+```text
+public/images-raw/
+```
+
+이러면 git에는 압축본만 들어간다.
+
+## 결과
+
+178MB → 8.5MB. 95% 감소.
+
+| 항목 | 원본 | 압축 후 |
+|------|------|---------|
+| 파일당 평균 크기 | 6.4MB | 290KB |
+| 총 크기 | 178MB | 8.5MB |
+| 해상도 | 4032x3024 | 1600x1200 |
+| 포맷 | JPEG | WebP |
+
+블로그 페이지 로드 속도가 체감으로 5배 정도 빨라졌다. PageSpeed Insights에서 모바일 점수가 60점대에서 90점대로 올랐다.
+
+## 빌드 통합
+
+매번 손으로 스크립트를 돌리면 잊는다. `package.json`에 빌드 전 자동 실행으로 박는다.
+
+```json
+{
+  "scripts": {
+    "compress": "tsx scripts/compress-images.ts",
+    "prebuild": "npm run compress",
+    "build": "next build"
+  }
+}
+```
+
+`prebuild`는 `build` 직전에 자동 실행된다. `npm run build`만 해도 압축이 먼저 돈다.
+
+## 캐시 추가
+
+스크립트가 매번 모든 파일을 다시 처리하면 느리다. mtime 기반 캐시를 추가.
+
+```typescript
+async function processImage(inputPath: string, outputPath: string) {
+  // 출력 파일이 이미 있고 입력보다 새로우면 skip
+  try {
+    const inStat = await fs.stat(inputPath);
+    const outStat = await fs.stat(outputPath);
+    if (outStat.mtimeMs > inStat.mtimeMs) {
+      console.log(`- ${path.basename(inputPath)} (cached)`);
+      return;
+    }
+  } catch {}
+
+  // 압축 로직 (위와 동일)
+}
+```
+
+이제 변경된 파일만 다시 처리한다. 사진 100장 중 1장만 추가했으면 그 1장만 처리한다.
+
+## Next.js Image 컴포넌트와의 관계
+
+Next.js의 `<Image>` 컴포넌트는 자체 최적화 기능이 있다. 빌드 시 또는 요청 시 이미지를 리사이즈하고 포맷 변환한다.
+
+근데 [Cloudflare Pages 환경](/blog/2026040501-deploying-to-cloudflare-pages)에서는 `images.unoptimized: true`로 끄는 게 일반적이다. Cloudflare는 Next.js Image Optimization을 직접 지원 안 한다.
+
+그래서 직접 압축이 답이다. 빌드 타임에 미리 압축해두면 런타임 최적화가 필요 없다.
+
+## 추가 최적화: 반응형 이미지
+
+스크롤하면서 보는 모바일에서는 800px 폭이면 충분하고, 데스크톱 retina에서는 1600px이 좋다. 두 사이즈를 모두 만들어두고 `srcset`으로 분기한다.
+
+```typescript
+const SIZES = [800, 1600];
+
+for (const width of SIZES) {
+  await sharp(inputPath)
+    .resize({ width })
+    .webp({ quality: 80 })
+    .toFile(outputPath.replace(".webp", `-${width}.webp`));
+}
+```
+
+`<img srcset="...-800.webp 800w, ...-1600.webp 1600w">`로 쓰면 브라우저가 화면에 맞는 사이즈를 받는다. 모바일 사용자는 800KB 대신 200KB만 받는다.
+
+다만 복잡도가 늘어나서 나는 일단 1600px 단일 버전만 쓰고 있다. 진짜 사용자가 늘어나면 그때 다단계 srcset을 도입할 생각이다.
+
+## 흔한 함정
+
+### 함정 1: HEIC 처리
+
+iPhone에서 옮긴 HEIC 파일은 sharp가 기본 지원 안 한다. macOS에서는 `sips`로 미리 JPEG로 변환하거나, `heic-convert` 패키지를 추가로 깐다.
+
+```bash
+brew install libheif
+```
+
+또는 macOS Finder에서 HEIC 파일을 우클릭 → Quick Actions → Convert Image로 미리 변환한다.
+
+### 함정 2: 메타데이터 보존
+
+EXIF 데이터(위치, 카메라 정보)가 그대로 들어 있으면 개인 정보가 노출될 수 있다. sharp는 기본적으로 EXIF를 제거한다. `withMetadata()`를 명시적으로 부르지 않는 한 안전.
+
+### 함정 3: 큰 PNG는 WebP보다 AVIF가 유리
+
+스크린샷처럼 텍스트가 많은 이미지는 PNG가 무겁다. sharp의 `.avif()`로 AVIF 출력을 추가하면 더 작아진다. 다만 AVIF 지원 안 하는 옛 브라우저가 있으니 picture 태그로 fallback을 함께 둔다.
+
+## 정리
+
+블로그 이미지 압축은 한 번 셋업하면 평생 자동이다. **sharp + WebP + mtime 캐시** 조합이 표준이다.
+
+내 셋업의 결론은 단순하다.
+
+1. 원본은 `public/images-raw/`에 둔다 (gitignore)
+2. `tsx scripts/compress-images.ts`로 자동 압축
+3. `prebuild`에 박아두면 빌드마다 자동 실행
+
+178MB → 8.5MB로 줄어든 결과는 단순한 숫자가 아니다. 페이지 로드 속도, 모바일 사용자 경험, 빌드 시간, git 작업 속도가 모두 좋아진다. 한 번의 스크립트가 평생의 차이를 만든다.
+
+[글 4개를 추가하면서 178MB로 늘어났던 그 시점](/blog/2026040502-blog-image-compression)이 이 작업의 트리거였다. 작은 마찰이 누적되기 전에 자동화하는 게 답이다.

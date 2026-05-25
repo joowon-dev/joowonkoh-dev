@@ -1,0 +1,167 @@
+---
+title: "Cloudflare Pages 배포 시 빌드 캐시 이슈와 해결기"
+description: "Cloudflare Pages 빌드가 매번 처음부터 도는 문제, 캐시가 적용 안 되는 이유, _next 캐싱 충돌, 무효화 시점까지 — 실제로 부딪힌 빌드 캐시 이슈와 해결법을 정리한다."
+date: "2026-04-20"
+tags: ["Dev", "Cloudflare", "배포"]
+---
+
+## 빌드가 5분에서 8분으로 늘어났다
+
+Cloudflare Pages에 [Next.js 블로그를 배포한](/blog/2026040501-deploying-to-cloudflare-pages) 직후에는 빌드가 3~5분이었다. 글이 30개로 늘어났을 때 8분으로 늘어났다. 정상이라기엔 너무 느렸다.
+
+빌드 로그를 뒤져보니 매번 `npm install`이 처음부터 돌고 있었다. **빌드 캐시가 동작 안 하는 상태**였다. 캐시만 잡아주면 5분이 다시 1~2분으로 줄어든다.
+
+이 글은 Cloudflare Pages에서 빌드 캐시 관련해 부딪힌 4가지 이슈와 해결 방법이다.
+
+## 이슈 1: 매 빌드마다 npm install이 처음부터 돈다
+
+가장 큰 문제. Cloudflare Pages는 기본적으로 `node_modules`를 캐시한다고 알려져 있지만, 실제로는 일정 조건이 안 맞으면 캐시가 안 된다.
+
+확인 방법: 빌드 로그에서 `Restoring cached dependencies` 또는 `Using cached node_modules` 같은 줄을 찾는다. 없으면 캐시 미스다.
+
+### 원인 1: 빌드 환경 변수 누락
+
+Cloudflare Pages는 `NODE_VERSION` 등 환경 변수가 빌드마다 일관되어야 캐시를 적용한다. 대시보드 → Settings → Environment Variables에서 명시적으로 박아둔다.
+
+```text
+NODE_VERSION=22
+NPM_VERSION=10
+```
+
+이게 없으면 매 빌드마다 노드 버전이 약간 달라지면서 캐시가 깨진다.
+
+### 원인 2: package-lock.json이 git에 없음
+
+`package-lock.json`(또는 `pnpm-lock.yaml`, `yarn.lock`)이 git에 없으면 Cloudflare는 매번 새로운 의존성 트리로 본다. 캐시가 작동하지 않는다.
+
+```bash
+# .gitignore에서 lock 파일이 ignore되고 있지 않은지 확인
+git check-ignore package-lock.json   # 출력이 있으면 ignore 중
+```
+
+ignore 중이면 빼고 커밋한다.
+
+## 이슈 2: 빌드 출력 캐싱이 안 된다
+
+`.next/` 디렉토리는 Next.js의 빌드 산출물이다. Cloudflare Pages가 이걸 자동으로 캐시하지는 않는다. 그래서 매번 처음부터 빌드한다.
+
+해결: `wrangler.toml` 또는 빌드 명령에서 캐시 위치를 명시한다.
+
+```text
+# Build command
+npm ci && npm run build && npx @cloudflare/next-on-pages
+```
+
+`npm ci`는 `package-lock.json`을 그대로 따른다. `npm install`보다 더 결정적이라 캐시 친화적이다.
+
+## 이슈 3: _next 정적 자산 캐시가 적용 안 된다
+
+배포는 끝났는데, 사용자가 캐싱된 옛 버전을 본다. `_next/static/chunks/...` 같은 파일이 브라우저 캐시에서 안 갱신된다.
+
+이건 빌드 캐시가 아니라 **브라우저/엣지 캐시 문제**다. 헤더로 해결한다.
+
+`public/_headers` 파일을 만든다.
+
+```text
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+```
+
+`_next/static/` 아래 파일은 해시가 들어 있어서 영구 캐시 가능. HTML은 매번 새로 받게 한다.
+
+이 두 줄로 정적 자산은 빠르게, HTML은 항상 최신으로 동작한다.
+
+## 이슈 4: 캐시를 강제로 비워야 할 때
+
+Next.js 버전을 올렸거나, 빌드 도구를 바꿨거나, 캐시 자체에 뭔가 깨진 상태가 박혔을 때. Cloudflare Pages 대시보드에서 직접 비울 수 있다.
+
+대시보드 → Pages 프로젝트 → Settings → Builds & deployments → "Clear build cache".
+
+또는 빌드 명령 앞에 캐시 무효화 신호를 박는다.
+
+```text
+# Build command
+rm -rf .next node_modules/.cache && npm ci && npm run build
+```
+
+평소에는 이렇게 안 한다. 빌드 시간이 다시 길어진다. 캐시가 망가졌을 때만 임시로.
+
+## 빌드 시간 단축 팁
+
+캐시 외에도 빌드 자체를 줄이는 방법들이 있다.
+
+### 1. `npm ci` 대신 `pnpm install`
+
+`pnpm`은 의존성 설치가 npm보다 2~3배 빠르다.
+
+```text
+# Build command
+pnpm install --frozen-lockfile && pnpm build && npx @cloudflare/next-on-pages
+```
+
+대시보드에서 `PNPM_VERSION` 환경 변수만 박으면 된다.
+
+### 2. 빌드 시 사용 안 하는 의존성 제거
+
+`devDependencies`에 무거운 패키지가 많으면 빌드 시간이 늘어난다. 사용 안 하는 거 정리.
+
+```bash
+npx depcheck
+```
+
+`depcheck`가 사용 안 하는 의존성을 찾아준다.
+
+### 3. MDX 빌드 결과 캐시
+
+콘텐츠가 많아지면 MDX 파싱이 빌드 시간의 큰 부분이 된다. 빌드 결과를 캐시하면 변경된 파일만 다시 처리한다.
+
+내가 쓰는 패턴:
+
+```typescript
+// scripts/generate-content-index.ts
+import fs from "node:fs";
+import matter from "gray-matter";
+
+const cache = JSON.parse(fs.readFileSync(".cache/posts.json", "utf-8") || "{}");
+
+for (const file of fs.readdirSync("content/blog")) {
+  const stat = fs.statSync(`content/blog/${file}`);
+  if (cache[file]?.mtime === stat.mtimeMs) continue;  // 캐시 히트
+  // 파싱 후 캐시에 저장
+  cache[file] = { mtime: stat.mtimeMs, ...matter(...).data };
+}
+
+fs.writeFileSync(".cache/posts.json", JSON.stringify(cache));
+```
+
+`.cache/`를 git에 올리지는 않지만, 이게 Cloudflare 빌드 캐시에 들어가면 효과를 본다.
+
+## 흔한 함정
+
+### 함정 1: 환경 변수 변경마다 캐시가 깨진다
+
+빌드에서 사용하는 환경 변수가 바뀌면 Cloudflare는 캐시를 무효화한다. 자주 바뀌는 값(예: 빌드 ID)을 환경 변수로 박지 마라. 빌드 시 동적으로 생성한다.
+
+### 함정 2: `wrangler.toml`만 믿지 마라
+
+[이전 글](/blog/2026040501-deploying-to-cloudflare-pages)에서 다룬 nodejs_compat 이슈처럼, `wrangler.toml` 설정의 일부는 Pages가 안 읽는다. 빌드 관련 설정도 마찬가지로 대시보드에서 직접 박는 게 안전하다.
+
+### 함정 3: 프리뷰 환경과 프로덕션 캐시가 분리
+
+Cloudflare Pages는 PR 프리뷰 빌드와 프로덕션 빌드의 캐시가 분리되어 있다. 한쪽에서 캐시가 잘 돼도 다른 쪽은 별개다. 프리뷰가 빠르다고 프로덕션도 빠를 거라 가정하지 마라.
+
+## 정리
+
+Cloudflare Pages 빌드 캐시는 자동이지만, 일정 조건이 안 맞으면 동작 안 한다. 4가지를 한 줄씩 정리한다.
+
+1. `NODE_VERSION` 환경 변수 명시
+2. `package-lock.json`을 git에 포함
+3. `_headers`로 정적 자산 영구 캐싱
+4. 빌드가 깨진 것 같으면 대시보드에서 캐시 비우기
+
+추가로 `pnpm` 도입과 `depcheck`로 의존성 정리만 해도 빌드 시간이 다시 절반 이하로 떨어진다.
+
+내 블로그는 이 셋업으로 빌드 시간이 8분 → 1분 30초로 줄었다. 글 하나 쓰고 푸시한 후 라이브 반영까지 2분이면 끝난다. 빌드가 빠르면 글을 더 자주 쓰게 된다는 부수 효과도 있다.

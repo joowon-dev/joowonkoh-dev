@@ -1,0 +1,205 @@
+---
+title: "tmux + cmux + Claude Code로 동시에 4개 작업 돌리는 멀티 세션 셋업"
+description: "한 화면에서 Claude Code 세 개와 dev 서버를 같이 돌리는 멀티 세션 셋업. tmux와 cmux를 어떻게 조합하고, 키바인딩과 세션 자동화는 어떻게 잡는지 정리한다."
+date: "2026-04-17"
+tags: ["Dev", "터미널", "tmux"]
+---
+
+## 한 작업에 한 터미널이면 손해다
+
+Claude Code를 한 세션만 띄워놓고 작업하면 답답한 순간이 자주 온다. AI가 뭔가 5분짜리 작업을 하는 동안 나는 그저 기다린다. 그동안 다른 일을 같이 하면 처리량이 두 배가 된다.
+
+처음에는 Warp 탭을 여러 개 열었다. 탭이 5개 넘어가면 어디에 뭐가 떠 있는지 잊어버린다. 그래서 [cmux](/blog/2026040204-warp-to-cmux)로 옮겼고, 거기에 tmux를 얹어서 세션 관리를 통째로 바꿨다.
+
+이 글은 한 화면에서 Claude Code 인스턴스 셋과 dev 서버를 같이 돌리는 셋업이다.
+
+## 왜 tmux와 cmux를 같이 쓰는가
+
+둘 다 터미널 관련 도구라서 헷갈릴 수 있다. 역할이 다르다.
+
+- **cmux**: 터미널 에뮬레이터(앱). Warp, iTerm 같은 것의 대체재. GPU 가속, 색감, 폰트 렌더링이 좋다.
+- **tmux**: 터미널 멀티플렉서. 한 터미널 안에서 패널 분할, 세션 관리, 백그라운드 유지를 한다.
+
+cmux가 "창"이라면 tmux는 "그 창 안의 격자"다. 둘은 충돌하지 않고 자연스럽게 합쳐진다.
+
+## 기본 셋업
+
+설치는 brew 한 줄이다.
+
+```bash
+brew install tmux
+```
+
+`~/.tmux.conf`에 최소 설정:
+
+```bash
+# prefix를 Ctrl+A로 (Ctrl+B는 다른 도구와 자주 충돌)
+unbind C-b
+set -g prefix C-a
+bind C-a send-prefix
+
+# 마우스 지원 (패널 클릭, 리사이즈)
+set -g mouse on
+
+# 패널 분할을 직관적으로
+bind | split-window -h
+bind - split-window -v
+
+# 패널 이동을 vim 키로
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+
+# 패널 리사이즈
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+
+# 색상 지원
+set -g default-terminal "screen-256color"
+set -ga terminal-overrides ",*256col*:Tc"
+
+# 창 번호 1부터 시작
+set -g base-index 1
+```
+
+`tmux source ~/.tmux.conf`로 적용한다.
+
+## 4분할 작업 화면
+
+내가 가장 자주 쓰는 레이아웃이다. 한 창을 4분할해서 각각 다른 일을 시킨다.
+
+```text
+┌─────────────────┬─────────────────┐
+│                 │                 │
+│  Claude Code 1  │  Claude Code 2  │
+│  (frontend)     │  (backend)      │
+│                 │                 │
+├─────────────────┼─────────────────┤
+│                 │                 │
+│  Dev Server     │  Logs / Tests   │
+│                 │                 │
+└─────────────────┴─────────────────┘
+```
+
+수동으로 만들 수도 있지만, 매번 같은 레이아웃이면 스크립트로 만든다.
+
+```bash
+#!/bin/bash
+# ~/bin/start-dev-layout.sh
+
+cd ~/joowonkoh-dev
+tmux new-session -d -s dev
+
+# 4분할
+tmux split-window -h
+tmux split-window -v
+tmux select-pane -t 0
+tmux split-window -v
+
+# 각 패널에 명령
+tmux send-keys -t dev:0.0 'claude' C-m       # 좌상: Claude Code 1
+tmux send-keys -t dev:0.1 'npm run dev' C-m  # 좌하: dev server
+tmux send-keys -t dev:0.2 'claude' C-m       # 우상: Claude Code 2
+tmux send-keys -t dev:0.3 'npm test --watch' C-m  # 우하: tests
+
+tmux attach -t dev
+```
+
+`./start-dev-layout.sh` 한 번 실행하면 4분할이 자동으로 만들어진다.
+
+## Claude Code 인스턴스 분리하기
+
+Claude Code 인스턴스 두 개를 띄우면 중요한 게 있다. **각 인스턴스가 다른 디렉토리에서 작업해야 한다.** 안 그러면 같은 파일을 두 인스턴스가 동시에 수정해서 충돌이 난다.
+
+내 패턴:
+- 좌상 인스턴스: `frontend/` 폴더에서 작업
+- 우상 인스턴스: `backend/` 폴더에서 작업
+
+또는 `git worktree`로 같은 레포의 다른 브랜치를 두 폴더에 펼쳐서 각각 다른 인스턴스가 본다. [Git Worktree 글](/blog/2026042302-git-worktree-parallel)에서 더 자세히 다룬다.
+
+## 세션 자동 복원
+
+작업하다가 노트북을 닫고 다시 열면 tmux 세션이 그대로 살아 있다. 그게 tmux의 진짜 매력이다.
+
+`tmux ls`로 살아있는 세션 확인.
+
+```bash
+$ tmux ls
+dev: 4 panes (created Mon Apr 17 09:00:00 2026)
+blog: 2 panes (created Mon Apr 17 11:30:00 2026)
+```
+
+`tmux attach -t dev`로 다시 붙는다. 모든 패널 상태가 그대로다. 실행 중이던 dev 서버도 죽지 않았다.
+
+리부팅하면 세션이 사라진다. 리부팅에도 살리려면 `tmux-resurrect` 플러그인을 쓴다.
+
+```bash
+# ~/.tmux.conf
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+
+run '~/.tmux/plugins/tpm/tpm'
+```
+
+`prefix + Ctrl+s`로 저장, `prefix + Ctrl+r`로 복원. 노트북 재부팅 후에도 4분할 레이아웃과 디렉토리 위치가 그대로 돌아온다.
+
+## 자주 쓰는 키바인딩
+
+prefix(`Ctrl+A`)를 누른 다음 입력하는 키들이다.
+
+| 키 | 동작 |
+|----|------|
+| `\|` | 세로 분할 |
+| `-` | 가로 분할 |
+| `h/j/k/l` | 패널 이동 |
+| `H/J/K/L` | 패널 리사이즈 |
+| `z` | 패널 줌 (한 패널을 전체화면) |
+| `c` | 새 창 |
+| `,` | 창 이름 변경 |
+| `d` | 세션에서 분리(detach) |
+| `s` | 세션 목록에서 선택 |
+| `x` | 패널 닫기 |
+
+`prefix + z`(줌)는 자주 쓴다. Claude Code 출력을 자세히 보고 싶을 때 한 패널만 키운 다음, 다시 `prefix + z`로 원래 레이아웃으로 돌아온다.
+
+## cmux와 합치는 팁
+
+cmux 자체에도 분할 기능이 있다. tmux와 어떤 걸 쓸지 헷갈릴 수 있다.
+
+내 기준:
+- **로컬 단일 머신 작업**: cmux 분할로 충분
+- **여러 SSH 세션, 백그라운드 유지, 리부팅 복원이 필요**: tmux
+
+대부분의 경우 tmux 한 가지만 깊게 익히는 게 효율적이다. cmux는 GPU 렌더링 좋은 "호스트 창"으로 쓰고, 그 안에서 tmux로 세션을 관리한다.
+
+## 흔한 함정
+
+### 함정 1: 두 인스턴스가 같은 파일을 건드린다
+
+가장 자주 만나는 사고다. 좌상 Claude Code가 `App.tsx`를 수정하는 동안 우상도 같은 파일을 수정하면 한쪽 변경이 사라진다. 디렉토리를 분리하거나, 같은 디렉토리에서는 한 명만 쓰기 작업을 하게 한다.
+
+### 함정 2: 너무 많은 패널
+
+4분할이 기능적 최대다. 6분할쯤 가면 글자 크기가 작아져서 가독성이 떨어진다. 화면이 좁아진 만큼 한 패널에서 보는 정보도 줄어든다. 한 화면 4분할이 안전한 한계다.
+
+### 함정 3: 세션 이름을 안 짓는다
+
+`tmux new-session`을 그냥 치면 세션 이름이 `0`, `1`처럼 숫자가 된다. 며칠 후 `tmux ls`로 보면 어떤 세션이 뭐였는지 모른다. **항상 `-s` 옵션으로 이름을 짓는다.**
+
+```bash
+tmux new -s blog       # 블로그 작업용
+tmux new -s api-fix    # API 버그 수정용
+```
+
+이 한 가지 습관만 들어도 세션 관리가 한결 깔끔해진다.
+
+## 정리
+
+tmux + cmux + Claude Code 멀티 인스턴스 조합은 작업 처리량을 체감으로 두 배 가까이 올린다. AI가 한쪽에서 5분 작업하는 동안 다른 쪽에서 다른 일을 한다. 더 이상 멍하니 기다리지 않는다.
+
+처음 셋업하는 데 30분쯤 든다. 이후는 그 셋업이 평생 간다. 한 번 손에 익으면 prefix 키 하나로 패널을 자유롭게 배치하고 줌하고 닫는 게 자연스러워진다. 그쯤 되면 단일 터미널로는 돌아가기 어렵다.
+
+내 추천 시작점은 단순하다. **tmux conf 위 예시를 복사하고, 4분할 스크립트 하나 만든다.** 그 다음에는 매일 쓰면서 자기 워크플로우에 맞게 조금씩 다듬는다.

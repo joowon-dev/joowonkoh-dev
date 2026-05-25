@@ -1,0 +1,164 @@
+---
+title: "zsh에서 fish로 갈아탄 이유, 그리고 다시 zsh로 돌아간 이유"
+description: "fish의 자동완성과 기본 설정의 매력에 빠져 zsh를 떠났다가 6개월 후 다시 돌아왔다. 두 셸 사이에서 무엇을 얻고 무엇을 잃었는지 솔직하게 정리한다."
+date: "2026-04-17"
+tags: ["Dev", "터미널", "shell"]
+---
+
+## fish 한 번 써보면 못 돌아간다고들 했다
+
+터미널 관련 글을 읽다 보면 fish 예찬을 자주 본다. **"기본 설정이 zsh + Oh My Zsh보다 좋다"**, **"문법이 일관적이다"**, **"자동완성이 마법이다"**. 호기심이 생길 만하다.
+
+나도 그래서 갈아탔다. 6개월 썼다. 그리고 다시 zsh로 돌아왔다. 양쪽을 충분히 써본 사람으로서 무엇을 얻고 잃는지 정리한다.
+
+## 왜 fish로 갔는가
+
+fish의 매력은 **기본 설정이 그대로 좋다**는 거다. zsh는 Oh My Zsh, Powerlevel10k, 플러그인 다 깔아야 그럭저럭 쓸 만해진다. fish는 깔자마자 끝난다.
+
+### 1. 자동완성이 강력하다
+
+fish는 명령어 사용 패턴을 학습해서, 빈 줄에서 시작 글자만 쳐도 과거에 자주 쓰던 전체 명령을 회색으로 미리 보여준다. 오른쪽 화살표 한 번이면 채워진다.
+
+```fish
+$ git push          # 회색으로 미리 표시
+$ git push origin feature/login  # 화살표 한 번에 자동완성
+```
+
+zsh에서도 비슷한 걸 하려면 `zsh-autosuggestions` 플러그인을 깔아야 한다. fish는 기본이다.
+
+### 2. man page를 파싱해서 옵션 자동완성
+
+`tar -`까지 치고 Tab을 누르면 fish가 tar의 man page를 파싱해서 모든 옵션을 설명과 함께 보여준다. 처음 보면 마법 같다.
+
+```fish
+$ tar -<Tab>
+-c  Create archive
+-x  Extract files
+-z  Use gzip
+-v  Verbose
+...
+```
+
+3. 문법이 일관적이다
+
+zsh/bash는 if/while/for의 끝이 fi/done이다. 어색한 비대칭이다. fish는 끝이 `end`로 통일된다.
+
+```fish
+if test -f file.txt
+    echo "exists"
+end
+
+for i in 1 2 3
+    echo $i
+end
+```
+
+스크립트를 길게 짜본 사람이라면 이 일관성이 작은 차이가 아니라는 걸 안다.
+
+## 6개월 쓰고 만난 한계
+
+다 좋았으면 안 돌아왔을 거다. 시간이 지나면서 자잘한 마찰이 쌓였다.
+
+### 1. POSIX 호환이 아니다
+
+이게 가장 결정적이었다. fish는 의도적으로 POSIX와 다른 문법을 쓴다.
+
+```bash
+# bash/zsh
+export FOO=bar
+
+# fish
+set -x FOO bar
+```
+
+문제는 인터넷에 있는 99%의 셸 스크립트가 bash 문법이라는 거다. 블로그 가이드, GitHub README, 팀 동료가 공유하는 한 줄 명령 — 다 bash다.
+
+```bash
+# Stack Overflow 답변
+echo "deb https://example.com" | sudo tee /etc/apt/sources.list.d/example.list
+```
+
+이걸 fish에서 그대로 붙여넣으면 동작 안 한다. 변환하는 시간이 누적되니 마찰이 컸다.
+
+### 2. 환경 변수 export가 어색하다
+
+`.env` 파일을 source하거나 한 줄로 환경 변수를 주는 패턴이 fish에서 어색하다.
+
+```bash
+# bash
+FOO=bar npm test
+```
+
+fish는 안 된다. `env FOO=bar npm test`로 우회해야 한다. 한 번 한 번은 작은 마찰이지만 매일 발생한다.
+
+### 3. 동료들이 다 zsh/bash다
+
+팀에서 셸 스크립트를 공유할 때, 내가 fish를 쓰면 검증을 두 번 해야 한다. "이 스크립트 fish에서 어떻게 도냐"를 매번 묻는다. 1인 환경이면 모르겠지만 협업 환경에서는 비용이다.
+
+### 4. AI 도구가 bash를 가정한다
+
+Claude Code, Cursor의 Bash 도구가 동작할 때 이들은 기본적으로 sh/bash 문법을 가정한다. AI가 만든 명령을 fish에 붙여넣으면 호환 안 되는 경우가 종종 생긴다. AI 시대에 이건 점점 더 무거운 비용이다.
+
+## 다시 zsh로 돌아오면서 한 것
+
+fish가 좋았던 부분을 zsh에서 최대한 재현했다.
+
+### 1. zsh-autosuggestions
+
+fish의 인라인 자동완성과 거의 같은 동작을 한다.
+
+```bash
+brew install zsh-autosuggestions
+echo 'source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh' >> ~/.zshrc
+```
+
+### 2. zsh-syntax-highlighting
+
+명령어를 치는 동안 색으로 유효성을 알려준다. 명령어가 빨간색이면 못 찾는다는 뜻이다. fish의 기본 동작과 비슷하다.
+
+```bash
+brew install zsh-syntax-highlighting
+echo 'source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >> ~/.zshrc
+```
+
+### 3. fzf-tab
+
+Tab 자동완성을 fzf 인터페이스로 바꿔준다. 옵션이 많을 때 검색하면서 고를 수 있다. 효과적으로는 fish의 옵션 자동완성보다 더 강력하다.
+
+```bash
+brew install fzf
+git clone https://github.com/Aloxaf/fzf-tab ~/.zsh/fzf-tab
+echo 'source ~/.zsh/fzf-tab/fzf-tab.plugin.zsh' >> ~/.zshrc
+```
+
+### 4. Starship
+
+크로스 셸 프롬프트. fish에서도 zsh에서도 같은 프롬프트를 쓸 수 있다. 셸을 갈아타도 시각적으로는 일관된다. [터미널 도구 글](/blog/2026040801-terminal-productivity-tools)에서 더 자세히 다뤘다.
+
+이 네 개를 합치면 fish의 핵심 매력은 거의 다 zsh에서 누릴 수 있다. POSIX 호환은 그대로 가져가면서.
+
+## 결론적으로 누구에게 fish가 좋은가
+
+fish가 잘 맞는 사람이 분명히 있다.
+
+- **단일 머신, 단독 작업**: 다른 사람의 셸 스크립트를 자주 다룰 일이 없는 환경
+- **셸 자체에 시간 투자하기 싫은 사람**: zsh + 플러그인 5개 세팅이 부담스러운 경우
+- **POSIX 문법을 평생 쓸 일 없는 사람**: 셸 스크립트를 거의 안 짜는 경우
+
+이 조건이면 fish가 즉시 행복을 준다.
+
+반대로 zsh가 나은 경우:
+
+- **팀 협업, 다양한 OS, 서버 작업이 잦은 환경**
+- **AI 코딩 도구를 적극적으로 쓰는 경우**
+- **셸 스크립트, .env 파일, 환경 변수를 자주 다루는 경우**
+
+대부분의 개발자가 두 번째 그룹에 속한다. 그래서 결국 zsh로 돌아오는 흐름이 자연스럽다.
+
+## 정리
+
+fish는 "기본 설정이 좋은 셸"이다. zsh는 "튜닝하면 더 강해지는 셸"이다. 둘 다 좋은 셸이고, 어느 쪽이 절대적으로 우월하지 않다.
+
+내 결론은 이렇다. **현대 개발 환경에서는 zsh가 더 안전한 디폴트다.** POSIX 호환, 협업, AI 도구와의 호환성 — 이 세 가지가 일상을 바꾼다. fish의 매력은 zsh + 좋은 플러그인 4개로 거의 따라잡힌다.
+
+다만 fish를 한 번도 안 써본 사람은 6개월 정도 써보는 것도 추천한다. 셸이 어디까지 좋아질 수 있는지 감이 잡힌다. 그 감각을 가지고 zsh로 돌아오면, zsh를 더 잘 튜닝하게 된다.

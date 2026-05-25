@@ -1,0 +1,215 @@
+---
+title: "블로그 다크모드 디자인, Tailwind v4만으로 끝내기"
+description: "다크모드 단일 사이트 디자인 가이드. CSS 변수와 Tailwind v4 @theme inline으로 색상 시스템을 구성하고, 가독성 좋은 어두운 배경과 텍스트 대비를 잡는 실전 노하우."
+date: "2026-04-22"
+tags: ["Dev", "Tailwind", "디자인"]
+---
+
+## 라이트모드를 빼기로 한 결정
+
+이 블로그는 다크모드 단일이다. 토글 버튼이 없다. 밝은 화면을 보고 싶으면 OS의 강제 다크모드 토글을 끄거나 다른 방법으로 보면 된다.
+
+이 결정에 망설임이 있었다. 일반적으로는 라이트/다크 둘 다 지원하는 게 친절하다. 그래도 다크모드 단일을 고른 이유 세 가지가 있다.
+
+1. **개인 블로그라서 시각적 정체성이 중요하다** — 다크 단일이 더 단단한 인상이다
+2. **두 모드를 둘 다 잘 만드는 비용이 크다** — 색상 두 세트, 컴포넌트 두 세트의 검증
+3. **개발 글의 코드 블록은 다크에서 더 잘 보인다** — VS Code도 압도적으로 다크 사용자가 많다
+
+이 글은 다크모드 단일 사이트를 Tailwind v4로 어떻게 디자인하는지에 대한 실전 정리다.
+
+## Tailwind v4의 @theme
+
+Tailwind v4부터는 `tailwind.config.ts`가 사라졌다. 대신 CSS 파일에서 `@theme`로 직접 테마를 정의한다.
+
+```css
+/* app/globals.css */
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0a0a;
+  --color-card-bg: #111111;
+  --color-border: #1f1f1f;
+
+  --color-text-primary: #ededed;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #6b6b6b;
+
+  --color-accent: #3b82f6;
+  --color-accent-hover: #60a5fa;
+
+  --font-sans: "Pretendard", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Pretendard", monospace;
+}
+```
+
+`@theme` 안의 변수가 곧 Tailwind 토큰이 된다. `--color-bg`라고 적으면 `bg-bg`, `text-bg` 같은 유틸리티 클래스가 자동으로 생긴다. (값으로 다른 CSS 변수를 참조하는 동적 테마가 필요할 때는 `@theme inline`을 쓰지만, 위처럼 색상 값을 직접 박을 때는 일반 `@theme`이 맞다.)
+
+```tsx
+<div className="bg-bg text-text-primary">
+  ...
+</div>
+```
+
+이전 버전보다 훨씬 직관적이다. CSS 변수 + Tailwind 유틸리티가 한 자리에서 관리된다.
+
+## 색상 시스템 설계
+
+다크모드 색상은 **5단계 회색**을 기준으로 짠다.
+
+### 배경 3단계
+
+- `--color-bg` (#0a0a0a) — 페이지 배경. 거의 검정에 가깝지만 완전 검정은 아님
+- `--color-card-bg` (#111111) — 카드, 코드 블록 배경
+- `--color-elevated` (#1a1a1a) — hover, 활성 상태
+
+순수 검정(#000)은 OLED 화면에서 글자와 너무 강하게 대비된다. 약간 회색이 섞인 검정이 눈에 편하다.
+
+### 텍스트 3단계
+
+- `--color-text-primary` (#ededed) — 본문, 제목
+- `--color-text-secondary` (#a3a3a3) — 메타데이터, 설명
+- `--color-text-muted` (#6b6b6b) — 부가 정보, placeholder
+
+순수 흰색(#fff)은 다크 배경에서 너무 강하다. 살짝 어두워진 흰색이 자연스럽다.
+
+### 강조 색상
+
+- `--color-accent` (#3b82f6) — 링크, 버튼, 강조
+- 부수 색상: `--color-success` (#22c55e), `--color-warning` (#f59e0b), `--color-danger` (#ef4444)
+
+너무 많은 색을 쓰지 말고 한두 개의 강조 색만 둔다. 배경이 어두워서 색이 더 두드러진다.
+
+## 색상 대비 검증
+
+다크모드 색상을 짤 때 **WCAG 대비 비율**을 확인한다. 4.5:1 이상이 본문 텍스트의 최소 기준이다.
+
+`#ededed` on `#0a0a0a` = 14.5:1 (충분)
+`#a3a3a3` on `#0a0a0a` = 7.6:1 (충분)
+`#6b6b6b` on `#0a0a0a` = 4.4:1 (경계 — 본문에는 안 쓰고 메타데이터만)
+
+[WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)에서 즉시 확인할 수 있다. 색을 잡을 때 한 번씩 체크해두면 가독성이 보장된다.
+
+## 코드 블록 색상
+
+블로그가 개발 글이면 코드 블록이 절반이다. 코드 색이 본문과 잘 어우러져야 한다.
+
+`rehype-pretty-code` + `shiki` 조합에서 테마는 `github-dark`나 `one-dark-pro`를 자주 쓴다. 둘 다 검증된 다크 테마다.
+
+```typescript
+// next.config.ts
+const nextConfig = {
+  // ...
+};
+
+// MDX rehype 설정에서
+[rehypePrettyCode, { theme: "github-dark" }]
+```
+
+코드 블록 배경이 페이지 배경과 다르게 약간 더 어둡거나 밝으면 시각적으로 분리된다.
+
+```css
+pre {
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+```
+
+## 폰트와 word-break
+
+한국어 다크 사이트에서 가독성을 결정하는 또 다른 요소가 폰트와 줄바꿈이다.
+
+폰트는 [Pretendard](https://github.com/orioncactus/pretendard)를 추천한다. 한글 + 영문이 모두 깔끔하고, 웹 폰트로 가볍다.
+
+```css
+@theme {
+  --font-sans: "Pretendard", system-ui, sans-serif;
+}
+```
+
+CSS에 `word-break: keep-all`을 추가하면 단어 단위로 줄바꿈된다. 한국어에서는 어색한 음절 단위 줄바꿈을 막아준다.
+
+```css
+body {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+```
+
+이 두 줄이 한국어 가독성을 크게 바꾼다.
+
+## prose 스타일
+
+마크다운으로 쓴 본문에 자동으로 적용되는 스타일은 `@tailwindcss/typography`로 처리한다.
+
+```bash
+npm install -D @tailwindcss/typography
+```
+
+```css
+@plugin "@tailwindcss/typography";
+```
+
+본문에 `prose prose-invert` 클래스를 박는다. `prose-invert`가 다크모드용이다.
+
+```tsx
+<article className="prose prose-invert max-w-none">
+  <MDXRemote source={content} />
+</article>
+```
+
+기본 prose 스타일이 다크에 맞게 자동 조정된다. 헤딩 크기, 코드 인라인, 링크 색상 등이 다 잡힌다.
+
+## 다크모드 단일이라 안 해도 되는 것들
+
+라이트/다크 둘 다 만들 때 신경 써야 하는 것들이 다 빠진다.
+
+- `dark:` variant 안 써도 됨
+- 색상 토큰 두 세트 관리 안 함
+- 토글 버튼, localStorage 동기화, FOUC(Flash of Unstyled Content) 안 잡아도 됨
+- prefers-color-scheme 미디어 쿼리 안 씀
+
+코드가 절반쯤 줄어든다. 단일 모드의 단순함이 결국 디자인 일관성에 도움이 된다.
+
+대신 첫 페이지 로드에 다크 배경을 즉시 보여주려면 `<html className="dark">`처럼 클래스를 박거나, body 배경색을 CSS로 직접 정한다.
+
+```css
+html, body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+}
+```
+
+## 흔한 함정
+
+### 함정 1: 너무 검은 배경
+
+`#000`은 OLED에서 텍스트와의 대비가 강해 눈이 피곤하다. `#0a0a0a` 정도로 살짝 회색을 섞는다.
+
+### 함정 2: 너무 많은 회색 단계
+
+배경 3단계, 텍스트 3단계가 한계다. 5단계, 7단계로 늘리면 시각적으로 구분이 어려워진다. 단계가 많을수록 일관성을 유지하기 어렵다.
+
+### 함정 3: 색맹 검증 안 함
+
+강조 색을 빨강과 초록으로만 쓰면 색맹 사용자에게 같은 색으로 보일 수 있다. 색만이 아니라 아이콘이나 텍스트로도 구분한다. [시각화 컴포넌트 글](/blog/2026042201-mdx-table-replacement-with-react-components)에서도 다뤘다.
+
+### 함정 4: 이미지 배경 무시
+
+블로그에 이미지를 넣을 때, 흰 배경 이미지가 다크 배경에 갑자기 끼면 시각적으로 깨진다. 이미지 배경을 다크로 잡거나, 이미지 컨테이너에 살짝 패딩과 카드 배경을 둔다.
+
+## 정리
+
+다크모드 단일 블로그를 만든다면 Tailwind v4의 `@theme`이 답이다. CSS 변수와 Tailwind 유틸리티가 한 자리에서 관리되니 색상 시스템이 단순해진다.
+
+핵심 원칙 5개:
+
+1. 배경 3단계, 텍스트 3단계로 색상 시스템 단순화
+2. 순수 흑백 대신 살짝 회색 섞기
+3. WCAG 대비 4.5:1 이상 유지
+4. 코드 블록은 카드 배경으로 분리
+5. 한국어는 `word-break: keep-all`
+
+라이트/다크 둘 다 지원하는 게 정답이라는 통념이 있지만, 단일 모드가 명확한 정체성을 줄 때도 있다. 결국 누가 보는 사이트인지, 어떤 인상을 남기고 싶은지가 결정한다. 두 모드를 적당히 만드는 것보다 한 모드를 단단하게 만드는 게 더 깔끔할 때가 있다.

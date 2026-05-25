@@ -1,0 +1,229 @@
+---
+title: "Next.js App Router에서 MDX 블로그 만들 때 헷갈리는 것들"
+description: "App Router로 MDX 블로그를 만들면서 부딪힌 함정 6가지를 정리한다. generateStaticParams, dynamic route, 메타데이터, Pages Router 가이드와의 차이, 빌드 타임 vs 런타임."
+date: "2026-04-20"
+tags: ["Dev", "Next.js", "MDX"]
+---
+
+## App Router로 블로그 만들면서 헤맨 6가지
+
+이 블로그를 Next.js App Router로 만들면서 부딪힌 함정들이 있다. 검색하면 Pages Router 가이드가 더 많이 나오는데, App Router는 결이 꽤 달라서 그대로 따라가면 깨진다.
+
+이 글은 그 차이를 한 곳에 정리한다. App Router로 MDX 블로그를 처음 만드는 사람이 똑같이 헤매지 않도록.
+
+## 함정 1: Pages Router 가이드를 그대로 따라간다
+
+가장 큰 함정. 인터넷에 있는 Next.js MDX 가이드는 대부분 Pages Router 기준이다. 그래서 이런 코드를 보게 된다.
+
+```tsx
+// pages/blog/[slug].tsx (Pages Router)
+import { GetStaticProps, GetStaticPaths } from "next";
+
+export const getStaticPaths: GetStaticPaths = async () => { ... };
+export const getStaticProps: GetStaticProps = async () => { ... };
+```
+
+App Router에서는 이 패턴이 통째로 사라졌다. `getStaticPaths` 대신 `generateStaticParams`, `getStaticProps` 대신 그냥 컴포넌트가 async function이다.
+
+```tsx
+// app/blog/[slug]/page.tsx (App Router)
+export async function generateStaticParams() {
+  return posts.map((p) => ({ slug: p.slug }));
+}
+
+export default async function PostPage({ params }: { params: { slug: string } }) {
+  const post = await getPost(params.slug);
+  return <Article post={post} />;
+}
+```
+
+같은 일을 하지만 모양이 다르다. App Router 가이드가 아니면 코드를 그대로 못 쓴다. **검색할 때 "App Router"를 키워드에 꼭 넣는다.**
+
+## 함정 2: dynamic route가 빌드 타임에 안 잡힌다
+
+`app/blog/[slug]/page.tsx`를 만들고 `generateStaticParams`로 슬러그 목록을 반환했는데, 빌드 시 정적 페이지가 안 만들어지는 경우가 있다.
+
+원인은 보통 `dynamic` 또는 `revalidate` 설정이 잘못된 거다.
+
+```tsx
+// 빌드 타임에 정적 생성 (원하는 동작)
+export const dynamic = "force-static";
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+  return posts.map((p) => ({ slug: p.slug }));
+}
+```
+
+`dynamicParams = false`를 안 넣으면, 목록에 없는 슬러그가 들어와도 동적으로 생성하려고 한다. 블로그처럼 글이 정해져 있는 경우는 명시적으로 막는 게 안전하다.
+
+`dynamic = "force-static"`은 이 라우트가 무조건 정적이어야 함을 강제한다. 데이터 호출 패턴이 SSG가 아닌 것처럼 보이면 Next가 자동으로 SSR로 분류하는데, 이걸 막는다.
+
+## 함정 3: MDX 파싱 도구 선택
+
+Next.js는 공식 `@next/mdx`를 제공하지만, App Router 블로그에서는 잘 안 맞는다. `next/mdx`는 빌드 타임에 import 기반으로 동작하는데, **콘텐츠 디렉토리의 모든 MDX 파일을 동적으로 파싱**하려면 다른 방법이 필요하다.
+
+내가 쓰는 조합:
+
+- `next-mdx-remote`: 빌드/런타임에 MDX 문자열을 React로 변환
+- `gray-matter`: frontmatter 파싱
+- `rehype-pretty-code` + `shiki`: 코드 하이라이팅
+- `remark-gfm`: GitHub 스타일 마크다운(테이블, 체크박스)
+
+설치.
+
+```bash
+npm install next-mdx-remote gray-matter rehype-pretty-code shiki remark-gfm
+```
+
+기본 사용:
+
+```tsx
+import { MDXRemote } from "next-mdx-remote/rsc";
+import matter from "gray-matter";
+import rehypePrettyCode from "rehype-pretty-code";
+import remarkGfm from "remark-gfm";
+import fs from "node:fs";
+
+async function getPost(slug: string) {
+  const raw = fs.readFileSync(`content/blog/${slug}.mdx`, "utf-8");
+  const { data, content } = matter(raw);
+  return { meta: data, content };
+}
+
+export default async function Page({ params }) {
+  const { meta, content } = await getPost(params.slug);
+  return (
+    <article>
+      <h1>{meta.title}</h1>
+      <MDXRemote
+        source={content}
+        options={{
+          mdxOptions: {
+            remarkPlugins: [remarkGfm],
+            rehypePlugins: [[rehypePrettyCode, { theme: "github-dark" }]],
+          },
+        }}
+      />
+    </article>
+  );
+}
+```
+
+`next-mdx-remote/rsc`를 쓰면 서버 컴포넌트에서 직접 사용할 수 있다. 클라이언트 번들에 MDX 파서가 안 실린다.
+
+## 함정 4: 메타데이터를 어디에 박는가
+
+App Router에서 페이지별 메타데이터는 `generateMetadata` 함수로 정의한다.
+
+```tsx
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }): Promise<Metadata> {
+  const post = await getPost(params.slug);
+  return {
+    title: post.meta.title,
+    description: post.meta.description,
+    openGraph: {
+      title: post.meta.title,
+      description: post.meta.description,
+      type: "article",
+      publishedTime: post.meta.date,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.meta.title,
+      description: post.meta.description,
+    },
+  };
+}
+```
+
+Pages Router에서 `<Head>` 컴포넌트로 박던 걸, 함수로 반환한다. 서버 사이드에서만 동작하니 SEO 안전.
+
+`og:image`는 `metadataBase`를 root layout에 두면 상대 경로로 처리된다.
+
+```tsx
+// app/layout.tsx
+export const metadata: Metadata = {
+  metadataBase: new URL("https://joowonkoh.dev"),
+  // ...
+};
+```
+
+이게 빠지면 og:image가 절대 경로로 잡히지 않아서 Slack/Twitter에서 미리보기가 깨진다.
+
+## 함정 5: 클라이언트 컴포넌트와 서버 컴포넌트의 경계
+
+MDX 안에서 React 컴포넌트를 쓰면 그 컴포넌트가 서버/클라이언트 어느 쪽이냐가 중요해진다. 인터랙션(클릭, 상태)이 있는 컴포넌트는 클라이언트 컴포넌트여야 한다.
+
+```tsx
+// components/InteractiveCard.tsx
+"use client";
+
+export default function InteractiveCard() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
+}
+```
+
+`"use client"` 지시어가 맨 위에 있어야 한다. 빠뜨리면 빌드 시 "useState is not a function" 같은 에러가 난다.
+
+상호작용이 없는 시각화 카드(예: [GitCommandCard](/blog/2026041101-git-github-cli-commands))는 서버 컴포넌트로 둔다. 클라이언트 번들이 가벼워진다.
+
+## 함정 6: 빌드 시 콘텐츠 디렉토리를 못 찾는다
+
+배포 환경에서 빌드 시 `fs.readFileSync`가 파일을 못 찾는 경우가 있다.
+
+```tsx
+const raw = fs.readFileSync("content/blog/foo.mdx");  // 빌드 시 에러
+```
+
+이유는 작업 디렉토리(`cwd`)가 빌드 환경에서 다를 수 있어서다. `process.cwd()`를 명시한다.
+
+```tsx
+import path from "node:path";
+
+const filePath = path.join(process.cwd(), "content/blog", `${slug}.mdx`);
+const raw = fs.readFileSync(filePath, "utf-8");
+```
+
+Cloudflare Pages 같은 환경에서는 이게 더 까다롭다. [Cloudflare 배포 글](/blog/2026040501-deploying-to-cloudflare-pages)에서 다뤘다.
+
+## 디렉토리 구조 추천
+
+내가 쓰는 구조:
+
+```text
+app/
+  blog/
+    [slug]/
+      page.tsx        # 글 페이지
+    page.tsx          # 글 목록
+  layout.tsx
+content/
+  blog/
+    2026-04-01-foo.mdx
+    2026-04-02-bar.mdx
+lib/
+  posts.ts            # MDX 파싱 유틸리티
+src/
+  components/
+    InteractiveCard.tsx (use client)
+    StaticCard.tsx
+```
+
+콘텐츠를 `content/`에 분리해두면 빌드 도구나 컴포넌트 코드와 섞이지 않는다. 글이 늘어나도 리포 구조가 깔끔하다.
+
+## 정리
+
+App Router로 MDX 블로그를 만들 때 마주치는 함정 6가지를 한 줄씩 정리한다.
+
+1. Pages Router 가이드를 그대로 따라가지 마라
+2. `dynamic = "force-static"` + `dynamicParams = false`로 SSG 강제
+3. `next-mdx-remote/rsc`로 서버 컴포넌트에서 MDX 렌더
+4. 메타데이터는 `generateMetadata` 함수로
+5. 인터랙티브 컴포넌트만 `"use client"`
+6. 파일 경로는 `process.cwd()` 기준으로
+
+이 6가지만 알고 시작하면 처음부터 절반쯤 덜 헤맨다. App Router는 패턴만 익히면 Pages Router보다 더 깔끔하다. 다만 그 패턴이 인터넷에 아직 적게 깔려 있어서, 직접 부딪히며 배우는 데 시간이 더 든다. 이 글이 그 시간을 줄여주면 좋겠다.

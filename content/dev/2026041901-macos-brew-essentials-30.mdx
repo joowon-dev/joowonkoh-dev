@@ -1,0 +1,284 @@
+---
+title: "macOS 개발자 필수 brew 패키지 30선: 카테고리별 정리"
+description: "새 맥북을 받았을 때 가장 먼저 까는 brew 패키지 30개를 카테고리별로 정리한다. 셸, CLI, 개발 도구, 앱(cask)까지 — Brewfile 한 장으로 환경을 복원하는 셋업."
+date: "2026-04-19"
+tags: ["Dev", "macOS", "brew"]
+---
+
+## 새 맥북을 받으면 뭐부터 깔까
+
+새 맥북을 받았을 때 매번 같은 패키지를 까느라 30분을 쓰던 시절이 있었다. 무엇을 까야 하는지는 알지만 순서대로 검색하고 깔다 보면 시간이 흐른다.
+
+지금은 `Brewfile` 한 장과 `brew bundle` 한 줄로 5분 안에 끝낸다. 이 글은 그 Brewfile에 들어가는 30개 패키지를 카테고리별로 정리한 거다.
+
+## brew 기본기
+
+깔린 게 없다면 brew부터.
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Brewfile은 단순한 텍스트 파일이다. 형식은 이렇다.
+
+```ruby
+# Brewfile
+brew "git"
+brew "node"
+cask "visual-studio-code"
+```
+
+`brew bundle --file=Brewfile`로 일괄 설치된다. dotfiles 레포에 같이 넣어두면 새 머신에서 자동화 가능하다. [dotfiles 글](/blog/2026041801-dotfiles-gnu-stow)에서 자세히 다뤘다.
+
+## 카테고리 1: 셸 환경 (5개)
+
+### 1. starship
+크로스 셸 프롬프트. 시작 시간 5ms.
+
+### 2. zoxide
+`cd` 대체. 자주 가던 폴더로 점프.
+
+### 3. fzf
+퍼지 검색. 모든 선택 작업의 표준.
+
+### 4. tmux
+터미널 멀티플렉서. 세션 관리, 패널 분할.
+
+### 5. atuin
+SQLite 기반 셸 히스토리.
+
+```ruby
+brew "starship"
+brew "zoxide"
+brew "fzf"
+brew "tmux"
+brew "atuin"
+```
+
+이 다섯 개로 셸 자체가 완전히 다른 도구가 된다.
+
+## 카테고리 2: 모던 CLI (8개)
+
+기본 Unix 명령어를 대체하는 Rust 기반 도구들이다. [터미널 도구 글](/blog/2026040801-terminal-productivity-tools)에서 자세히 다뤘다.
+
+### 6. ripgrep
+`grep -r` 대체. `.gitignore` 자동 존중.
+
+### 7. bat
+`cat` 대체. 구문 강조 + 줄 번호.
+
+### 8. eza
+`ls` 대체. 아이콘, Git 상태 표시.
+
+### 9. fd
+`find` 대체. 직관적 문법.
+
+### 10. delta
+git diff 뷰어. 구문 강조 + 사이드바이사이드.
+
+### 11. dust
+`du` 대체. 시각적 디스크 사용량.
+
+### 12. duf
+`df` 대체. 디스크 정보를 표로 깔끔하게.
+
+### 13. procs
+`ps` 대체. 색상 입혀진 프로세스 목록.
+
+```ruby
+brew "ripgrep"
+brew "bat"
+brew "eza"
+brew "fd"
+brew "git-delta"
+brew "dust"
+brew "duf"
+brew "procs"
+```
+
+이 그룹은 깔자마자 alias로 기존 명령어를 덮어쓰면 효과 즉시.
+
+## 카테고리 3: 개발 필수 (7개)
+
+### 14. git
+설명 생략.
+
+### 15. gh
+GitHub CLI. PR 만들고 머지하고 리뷰 받기까지 터미널에서 끝낸다. [관련 글](/blog/2026041101-git-github-cli-commands).
+
+### 16. lazygit
+터미널 Git UI. 복잡한 rebase, 부분 staging이 쉬워진다.
+
+### 17. mise
+Node, Python, Go 버전 매니저 통합. [관련 글](/blog/2026041802-mise-version-manager).
+
+### 18. jq
+JSON 파싱. API 응답 처리에 필수.
+
+### 19. yq
+YAML 버전 jq. Kubernetes, GitHub Actions 작업에서 자주 쓴다.
+
+### 20. httpie
+`curl` 대체. 사람이 읽기 쉬운 HTTP 클라이언트.
+
+```ruby
+brew "git"
+brew "gh"
+brew "lazygit"
+brew "mise"
+brew "jq"
+brew "yq"
+brew "httpie"
+```
+
+## 카테고리 4: 빌드/시스템 도구 (4개)
+
+### 21. wget
+파일 다운로드. macOS 기본은 `curl`만 있다.
+
+### 22. tree
+디렉토리 트리 표시. eza의 `--tree`와 겹치지만 단독으로도 자주 쓴다.
+
+### 23. coreutils
+GNU 버전 유틸리티. `gdate`, `gsed` 등을 제공한다. macOS 기본은 BSD 버전이라 일부 셸 스크립트가 안 돌아간다.
+
+### 24. watch
+`watch` 명령어. 일정 간격으로 명령 반복 실행.
+
+```ruby
+brew "wget"
+brew "tree"
+brew "coreutils"
+brew "watch"
+```
+
+## 카테고리 5: 데스크톱 앱 (cask, 6개)
+
+`cask`는 GUI 앱 설치다. 이것도 brew로 관리한다.
+
+### 25. cmux
+GPU 가속 터미널. [Warp에서 cmux로 갈아탄 이야기](/blog/2026040204-warp-to-cmux).
+
+### 26. visual-studio-code
+설명 생략.
+
+### 27. cursor
+AI 에디터. [Cursor 비교 글](/blog/2026041502-cursor-windsurf-claude-code-comparison).
+
+### 28. raycast
+Spotlight 대체. 클립보드 기록, 빠른 실행, 단축어.
+
+### 29. rectangle
+창 분할 단축키. macOS 기본 분할이 답답한 사람용.
+
+### 30. obsidian
+마크다운 노트. [블로그 글감 파이프라인](/blog/2026042301-obsidian-blog-pipeline)에서 자세히.
+
+```ruby
+cask "cmux"
+cask "visual-studio-code"
+cask "cursor"
+cask "raycast"
+cask "rectangle"
+cask "obsidian"
+```
+
+## 완성된 Brewfile
+
+```ruby
+# 셸 환경
+brew "starship"
+brew "zoxide"
+brew "fzf"
+brew "tmux"
+brew "atuin"
+
+# 모던 CLI
+brew "ripgrep"
+brew "bat"
+brew "eza"
+brew "fd"
+brew "git-delta"
+brew "dust"
+brew "duf"
+brew "procs"
+
+# 개발 필수
+brew "git"
+brew "gh"
+brew "lazygit"
+brew "mise"
+brew "jq"
+brew "yq"
+brew "httpie"
+
+# 빌드/시스템
+brew "wget"
+brew "tree"
+brew "coreutils"
+brew "watch"
+
+# 앱
+cask "cmux"
+cask "visual-studio-code"
+cask "cursor"
+cask "raycast"
+cask "rectangle"
+cask "obsidian"
+```
+
+새 머신에서 한 줄.
+
+```bash
+brew bundle --file=Brewfile
+```
+
+5분쯤 기다리면 위 30개가 다 깔린다.
+
+## 추가로 챙기는 것들
+
+위 30개 외에 자주 추가하는 것들:
+
+- **postgres** / **mysql**: DB 작업이 필요한 경우
+- **docker**: cask로 `docker-desktop`
+- **ngrok**: 로컬 서버 외부 노출
+- **stripe-cli**: 결제 작업
+- **awscli** / **gcloud**: 클라우드 작업
+
+이런 것들은 프로젝트별로 필요할 때만 추가한다. 글로벌 Brewfile에 넣어버리면 안 쓰는 것까지 매번 깔린다.
+
+## 정리 팁
+
+### 1. 가끔 `brew bundle dump`로 동기화
+
+현재 깔린 패키지를 Brewfile로 내보낸다.
+
+```bash
+brew bundle dump --file=Brewfile.current
+```
+
+기존 Brewfile과 비교해서 어떤 게 추가됐는지 확인한다. 매일 안 해도 된다. 한 달에 한 번 정리하는 정도.
+
+### 2. cleanup으로 안 쓰는 의존성 제거
+
+```bash
+brew bundle cleanup --file=Brewfile
+```
+
+Brewfile에 없는 패키지를 모두 제거한다. dry-run이 디폴트라 실제로 지우려면 `--force`를 붙인다. 환경을 깨끗하게 유지하는 데 효과적이다.
+
+### 3. 자동 업데이트
+
+```bash
+brew update && brew upgrade && brew cleanup
+```
+
+이 세 줄을 alias로 박아두면 환경 유지가 쉽다. `brew cleanup`이 옛 버전을 정리한다.
+
+## 정리
+
+새 맥북 셋업이 5분 안에 끝나면 OS를 갈아엎는 것에 대한 부담이 사라진다. 환경이 망가져도 두렵지 않다는 게 큰 자유다.
+
+30개를 한 번에 다 외울 필요는 없다. 하루에 두세 개씩 시도하면서 자기 패턴에 맞는 것을 추려가면 된다. 어떤 도구는 깔자마자 사용 빈도가 폭발하고, 어떤 도구는 한 달 후에야 쓸모를 발견한다.
+
+내 추천 시작 5개는 이렇다. **starship, zoxide, fzf, ripgrep, bat.** 이 다섯 개만 깔아도 터미널이 다른 도구처럼 느껴진다. 그 다음에 나머지를 천천히 쌓아간다.
