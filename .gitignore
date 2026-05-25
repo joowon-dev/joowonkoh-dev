@@ -47,3 +47,7 @@ yarn-error.log*
 
 # claude local settings
 .claude/settings.local.json
+
+# gsc-inspect (서비스 계정 키 + 결과 스냅샷)
+scripts/.gsc-key.json
+scripts/.gsc-results/
