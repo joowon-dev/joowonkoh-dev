@@ -25,22 +25,23 @@ Jesse Vincent(obra)이 만든 오픈소스 프로젝트로, Claude Code에 구�
 
 ## 설치 방법
 
-### 방법 1: Claude Code 안에서 설치 (추천)
+### 방법 1: 공식 마켓플레이스에서 설치 (추천)
 
-Claude Code를 실행한 상태에서 아래 명령어를 입력한다.
+Superpowers는 Anthropic 공식 마켓플레이스(`claude-plugins-official`)에 등록돼 있다. Claude Code를 실행한 상태에서 아래 명령어를 입력한다.
 
 ```text
-/install-plugin superpowers
+/plugin install superpowers@claude-plugins-official
 ```
 
 끝이다. 플러그인이 자동으로 다운로드되고 활성화된다.
 
-### 방법 2: 수동 설치
+### 방법 2: 마켓플레이스를 직접 등록 후 설치
 
-직접 클론해서 설치할 수도 있다.
+공식 마켓플레이스가 등록돼 있지 않다면 먼저 추가한 뒤 설치한다.
 
-```bash
-git clone https://github.com/obra/superpowers ~/.claude/plugins/superpowers
+```text
+/plugin marketplace add anthropics/claude-plugins-official
+/plugin install superpowers@claude-plugins-official
 ```
 
 설치 후 Claude Code를 재시작하면 스킬이 활성화된다.
