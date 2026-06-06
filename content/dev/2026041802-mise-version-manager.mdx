@@ -108,13 +108,16 @@ _.file = ".env"
 
 같은 컨셉이라 헷갈리는데, 차이가 명확하다.
 
-| 항목 | asdf | mise |
-|------|------|------|
-| 구현 | Bash | Rust |
-| 셸 시작 시간 | ~200ms | ~5ms |
-| 환경 변수 관리 | direnv 별도 필요 | 내장 |
-| 명령어 | `asdf install`, `asdf global`, ... | `mise use`, `mise install`, ... |
-| 호환성 | `.tool-versions` | `.tool-versions` + `.mise.toml` |
+<DataTableCard
+  headers={["항목", "asdf", "mise"]}
+  rows={[
+    ["구현", "Bash", "Rust"],
+    ["셸 시작 시간", "~200ms", "~5ms"],
+    ["환경 변수 관리", "direnv 별도 필요", "내장"],
+    ["명령어", "asdf install, asdf global, ...", "mise use, mise install, ..."],
+    ["호환성", ".tool-versions", ".tool-versions + .mise.toml"],
+  ]}
+/>
 
 이미 asdf를 쓰고 있다면 마이그레이션이 거의 무료다. `.tool-versions` 파일은 그대로 동작한다. mise를 깔고 asdf를 지우면 끝이다.
 
@@ -146,11 +149,14 @@ mise upgrade
 
 내 머신에서 직접 측정한 결과다.
 
-| 셋업 | 셸 시작 시간 |
-|------|--------------|
-| nvm + pyenv + gvm | 약 1.2초 |
-| asdf | 약 0.3초 |
-| mise | 약 0.05초 |
+<StackSummaryCard
+  title="셸 시작 시간 비교"
+  items={[
+    { label: "nvm + pyenv + gvm", value: "약 1.2초" },
+    { label: "asdf", value: "약 0.3초" },
+    { label: "mise", value: "약 0.05초" },
+  ]}
+/>
 
 mise는 거의 느낌이 없다. nvm 한 가지만 깔아도 1초 가까이 걸리는 걸 생각하면 효과가 크다. 새 탭을 자주 여는 사람일수록 체감이 크다.
 

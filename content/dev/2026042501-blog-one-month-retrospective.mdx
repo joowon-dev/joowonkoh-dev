@@ -30,13 +30,16 @@ Google Analytics + Search Console 기준.
 
 ## 가장 많이 본 글 TOP 5
 
-| 순위 | 글 | 페이지뷰 |
-|------|------|----------|
-| 1 | [터미널 생산성 도구](/blog/2026040801-terminal-productivity-tools) | 약 280 |
-| 2 | [Claude Code 명령어](/blog/2026041001-claude-code-commands) | 약 210 |
-| 3 | [Git & GitHub CLI 명령어 30선](/blog/2026041101-git-github-cli-commands) | 약 180 |
-| 4 | [Oh My ClaudeCode 가이드](/blog/2026040701-oh-my-claudecode) | 약 130 |
-| 5 | [Cloudflare Pages 배포](/blog/2026040501-deploying-to-cloudflare-pages) | 약 110 |
+<DataTableCard
+  headers={["순위", "글", "페이지뷰"]}
+  rows={[
+    ["1", "터미널 생산성 도구", "약 280"],
+    ["2", "Claude Code 명령어", "약 210"],
+    ["3", "Git & GitHub CLI 명령어 30선", "약 180"],
+    ["4", "Oh My ClaudeCode 가이드", "약 130"],
+    ["5", "Cloudflare Pages 배포", "약 110"],
+  ]}
+/>
 
 **상위 5개의 공통점**: 다 "도구 모음" 또는 "명령어 모음" 형태다. 사람들이 검색으로 들어오는 글의 형식이 분명히 있다.
 
@@ -100,15 +103,18 @@ Search Console에서 본 실제 유입 키워드(약간 가공).
 
 ## 한 달 동안 시도한 것 vs 효과
 
-| 시도 | 효과 |
-|------|------|
-| 매일 1편 글 작성 (실제로는 이틀에 1편) | 콘텐츠 양 ↑, 품질 균등하지 않음 |
-| 시각화 컴포넌트 도입 ([CompareCard 등](/blog/2026042201-mdx-table-replacement-with-react-components)) | 가독성 ↑, 작성 시간 ↑ |
-| Google Search Console 등록 | 인덱싱 빠름 |
-| 내부 링크 적극 추가 | 페이지뷰/사용자 비율 ↑ |
-| 시각화 컴포넌트 사용 | 모바일 가독성 ↑ |
-| 한 글당 1,500자 이상 유지 | SEO 친화적, AdSense 기준 충족 |
-| 다크모드 단일 디자인 | 정체성 강화 |
+<StackSummaryCard
+  title="시도 → 효과"
+  items={[
+    { label: "매일 1편 글", value: "콘텐츠 양 ↑, 품질 균등하지 않음" },
+    { label: "시각화 컴포넌트", value: "가독성 ↑, 작성 시간 ↑" },
+    { label: "Search Console", value: "인덱싱 빠름" },
+    { label: "내부 링크 추가", value: "페이지뷰/사용자 비율 ↑" },
+    { label: "모바일 시각화", value: "모바일 가독성 ↑" },
+    { label: "1,500자 기준", value: "SEO 친화적, AdSense 기준 충족" },
+    { label: "다크모드 단일", value: "정체성 강화" },
+  ]}
+/>
 
 가장 효과 큰 것: **내부 링크 + 1,500자 기준 + 검색 친화적 키워드 선택.**
 가장 효과 작은 것: SNS 공유 (직접 효과 거의 없음).

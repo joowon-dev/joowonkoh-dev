@@ -150,18 +150,22 @@ run '~/.tmux/plugins/tpm/tpm'
 
 prefix(`Ctrl+A`)를 누른 다음 입력하는 키들이다.
 
-| 키 | 동작 |
-|----|------|
-| `\|` | 세로 분할 |
-| `-` | 가로 분할 |
-| `h/j/k/l` | 패널 이동 |
-| `H/J/K/L` | 패널 리사이즈 |
-| `z` | 패널 줌 (한 패널을 전체화면) |
-| `c` | 새 창 |
-| `,` | 창 이름 변경 |
-| `d` | 세션에서 분리(detach) |
-| `s` | 세션 목록에서 선택 |
-| `x` | 패널 닫기 |
+<KeybindCard
+  title="tmux 자주 쓰는 키바인딩"
+  prefix="Ctrl+A"
+  binds={[
+    { key: "|", action: "세로 분할" },
+    { key: "-", action: "가로 분할" },
+    { key: "h/j/k/l", action: "패널 이동" },
+    { key: "H/J/K/L", action: "패널 리사이즈" },
+    { key: "z", action: "패널 줌 (한 패널을 전체화면)" },
+    { key: "c", action: "새 창" },
+    { key: ",", action: "창 이름 변경" },
+    { key: "d", action: "세션에서 분리(detach)" },
+    { key: "s", action: "세션 목록에서 선택" },
+    { key: "x", action: "패널 닫기" },
+  ]}
+/>
 
 `prefix + z`(줌)는 자주 쓴다. Claude Code 출력을 자세히 보고 싶을 때 한 패널만 키운 다음, 다시 `prefix + z`로 원래 레이아웃으로 돌아온다.
 
