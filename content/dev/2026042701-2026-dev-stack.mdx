@@ -15,21 +15,24 @@ tags: ["Dev", "회고", "스택"]
 
 ## 한 화면 요약
 
-| 카테고리 | 2026년 4월 기준 |
-|----------|-----------------|
-| 에디터 | VS Code + Cursor + Claude Code |
-| 터미널 | cmux + tmux + zsh |
-| AI 코딩 | Claude Code (Opus 4.7) + OMC + Superpowers |
-| 언어 | TypeScript / Python / Go |
-| 프레임워크 | Next.js 15 + Tailwind v4 |
-| DB | Supabase (Postgres + Auth + Storage) |
-| 호스팅 | Cloudflare Pages + Cloudflare Workers |
-| 노트 | Obsidian (iCloud 동기화) |
-| 모니터링 | Sentry + GA + Search Console |
-| 패키지 관리 | mise + brew + pnpm |
-| Git | gh CLI + lazygit |
-| 이미지 처리 | sharp |
-| 폰트 | Pretendard |
+<StackSummaryCard
+  title="2026년 4월 기준 스택"
+  items={[
+    { label: "에디터", value: "VS Code + Cursor + Claude Code" },
+    { label: "터미널", value: "cmux + tmux + zsh" },
+    { label: "AI 코딩", value: "Claude Code (Opus 4.7) + OMC + Superpowers" },
+    { label: "언어", value: "TypeScript / Python / Go" },
+    { label: "프레임워크", value: "Next.js 15 + Tailwind v4" },
+    { label: "DB", value: "Supabase (Postgres + Auth + Storage)" },
+    { label: "호스팅", value: "Cloudflare Pages + Cloudflare Workers" },
+    { label: "노트", value: "Obsidian (iCloud 동기화)" },
+    { label: "모니터링", value: "Sentry + GA + Search Console" },
+    { label: "패키지 관리", value: "mise + brew + pnpm" },
+    { label: "Git", value: "gh CLI + lazygit" },
+    { label: "이미지 처리", value: "sharp" },
+    { label: "폰트", value: "Pretendard" },
+  ]}
+/>
 
 이게 매일 쓰는 메인 스택이다. 더 깊이는 카테고리별로.
 

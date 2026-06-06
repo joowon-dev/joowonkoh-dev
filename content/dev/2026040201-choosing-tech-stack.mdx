@@ -67,10 +67,13 @@ CSS 프레임워크는 Tailwind CSS를 선택했다. v4부터는 별도의 `tail
 
 ## 정리
 
-| 영역 | 선택 | 이유 |
-|------|------|------|
-| 프레임워크 | Next.js 15 | SSG, App Router, MDX, SEO |
-| 호스팅 | Cloudflare Pages | 무료 상업적 사용, 무제한 대역폭 |
-| 스타일링 | Tailwind CSS v4 | CSS 기반 테마, 빠른 개발 |
-| 폰트 | Pretendard | 깔끔한 한글, CDN 제공 |
-| 콘텐츠 | MDX | 마크다운 + React 컴포넌트 |
+<DataTableCard
+  headers={["영역", "선택", "이유"]}
+  rows={[
+    ["프레임워크", "Next.js 15", "SSG, App Router, MDX, SEO"],
+    ["호스팅", "Cloudflare Pages", "무료 상업적 사용, 무제한 대역폭"],
+    ["스타일링", "Tailwind CSS v4", "CSS 기반 테마, 빠른 개발"],
+    ["폰트", "Pretendard", "깔끔한 한글, CDN 제공"],
+    ["콘텐츠", "MDX", "마크다운 + React 컴포넌트"],
+  ]}
+/>
