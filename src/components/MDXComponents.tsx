@@ -13,6 +13,9 @@ import TerminalToolCard from "./TerminalToolCard";
 import ClaudeCodeCommandCard from "./ClaudeCodeCommandCard";
 import ClaudeCodeShortcutCard from "./ClaudeCodeShortcutCard";
 import GitCommandCard from "./GitCommandCard";
+import StackSummaryCard from "./StackSummaryCard";
+import DataTableCard from "./DataTableCard";
+import KeybindCard from "./KeybindCard";
 
 const components: MDXComponents = {
   h2: (props) => (
@@ -81,6 +84,9 @@ const components: MDXComponents = {
   ClaudeCodeCommandCard,
   ClaudeCodeShortcutCard,
   GitCommandCard,
+  StackSummaryCard,
+  DataTableCard,
+  KeybindCard,
 };
 
 export default components;
