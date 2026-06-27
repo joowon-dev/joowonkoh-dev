@@ -42,6 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         images: ["/logo.png"],
       },
       alternates: { canonical: url },
+      robots: meta.noindex ? { index: false, follow: true } : undefined,
     };
   } catch {
     return { title: "Not Found" };

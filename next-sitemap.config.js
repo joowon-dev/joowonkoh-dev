@@ -7,8 +7,9 @@ const SECTIONS = ["dev", "life"];
 
 // Build a map of "/blog/<section>/<slug>" -> ISO publish date from frontmatter,
 // so the sitemap reports each post's real date instead of the build timestamp.
-function buildDateMap() {
-  const map = {};
+function buildContentIndex() {
+  const dateMap = {};
+  const noindexPaths = [];
   for (const section of SECTIONS) {
     const dir = path.join(CONTENT_ROOT, section);
     if (!fs.existsSync(dir)) continue;
@@ -16,15 +17,15 @@ function buildDateMap() {
       if (!file.endsWith(".mdx")) continue;
       const slug = (file.replace(/\.mdx$/, "").match(/^(\d+)/) || [])[1] || file;
       const { data } = matter(fs.readFileSync(path.join(dir, file), "utf-8"));
-      if (data.date) {
-        map[`/blog/${section}/${slug}`] = new Date(data.date).toISOString();
-      }
+      const loc = `/blog/${section}/${slug}`;
+      if (data.date) dateMap[loc] = new Date(data.date).toISOString();
+      if (data.noindex === true) noindexPaths.push(loc);
     }
   }
-  return map;
+  return { dateMap, noindexPaths };
 }
 
-const dateMap = buildDateMap();
+const { dateMap, noindexPaths } = buildContentIndex();
 
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
@@ -32,6 +33,7 @@ module.exports = {
   generateRobotsTxt: true,
   sitemapSize: 7000,
   outDir: "./public",
+  exclude: noindexPaths,
   transform: async (config, url) => {
     const loc = new URL(url, config.siteUrl).pathname;
     const isPost = loc.startsWith("/blog/") && loc.split("/").length === 4;

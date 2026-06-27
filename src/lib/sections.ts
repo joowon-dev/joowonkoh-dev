@@ -14,6 +14,8 @@ export interface PostMeta {
   date: string;
   tags: string[];
   section: Section;
+  /** When true, the post is excluded from search indexing (robots noindex + sitemap). */
+  noindex?: boolean;
 }
 
 export function postHref(post: Pick<PostMeta, "section" | "slug">): string {

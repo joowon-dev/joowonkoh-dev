@@ -13,6 +13,9 @@ interface Props {
  * a headline, author, and publish date.
  */
 export default function ArticleJsonLd({ meta }: Props) {
+  // Don't advertise structured data for pages excluded from indexing.
+  if (meta.noindex) return null;
+
   const url = `${SITE_URL}/blog/${meta.section}/${meta.slug}`;
 
   const jsonLd = {
