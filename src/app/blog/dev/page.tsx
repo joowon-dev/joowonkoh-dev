@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import SectionList from "@/components/SectionList";
-import { getAllPostsBySection, getAllTagsBySection } from "@/lib/mdx";
+import { getAllPostsBySection, getPopularTagsBySection } from "@/lib/mdx";
 
 export const metadata: Metadata = {
   title: "Blog · Dev",
@@ -10,6 +10,6 @@ export const metadata: Metadata = {
 
 export default function DevSectionPage() {
   const posts = getAllPostsBySection("dev");
-  const tags = getAllTagsBySection("dev");
+  const tags = getPopularTagsBySection("dev");
   return <SectionList section="dev" posts={posts} tags={tags} />;
 }

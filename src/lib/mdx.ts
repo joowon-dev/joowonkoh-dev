@@ -85,3 +85,23 @@ export function getAllTagsBySection(section: Section): string[] {
   posts.forEach((post) => post.tags.forEach((tag) => tagSet.add(tag)));
   return Array.from(tagSet);
 }
+
+/**
+ * Tags worth surfacing as filters: only those used on at least `minCount`
+ * posts, ordered by frequency (most used first). Keeps the filter row short
+ * instead of listing dozens of one-off tags.
+ */
+export function getPopularTagsBySection(
+  section: Section,
+  minCount = 2,
+): string[] {
+  const posts = getAllPostsBySection(section);
+  const counts = new Map<string, number>();
+  posts.forEach((post) =>
+    post.tags.forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1)),
+  );
+  return Array.from(counts.entries())
+    .filter(([, n]) => n >= minCount)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([tag]) => tag);
+}
