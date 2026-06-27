@@ -37,6 +37,7 @@ function readPostMeta(section: Section, filename: string): PostMeta {
     date: data.date ?? "",
     tags: data.tags ?? [],
     section,
+    noindex: data.noindex === true,
   };
 }
 
@@ -72,6 +73,7 @@ export function getPostBySlugFromSection(section: Section, slug: string) {
       date: data.date ?? "",
       tags: data.tags ?? [],
       section,
+      noindex: data.noindex === true,
     } satisfies PostMeta,
     content,
   };
