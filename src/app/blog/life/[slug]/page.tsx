@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import SectionPostView from "@/components/SectionPostView";
+import ArticleJsonLd from "@/components/ArticleJsonLd";
 import {
   getAllPostsBySection,
   getPostBySlugFromSection,
@@ -64,11 +65,14 @@ export default async function LifePostPage({ params }: Props) {
   const next = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
 
   return (
-    <SectionPostView
-      meta={post!.meta}
-      content={post!.content}
-      prev={prev}
-      next={next}
-    />
+    <>
+      <ArticleJsonLd meta={post!.meta} />
+      <SectionPostView
+        meta={post!.meta}
+        content={post!.content}
+        prev={prev}
+        next={next}
+      />
+    </>
   );
 }

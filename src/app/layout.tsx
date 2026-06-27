@@ -30,9 +30,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://joowonkoh.com",
   },
-  verification: {
-    google: "G-924W0S77PX",
-  },
 };
 
 export default function RootLayout({
