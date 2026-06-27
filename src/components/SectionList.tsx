@@ -3,6 +3,7 @@
 import { useState } from "react";
 import PostItem from "@/components/PostItem";
 import TagFilter from "@/components/TagFilter";
+import Pagination from "@/components/Pagination";
 import type { PostMeta, Section } from "@/lib/sections";
 import { SECTION_LABELS } from "@/lib/sections";
 
@@ -10,6 +11,8 @@ const SECTION_DESCRIPTIONS: Record<Section, string> = {
   dev: "개발, 도구, 워크플로우에 대한 글을 모았습니다.",
   life: "일상에서 직접 겪은 것들을 기록합니다. 맛집, 베이커리, 여행.",
 };
+
+const PAGE_SIZE = 10;
 
 export default function SectionList({
   section,
@@ -21,10 +24,30 @@ export default function SectionList({
   tags: string[];
 }) {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const filtered = selectedTag
     ? posts.filter((p) => p.tags.includes(selectedTag))
     : posts;
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  const handleTagChange = (tag: string | null) => {
+    setSelectedTag(tag);
+    setPage(1);
+  };
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="animate-fade-in-up">
@@ -38,10 +61,14 @@ export default function SectionList({
         {SECTION_DESCRIPTIONS[section]}
       </p>
       <div className="mt-8">
-        <TagFilter tags={tags} selected={selectedTag} onChange={setSelectedTag} />
+        <TagFilter
+          tags={tags}
+          selected={selectedTag}
+          onChange={handleTagChange}
+        />
       </div>
       <div className="mt-6 space-y-3 stagger-children">
-        {filtered.map((post) => (
+        {paged.map((post) => (
           <PostItem key={post.slug} post={post} />
         ))}
         {filtered.length === 0 && (
@@ -50,6 +77,11 @@ export default function SectionList({
           </p>
         )}
       </div>
+      <Pagination
+        page={currentPage}
+        totalPages={totalPages}
+        onChange={handlePageChange}
+      />
     </div>
   );
 }
