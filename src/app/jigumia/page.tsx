@@ -108,10 +108,10 @@ export default function JigumiaPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-5">
           <a
-            href="mailto:hello@joowonkoh.com"
+            href="mailto:jigumia0226@gmail.com"
             className="text-sm font-medium text-text-secondary spring-transition hover:text-accent"
           >
-            hello@joowonkoh.com →
+            jigumia0226@gmail.com →
           </a>
           <Link
             href="/jigumia/privacy"

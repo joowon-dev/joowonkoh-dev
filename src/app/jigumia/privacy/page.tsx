@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   },
 };
 
-const UPDATED_AT = "2026년 6월 15일";
-const CONTACT = "hello@joowonkoh.com";
+const UPDATED_AT = "2026년 6월 29일";
+const CONTACT = "jigumia0226@gmail.com";
 
 export default function JigumiaPrivacyPage() {
   return (
@@ -31,7 +31,7 @@ export default function JigumiaPrivacyPage() {
           <p>
             JIGUMIA(지구미아, 이하 &ldquo;본 앱&rdquo;)는 여러 브랜드의 세일 일정을
             캘린더 형태로 모아 보고, 관심 브랜드의 세일을 알림으로 받아볼 수 있는
-            모바일 애플리케이션입니다. 본 앱은 개발자 고주원이 개인적으로 운영하며,
+            모바일 애플리케이션입니다. 본 앱은 JIGUMIA가 운영하며,
             본 방침은 본 앱이 수집하는 정보의 항목과 이용 목적, 보관 및 파기,
             이용자의 권리에 관한 사항을 설명합니다. 문의 사항은{" "}
             <a className="text-accent hover:underline" href={`mailto:${CONTACT}`}>
@@ -66,6 +66,12 @@ export default function JigumiaPrivacyPage() {
               <strong className="text-text-primary">문의 내역</strong> — 앱 내 문의하기
               기능을 이용한 경우 이메일 주소, 문의 제목 및 내용.
             </li>
+            <li>
+              <strong className="text-text-primary">광고 식별자 및 기기 정보</strong> —
+              앱 내 광고 제공을 위해 Google AdMob이 광고 식별자(Google 광고 ID,
+              iOS 광고 식별자(IDFA))와 기기 종류·운영체제·대략적 지역·IP 주소 등을
+              수집할 수 있습니다.
+            </li>
           </ul>
           <p className="mt-3">
             본 앱은 위치 정보, 연락처, 사진, 전화번호, 결제 정보 등 위에 명시되지
@@ -84,10 +90,14 @@ export default function JigumiaPrivacyPage() {
             <li>이용자가 설정한 브랜드 세일에 대한 푸시 알림 발송</li>
             <li>문의 접수 및 답변 제공</li>
             <li>서비스 이용 통계 집계 및 품질 개선</li>
+            <li>앱 내 광고 제공</li>
           </ul>
           <p className="mt-3">
-            본 앱은 수집한 정보를 광고 목적으로 사용하지 않으며, 이용자 추적을 위한
-            제3자 광고 식별자를 사용하지 않습니다.
+            본 앱은 Google AdMob을 통해 앱 내에 광고를 게재합니다. 본 앱은 이용자
+            맞춤형 광고를 위한 추적을 사용하지 않으며, 비맞춤형(non-personalized)
+            광고만을 요청합니다. 다만 광고 제공 과정에서 Google AdMob이 광고
+            식별자와 기기 정보를 수집할 수 있으며, 자세한 내용은 아래 4. 제3자
+            서비스 항목을 참고해 주시기 바랍니다.
           </p>
         </section>
 
@@ -118,10 +128,23 @@ export default function JigumiaPrivacyPage() {
               알림 전송을 위해 사용되며, Apple(APNs) 및 Google(FCM)의 푸시 인프라를
               경유해 기기로 알림이 전달됩니다.
             </li>
+            <li>
+              <strong className="text-text-primary">Google AdMob</strong> — 앱 내 광고
+              게재 및 광고 성과 측정에 사용됩니다. 광고 제공 과정에서 광고 식별자,
+              기기 정보, IP 주소 등이 수집·처리될 수 있으며, 처리 방식은 Google의{" "}
+              <a
+                className="text-accent hover:underline"
+                href="https://policies.google.com/technologies/partner-sites"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                파트너 사이트에서의 데이터 사용 방침
+              </a>
+              을 따릅니다.
+            </li>
           </ul>
           <p className="mt-3">
-            본 앱은 위 목적 외에 이용자의 개인정보를 제3자에게 판매하거나 별도로
-            제공하지 않습니다.
+            본 앱은 위 목적 외에 이용자의 개인정보를 제3자에게 판매하지 않습니다.
           </p>
         </section>
 
