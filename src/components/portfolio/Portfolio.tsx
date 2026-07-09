@@ -24,19 +24,20 @@ import {
   staggerItem,
   EASE,
 } from "./primitives";
+import GithubContributions from "./GithubContributions";
 
 /* Spring curve reused for all interactive lifts (Supanova standard). */
 const SPRING = "[transition-timing-function:cubic-bezier(0.16,1,0.3,1)]";
 
 /* ------------------------------------------------------------------ */
-/*  Warm ambient mesh — amber/neutral orbs, no purple "AI gradient".   */
+/*  Ambient mesh — lime/emerald orbs, no purple "AI gradient".          */
 /* ------------------------------------------------------------------ */
 function Ambient() {
   const orbs = [
-    { c: "bg-amber-500/20", s: "h-[40vw] w-[40vw] left-[-6%] top-[4%]", d: 20 },
-    { c: "bg-orange-600/12", s: "h-[36vw] w-[36vw] right-[-4%] top-[0%]", d: 24 },
-    { c: "bg-amber-300/10", s: "h-[32vw] w-[32vw] left-[30%] top-[40%]", d: 28 },
-    { c: "bg-stone-400/10", s: "h-[28vw] w-[28vw] right-[16%] bottom-[4%]", d: 22 },
+    { c: "bg-[#9fd42f]/20", s: "h-[40vw] w-[40vw] left-[-6%] top-[4%]", d: 20 },
+    { c: "bg-emerald-500/14", s: "h-[36vw] w-[36vw] right-[-4%] top-[0%]", d: 24 },
+    { c: "bg-[#C6F24E]/10", s: "h-[32vw] w-[32vw] left-[30%] top-[40%]", d: 28 },
+    { c: "bg-teal-400/10", s: "h-[28vw] w-[28vw] right-[16%] bottom-[4%]", d: 22 },
   ];
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -56,8 +57,8 @@ function Ambient() {
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <Reveal>
-      <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200">
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+      <span className="inline-flex items-center gap-2 rounded-full border border-[#C6F24E]/20 bg-[#C6F24E]/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d8f87e]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#C6F24E]" />
         {children}
       </span>
     </Reveal>
@@ -83,10 +84,10 @@ export default function Portfolio() {
 
   return (
     <div className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 -mt-16 -mb-16 overflow-x-clip break-keep bg-[#050505] text-white antialiased [text-wrap:pretty]">
-      {/* Scroll progress — single amber hue */}
+      {/* Scroll progress — single lime hue */}
       <motion.div
         style={{ scaleX: progress }}
-        className="fixed inset-x-0 top-0 z-[70] h-[2px] origin-left bg-gradient-to-r from-amber-300 to-amber-500"
+        className="fixed inset-x-0 top-0 z-[70] h-[2px] origin-left bg-gradient-to-r from-[#C6F24E] to-[#9fd42f]"
       />
 
       {/* ============================ HERO ============================ */}
@@ -110,13 +111,13 @@ export default function Portfolio() {
           aria-hidden
           animate={{ y: [0, -14, 0], rotate: [0, 8, 0] }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="pointer-events-none absolute right-[14%] top-[22%] hidden h-16 w-16 rounded-full border border-amber-300/25 md:block"
+          className="pointer-events-none absolute right-[14%] top-[22%] hidden h-16 w-16 rounded-full border border-[#C6F24E]/25 md:block"
         />
         <motion.div
           aria-hidden
           animate={{ y: [0, 16, 0] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="pointer-events-none absolute left-[16%] bottom-[26%] hidden h-2.5 w-2.5 rounded-full bg-amber-300/70 md:block"
+          className="pointer-events-none absolute left-[16%] bottom-[26%] hidden h-2.5 w-2.5 rounded-full bg-[#C6F24E]/70 md:block"
         />
 
         <motion.div
@@ -130,8 +131,8 @@ export default function Portfolio() {
             className="mb-9 inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.06] px-4 py-2 text-[13px] font-medium tracking-wide text-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
           >
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C6F24E] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#C6F24E]" />
             </span>
             {PROFILE.badge}
           </motion.span>
@@ -157,7 +158,7 @@ export default function Portfolio() {
           >
             <MagneticButton
               href="#work"
-              className="group inline-flex items-center gap-3 rounded-full bg-amber-400 py-2 pl-7 pr-2 text-[15px] font-semibold text-black shadow-[0_10px_36px_-10px_rgba(251,191,36,0.6)]"
+              className="group inline-flex items-center gap-3 rounded-full bg-[#C6F24E] py-2 pl-7 pr-2 text-[15px] font-semibold text-black shadow-[0_10px_36px_-10px_rgba(198,242,78,0.6)]"
             >
               작업 보기
               <span className={`flex h-9 w-9 items-center justify-center rounded-full bg-black/10 transition-transform duration-500 ${SPRING} group-hover:translate-x-0.5`}>
@@ -217,7 +218,7 @@ export default function Portfolio() {
             {METRICS.map((m) => (
               <motion.div key={m.label} variants={staggerItem}>
                 <div className="flex items-start gap-1.5">
-                  <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                  <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[#C6F24E]" />
                   <span className="font-display text-5xl font-extrabold tracking-tight text-white md:text-6xl">
                     <CountUp
                       value={m.value}
@@ -227,7 +228,17 @@ export default function Portfolio() {
                     />
                   </span>
                 </div>
-                <p className="mt-4 text-[15px] font-semibold text-white/85">
+                <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
+                  <motion.div
+                    initial={{ scaleX: 0 }}
+                    whileInView={{ scaleX: m.bar / 100 }}
+                    viewport={{ once: true, margin: "-60px" }}
+                    transition={{ duration: 1.1, delay: 0.2, ease: EASE }}
+                    style={{ originX: 0 }}
+                    className="h-full rounded-full bg-gradient-to-r from-[#C6F24E] to-[#9fd42f]"
+                  />
+                </div>
+                <p className="mt-3.5 text-[15px] font-semibold text-white/85">
                   {m.label}
                 </p>
                 <p className="mt-1 break-keep text-[13px] leading-relaxed text-white/50">
@@ -236,6 +247,11 @@ export default function Portfolio() {
               </motion.div>
             ))}
           </motion.div>
+
+          {/* GitHub contribution graph — the dramatic "잔디" visual */}
+          <Reveal className="mt-16">
+            <GithubContributions username="joowon-dev" />
+          </Reveal>
         </div>
       </section>
 
@@ -253,7 +269,7 @@ export default function Portfolio() {
             <Reveal key={j.org} delay={i * 0.05}>
               <div className="group relative grid grid-cols-1 gap-6 border-t border-white/10 pt-10 md:grid-cols-[minmax(0,200px)_1fr]">
                 <div className="md:sticky md:top-24 md:self-start">
-                  <p className="font-mono text-[13px] font-semibold tracking-tight text-amber-300/90">
+                  <p className="font-mono text-[13px] font-semibold tracking-tight text-[#C6F24E]/90">
                     {j.period}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -271,7 +287,7 @@ export default function Portfolio() {
                   <h3 className="font-display text-2xl font-bold tracking-tight text-white md:text-[1.75rem]">
                     {j.org}
                   </h3>
-                  <p className="mt-1.5 text-[15px] font-medium text-amber-200/70">
+                  <p className="mt-1.5 text-[15px] font-medium text-[#d8f87e]/70">
                     {j.role}
                   </p>
                   <p className="mt-4 max-w-2xl break-keep text-[15px] leading-[1.85] text-white/70">
@@ -283,7 +299,7 @@ export default function Portfolio() {
                         key={p}
                         className="flex gap-3 break-keep text-[14.5px] leading-relaxed text-white/65"
                       >
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/80" />
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#C6F24E]/80" />
                         {p}
                       </li>
                     ))}
@@ -302,7 +318,7 @@ export default function Portfolio() {
           <Reveal className="mt-7">
             <h2 className="max-w-3xl font-display text-4xl font-bold leading-snug tracking-tight text-balance md:text-5xl">
               퇴근 후에도 멈추지 않고 만드는{" "}
-              <span className="bg-gradient-to-r from-amber-200 to-amber-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#d8f87e] to-[#C6F24E] bg-clip-text text-transparent">
                 실사용 서비스
               </span>
             </h2>
@@ -362,9 +378,9 @@ export default function Portfolio() {
               <motion.div
                 key={a.title}
                 variants={staggerItem}
-                className={`flex items-baseline gap-5 rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all duration-500 ${SPRING} hover:-translate-y-0.5 hover:border-amber-300/30`}
+                className={`flex items-baseline gap-5 rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all duration-500 ${SPRING} hover:-translate-y-0.5 hover:border-[#C6F24E]/30`}
               >
-                <span className="font-mono text-base font-bold text-amber-300/80">
+                <span className="font-mono text-base font-bold text-[#C6F24E]/80">
                   {a.year}
                 </span>
                 <div>
@@ -385,7 +401,7 @@ export default function Portfolio() {
           <motion.div
             animate={{ scale: [1, 1.12, 1], opacity: [0.35, 0.55, 0.35] }}
             transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute left-1/2 top-1/2 h-[55vw] w-[55vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/12 blur-[130px]"
+            className="absolute left-1/2 top-1/2 h-[55vw] w-[55vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#9fd42f]/12 blur-[130px]"
           />
         </div>
         <div className="relative z-10 mx-auto max-w-3xl text-center">
@@ -407,7 +423,7 @@ export default function Portfolio() {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <MagneticButton
                 href={`mailto:${PROFILE.email}`}
-                className="group inline-flex items-center gap-3 rounded-full bg-amber-400 py-2.5 pl-7 pr-2.5 text-[15px] font-semibold text-black shadow-[0_10px_36px_-10px_rgba(251,191,36,0.6)]"
+                className="group inline-flex items-center gap-3 rounded-full bg-[#C6F24E] py-2.5 pl-7 pr-2.5 text-[15px] font-semibold text-black shadow-[0_10px_36px_-10px_rgba(198,242,78,0.6)]"
               >
                 {PROFILE.email}
                 <span className={`flex h-9 w-9 items-center justify-center rounded-full bg-black/10 transition-transform duration-500 ${SPRING} group-hover:translate-x-0.5`}>
@@ -445,7 +461,7 @@ export default function Portfolio() {
 /* ------------------------------------------------------------------ */
 function SkillChip({ label }: { label: string }) {
   return (
-    <span className="flex items-center gap-2.5 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 text-[15px] font-medium text-white/80 transition-colors duration-300 group-hover:border-amber-300/25">
+    <span className="flex items-center gap-2.5 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 text-[15px] font-medium text-white/80 transition-colors duration-300 group-hover:border-[#C6F24E]/25">
       <Icon
         icon={techIcon(label)}
         className="h-[18px] w-[18px] text-white/85"
@@ -457,7 +473,7 @@ function SkillChip({ label }: { label: string }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Work card — spring lift + tinted amber edge glow                   */
+/*  Work card — spring lift + tinted lime edge glow                    */
 /* ------------------------------------------------------------------ */
 function WorkCard({ work }: { work: (typeof WORKS)[number] }) {
   const external = work.href.startsWith("http");
@@ -465,11 +481,11 @@ function WorkCard({ work }: { work: (typeof WORKS)[number] }) {
 
   const inner = (
     <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(2rem-0.375rem)] bg-[#0b0b0d] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-      <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.16),transparent_60%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_right,rgba(198,242,78,0.16),transparent_60%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       <div className="relative flex h-full flex-col">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-amber-300/90">
+            <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#C6F24E]/90">
               {work.tagline}
             </span>
             <h3 className="mt-2 font-display text-2xl font-bold tracking-tight text-white">
@@ -497,7 +513,7 @@ function WorkCard({ work }: { work: (typeof WORKS)[number] }) {
               {work.metricLabel}
             </div>
           </div>
-          <span className="text-lg text-white/40 transition-all duration-500 group-hover:translate-x-1 group-hover:text-amber-300">
+          <span className="text-lg text-white/40 transition-all duration-500 group-hover:translate-x-1 group-hover:text-[#C6F24E]">
             ↗
           </span>
         </div>
@@ -522,7 +538,7 @@ function WorkCard({ work }: { work: (typeof WORKS)[number] }) {
   );
 
   // Double-Bezel: glass core seated in a machined tray.
-  const className = `group relative block rounded-[2rem] bg-white/[0.045] p-1.5 ring-1 ring-white/10 transition-all duration-500 ${SPRING} hover:-translate-y-1.5 hover:ring-amber-300/40 ${
+  const className = `group relative block rounded-[2rem] bg-white/[0.045] p-1.5 ring-1 ring-white/10 transition-all duration-500 ${SPRING} hover:-translate-y-1.5 hover:ring-[#C6F24E]/40 ${
     wide ? "md:col-span-2" : ""
   }`;
 

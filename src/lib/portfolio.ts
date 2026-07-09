@@ -21,15 +21,16 @@ export interface Metric {
   comma?: boolean;
   label: string;
   sub: string;
+  bar: number; // 0–100, drives the mini progress bar
 }
 
 export const METRICS: Metric[] = [
-  { value: 130, suffix: "만+", label: "대국민 서비스 사용자", sub: "기본형공익직불 신청 — 프로젝트 최대 규모" },
-  { value: 11000, suffix: "+", comma: true, label: "개인 서비스 누적 사용자", sub: "워십 서비스 3종 합계" },
-  { value: 4000, suffix: "", comma: true, label: "피크 동시접속 분산 처리", sub: "무료 인프라만으로 무중단 운영" },
-  { value: 3290, suffix: "", comma: true, label: "연간 GitHub 커밋", sub: "@joowon-dev" },
-  { value: 98, suffix: "%", label: "쿼리 변환기 정확도", sub: "내부망 공통 유틸 — 투입 인력 전원 사용" },
-  { value: 6, suffix: "회", label: "해커톤·경진대회 수상", sub: "대상·최우수상·금상 포함" },
+  { value: 130, suffix: "만+", bar: 100, label: "대국민 서비스 사용자", sub: "기본형공익직불 신청 — 프로젝트 최대 규모" },
+  { value: 11000, suffix: "+", comma: true, bar: 82, label: "개인 서비스 누적 사용자", sub: "워십 서비스 3종 합계" },
+  { value: 4000, suffix: "", comma: true, bar: 74, label: "피크 동시접속 분산 처리", sub: "무료 인프라만으로 무중단 운영" },
+  { value: 3290, suffix: "", comma: true, bar: 92, label: "연간 GitHub 커밋", sub: "@joowon-dev" },
+  { value: 98, suffix: "%", bar: 98, label: "쿼리 변환기 정확도", sub: "내부망 공통 유틸 — 투입 인력 전원 사용" },
+  { value: 6, suffix: "회", bar: 60, label: "해커톤·경진대회 수상", sub: "대상·최우수상·금상 포함" },
 ];
 
 export interface JourneyItem {
@@ -47,41 +48,37 @@ export const JOURNEY: JourneyItem[] = [
     org: "유큐브 · 차세대 농업농촌 프로젝트",
     role: "SI 풀스택 개발자 · 원청 LG CNS",
     summary:
-      "저연차로 프로젝트 최대 규모인 130만 대국민 기본형공익직불 신청 서비스를 책임지고 담당. 분석·설계·자동화·개발·운영·신규개발 전 단계에 기여했습니다.",
+      "저연차로 프로젝트 최대 규모인 130만 대국민 신청 서비스를 맡아 분석부터 운영까지 담당했습니다.",
     points: [
-      "130만 신청 서비스 인수·통합/관통테스트 주도, 간편신청(33만명)·가족구성원 동의 등 핵심 기능 설계·개발",
-      "내부망 공통 유틸 4종 개발 — 쿼리 변환 정확도 98%, 공수 90%+ 절감, 투입 인력 전원 사용",
-      "단위 테스트케이스 1,000+건 자동화, 공통화면 54→13개 통합(화면 통합률 76%)",
-      "PL 5회 변경 공백마다 담당자 역할 대행 — 운영 연속성 100% 보장, SR 900건 처리",
-      "사업단 최초 DW 기반 이력조회 서비스 개발, 계약 이관받은 QR 현장 접수앱(Android) 안정화",
+      "130만 신청 서비스 인수·통합/관통테스트 주도, 핵심 기능 설계·개발",
+      "내부망 쿼리 변환기 등 공통 유틸 4종 — 정확도 98%, 공수 90%+ 절감",
+      "PL 공백마다 담당자 대행 — SR 900건 처리, 운영 연속성 100%",
     ],
-    tags: ["Java", "Spring Boot", "MyBatis", "OZ Report", "MySQL", "DW", "배치", "Android"],
+    tags: ["Java", "Spring Boot", "MyBatis", "OZ Report", "MySQL", "DW"],
   },
   {
     period: "2023.03 — 2024.06",
     org: "선문대 CoRe-Lab · 산학공동과제",
     role: "팀 리더 · AI·데이터 6개 연구 프로젝트",
     summary:
-      "AI·머신러닝·센서 데이터 기반 서비스를 기획부터 배포까지 수행. 6개 연구 프로젝트를 리드했습니다.",
+      "AI·머신러닝·센서 데이터 서비스를 기획부터 배포까지, 6개 연구 프로젝트를 리드했습니다.",
     points: [
-      "Fluffy Mood — 스마트폰 센서를 DBSCAN·K-Means·주파수 분석으로 처리한 AI 우울감 케어봇, 임상 척도(PHQ-9)와 90% 일치",
-      "WebRTC 화상상담에 대화 긍/부정 탐지 기반 AI 공감 기능 탑재, 백만 건 규모 데이터 처리·최적화",
-      "ChatGPT 기반 맞춤 영양제 추천 웹, BLE 비콘 실시간 채팅(WENNECT) 풀스택 개발",
+      "AI 우울감 케어봇 — 센서 데이터 ML 분석, 임상 척도(PHQ-9)와 90% 일치",
+      "ChatGPT 영양제 추천·BLE 실시간 채팅 풀스택 개발, 백만 건 데이터 최적화",
     ],
-    tags: ["Python", "React", "React Native", "Spring Boot", "WebRTC", "AWS", "ML"],
+    tags: ["Python", "React", "Spring Boot", "WebRTC", "ML"],
   },
   {
     period: "2019.03 — 2024.08",
     org: "선문대학교 컴퓨터공학부 데이터공학과",
     role: "수석 졸업 · GPA 4.39 / 4.5",
     summary:
-      "전 학년 수석, 수석 졸업. 코딩 동아리 회장·전공 멘토단장으로 활동하며 해커톤·경진대회 6회 수상.",
+      "전 학년 수석으로 졸업. 동아리 회장·멘토단장으로 활동하며 6회 수상했습니다.",
     points: [
-      "대한디지털치료학회 「스마트폰 센서 기반 우울감 조기감지」 구두 발표 (2024)",
-      "IoT빅데이터 응용 교육과정 멘토·조교, 늘봄학교·디지털새싹 AI/SW 캠프 강사",
-      "정보처리기사 · SQLD · AI-900(Microsoft) 취득",
+      "해커톤·경진대회 6회 수상, 학회 구두 발표 (2024)",
+      "정보처리기사 · SQLD · AI-900 취득",
     ],
-    tags: ["연구", "리더십", "멘토링", "발표"],
+    tags: ["연구", "리더십", "멘토링"],
   },
 ];
 
@@ -197,31 +194,32 @@ export const AWARDS: Award[] = [
 export const PHILOSOPHY =
   "만드는 게 좋아서 멈추질 못합니다. 낮엔 130만 명이 쓰는 서비스를, 퇴근 후엔 제 서비스를 — 분석부터 운영까지 전부 직접 부딪히면서 오늘도 뭔가를 만들고 있습니다.";
 
-// label → Iconify slug. Brand marks use simple-icons (monochrome, currentColor);
-// concepts fall back to Solar line icons. A missing slug just renders no glyph
-// beside the label, so the chip still reads fine.
+// label → Iconify slug. Brand marks use the colorful `logos:` set. A few brand
+// logos are dark/monochrome and vanish on the black background (Next.js, Vercel,
+// GitHub) — those use white-tinted `simple-icons` instead. Concepts fall back to
+// Solar line icons. A missing slug just renders no glyph beside the label.
 const TECH_ICONS: Record<string, string> = {
-  TypeScript: "simple-icons:typescript",
-  React: "simple-icons:react",
-  "React Native": "simple-icons:react",
-  "Next.js": "simple-icons:nextdotjs",
-  Java: "simple-icons:openjdk",
-  "Spring Boot": "simple-icons:springboot",
-  "Node.js": "simple-icons:nodedotjs",
-  Python: "simple-icons:python",
+  TypeScript: "logos:typescript-icon",
+  React: "logos:react",
+  "React Native": "logos:react",
+  "Next.js": "simple-icons:nextdotjs", // dark logo → white mono
+  Java: "logos:java",
+  "Spring Boot": "logos:spring-icon",
+  "Node.js": "logos:nodejs-icon",
+  Python: "logos:python",
   MyBatis: "solar:database-linear",
-  Supabase: "simple-icons:supabase",
-  MySQL: "simple-icons:mysql",
-  Redis: "simple-icons:redis",
-  MongoDB: "simple-icons:mongodb",
-  AWS: "simple-icons:amazonwebservices",
-  Vercel: "simple-icons:vercel",
-  Cloudflare: "simple-icons:cloudflare",
-  Firebase: "simple-icons:firebase",
-  MDX: "simple-icons:mdx",
-  Tailwind: "simple-icons:tailwindcss",
-  WebRTC: "simple-icons:webrtc",
-  "Git / GitHub": "simple-icons:github",
+  Supabase: "logos:supabase-icon",
+  MySQL: "logos:mysql-icon",
+  Redis: "logos:redis",
+  MongoDB: "logos:mongodb-icon",
+  AWS: "logos:aws",
+  Vercel: "simple-icons:vercel", // dark logo → white mono
+  Cloudflare: "logos:cloudflare-icon",
+  Firebase: "logos:firebase",
+  MDX: "logos:mdx",
+  Tailwind: "logos:tailwindcss-icon",
+  WebRTC: "logos:webrtc",
+  "Git / GitHub": "simple-icons:github", // dark logo → white mono
   "OZ Report": "solar:document-text-linear",
   eXBuilder6: "solar:code-square-linear",
   "PG 결제": "solar:card-linear",
