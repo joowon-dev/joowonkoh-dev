@@ -250,7 +250,7 @@ export default function Portfolio() {
 
           {/* GitHub contribution graph — the dramatic "잔디" visual */}
           <Reveal className="mt-16">
-            <GithubContributions username="joowon-dev" />
+            <GithubContributions username="joowon-dev" displayTotal={3290} />
           </Reveal>
         </div>
       </section>

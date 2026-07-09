@@ -14,7 +14,13 @@ const LEVEL_BG = [
   "rgba(198,242,78,1)",
 ];
 
-export default function GithubContributions({ username }: { username: string }) {
+export default function GithubContributions({
+  username,
+  displayTotal,
+}: {
+  username: string;
+  displayTotal?: number;
+}) {
   const [days, setDays] = useState<Day[] | null>(null);
   const [total, setTotal] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
@@ -63,10 +69,10 @@ export default function GithubContributions({ username }: { username: string }) 
           rel="noopener noreferrer"
           className="text-[13px] font-medium text-white/50 transition-colors hover:text-[#C6F24E]"
         >
-          {total !== null ? (
+          {(displayTotal ?? total) !== null ? (
             <>
               <span className="font-semibold text-white" style={{ fontVariantNumeric: "tabular-nums" }}>
-                {total.toLocaleString("en-US")}
+                {(displayTotal ?? total)!.toLocaleString("en-US")}
               </span>{" "}
               contributions · @{username} ↗
             </>
