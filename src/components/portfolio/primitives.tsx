@@ -8,9 +8,9 @@ import {
   useTransform,
   type Variants,
 } from "motion/react";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
-/** Easing tuned to feel cinematic — slow-out, gentle settle. */
+/** Supanova motion signature — slow-out, gentle settle. */
 export const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 /** Scroll-reveal wrapper: fades + rises + de-blurs when it enters the viewport. */
@@ -73,7 +73,7 @@ export function KineticText({
             transition={{ duration: 1, delay: delay + i * 0.08, ease: EASE }}
           >
             {word}
-            {i < words.length - 1 ? " " : ""}
+            {i < words.length - 1 ? " " : ""}
           </motion.span>
         </span>
       ))}
@@ -109,10 +109,87 @@ export function CountUp({
   }, [inView, value, mv]);
 
   return (
-    <span ref={ref} className={className}>
+    <span ref={ref} className={className} style={{ fontVariantNumeric: "tabular-nums" }}>
       {prefix}
       <motion.span>{display}</motion.span>
       {suffix}
     </span>
+  );
+}
+
+/** Infinite horizontal marquee. Duplicates children so the loop is seamless. */
+export function Marquee({
+  children,
+  duration = 30,
+  reverse = false,
+  className,
+}: {
+  children: ReactNode;
+  duration?: number;
+  reverse?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`group relative flex overflow-hidden ${className ?? ""}`}>
+      <motion.div
+        className="flex shrink-0 items-center gap-4 pr-4"
+        animate={{ x: reverse ? ["-50%", "0%"] : ["0%", "-50%"] }}
+        transition={{ duration, ease: "linear", repeat: Infinity }}
+      >
+        {children}
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+/** CTA that leans toward the cursor while hovered (Supanova magnetic physics). */
+export function MagneticButton({
+  children,
+  className,
+  href,
+  external,
+}: {
+  children: ReactNode;
+  className?: string;
+  href: string;
+  external?: boolean;
+}) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 260, damping: 18 });
+  const sy = useSpring(y, { stiffness: 260, damping: 18 });
+  const [hovered, setHovered] = useState(false);
+
+  const onMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    x.set((e.clientX - (r.left + r.width / 2)) * 0.35);
+    y.set((e.clientY - (r.top + r.height / 2)) * 0.35);
+  };
+  const reset = () => {
+    x.set(0);
+    y.set(0);
+    setHovered(false);
+  };
+
+  return (
+    <motion.a
+      ref={ref}
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+      onMouseMove={onMove}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={reset}
+      style={{ x: sx, y: sy }}
+      animate={{ scale: hovered ? 1.03 : 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className={className}
+    >
+      {children}
+    </motion.a>
   );
 }

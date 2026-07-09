@@ -85,9 +85,46 @@ p, li, blockquote {
   background-size: 256px 256px;
 }
 
+/* Infinite marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 30s) linear infinite;
+}
+
+/* Animated gradient text */
+@keyframes gradient-pan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.text-gradient-animated {
+  background-size: 200% auto;
+  animation: gradient-pan 6s ease infinite;
+}
+
+/* Slow spin for decorative rings */
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 24s linear infinite;
+}
+
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .text-gradient-animated,
+  .animate-spin-slow {
+    animation: none;
+  }
 }
 
 /* Selection color */

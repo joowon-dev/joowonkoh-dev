@@ -93,13 +93,13 @@ export interface Work {
   metricLabel: string;
   stack: string[];
   href: string;
-  accent: string; // tailwind gradient stops
+  span?: "wide"; // bento sizing hint — spans two columns
 }
 
 export const WORKS: Work[] = [
   {
     title: "countdown2026.org",
-    period: "2026.04 —",
+    period: "2026.04 — 진행중",
     tagline: "워십 컨퍼런스 등록·커머스",
     description:
       "장충체육관 워십 컨퍼런스의 공식 등록·굿즈 커머스 웹. 오픈 피크 시 동시접속 4,000명을 Vercel Edge·Cloudflare·CDN으로 분산 처리해 무료 인프라만으로 무중단 운영했습니다.",
@@ -107,11 +107,11 @@ export const WORKS: Work[] = [
     metricLabel: "누적 사용자",
     stack: ["Next.js", "Supabase", "Vercel", "Cloudflare", "PG 결제"],
     href: "https://countdown2026.org",
-    accent: "from-indigo-500 to-blue-500",
+    span: "wide",
   },
   {
     title: "joshuaworship.com",
-    period: "2025.10 —",
+    period: "2025.10 — 진행중",
     tagline: "공동체 일정·행사·커머스",
     description:
       "JOSHUA 공동체의 일정·행사 등록과 굿즈 판매를 관리하는 커뮤니티 웹. Supabase Auth 인증, 캘린더 일정, PG 결제 커머스를 직접 구현했습니다.",
@@ -119,11 +119,10 @@ export const WORKS: Work[] = [
     metricLabel: "누적 사용자",
     stack: ["Next.js", "TypeScript", "Supabase", "PG 결제"],
     href: "https://joshuaworship.com",
-    accent: "from-violet-500 to-fuchsia-500",
   },
   {
     title: "hubworship.ing",
-    period: "2025.08 —",
+    period: "2025.08 — 진행중",
     tagline: "워십 HUB 플랫폼",
     description:
       "여러 앱·리소스·굿즈를 한곳에 모은 모듈형 HUB 플랫폼. 로그인·사용자 관리, 커머스, 피드백 채널까지 1인으로 운영합니다.",
@@ -131,23 +130,21 @@ export const WORKS: Work[] = [
     metricLabel: "누적 사용자",
     stack: ["Next.js", "TypeScript", "Supabase", "PG 결제"],
     href: "https://hubworship.ing",
-    accent: "from-cyan-500 to-teal-500",
   },
   {
     title: "지구미아 · Jigumia",
-    period: "출시",
+    period: "App Store 출시",
     tagline: "브랜드 세일 캘린더 앱",
     description:
       "올리브영·무신사·29CM·쿠팡 등 인기 브랜드의 세일 일정을 하나의 캘린더에서 모아 보는 쇼핑 앱. 세일 정보 수집·관리는 AI로 운영합니다.",
-    metric: "App Store",
-    metricLabel: "출시 · 300 DL",
+    metric: "300+",
+    metricLabel: "다운로드 · App Store",
     stack: ["React Native", "AI 운영"],
-    href: "/jigumia",
-    accent: "from-amber-500 to-orange-500",
+    href: "https://apps.apple.com/kr/app/id6772139871",
   },
   {
     title: "joowonkoh.com",
-    period: "2026.01 —",
+    period: "2026.01 — 진행중",
     tagline: "기술 블로그·포트폴리오",
     description:
       "개발/커리어 인사이트를 공유하는 기술 블로그 겸 포트폴리오. MDX 기반 콘텐츠 파이프라인을 직접 구축하고 SEO·성능을 최적화했습니다.",
@@ -155,7 +152,7 @@ export const WORKS: Work[] = [
     metricLabel: "평균 방문자",
     stack: ["Next.js", "TypeScript", "MDX", "Vercel"],
     href: "https://joowonkoh.com",
-    accent: "from-slate-400 to-slate-600",
+    span: "wide",
   },
 ];
 
@@ -171,6 +168,14 @@ export const SKILLS: SkillGroup[] = [
   { label: "Infra · Tool", skills: ["AWS", "Vercel", "Cloudflare", "Firebase", "CDN · 캐싱", "Git / GitHub"] },
   { label: "SI · Enterprise", skills: ["eXBuilder6", "OZ Report"] },
   { label: "자격 · 어학", skills: ["정보처리기사", "SQLD", "AI-900", "UCSI 해외 IT·영어 연수"] },
+];
+
+// Flat list for the marquee — deduped, ordered for visual rhythm.
+export const SKILL_MARQUEE: string[] = [
+  "TypeScript", "React", "Next.js", "React Native", "Java", "Spring Boot",
+  "Node.js", "Python", "MyBatis", "Supabase", "MySQL", "Redis",
+  "AWS", "Vercel", "Cloudflare", "MDX", "Tailwind", "WebRTC",
+  "OZ Report", "ML · 데이터 분석", "PG 결제 연동", "DW",
 ];
 
 export interface Award {
