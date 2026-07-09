@@ -208,27 +208,47 @@ export default function Portfolio() {
       <section className="relative border-y border-white/10 bg-white/[0.015]">
         <div className="mx-auto max-w-6xl px-6 py-24">
           <Eyebrow>By the numbers</Eyebrow>
+
+          {/* Featured hero stat — the single headline number */}
+          <Reveal className="mt-12">
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] md:p-12">
+              <div className="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full bg-[#C6F24E]/12 blur-[90px]" />
+              <div className="relative">
+                <p className="mb-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#C6F24E]">
+                  가장 큰 무대
+                </p>
+                <div className="font-display text-7xl font-extrabold leading-[0.85] tracking-tight text-white sm:text-8xl md:text-[8.5rem]">
+                  <CountUp value={METRICS[0].value} suffix={METRICS[0].suffix} />
+                </div>
+                <p className="mt-6 text-lg font-semibold text-white">
+                  {METRICS[0].label}
+                </p>
+                <p className="mt-1 break-keep text-sm text-white/55">
+                  {METRICS[0].sub}
+                </p>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Supporting stats — single row on desktop, labels only */}
           <motion.div
             variants={stagger}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-60px" }}
-            className="mt-14 grid grid-cols-2 gap-x-6 gap-y-14 md:grid-cols-3"
+            className="mt-6 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-5"
           >
-            {METRICS.map((m) => (
+            {METRICS.slice(1).map((m) => (
               <motion.div key={m.label} variants={staggerItem}>
-                <div className="flex items-start gap-1.5">
-                  <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[#C6F24E]" />
-                  <span className="font-display text-5xl font-extrabold tracking-tight text-white md:text-6xl">
-                    <CountUp
-                      value={m.value}
-                      suffix={m.suffix}
-                      prefix={m.prefix}
-                      comma={m.comma}
-                    />
-                  </span>
+                <div className="font-display text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+                  <CountUp
+                    value={m.value}
+                    suffix={m.suffix}
+                    prefix={m.prefix}
+                    comma={m.comma}
+                  />
                 </div>
-                <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
+                <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
                   <motion.div
                     initial={{ scaleX: 0 }}
                     whileInView={{ scaleX: m.bar / 100 }}
@@ -238,18 +258,15 @@ export default function Portfolio() {
                     className="h-full rounded-full bg-gradient-to-r from-[#C6F24E] to-[#9fd42f]"
                   />
                 </div>
-                <p className="mt-3.5 text-[15px] font-semibold text-white/85">
+                <p className="mt-3 break-keep text-[13.5px] font-semibold text-white/85">
                   {m.label}
-                </p>
-                <p className="mt-1 break-keep text-[13px] leading-relaxed text-white/50">
-                  {m.sub}
                 </p>
               </motion.div>
             ))}
           </motion.div>
 
           {/* GitHub contribution graph — the dramatic "잔디" visual */}
-          <Reveal className="mt-16">
+          <Reveal className="mt-14">
             <GithubContributions username="joowon-dev" displayTotal={3290} />
           </Reveal>
         </div>
@@ -483,8 +500,8 @@ function WorkCard({ work }: { work: (typeof WORKS)[number] }) {
     <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(2rem-0.375rem)] bg-[#0b0b0d] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
       <div className="pointer-events-none absolute -inset-24 bg-[radial-gradient(circle_at_top_right,rgba(198,242,78,0.16),transparent_60%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       <div className="relative flex h-full flex-col">
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0">
             <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#C6F24E]/90">
               {work.tagline}
             </span>
@@ -492,7 +509,7 @@ function WorkCard({ work }: { work: (typeof WORKS)[number] }) {
               {work.title}
             </h3>
           </div>
-          <span className="shrink-0 font-mono text-[12px] font-medium text-white/40">
+          <span className="whitespace-nowrap font-mono text-[11px] font-medium text-white/40 sm:shrink-0 sm:text-[12px]">
             {work.period}
           </span>
         </div>
@@ -569,16 +586,18 @@ function RevealParagraph({ text }: { text: string }) {
       className="max-w-4xl break-keep font-display text-[1.65rem] font-semibold leading-[1.5] tracking-tight text-white md:text-[2.5rem] md:leading-[1.4]"
     >
       {words.map((w, i) => (
-        <motion.span
-          key={i}
-          variants={{
-            hidden: { opacity: 0.16 },
-            show: { opacity: 1, transition: { duration: 0.5, ease: EASE } },
-          }}
-          className="inline-block"
-        >
-          {w}&nbsp;
-        </motion.span>
+        <span key={i}>
+          <motion.span
+            variants={{
+              hidden: { opacity: 0.16 },
+              show: { opacity: 1, transition: { duration: 0.5, ease: EASE } },
+            }}
+            className="inline-block"
+          >
+            {w}
+          </motion.span>
+          {i < words.length - 1 ? " " : ""}
+        </span>
       ))}
     </motion.p>
   );

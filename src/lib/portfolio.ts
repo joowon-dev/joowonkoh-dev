@@ -8,7 +8,7 @@ export const PROFILE = {
   badge: "풀스택 개발자 · 낮에도 밤에도 개발 중",
   tagline: "낮엔 130만 명이 쓰는 서비스를, 밤엔 제 이름을 건 서비스를 만듭니다.",
   intro:
-    "회사에서는 130만 명이 쓰는 대국민 서비스를 맡고, 퇴근하면 AI 코딩 에이전트와 함께 실사용자 1만 명이 넘는 웹·앱을 직접 만들어 운영합니다. 만드는 걸 멈춘 날이 거의 없어요.",
+    "회사에선 130만 명이 쓰는 서비스를, 퇴근 후엔 실사용자 1만+의 웹·앱을 직접 만들어 운영합니다.",
   email: "joowonkoh0505@gmail.com",
   github: "https://github.com/joowon-dev",
   blog: "https://joowonkoh.com",
@@ -192,7 +192,7 @@ export const AWARDS: Award[] = [
 ];
 
 export const PHILOSOPHY =
-  "만드는 게 좋아서 멈추질 못합니다. 낮엔 130만 명이 쓰는 서비스를, 퇴근 후엔 제 서비스를 — 분석부터 운영까지 전부 직접 부딪히면서 오늘도 뭔가를 만들고 있습니다.";
+  "만드는 게 좋아서, 멈추질 못합니다. 낮엔 130만이 쓰는 서비스를, 밤엔 제 서비스를 만듭니다.";
 
 // label → Iconify slug. Brand marks use the colorful `logos:` set. A few brand
 // logos are dark/monochrome and vanish on the black background (Next.js, Vercel,
