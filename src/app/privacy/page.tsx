@@ -31,7 +31,7 @@ export default function PrivacyPage() {
             본 사이트(이하 &ldquo;joowonkoh.com&rdquo;)는 개발자 고주원이 개인적으로
             운영하는 블로그입니다. 본 방침은 사이트가 수집하는 정보의 종류와 사용
             목적, 보관 및 제3자 제공에 관한 사항을 설명합니다. 문의 사항이 있을
-            경우 <a className="text-accent hover:underline" href="mailto:hello@joowonkoh.com">hello@joowonkoh.com</a>{" "}
+            경우 <a className="text-accent hover:underline" href="mailto:joowonkoh0505@gmail.com">joowonkoh0505@gmail.com</a>{" "}
             으로 연락 부탁드립니다.
           </p>
         </section>

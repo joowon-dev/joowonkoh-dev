@@ -156,10 +156,10 @@ export default function AboutPage() {
             GitHub →
           </a>
           <a
-            href="mailto:hello@joowonkoh.com"
+            href="mailto:joowonkoh0505@gmail.com"
             className="text-sm font-medium text-text-secondary spring-transition hover:text-accent"
           >
-            hello@joowonkoh.com →
+            joowonkoh0505@gmail.com →
           </a>
           <Link
             href="/privacy"

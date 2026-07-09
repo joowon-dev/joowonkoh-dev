@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
+    "motion": "^12.42.2",
     "next": "16.2.2",
     "next-mdx-remote": "^6.0.0",
     "next-sitemap": "^4.2.3",

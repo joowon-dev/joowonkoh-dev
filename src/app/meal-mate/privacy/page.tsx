@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 const UPDATED_AT = "2026년 5월 21일";
-const CONTACT = "hello@joowonkoh.com";
+const CONTACT = "joowonkoh0505@gmail.com";
 
 export default function MealMatePrivacyPage() {
   return (

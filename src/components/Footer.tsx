@@ -24,7 +24,7 @@ export default function Footer() {
               개인정보처리방침
             </Link>
             <a
-              href="mailto:hello@joowonkoh.com"
+              href="mailto:joowonkoh0505@gmail.com"
               className="font-medium text-text-secondary spring-transition hover:text-accent"
             >
               Contact
