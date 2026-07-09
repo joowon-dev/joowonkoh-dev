@@ -5,9 +5,10 @@ export const PROFILE = {
   name: "고주원",
   nameEn: "Joowon Koh",
   role: "Full-Stack Developer",
-  tagline: "분석부터 운영까지, 혼자 끝까지 끌고 갑니다.",
+  badge: "풀스택 개발자 · 낮에도 밤에도 개발 중",
+  tagline: "낮엔 130만 명이 쓰는 서비스를, 밤엔 제 이름을 건 서비스를 만듭니다.",
   intro:
-    "2년차에 130만 명이 쓰는 대국민 서비스를 책임지고 담당했고, 퇴근 후에는 하네스 엔지니어링 기반으로 AI 코딩 에이전트를 활용해 실사용자 1만+의 웹·앱 서비스를 직접 만들어 운영합니다.",
+    "회사에서는 130만 명이 쓰는 대국민 서비스를 맡고, 퇴근하면 AI 코딩 에이전트와 함께 실사용자 1만 명이 넘는 웹·앱을 직접 만들어 운영합니다. 만드는 걸 멈춘 날이 거의 없어요.",
   email: "joowonkoh0505@gmail.com",
   github: "https://github.com/joowon-dev",
   blog: "https://joowonkoh.com",
@@ -194,4 +195,44 @@ export const AWARDS: Award[] = [
 ];
 
 export const PHILOSOPHY =
-  "저는 만드는 사람입니다. 요구사항 분석부터 설계·개발·운영·신규개발까지 중간 단계 없이 직접 끌고 가고, AI 에이전트를 활용해 혼자서도 실사용자가 있는 서비스를 끝까지 책임집니다.";
+  "만드는 게 좋아서 멈추질 못합니다. 낮엔 130만 명이 쓰는 서비스를, 퇴근 후엔 제 서비스를 — 분석부터 운영까지 전부 직접 부딪히면서 오늘도 뭔가를 만들고 있습니다.";
+
+// label → Iconify slug. Brand marks use simple-icons (monochrome, currentColor);
+// concepts fall back to Solar line icons. A missing slug just renders no glyph
+// beside the label, so the chip still reads fine.
+const TECH_ICONS: Record<string, string> = {
+  TypeScript: "simple-icons:typescript",
+  React: "simple-icons:react",
+  "React Native": "simple-icons:react",
+  "Next.js": "simple-icons:nextdotjs",
+  Java: "simple-icons:openjdk",
+  "Spring Boot": "simple-icons:springboot",
+  "Node.js": "simple-icons:nodedotjs",
+  Python: "simple-icons:python",
+  MyBatis: "solar:database-linear",
+  Supabase: "simple-icons:supabase",
+  MySQL: "simple-icons:mysql",
+  Redis: "simple-icons:redis",
+  MongoDB: "simple-icons:mongodb",
+  AWS: "simple-icons:amazonwebservices",
+  Vercel: "simple-icons:vercel",
+  Cloudflare: "simple-icons:cloudflare",
+  Firebase: "simple-icons:firebase",
+  MDX: "simple-icons:mdx",
+  Tailwind: "simple-icons:tailwindcss",
+  WebRTC: "simple-icons:webrtc",
+  "Git / GitHub": "simple-icons:github",
+  "OZ Report": "solar:document-text-linear",
+  eXBuilder6: "solar:code-square-linear",
+  "PG 결제": "solar:card-linear",
+  "PG 결제 연동": "solar:card-linear",
+  DW: "solar:server-square-linear",
+  "CDN · 캐싱": "solar:server-linear",
+  "AI 운영": "solar:magic-stick-3-linear",
+  "ML / 데이터 분석": "solar:chart-square-linear",
+  "ML · 데이터 분석": "solar:chart-square-linear",
+};
+
+export function techIcon(label: string): string {
+  return TECH_ICONS[label] ?? "solar:code-2-linear";
+}

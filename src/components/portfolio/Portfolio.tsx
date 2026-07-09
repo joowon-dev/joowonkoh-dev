@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useScroll, useSpring, useTransform } from "motion/react";
+import { Icon } from "@iconify/react";
 import { useRef } from "react";
 import Link from "next/link";
 import {
@@ -11,6 +12,7 @@ import {
   SKILL_MARQUEE,
   AWARDS,
   PHILOSOPHY,
+  techIcon,
 } from "@/lib/portfolio";
 import {
   Reveal,
@@ -80,7 +82,7 @@ export default function Portfolio() {
   const heroScale = useTransform(heroProgress, [0, 1], [1, 1.06]);
 
   return (
-    <div className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 -mt-16 -mb-16 overflow-x-clip bg-[#050505] text-white antialiased">
+    <div className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 -mt-16 -mb-16 overflow-x-clip break-keep bg-[#050505] text-white antialiased [text-wrap:pretty]">
       {/* Scroll progress — single amber hue */}
       <motion.div
         style={{ scaleX: progress }}
@@ -131,7 +133,7 @@ export default function Portfolio() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
             </span>
-            Full-Stack Developer · 서비스를 만들고 운영합니다
+            {PROFILE.badge}
           </motion.span>
 
           <h1 className="font-display text-[19vw] font-extrabold leading-[0.9] tracking-tight sm:text-[13vw] md:text-[10rem]">
@@ -298,8 +300,8 @@ export default function Portfolio() {
         <div className="mx-auto max-w-6xl px-6 py-28 md:py-40">
           <Eyebrow>Selected Work</Eyebrow>
           <Reveal className="mt-7">
-            <h2 className="max-w-3xl font-display text-4xl font-bold tracking-tight text-balance md:text-5xl">
-              혼자 기획·개발·운영하는{" "}
+            <h2 className="max-w-3xl font-display text-4xl font-bold leading-snug tracking-tight text-balance md:text-5xl">
+              퇴근 후에도 멈추지 않고 만드는{" "}
               <span className="bg-gradient-to-r from-amber-200 to-amber-400 bg-clip-text text-transparent">
                 실사용 서비스
               </span>
@@ -320,8 +322,8 @@ export default function Portfolio() {
         <div className="mx-auto mb-14 max-w-6xl px-6">
           <Eyebrow>Tech Arsenal</Eyebrow>
           <Reveal className="mt-7">
-            <h2 className="font-display text-4xl font-bold tracking-tight text-balance md:text-5xl">
-              매일 다루는 도구들
+            <h2 className="font-display text-4xl font-bold leading-snug tracking-tight text-balance md:text-5xl">
+              손에 익은 도구들
             </h2>
           </Reveal>
         </div>
@@ -397,7 +399,8 @@ export default function Portfolio() {
           </Reveal>
           <Reveal delay={0.15} className="mt-7">
             <p className="mx-auto max-w-xl break-keep text-lg leading-relaxed text-white/60">
-              협업 제안, 채용, 커피챗 모두 환영합니다. 편한 채널로 연락 주세요.
+              커피챗, 채용, 협업 무엇이든 좋아요. 뭔가 만드는 이야기라면 언제든
+              환영입니다.
             </p>
           </Reveal>
           <Reveal delay={0.3} className="mt-11">
@@ -442,8 +445,12 @@ export default function Portfolio() {
 /* ------------------------------------------------------------------ */
 function SkillChip({ label }: { label: string }) {
   return (
-    <span className="flex items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 text-[15px] font-medium text-white/70 transition-colors duration-300 group-hover:border-white/15">
-      <span className="h-1.5 w-1.5 rounded-full bg-amber-400/70" />
+    <span className="flex items-center gap-2.5 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 text-[15px] font-medium text-white/80 transition-colors duration-300 group-hover:border-amber-300/25">
+      <Icon
+        icon={techIcon(label)}
+        className="h-[18px] w-[18px] text-white/85"
+        aria-hidden
+      />
       {label}
     </span>
   );
@@ -499,8 +506,13 @@ function WorkCard({ work }: { work: (typeof WORKS)[number] }) {
           {work.stack.map((s) => (
             <span
               key={s}
-              className="rounded-md bg-white/[0.06] px-2 py-0.5 text-[11px] font-medium text-white/55"
+              className="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2 py-1 text-[11px] font-medium text-white/60"
             >
+              <Icon
+                icon={techIcon(s)}
+                className="h-3.5 w-3.5 text-white/70"
+                aria-hidden
+              />
               {s}
             </span>
           ))}

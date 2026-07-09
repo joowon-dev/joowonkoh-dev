@@ -12,6 +12,7 @@
     "pages:dev": "npx wrangler pages dev .vercel/output/static --compatibility-date=2024-01-01"
   },
   "dependencies": {
+    "@iconify/react": "^6.0.2",
     "gray-matter": "^4.0.3",
     "motion": "^12.42.2",
     "next": "16.2.2",
