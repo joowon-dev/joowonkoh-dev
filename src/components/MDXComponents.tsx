@@ -16,6 +16,8 @@ import GitCommandCard from "./GitCommandCard";
 import StackSummaryCard from "./StackSummaryCard";
 import DataTableCard from "./DataTableCard";
 import KeybindCard from "./KeybindCard";
+import DebugPhaseCard from "./DebugPhaseCard";
+import FlowStepsCard from "./FlowStepsCard";
 
 const components: MDXComponents = {
   h2: (props) => (
@@ -87,6 +89,8 @@ const components: MDXComponents = {
   StackSummaryCard,
   DataTableCard,
   KeybindCard,
+  DebugPhaseCard,
+  FlowStepsCard,
 };
 
 export default components;
