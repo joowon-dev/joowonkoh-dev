@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   },
 };
 
-const UPDATED_AT = "2026년 6월 29일";
+const UPDATED_AT = "2026년 7월 17일";
 const CONTACT = "jigumia0226@gmail.com";
 
 export default function JigumiaPrivacyPage() {
@@ -93,9 +93,11 @@ export default function JigumiaPrivacyPage() {
             <li>앱 내 광고 제공</li>
           </ul>
           <p className="mt-3">
-            본 앱은 Google AdMob을 통해 앱 내에 광고를 게재합니다. 본 앱은 이용자
-            맞춤형 광고를 위한 추적을 사용하지 않으며, 비맞춤형(non-personalized)
-            광고만을 요청합니다. 다만 광고 제공 과정에서 Google AdMob이 광고
+            본 앱은 Google AdMob을 통해 앱 내에 광고를 게재합니다. 광고는 이용자의
+            동의와 지역 설정에 따라 맞춤형(개인화) 또는 비맞춤형(non-personalized)
+            광고로 제공됩니다. 유럽(EEA) 등 관련 규정이 적용되는 지역에서는 Google의
+            사용자 동의 관리 도구(UMP)를 통해 동의 여부를 확인하며, 동의하지 않은
+            경우 비맞춤형 광고만 제공됩니다. 광고 제공 과정에서 Google AdMob이 광고
             식별자와 기기 정보를 수집할 수 있으며, 자세한 내용은 아래 4. 제3자
             서비스 항목을 참고해 주시기 바랍니다.
           </p>
