@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   launch,
   step,
@@ -17,6 +17,7 @@ export function usePlanePhysics(getWind: () => number) {
   const rafRef = useRef<number | null>(null);
   const lastRef = useRef<number>(0);
   const stateRef = useRef<PlaneState | null>(null);
+  const loopRef = useRef<(t: number) => void>(() => {});
 
   const stop = useCallback(() => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
@@ -38,10 +39,14 @@ export function usePlanePhysics(getWind: () => number) {
         stop();
         return;
       }
-      rafRef.current = requestAnimationFrame(loop);
+      rafRef.current = requestAnimationFrame((t2) => loopRef.current(t2));
     },
     [getWind, stop],
   );
+
+  useEffect(() => {
+    loopRef.current = loop;
+  }, [loop]);
 
   const launchPlane = useCallback(
     (p: LaunchParams) => {
@@ -54,10 +59,10 @@ export function usePlanePhysics(getWind: () => number) {
       stop();
       rafRef.current = requestAnimationFrame((t) => {
         lastRef.current = t;
-        rafRef.current = requestAnimationFrame(loop);
+        rafRef.current = requestAnimationFrame((t2) => loopRef.current(t2));
       });
     },
-    [loop, stop],
+    [stop],
   );
 
   const reset = useCallback(() => {
