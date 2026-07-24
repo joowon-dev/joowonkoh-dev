@@ -201,7 +201,10 @@ export default function PaperPlaneGame() {
 
       {/* 조준 안내 */}
       {phase === "aim" && !drag && (
-        <div className="absolute inset-x-0 bottom-10 z-30 text-center text-sm font-medium text-white drop-shadow">
+        <div
+          className="absolute inset-x-0 bottom-10 z-30 text-center text-sm font-medium text-white drop-shadow"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
           비행기를 뒤로 당겼다 놓아 발사하세요
         </div>
       )}
@@ -228,7 +231,11 @@ export default function PaperPlaneGame() {
 
       {/* 착지: 리더보드 하단 시트 */}
       {phase === "landed" && (
-        <div className="absolute inset-x-0 bottom-0 z-40 max-h-[70%] overflow-y-auto rounded-t-2xl bg-card-bg p-4 shadow-ambient animate-fade-in-up">
+        <div
+          className="absolute inset-x-0 bottom-0 z-40 max-h-[70%] overflow-y-auto rounded-t-2xl bg-card-bg p-4 shadow-ambient animate-fade-in-up"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+        >
+
           <div className="mb-3 text-center">
             <button
               onClick={reset}
