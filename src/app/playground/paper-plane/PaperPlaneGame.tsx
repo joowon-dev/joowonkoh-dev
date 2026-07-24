@@ -148,7 +148,7 @@ export default function PaperPlaneGame() {
       {/* 비행기 */}
       {phase !== "intro" && (
         <div
-          className={`absolute z-10 ${blowing ? styles.sway : ""}`}
+          className="absolute z-10"
           style={{
             left: proj.screenX,
             top: proj.screenY,
@@ -158,7 +158,9 @@ export default function PaperPlaneGame() {
             transformOrigin: "center",
           }}
         >
-          <PlaneCharacter view={planeView} blowing={blowing} />
+          <div className={blowing ? styles.sway : undefined}>
+            <PlaneCharacter view={planeView} blowing={blowing} />
+          </div>
         </div>
       )}
 
@@ -235,7 +237,6 @@ export default function PaperPlaneGame() {
           className="absolute inset-x-0 bottom-0 z-40 max-h-[70%] overflow-y-auto rounded-t-2xl bg-card-bg p-4 shadow-ambient animate-fade-in-up"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
         >
-
           <div className="mb-3 text-center">
             <button
               onClick={reset}

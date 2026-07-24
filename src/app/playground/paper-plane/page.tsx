@@ -9,8 +9,7 @@ export const metadata: Metadata = {
 
 export default function PaperPlanePage() {
   return (
-    <main className="flex min-h-[50vh] items-center justify-center text-sm text-text-muted">
-      게임을 불러오는 중…
+    <main>
       <PaperPlaneGame />
     </main>
   );

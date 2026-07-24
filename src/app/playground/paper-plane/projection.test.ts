@@ -22,6 +22,7 @@ describe("project", () => {
     const mid = project(DEPTH_REF, 0, VP);
     const far = project(DEPTH_REF * 20, 0, VP);
     expect(mid.scale).toBeCloseTo(0.5);
+    expect(near.scale).toBeGreaterThan(mid.scale);
     expect(far.scale).toBeLessThan(mid.scale);
     expect(far.screenY).toBeLessThan(mid.screenY);
     expect(far.screenY).toBeGreaterThan(800 * 0.32 - 1);
