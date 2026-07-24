@@ -57,7 +57,7 @@ export function useWindMic() {
     const analyser = analyserRef.current;
     const buf = bufRef.current;
     if (!analyser || !buf) return 0;
-    analyser.getFloatTimeDomainData(buf);
+    analyser.getFloatTimeDomainData(buf as Float32Array<ArrayBuffer>);
     return rmsToWind(computeRms(buf));
   }, []);
 
