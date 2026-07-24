@@ -1,0 +1,47 @@
+/* 소실점에서 카메라로 다가오는 요소 (구름/링) */
+@keyframes pp-approach {
+  0% { transform: translate(-50%, -50%) scale(0.12); opacity: 0; }
+  20% { opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+}
+.approach {
+  animation-name: pp-approach;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* 바람 속도선: 아래(카메라)에서 위(소실점)로 흐름 */
+@keyframes pp-streak {
+  0% { transform: translateY(10%) scaleY(0.5); opacity: 0; }
+  30% { opacity: 0.7; }
+  100% { transform: translateY(-70vh) scaleY(1.6); opacity: 0; }
+}
+.streak {
+  animation-name: pp-streak;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* 입김 파티클: 하단에서 퍼지며 위로 */
+@keyframes pp-breath {
+  0% { transform: translateY(0) scale(0.5); opacity: 0.6; }
+  100% { transform: translateY(-38vh) scale(1.7); opacity: 0; }
+}
+.breath {
+  animation-name: pp-breath;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+
+/* 비행기 미세 흔들림 (바람 반응) */
+@keyframes pp-sway {
+  0%, 100% { transform: translateX(-3px) rotate(-1.5deg); }
+  50% { transform: translateX(3px) rotate(1.5deg); }
+}
+.sway {
+  animation: pp-sway 0.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .approach, .streak, .breath, .sway { animation: none; }
+}
