@@ -1,52 +1,57 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useWindMic } from "./useWindMic";
 import { usePlanePhysics } from "./usePlanePhysics";
+import { useFullscreen } from "./useFullscreen";
+import { project, type Viewport } from "./projection";
 import { PlaneCharacter } from "./PlaneCharacter";
 import { Scenery } from "./Scenery";
+import { WindEffects } from "./WindEffects";
 import { HelpOverlay } from "./HelpOverlay";
 import { MicPermissionGate } from "./MicPermissionGate";
 import { Leaderboard } from "./Leaderboard";
+import styles from "./effects.module.css";
 
 type Phase = "intro" | "aim" | "flying" | "landed";
-const VIEW_H = 420;
 const TUTORIAL_KEY = "pp_seen_tutorial";
 
 export default function PaperPlaneGame() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const mic = useWindMic();
   const physics = usePlanePhysics(mic.wind);
+  const fs = useFullscreen(containerRef);
+
   const [phase, setPhase] = useState<Phase>("intro");
   const [showHelp, setShowHelp] = useState(false);
   const [drag, setDrag] = useState<{ dx: number; dy: number } | null>(null);
   const [pendingDistance, setPendingDistance] = useState<number | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [vp, setVp] = useState<Viewport>({ w: 390, h: 780 });
   const dragStart = useRef<{ x: number; y: number } | null>(null);
-  const blowing = phase === "flying" && mic.wind() > 0;
 
-  const begin = useCallback(async () => {
-    const seen =
-      typeof window !== "undefined" && localStorage.getItem(TUTORIAL_KEY);
-    if (!seen) setShowHelp(true);
-    await mic.start();
-    setPhase("aim");
-  }, [mic]);
+  const wind = phase === "flying" ? mic.wind() : 0;
+  const blowing = wind > 0;
 
-  const closeHelp = useCallback(() => {
-    if (typeof window !== "undefined")
-      localStorage.setItem(TUTORIAL_KEY, "1");
-    setShowHelp(false);
+  // 뷰포트 크기 추적
+  useEffect(() => {
+    const measure = () =>
+      setVp({ w: window.innerWidth, h: window.innerHeight });
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
   }, []);
 
-  // 언마운트 시 마이크 스트림/AudioContext 정리
+  // 언마운트 시 마이크 정리
   useEffect(() => {
     return () => {
       mic.stop();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- unmount cleanup only, stop identity is stable (useCallback([]))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- unmount cleanup only; mic.stop identity stable
   }, []);
 
-  // 착지 감지: 비행 중 상태가 멎으면 landed로 전환 (렌더 중 setState 금지 → effect로)
+  // 착지 감지
   useEffect(() => {
     if (phase === "flying" && physics.state && !physics.running) {
       setPhase("landed");
@@ -54,7 +59,20 @@ export default function PaperPlaneGame() {
     }
   }, [phase, physics.running, physics.state, physics.distance]);
 
-  // 드래그(새총) — 뒤로 당길수록 파워↑, 당긴 반대 방향으로 발사
+  const begin = useCallback(async () => {
+    const seen =
+      typeof window !== "undefined" && localStorage.getItem(TUTORIAL_KEY);
+    if (!seen) setShowHelp(true);
+    if (fs.isSupported) fs.enter();
+    await mic.start();
+    setPhase("aim");
+  }, [mic, fs]);
+
+  const closeHelp = useCallback(() => {
+    if (typeof window !== "undefined") localStorage.setItem(TUTORIAL_KEY, "1");
+    setShowHelp(false);
+  }, []);
+
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (phase !== "aim") return;
@@ -77,23 +95,12 @@ export default function PaperPlaneGame() {
     const pull = Math.hypot(drag.dx, drag.dy);
     dragStart.current = null;
     setDrag(null);
-    if (pull < 12) return; // 미세 클릭 무시
-    const power = Math.min(1, pull / 220);
-    const angle = Math.atan2(-drag.dy, -drag.dx); // 당긴 반대 방향
+    if (pull < 12) return;
+    const power = Math.min(1, pull / 240);
+    const angle = Math.atan2(-drag.dy, -drag.dx);
     setPhase("flying");
     physics.launchPlane({ angle: normalizeUp(angle), power });
   }, [drag, physics]);
-
-  const planeScreenX = useMemo(() => {
-    const x = physics.state?.x ?? 0;
-    return Math.min(x, 120); // 화면상 비행기는 좌측 고정 후 배경 스크롤
-  }, [physics.state]);
-  const planeY =
-    VIEW_H - 80 - (physics.state?.y ?? (phase === "aim" ? 40 : 0));
-
-  const rotation = physics.state
-    ? -Math.atan2(physics.state.vy, physics.state.vx) * (180 / Math.PI)
-    : -20;
 
   const reset = useCallback(() => {
     physics.reset();
@@ -116,107 +123,137 @@ export default function PaperPlaneGame() {
       ? mic.status
       : null;
 
+  // 비행기 투영
+  const px = physics.state?.x ?? 0;
+  const py = physics.state?.y ?? (phase === "aim" ? 40 : 0);
+  const proj = project(px, py, vp);
+  const speed = physics.running && physics.state
+    ? Math.min(1, Math.hypot(physics.state.vx, physics.state.vy) / 700)
+    : 0;
+  const planeView = phase === "flying" || phase === "landed" ? "back" : "front";
+
   return (
-    <div className="grid gap-6 md:grid-cols-[1fr_280px]">
+    <div
+      ref={containerRef}
+      className="fixed inset-0 z-50 select-none overflow-hidden bg-sky-100"
+      style={{ touchAction: "none" }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+    >
+      <Scenery speed={speed} />
+      <WindEffects wind={wind} active={phase === "flying"} />
+
+      {/* 비행기 */}
+      {phase !== "intro" && (
+        <div
+          className={`absolute z-10 ${blowing ? styles.sway : ""}`}
+          style={{
+            left: proj.screenX,
+            top: proj.screenY,
+            transform: `translate(-50%, -50%) scale(${proj.scale})${
+              drag ? ` translate(${drag.dx}px, ${drag.dy}px)` : ""
+            }`,
+            transformOrigin: "center",
+          }}
+        >
+          <PlaneCharacter view={planeView} blowing={blowing} />
+        </div>
+      )}
+
+      {/* 상단 HUD */}
       <div
-        className="relative overflow-hidden rounded-2xl border border-border shadow-ambient select-none"
-        style={{ height: VIEW_H, touchAction: "none" }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
+        className="absolute inset-x-0 top-0 z-30 flex items-center justify-between p-3"
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
       >
-        <Scenery speed={0} />
+        <div className="rounded-full bg-white/85 px-3 py-1 text-sm font-bold text-accent">
+          {phase === "flying" || phase === "landed" ? `${physics.distance}m` : "🐱🛩️"}
+        </div>
+        <div className="flex items-center gap-2">
+          {phase !== "intro" && (
+            <button
+              onClick={() => setShowHelp(true)}
+              className="h-9 w-9 rounded-full bg-white/85 text-sm font-bold text-accent"
+              aria-label="도움말"
+            >
+              ?
+            </button>
+          )}
+          {fs.isSupported && (
+            <button
+              onClick={fs.toggle}
+              className="h-9 w-9 rounded-full bg-white/85 text-sm text-accent"
+              aria-label="전체화면"
+            >
+              ⛶
+            </button>
+          )}
+          <Link
+            href="/playground"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/85 text-sm font-bold text-accent"
+            aria-label="나가기"
+          >
+            ✕
+          </Link>
+        </div>
+      </div>
 
-        {/* 거리 카운터 */}
-        {(phase === "flying" || phase === "landed") && (
-          <div className="absolute left-3 top-3 z-10 rounded-full bg-white/80 px-3 py-1 text-sm font-bold text-accent">
-            {physics.distance}m
-          </div>
-        )}
+      {/* 조준 안내 */}
+      {phase === "aim" && !drag && (
+        <div className="absolute inset-x-0 bottom-10 z-30 text-center text-sm font-medium text-white drop-shadow">
+          비행기를 뒤로 당겼다 놓아 발사하세요
+        </div>
+      )}
 
-        {/* 도움말 버튼 */}
-        {phase !== "intro" && (
+      {/* 인트로 */}
+      {phase === "intro" && (
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-sky-100/60 px-6 text-center backdrop-blur-sm">
+          <PlaneCharacter view="front" />
+          <h2 className="font-display text-2xl font-bold">종이비행기 날리기</h2>
+          <p className="text-sm text-text-secondary">
+            뒤로 당겨 발사하고, 마이크에 훅~ 불어 더 멀리!
+          </p>
           <button
-            onClick={() => setShowHelp(true)}
-            className="absolute right-3 top-3 z-10 h-8 w-8 rounded-full bg-white/80 text-sm font-bold text-accent"
-            aria-label="도움말"
+            onClick={begin}
+            className="mt-1 rounded-full bg-accent px-7 py-3 text-base font-semibold text-white spring-transition hover:scale-[1.03]"
           >
-            ?
+            시작하기 🎤
           </button>
-        )}
+          <Link href="/playground" className="text-xs text-text-muted underline">
+            나가기
+          </Link>
+        </div>
+      )}
 
-        {/* 비행기 */}
-        {phase !== "intro" && (
-          <div
-            className="absolute z-10"
-            style={{
-              left: planeScreenX + 40,
-              top: planeY,
-              transform: drag ? `translate(${drag.dx}px, ${drag.dy}px)` : undefined,
-            }}
-          >
-            <PlaneCharacter view={phase === "aim" ? "front" : "back"} blowing={blowing} />
-          </div>
-        )}
-
-        {/* 조준 안내 */}
-        {phase === "aim" && !drag && (
-          <div className="absolute inset-x-0 bottom-4 z-10 text-center text-xs text-text-secondary">
-            비행기를 뒤로 당겼다 놓아 발사하세요
-          </div>
-        )}
-        {phase === "flying" && (
-          <div className="absolute inset-x-0 bottom-4 z-10 animate-fade-in-up text-center text-xs font-semibold text-accent">
-            🌬️ 마이크에 훅~ 불어 더 멀리 보내세요!
-          </div>
-        )}
-        {phase === "landed" && (
-          <div className="absolute inset-x-0 bottom-4 z-10 text-center">
+      {/* 착지: 리더보드 하단 시트 */}
+      {phase === "landed" && (
+        <div className="absolute inset-x-0 bottom-0 z-40 max-h-[70%] overflow-y-auto rounded-t-2xl bg-card-bg p-4 shadow-ambient animate-fade-in-up">
+          <div className="mb-3 text-center">
             <button
               onClick={reset}
-              className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white spring-transition hover:scale-[1.02]"
+              className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white spring-transition hover:scale-[1.03]"
             >
               다시 날리기 ({physics.distance}m)
             </button>
           </div>
-        )}
+          <Leaderboard
+            pendingDistance={pendingDistance}
+            onSubmitted={handleSubmitted}
+            highlightId={highlightId}
+          />
+        </div>
+      )}
 
-        {/* 인트로 */}
-        {phase === "intro" && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-white/40 backdrop-blur-sm">
-            <div className="text-4xl">🐱🛩️</div>
-            <h2 className="font-display text-xl font-bold">종이비행기 날리기</h2>
-            <p className="text-xs text-text-secondary">드래그로 발사하고 입김으로 멀리!</p>
-            <button
-              onClick={begin}
-              className="mt-2 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white spring-transition hover:scale-[1.02]"
-            >
-              시작하기 🎤
-            </button>
-          </div>
-        )}
-
-        {showHelp && <HelpOverlay onClose={closeHelp} />}
-        {gateStatus && (
-          <MicPermissionGate status={gateStatus} onRetry={retryMic} />
-        )}
-      </div>
-
-      <Leaderboard
-        pendingDistance={pendingDistance}
-        onSubmitted={handleSubmitted}
-        highlightId={highlightId}
-      />
+      {showHelp && <HelpOverlay onClose={closeHelp} />}
+      {gateStatus && <MicPermissionGate status={gateStatus} onRetry={retryMic} />}
     </div>
   );
 }
 
 function normalizeUp(angle: number): number {
-  // 항상 위쪽(양의 y=up)으로 발사되도록 보정: 결과 각도의 sin을 양수로
   let a = angle;
   if (Math.sin(a) < 0) a = -a;
-  // 너무 수직/수평 방지: 15°~80°로 클램프
   const min = (15 * Math.PI) / 180;
   const max = (80 * Math.PI) / 180;
   return Math.max(min, Math.min(max, a));
