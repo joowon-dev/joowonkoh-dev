@@ -157,7 +157,7 @@ export default function PaperPlaneGame() {
               transform: drag ? `translate(${drag.dx}px, ${drag.dy}px)` : undefined,
             }}
           >
-            <PlaneCharacter rotation={rotation} blowing={blowing} />
+            <PlaneCharacter view={phase === "aim" ? "front" : "back"} blowing={blowing} />
           </div>
         )}
 

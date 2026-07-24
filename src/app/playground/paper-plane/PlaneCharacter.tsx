@@ -1,46 +1,53 @@
 "use client";
 
+const CREAM = "#fde7cf";
+const CREAM_SHADE = "#f2d3ab";
+const BLUSH = "#ffc2ce";
+const INK = "#4a4038";
+const PLANE = "#ffffff";
+const PLANE_SHADE = "#dfe6ff";
+const PLANE_LINE = "#b9c4f0";
+
 export function PlaneCharacter({
-  rotation,
-  blowing,
+  view,
+  blowing = false,
 }: {
-  rotation: number;
-  blowing: boolean;
+  view: "front" | "back";
+  blowing?: boolean;
 }) {
-  return (
-    <div
-      style={{ transform: `rotate(${rotation}deg)` }}
-      className="spring-transition"
-      aria-hidden
-    >
-      <svg width="88" height="72" viewBox="0 0 88 72" fill="none">
-        {/* 종이비행기 */}
-        <path d="M2 36 L86 6 L50 40 Z" fill="#ffffff" stroke="#c7d2fe" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M50 40 L86 6 L58 66 Z" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M2 36 L50 40 L34 52 Z" fill="#e0e7ff" stroke="#c7d2fe" strokeWidth="2" strokeLinejoin="round" />
-        {/* 고양이 */}
-        <g transform="translate(40 20)">
-          <path d="M-8 -6 L-4 -14 L0 -6 Z" fill="#f8b3c5" /> {/* 왼귀 */}
-          <path d="M8 -6 L4 -14 L0 -6 Z" fill="#f8b3c5" /> {/* 오른귀 */}
-          <circle cx="0" cy="0" r="10" fill="#fcd9b8" />
-          <circle cx="-4" cy="-1" r="1.6" fill="#3b3b3b" />
-          <circle cx="4" cy="-1" r="1.6" fill="#3b3b3b" />
-          <circle cx="-6" cy="3" r="2" fill="#f8b3c5" opacity="0.7" />
-          <circle cx="6" cy="3" r="2" fill="#f8b3c5" opacity="0.7" />
-          <path
-            d={blowing ? "M-3 4 Q0 8 3 4" : "M-3 5 Q0 6 3 5"}
-            stroke="#a86a4a"
-            strokeWidth="1.4"
-            fill="none"
-            strokeLinecap="round"
-          />
-        </g>
+  if (view === "front") {
+    // 앞모습: 큰 동그란 머리 + 점 눈 + 발그레 볼 + 작은 입, 종이비행기에 앉음
+    return (
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none" aria-hidden>
+        <path d="M18 84 L102 84 L60 104 Z" fill={PLANE} stroke={PLANE_LINE} strokeWidth="2" strokeLinejoin="round" />
+        <path d="M60 104 L60 84 L36 92 Z" fill={PLANE_SHADE} stroke={PLANE_LINE} strokeWidth="2" strokeLinejoin="round" />
+        <ellipse cx="60" cy="74" rx="16" ry="12" fill={CREAM} stroke={CREAM_SHADE} strokeWidth="2" />
+        <path d="M40 40 L34 20 L52 34 Z" fill={CREAM} stroke={CREAM_SHADE} strokeWidth="2" strokeLinejoin="round" />
+        <path d="M80 40 L86 20 L68 34 Z" fill={CREAM} stroke={CREAM_SHADE} strokeWidth="2" strokeLinejoin="round" />
+        <path d="M41 34 L38 25 L47 32 Z" fill={BLUSH} />
+        <path d="M79 34 L82 25 L73 32 Z" fill={BLUSH} />
+        <circle cx="60" cy="52" r="26" fill={CREAM} stroke={CREAM_SHADE} strokeWidth="2" />
+        <circle cx="46" cy="58" r="5" fill={BLUSH} opacity="0.8" />
+        <circle cx="74" cy="58" r="5" fill={BLUSH} opacity="0.8" />
+        <circle cx="51" cy="50" r="3" fill={INK} />
+        <circle cx="69" cy="50" r="3" fill={INK} />
+        <circle cx="52" cy="49" r="1" fill="#ffffff" />
+        <circle cx="70" cy="49" r="1" fill="#ffffff" />
+        <path d="M56 58 Q60 62 64 58" stroke={INK} strokeWidth="1.6" fill="none" strokeLinecap="round" />
       </svg>
-      {blowing && (
-        <div className="pointer-events-none absolute -left-6 top-8 animate-fade-in-up text-lg select-none">
-          🌬️
-        </div>
-      )}
-    </div>
+    );
+  }
+
+  // 뒤모습: 종이비행기 뒤태(V자, 위로 멀어짐) + 고양이 뒤통수/귀. blowing은 잔털 opacity에 사용.
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" aria-hidden>
+      <path d="M60 30 L20 96 L60 80 Z" fill={PLANE} stroke={PLANE_LINE} strokeWidth="2" strokeLinejoin="round" />
+      <path d="M60 30 L100 96 L60 80 Z" fill={PLANE_SHADE} stroke={PLANE_LINE} strokeWidth="2" strokeLinejoin="round" />
+      <path d="M60 30 L60 80" stroke={PLANE_LINE} strokeWidth="2" />
+      <circle cx="60" cy="52" r="20" fill={CREAM} stroke={CREAM_SHADE} strokeWidth="2" />
+      <path d="M45 40 L40 24 L56 36 Z" fill={CREAM} stroke={CREAM_SHADE} strokeWidth="2" strokeLinejoin="round" />
+      <path d="M75 40 L80 24 L64 36 Z" fill={CREAM} stroke={CREAM_SHADE} strokeWidth="2" strokeLinejoin="round" />
+      <path d="M56 40 Q60 34 64 40" stroke={CREAM_SHADE} strokeWidth="1.5" fill="none" strokeLinecap="round" opacity={blowing ? 1 : 0.6} />
+    </svg>
   );
 }
