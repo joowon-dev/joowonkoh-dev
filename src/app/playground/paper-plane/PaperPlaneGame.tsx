@@ -22,7 +22,7 @@ export default function PaperPlaneGame() {
   const [pendingDistance, setPendingDistance] = useState<number | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
-  const blowing = mic.wind() > 0;
+  const blowing = phase === "flying" && mic.wind() > 0;
 
   const begin = useCallback(async () => {
     const seen =
@@ -157,7 +157,7 @@ export default function PaperPlaneGame() {
               transform: drag ? `translate(${drag.dx}px, ${drag.dy}px)` : undefined,
             }}
           >
-            <PlaneCharacter rotation={rotation} blowing={phase === "flying" && blowing} />
+            <PlaneCharacter rotation={rotation} blowing={blowing} />
           </div>
         )}
 

@@ -18,6 +18,7 @@ export function useWindMic() {
   const bufRef = useRef<Float32Array | null>(null);
 
   const start = useCallback(async () => {
+    if (status === "requesting" || status === "ready") return;
     if (
       typeof navigator === "undefined" ||
       !navigator.mediaDevices?.getUserMedia
@@ -41,7 +42,7 @@ export function useWindMic() {
     } catch {
       setStatus("denied");
     }
-  }, []);
+  }, [status]);
 
   const stop = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());

@@ -48,6 +48,9 @@ export function usePlanePhysics(getWind: () => number) {
     loopRef.current = loop;
   }, [loop]);
 
+  // 언마운트 시 실행 중인 rAF 정리 (비행 중 페이지 이탈 대비)
+  useEffect(() => stop, [stop]);
+
   const launchPlane = useCallback(
     (p: LaunchParams) => {
       const s0 = launch(p);

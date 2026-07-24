@@ -21,6 +21,7 @@ export function Leaderboard({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -47,6 +48,7 @@ export function Leaderboard({
       setNickname("");
       await load();
       onSubmitted(row.id);
+      setSubmitted(true);
     } catch {
       setError("등록에 실패했어요. 다시 시도해 주세요.");
     } finally {
@@ -80,6 +82,12 @@ export function Leaderboard({
             </button>
           </div>
         </div>
+      )}
+
+      {submitted && pendingDistance == null && (
+        <p className="mt-3 text-xs font-semibold text-accent">
+          등록됐어요! 🎉
+        </p>
       )}
 
       {error && <p className="mt-3 text-xs text-red-500">{error}</p>}

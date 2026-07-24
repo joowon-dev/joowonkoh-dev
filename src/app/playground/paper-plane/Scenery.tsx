@@ -8,9 +8,9 @@ export function Scenery({ offsetX }: { offsetX: number }) {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-sky-200 to-sky-50" />
-      {clouds.map((c, i) => (
+      {clouds.map((c) => (
         <div
-          key={i}
+          key={`cloud-${c.x}`}
           className="absolute"
           style={{
             left: c.x - offsetX * 0.4,
