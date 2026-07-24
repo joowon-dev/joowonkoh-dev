@@ -88,7 +88,6 @@ export default function PaperPlaneGame() {
     const x = physics.state?.x ?? 0;
     return Math.min(x, 120); // 화면상 비행기는 좌측 고정 후 배경 스크롤
   }, [physics.state]);
-  const offsetX = Math.max(0, (physics.state?.x ?? 0) - 120);
   const planeY =
     VIEW_H - 80 - (physics.state?.y ?? (phase === "aim" ? 40 : 0));
 
@@ -127,7 +126,7 @@ export default function PaperPlaneGame() {
         onPointerUp={onPointerUp}
         onPointerLeave={onPointerUp}
       >
-        <Scenery offsetX={offsetX} />
+        <Scenery speed={0} />
 
         {/* 거리 카운터 */}
         {(phase === "flying" || phase === "landed") && (
