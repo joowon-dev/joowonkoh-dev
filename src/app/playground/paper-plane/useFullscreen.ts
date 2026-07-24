@@ -1,21 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState, type RefObject } from "react";
+import { useCallback, useSyncExternalStore, type RefObject } from "react";
+
+const noopSubscribe = () => () => {};
+
+function subscribeFullscreen(callback: () => void) {
+  if (typeof document === "undefined") return () => {};
+  document.addEventListener("fullscreenchange", callback);
+  return () => document.removeEventListener("fullscreenchange", callback);
+}
 
 export function useFullscreen(ref: RefObject<HTMLElement | null>) {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isSupported] = useState(() =>
-    typeof document !== "undefined" && !!document.fullscreenEnabled,
+  const isFullscreen = useSyncExternalStore(
+    subscribeFullscreen,
+    () => typeof document !== "undefined" && !!document.fullscreenElement,
+    () => false,
   );
-
-  useEffect(() => {
-    const onChange = () =>
-      setIsFullscreen(
-        typeof document !== "undefined" && !!document.fullscreenElement,
-      );
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
+  const isSupported = useSyncExternalStore(
+    noopSubscribe,
+    () => typeof document !== "undefined" && !!document.fullscreenEnabled,
+    () => false,
+  );
 
   const enter = useCallback(async () => {
     const el = ref.current;
@@ -23,7 +28,7 @@ export function useFullscreen(ref: RefObject<HTMLElement | null>) {
       try {
         await el.requestFullscreen();
       } catch {
-        /* 사용자 거부/미지원 — 조용히 몰입 모드로 폴백 */
+        /* 사용자 거부/미지원 — 조용히 폴백 */
       }
     }
   }, [ref]);
