@@ -9,10 +9,13 @@
     "start": "next start",
     "lint": "eslint",
     "pages:build": "npx @cloudflare/next-on-pages",
-    "pages:dev": "npx wrangler pages dev .vercel/output/static --compatibility-date=2024-01-01"
+    "pages:dev": "npx wrangler pages dev .vercel/output/static --compatibility-date=2024-01-01",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
+    "@supabase/supabase-js": "^2.110.8",
     "gray-matter": "^4.0.3",
     "motion": "^12.42.2",
     "next": "16.2.2",
@@ -31,6 +34,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }
