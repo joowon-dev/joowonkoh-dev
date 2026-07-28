@@ -1,0 +1,16 @@
+@keyframes coin-confetti-fall {
+  0% {
+    translate: 0 0;
+    opacity: 1;
+  }
+  100% {
+    translate: 0 115vh;
+    opacity: 0.9;
+  }
+}
+
+.piece {
+  animation-name: coin-confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
