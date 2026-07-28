@@ -78,7 +78,10 @@ export default function Stage({ gameRef, fallingRef, handleRef, className }: Sta
 
   // 기본값: 판은 너비 420 + 좌우 패딩 32 = 452,
   // 깊이는 (220 - (-20)) * 0.55 = 132 + 상하 패딩 48 = 180.
-  // 이 비율을 유지하면 불필요한 공백이 없다. 호출자는 className으로 override할 수 있다.
+  // 이 비율을 유지하면 불필요한 공백이 없다.
+  // className 속성은 충돌하지 않는 유틸리티를 추가할 때만 사용한다.
+  // (w-full, aspect-[452/180], max-h-[60vh]는 Tailwind 스타일시트 순서에 따라 해결되므로
+  // 속성 순서로 reliably override할 수 없다)
   const defaultClassName = "w-full aspect-[452/180] max-h-[60vh]";
   const finalClassName = className ? `${defaultClassName} ${className}` : defaultClassName;
 
