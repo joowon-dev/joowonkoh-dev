@@ -5,6 +5,7 @@ import type { Game } from "./setup";
 export const PERSPECTIVE_SCALE = 0.55;
 
 const SIDE_PADDING = 16;
+const VERTICAL_PADDING = 24;
 
 export interface Viewport {
   w: number;
@@ -18,12 +19,17 @@ export interface Camera {
 }
 
 export function computeCamera(vp: Viewport, board: Board): Camera {
-  const scale = Math.max(0.01, (vp.w - SIDE_PADDING * 2) / board.width);
-  const projectedHeight = (board.fallLine - PUSHER_BACK_Y) * PERSPECTIVE_SCALE * scale;
+  const depth = (board.fallLine - PUSHER_BACK_Y) * PERSPECTIVE_SCALE;
+  const widthFit = (vp.w - SIDE_PADDING * 2) / board.width;
+  const heightFit = (vp.h - VERTICAL_PADDING * 2) / depth;
+  // 두 축 모두 들어가는 배율을 쓴다. 판 좌우가 잘리면 벽 근처 코인이 안 보이므로
+  // 너비를 넘기지 않는 쪽을 우선하고, 세로가 모자란 화면에서는 세로에 맞춘다.
+  const scale = Math.max(0.01, Math.min(widthFit, heightFit));
+  const projectedHeight = depth * scale;
   return {
     scale,
-    offsetX: SIDE_PADDING,
-    offsetY: Math.max(24, (vp.h - projectedHeight) / 2 - PUSHER_BACK_Y * PERSPECTIVE_SCALE * scale),
+    offsetX: (vp.w - board.width * scale) / 2,
+    offsetY: (vp.h - projectedHeight) / 2 - PUSHER_BACK_Y * PERSPECTIVE_SCALE * scale,
   };
 }
 
@@ -183,7 +189,7 @@ export function drawScene(
   const sorted = [...game.world.coins].sort((a, b) => a.y - b.y);
   for (const coin of sorted) {
     // 투입 직후 0.25초 동안 위에서 내려앉는 연출
-    const age = game.world.elapsed - coin.bornAt;
+    const age = Math.max(0, game.world.elapsed - coin.bornAt);
     const dropOffset = age < 0.25 ? -Math.pow(1 - age / 0.25, 2) * 60 * cam.scale : 0;
     drawCoin(ctx, coin, cam, palette, game.names, dropOffset, 1);
   }

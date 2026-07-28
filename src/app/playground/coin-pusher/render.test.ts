@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PERSPECTIVE_SCALE, computeCamera, projectPoint } from "./render";
-import { type Board } from "./physics";
+import { PUSHER_BACK_Y, type Board } from "./physics";
 
 const board: Board = { width: 420, fallLine: 220 };
 
@@ -22,6 +22,41 @@ describe("computeCamera", () => {
 
   it("배율은 항상 양수다", () => {
     expect(computeCamera({ w: 100, h: 100 }, board).scale).toBeGreaterThan(0);
+  });
+
+  it("키 큰 뷰포트(390x780)에선 너비가 제약이다", () => {
+    const vp = { w: 390, h: 780 };
+    const cam = computeCamera(vp, board);
+    // 판의 전체 너비가 화면에 들어가야 한다
+    const left = projectPoint(0, 0, cam).sx;
+    const right = projectPoint(board.width, 0, cam).sx;
+    expect(left).toBeGreaterThanOrEqual(0);
+    expect(right).toBeLessThanOrEqual(vp.w);
+  });
+
+  it("짧고 넓은 뷰포트(900x160)에선 높이가 제약이다", () => {
+    const vp = { w: 900, h: 160 };
+    const cam = computeCamera(vp, board);
+    // 판의 전체 높이(푸셔 뒤에서 낙하선까지)가 화면에 들어가야 한다
+    const top = projectPoint(0, PUSHER_BACK_Y, cam).sy;
+    const bottom = projectPoint(0, board.fallLine, cam).sy;
+    expect(top).toBeGreaterThanOrEqual(0);
+    expect(bottom).toBeLessThanOrEqual(vp.h);
+  });
+
+  it("판이 수평으로 가운데 정렬된다", () => {
+    const vp = { w: 900, h: 780 };
+    const cam = computeCamera(vp, board);
+    // x=0의 좌측 여백과 x=board.width의 우측 여백이 같아야 한다
+    const leftGap = projectPoint(0, 0, cam).sx;
+    const rightGap = vp.w - projectPoint(board.width, 0, cam).sx;
+    expect(leftGap).toBeCloseTo(rightGap, 1);
+  });
+
+  it("매우 작은 뷰포트(100x100)에서도 배율이 양수다", () => {
+    const cam = computeCamera({ w: 100, h: 100 }, board);
+    expect(cam.scale).toBeGreaterThan(0);
+    expect(Number.isFinite(cam.scale)).toBe(true);
   });
 });
 
