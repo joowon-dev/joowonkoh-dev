@@ -9,7 +9,7 @@ import {
 } from "./physics";
 
 export const BOARD_WIDTH = 420;
-export const FALL_LINE = 150;
+export const FALL_LINE = 220;
 
 /** 중립 코인이 처음 깔리는 구간 (푸셔 앞 ~ 낙하선 직전) */
 const PRESET_MIN_Y = 40;

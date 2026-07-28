@@ -173,14 +173,44 @@ describe("allDropped", () => {
 });
 
 describe("통합", () => {
-  it("전체를 오래 돌리면 참가자 코인이 하나는 떨어진다", () => {
+  // 중립 코인을 계속 투입해야 코인 더미가 앞으로 나아간다. 보충이 없으면 마찰로 더미가
+  // y~150 근처에서 멈춰서 낙하선을 아무리 당겨도 아무도 떨어지지 않는다.
+  // 실제 게임 루프(CoinPusherGame)와 같은 주기로 보충하며 돈다.
+  function runUntilWinner(names: string[], seed: number, maxSeconds: number) {
+    const g = createGame(names, seed);
+    let nextNeutralAt = 1.4;
+    for (let i = 0; i < Math.round(maxSeconds / FIXED_DT); i++) {
+      releaseDue(g);
+      if (allDropped(g) && g.world.elapsed >= nextNeutralAt) {
+        spawnNeutral(g, 1);
+        nextNeutralAt = g.world.elapsed + 1.4;
+      }
+      stepWorld(g.world, FIXED_DT);
+      if (g.world.fallen.some((f) => f.coin.ownerIndex >= 0)) return g;
+    }
+    return g;
+  }
+
+  it("실제 루프대로 돌리면 참가자 코인이 떨어진다", () => {
+    const g = runUntilWinner(["주원", "민지", "현우", "서연", "지호"], 2024, 120);
+    expect(g.world.fallen.some((f) => f.coin.ownerIndex >= 0)).toBe(true);
+  });
+
+  it("중립 코인 보충이 없으면 더미가 낙하선에 못 미친다", () => {
+    // 보충 없는 루프가 왜 안 되는지를 고정해 두는 회귀 테스트.
+    // 이게 깨지면 마찰/푸셔 상수가 바뀐 것이므로 FALL_LINE을 다시 측정해야 한다.
     const g = createGame(["주원", "민지", "현우", "서연", "지호"], 2024);
-    g.world.elapsed = 0;
     for (let i = 0; i < Math.round(120 / FIXED_DT); i++) {
       releaseDue(g);
       stepWorld(g.world, FIXED_DT);
-      if (g.world.fallen.some((f) => f.coin.ownerIndex >= 0)) break;
     }
-    expect(g.world.fallen.some((f) => f.coin.ownerIndex >= 0)).toBe(true);
+    expect(g.world.fallen.some((f) => f.coin.ownerIndex >= 0)).toBe(false);
+  });
+
+  it("여러 시드에서 모두 당첨자가 나온다", () => {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const g = runUntilWinner(["a", "b", "c", "d", "e", "f", "g", "h"], seed, 180);
+      expect(g.world.fallen.some((f) => f.coin.ownerIndex >= 0)).toBe(true);
+    }
   });
 });
