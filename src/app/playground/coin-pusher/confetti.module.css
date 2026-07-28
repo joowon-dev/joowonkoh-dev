@@ -14,3 +14,7 @@
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .piece { animation: none; }
+}

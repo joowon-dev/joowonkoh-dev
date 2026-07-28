@@ -29,10 +29,14 @@ export default function WinnerOverlay({ name, seed, onRestart, onEdit }: WinnerO
   }, [seed]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg/92 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg/92 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label="당첨 결과"
+    >
       <div
         className="pointer-events-none absolute inset-0 overflow-hidden"
-        role="presentation"
         aria-hidden="true"
       >
         {confetti.map((c) => (
@@ -70,6 +74,7 @@ export default function WinnerOverlay({ name, seed, onRestart, onEdit }: WinnerO
           <button
             type="button"
             onClick={onRestart}
+            autoFocus
             className="rounded-2xl bg-accent px-8 py-3.5 font-display text-sm font-semibold text-white shadow-ambient transition hover:shadow-ambient-hover active:scale-[0.98]"
           >
             같은 인원으로 다시
