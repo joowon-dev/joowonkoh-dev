@@ -66,7 +66,9 @@ export function updateScheduler(s: Scheduler, elapsed: number, dt: number): Even
   return type;
 }
 
-/** 진행 중인 이벤트를 월드에 반영한다. 이벤트가 없으면 기본값으로 되돌린다. */
+/** 진행 중인 이벤트를 월드에 반영한다. 이벤트가 없으면 기본값으로 되돌린다.
+ * 유지보수 주의: 이벤트가 건드릴 수 있는 모든 필드는 여기서 반드시 리셋해야 한다.
+ * 새로운 EventType을 추가할 때는 대응하는 리셋 라인을 여기에 추가해야 한다. */
 export function applyScheduler(world: World, s: Scheduler): void {
   world.tiltAx = 0;
   world.pusher.speedScale = 1;
@@ -85,6 +87,7 @@ export function applyScheduler(world: World, s: Scheduler): void {
   }
   // shake — 모든 코인에 무작위 방향 임펄스
   world.shakeImpulse = active.magnitude;
+  // 코인 개수만큼 RNG를 소비하므로 이벤트 시퀀스는 코인 개수에 의존하지만, 같은 입력이면 결정론적이다.
   for (const coin of world.coins) {
     const angle = s.rng() * Math.PI * 2;
     const power = active.magnitude * 0.02;

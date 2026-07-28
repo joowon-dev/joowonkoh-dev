@@ -11,7 +11,7 @@ import {
   kindMass,
   kindRestitution,
 } from "./events";
-import { FIXED_DT, createCoin, createPusher, type World } from "./physics";
+import { FIXED_DT, createCoin, createPusher, stepWorld, type World } from "./physics";
 
 function makeWorld(): World {
   return {
@@ -75,6 +75,49 @@ describe("updateScheduler", () => {
       elapsed += FIXED_DT;
       updateScheduler(s, elapsed, FIXED_DT);
       if (!s.active) expect(s.nextAt).toBeGreaterThanOrEqual(elapsed - FIXED_DT);
+    }
+  });
+
+  it("shake 중일 때 코인 개수가 같으면 같은 이벤트 시퀀스가 나온다", () => {
+    // 같은 시드로 두 개의 세계를 만든다
+    const seed = 42;
+    const seconds = 20;
+    const steps = Math.round(seconds / FIXED_DT);
+
+    // 첫 번째 세계
+    const w1 = makeWorld();
+    const s1 = createScheduler(createRng(seed));
+    const fired1: Array<{ type: string; at: number }> = [];
+    let elapsed1 = 0;
+    for (let i = 0; i < steps; i++) {
+      elapsed1 += FIXED_DT;
+      const type = updateScheduler(s1, elapsed1, FIXED_DT);
+      if (type) fired1.push({ type, at: Number(elapsed1.toFixed(3)) });
+      applyScheduler(w1, s1);
+      stepWorld(w1, FIXED_DT);
+    }
+
+    // 두 번째 세계
+    const w2 = makeWorld();
+    const s2 = createScheduler(createRng(seed));
+    const fired2: Array<{ type: string; at: number }> = [];
+    let elapsed2 = 0;
+    for (let i = 0; i < steps; i++) {
+      elapsed2 += FIXED_DT;
+      const type = updateScheduler(s2, elapsed2, FIXED_DT);
+      if (type) fired2.push({ type, at: Number(elapsed2.toFixed(3)) });
+      applyScheduler(w2, s2);
+      stepWorld(w2, FIXED_DT);
+    }
+
+    // 이벤트 시퀀스가 같아야 한다
+    expect(fired1).toEqual(fired2);
+
+    // 코인 위치도 같아야 한다
+    expect(w1.coins).toHaveLength(w2.coins.length);
+    for (let i = 0; i < w1.coins.length; i++) {
+      expect(w1.coins[i].x).toBeCloseTo(w2.coins[i].x, 5);
+      expect(w1.coins[i].y).toBeCloseTo(w2.coins[i].y, 5);
     }
   });
 });
