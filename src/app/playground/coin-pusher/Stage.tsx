@@ -47,19 +47,6 @@ export default function Stage({ gameRef, fallingRef, handleRef, className }: Sta
 
   useImperativeHandle(handleRef, () => ({ draw }), [draw]);
 
-  // 테마가 바뀌면 팔레트를 다시 읽는다
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      paletteRef.current = null;
-      draw();
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-    return () => observer.disconnect();
-  }, [draw]);
-
   // ResizeObserver를 사용하여 window 리사이즈 외에도 캔버스 크기 변화를 감지한다
   // (부모 컨테이너 크기 변화, CSS media query, 레이아웃 변경 등)
   useEffect(() => {

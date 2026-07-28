@@ -58,7 +58,6 @@ export function createGame(names: string[], seed: number): Game {
     coins: [],
     pusher: createPusher(),
     tiltAx: 0,
-    shakeImpulse: 0,
     fallen: [],
     elapsed: 0,
   };

@@ -72,7 +72,6 @@ export function updateScheduler(s: Scheduler, elapsed: number, dt: number): Even
 export function applyScheduler(world: World, s: Scheduler): void {
   world.tiltAx = 0;
   world.pusher.speedScale = 1;
-  world.shakeImpulse = 0;
 
   const active = s.active;
   if (!active) return;
@@ -86,7 +85,6 @@ export function applyScheduler(world: World, s: Scheduler): void {
     return;
   }
   // shake — 모든 코인에 무작위 방향 임펄스
-  world.shakeImpulse = active.magnitude;
   // 코인 개수만큼 RNG를 소비하므로 이벤트 시퀀스는 코인 개수에 의존하지만, 같은 입력이면 결정론적이다.
   for (const coin of world.coins) {
     const angle = s.rng() * Math.PI * 2;

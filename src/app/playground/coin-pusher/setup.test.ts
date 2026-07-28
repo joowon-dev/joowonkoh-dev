@@ -9,6 +9,10 @@ import {
   allDropped,
 } from "./setup";
 import { COIN_RADIUS, FIXED_DT, stepWorld } from "./physics";
+import { createScheduler } from "./events";
+import { createRng } from "./random";
+import { NEUTRAL_INTERVAL, simulate } from "./loop";
+import type { FallingCoin } from "./render";
 
 describe("parseNames", () => {
   it("줄바꿈으로 나눈다", () => {
@@ -175,17 +179,15 @@ describe("allDropped", () => {
 describe("통합", () => {
   // 중립 코인을 계속 투입해야 코인 더미가 앞으로 나아간다. 보충이 없으면 마찰로 더미가
   // y~150 근처에서 멈춰서 낙하선을 아무리 당겨도 아무도 떨어지지 않는다.
-  // 실제 게임 루프(CoinPusherGame)와 같은 주기로 보충하며 돈다.
+  // loop.ts의 실제 게임 루프(simulate)를 그대로 돌린다 — 스케줄러와 막판 스퍼트를 포함해서,
+  // CoinPusherGame.tsx가 쓰는 것과 완전히 같은 코드 경로를 검증한다.
   function runUntilWinner(names: string[], seed: number, maxSeconds: number) {
     const g = createGame(names, seed);
-    let nextNeutralAt = 1.4;
+    const scheduler = createScheduler(createRng(seed ^ 0x9e3779b9));
+    const falling: FallingCoin[] = [];
+    const nextNeutralAt = { current: NEUTRAL_INTERVAL };
     for (let i = 0; i < Math.round(maxSeconds / FIXED_DT); i++) {
-      releaseDue(g);
-      if (allDropped(g) && g.world.elapsed >= nextNeutralAt) {
-        spawnNeutral(g, 1);
-        nextNeutralAt = g.world.elapsed + 1.4;
-      }
-      stepWorld(g.world, FIXED_DT);
+      simulate(g, scheduler, falling, nextNeutralAt, FIXED_DT);
       if (g.world.fallen.some((f) => f.coin.ownerIndex >= 0)) return g;
     }
     return g;

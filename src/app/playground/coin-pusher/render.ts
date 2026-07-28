@@ -1,5 +1,6 @@
 import { COIN_RADIUS, PUSHER_BACK_Y, type Board, type Coin } from "./physics";
 import type { Game } from "./setup";
+import { FALL_ANIM_SECONDS } from "./loop";
 
 /** 화면상 y축을 이 비율로 압축해 비스듬한 시점을 만든다 */
 export const PERSPECTIVE_SCALE = 0.55;
@@ -63,7 +64,8 @@ export interface FallingCoin {
   t: number;
 }
 
-/** CSS 변수에서 팔레트를 읽는다. 다크모드 전환에 자동으로 따라간다. */
+/** CSS 커스텀 프로퍼티에서 팔레트를 읽는다. 이 사이트는 현재 라이트 테마 하나만 제공하므로
+ * 다크모드 전환을 따라가는 동작은 없다. */
 export function readPalette(el: HTMLElement): Palette {
   const cs = getComputedStyle(el);
   const v = (name: string, fallback: string) => cs.getPropertyValue(name).trim() || fallback;
@@ -163,7 +165,7 @@ export function drawScene(
   const boardW = bottomRight.sx - topLeft.sx;
   const boardH = bottomRight.sy - topLeft.sy;
 
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  // 캔버스 지우기는 Stage.draw가 CSS 픽셀 기준으로 이미 처리한다.
 
   // 판
   ctx.fillStyle = palette.board;
@@ -197,7 +199,7 @@ export function drawScene(
   // 판 밖으로 떨어지는 코인 — 물리에서 분리된 순수 연출
   for (const f of falling) {
     const drop = 220 * f.t * f.t * cam.scale;
-    const alpha = Math.max(0, 1 - f.t / 0.9);
+    const alpha = Math.max(0, 1 - f.t / FALL_ANIM_SECONDS);
     drawCoin(ctx, f.coin, cam, palette, game.names, drop, alpha);
   }
 }

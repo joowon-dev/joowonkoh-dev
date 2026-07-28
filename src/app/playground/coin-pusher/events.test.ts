@@ -19,7 +19,6 @@ function makeWorld(): World {
     coins: [createCoin({ id: 1, x: 200, y: 100 })],
     pusher: createPusher(),
     tiltAx: 0,
-    shakeImpulse: 0,
     fallen: [],
     elapsed: 0,
   };

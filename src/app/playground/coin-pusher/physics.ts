@@ -120,8 +120,6 @@ export interface World {
   pusher: Pusher;
   /** 기울기 이벤트가 주는 x축 가속도 */
   tiltAx: number;
-  /** 진동 이벤트가 이번 스텝에 줄 임펄스 세기. 적용 후 0으로 돌아간다. */
-  shakeImpulse: number;
   fallen: FallEvent[];
   elapsed: number;
 }
@@ -156,6 +154,8 @@ export function applyPusher(coin: Coin, pusher: Pusher): void {
 
 /**
  * 공간 해시로 충돌 후보 쌍을 뽑는다. 항상 i < j 이고 같은 쌍이 두 번 나오지 않는다.
+ * 전제조건: cellSize는 COIN_RADIUS * 2 이상이어야 한다. 이보다 작으면 인접하지 않은
+ * 셀에 걸친 충돌 쌍이 조용히 누락될 수 있다.
  */
 export function candidatePairs(coins: Coin[], cellSize: number): Array<[number, number]> {
   const grid = new Map<string, number[]>();

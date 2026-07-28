@@ -7,18 +7,11 @@ import Stage, { type StageHandle } from "./Stage";
 import WinnerOverlay from "./WinnerOverlay";
 import { useGameLoop } from "./useGameLoop";
 import { createRng } from "./random";
-import {
-  applyFinalSpurt,
-  applyScheduler,
-  createScheduler,
-  isFinalSpurt,
-  updateScheduler,
-  type EventType,
-  type Scheduler,
-} from "./events";
-import { FIXED_DT, stepWorld, winnerOf } from "./physics";
-import { allDropped, createGame, releaseDue, spawnNeutral, type Game } from "./setup";
+import { createScheduler, type EventType, type Scheduler } from "./events";
+import { FIXED_DT, winnerOf } from "./physics";
+import { createGame, type Game } from "./setup";
 import type { FallingCoin } from "./render";
+import { NEUTRAL_INTERVAL, simulate } from "./loop";
 
 type Phase = "setup" | "playing" | "result";
 
@@ -27,51 +20,6 @@ const EVENT_LABEL: Record<EventType, string> = {
   tilt: "판이 기울어진다!",
   rush: "푸셔 가속!",
 };
-
-/** 중립 코인 추가 투입 간격(초) */
-const NEUTRAL_INTERVAL = 1.4;
-const NEUTRAL_INTERVAL_SPURT = 0.35;
-const FALL_ANIM_SECONDS = 0.9;
-
-/**
- * 한 스텝 진행. React 상태를 건드리지 않으므로 rAF 루프와 "결과 바로 보기"의
- * 빠른 시뮬레이션이 같은 코드를 쓴다. falling 배열은 제자리에서 수정한다.
- */
-function simulate(
-  game: Game,
-  scheduler: Scheduler,
-  falling: FallingCoin[],
-  nextNeutralAt: { current: number },
-  dt: number,
-): EventType | null {
-  releaseDue(game);
-
-  const fired = updateScheduler(scheduler, game.world.elapsed, dt);
-  applyScheduler(game.world, scheduler);
-  applyFinalSpurt(game.world, game.world.elapsed);
-
-  // 참가자 코인이 전부 들어온 뒤부터 중립 코인을 계속 투입한다
-  if (allDropped(game) && game.world.elapsed >= nextNeutralAt.current) {
-    const spurt = isFinalSpurt(game.world.elapsed);
-    spawnNeutral(game, spurt ? 3 : 1);
-    nextNeutralAt.current =
-      game.world.elapsed + (spurt ? NEUTRAL_INTERVAL_SPURT : NEUTRAL_INTERVAL);
-  }
-
-  const fallenBefore = game.world.fallen.length;
-  stepWorld(game.world, dt);
-
-  // 이번 스텝에 떨어진 코인을 낙하 연출 목록에 넣는다
-  for (let i = fallenBefore; i < game.world.fallen.length; i++) {
-    falling.push({ coin: game.world.fallen[i].coin, t: 0 });
-  }
-  for (let i = falling.length - 1; i >= 0; i--) {
-    falling[i].t += dt;
-    if (falling[i].t >= FALL_ANIM_SECONDS) falling.splice(i, 1);
-  }
-
-  return fired;
-}
 
 export default function CoinPusherGame() {
   const gameRef = useRef<Game | null>(null);
