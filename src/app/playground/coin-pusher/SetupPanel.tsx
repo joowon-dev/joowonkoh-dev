@@ -37,6 +37,7 @@ export default function SetupPanel({ initialRaw = "", onStart }: SetupPanelProps
       </label>
       <textarea
         id="players"
+        aria-describedby="players-status"
         value={raw}
         onChange={(e) => setRaw(e.target.value)}
         rows={8}
@@ -45,7 +46,7 @@ export default function SetupPanel({ initialRaw = "", onStart }: SetupPanelProps
       />
 
       <div className="mt-3 flex items-center justify-between text-xs">
-        <span className="text-text-muted">
+        <span id="players-status" role="status" aria-live="polite" className="text-text-muted">
           {names.length}명
           {tooFew && " — 2명 이상 넣어주세요"}
           {tooMany && ` — 최대 ${MAX_PLAYERS}명까지`}
@@ -78,6 +79,7 @@ export default function SetupPanel({ initialRaw = "", onStart }: SetupPanelProps
       <button
         type="button"
         disabled={!canStart}
+        aria-describedby="players-status"
         onClick={() => onStart(names, raw)}
         className="mt-8 w-full rounded-2xl bg-accent px-6 py-4 font-display text-sm font-semibold text-white shadow-ambient transition hover:shadow-ambient-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
       >
