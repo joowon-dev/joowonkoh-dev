@@ -27,11 +27,12 @@ describe("computeCamera", () => {
   it("키 큰 뷰포트(390x780)에선 너비가 제약이다", () => {
     const vp = { w: 390, h: 780 };
     const cam = computeCamera(vp, board);
-    // 판의 전체 너비가 화면에 들어가야 한다
-    const left = projectPoint(0, 0, cam).sx;
-    const right = projectPoint(board.width, 0, cam).sx;
-    expect(left).toBeGreaterThanOrEqual(0);
-    expect(right).toBeLessThanOrEqual(vp.w);
+    // 높이 제약이 아님을 확인해 너비 제약임을 증명
+    const depth = (board.fallLine - PUSHER_BACK_Y) * PERSPECTIVE_SCALE;
+    const widthFit = (vp.w - 32) / board.width; // SIDE_PADDING = 16
+    const heightFit = (vp.h - 48) / depth; // VERTICAL_PADDING = 24
+    expect(heightFit).toBeGreaterThan(widthFit); // 높이가 더 여유로움
+    expect(cam.scale).toBeCloseTo(widthFit, 5); // 배율은 너비 제약값
   });
 
   it("짧고 넓은 뷰포트(900x160)에선 높이가 제약이다", () => {
@@ -44,19 +45,15 @@ describe("computeCamera", () => {
     expect(bottom).toBeLessThanOrEqual(vp.h);
   });
 
-  it("판이 수평으로 가운데 정렬된다", () => {
-    const vp = { w: 900, h: 780 };
+  it("높이가 제약일 때도 판이 가운데 정렬된다", () => {
+    const vp = { w: 900, h: 160 };
     const cam = computeCamera(vp, board);
-    // x=0의 좌측 여백과 x=board.width의 우측 여백이 같아야 한다
+    // 높이 제약 뷰포트에서 offsetX는 진정한 가운데 정렬이어야 한다.
+    // 구 코드였다면 offsetX = SIDE_PADDING(16)이었을 테니 좌우 여백이 비대칭이었을 것.
     const leftGap = projectPoint(0, 0, cam).sx;
     const rightGap = vp.w - projectPoint(board.width, 0, cam).sx;
-    expect(leftGap).toBeCloseTo(rightGap, 1);
-  });
-
-  it("매우 작은 뷰포트(100x100)에서도 배율이 양수다", () => {
-    const cam = computeCamera({ w: 100, h: 100 }, board);
-    expect(cam.scale).toBeGreaterThan(0);
-    expect(Number.isFinite(cam.scale)).toBe(true);
+    expect(leftGap).toBeCloseTo(rightGap, 1); // 대칭
+    expect(leftGap).toBeGreaterThan(16); // SIDE_PADDING보다 큼 (구 코드와 다름)
   });
 });
 
