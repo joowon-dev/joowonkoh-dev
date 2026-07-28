@@ -2159,7 +2159,9 @@ import { useMemo, useState } from "react";
 import { parseNames } from "./setup";
 
 const MIN_PLAYERS = 2;
-const MAX_PLAYERS = 200;
+// 최종 리뷰(2026-07-28)에서 40으로 낮춤: 판 용량 실측 결과 40명을 넘으면 대기 중 당첨이 생겨
+// 공정성이 깨진다. 상세 근거는 design.md §4/§5.5 참고.
+const MAX_PLAYERS = 40;
 
 interface SetupPanelProps {
   initialRaw?: string;
@@ -2752,5 +2754,6 @@ git commit -m "feat: 플레이그라운드에 코인 밀기 추첨기 카드 추
 - `npx tsc --noEmit` 에러 없음
 - `npm run build` 성공
 - `/playground/coin-pusher`에서 이름 입력 → 코인 낙하 → 푸셔 밀기 → 당첨자 발표까지 끊김 없이 진행
-- 참가자 50명 기준 데스크톱에서 부드럽게 동작
+- 참가자 40명(상한) 기준 데스크톱에서 부드럽게 동작하며, 40명까지는 당첨 시점에 대기 중인
+  참가자가 없다(공정성 실측 기준, 최종 리뷰 2026-07-28)
 - 라이트/다크 모드 모두에서 판과 코인이 읽힌다
