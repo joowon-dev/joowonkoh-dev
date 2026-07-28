@@ -148,6 +148,9 @@ export default function CoinPusherGame() {
     }
 
     const win = winnerOf(game.world);
+    // 180초 안에 결과가 안 나오면(극히 드묾) phase를 바꾸지 않고 조용히 반환한다.
+    // world.elapsed는 이미 180초만큼 앞서 있어 다음 프레임 HUD가 껑충 뛰겠지만,
+    // 멈춘 상태가 아니라 rAF 루프가 이어서 정상 진행되므로 별도 처리를 두지 않는다.
     if (!win) return;
     fallingRef.current.length = 0;
     setWinner(game.names[win.coin.ownerIndex] ?? "");
@@ -174,7 +177,7 @@ export default function CoinPusherGame() {
   // 컨텐츠 블록을 뷰포트 안에서 수직 중앙 정렬한다.
   return (
     <div className="fixed inset-0 z-40 flex overflow-y-auto bg-bg">
-      <div className="m-auto w-full max-w-md px-4 py-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="m-auto w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between text-xs text-text-muted">
           <span>남은 코인 {remaining}개</span>
           <span className="tabular-nums">{elapsed.toFixed(1)}초</span>
