@@ -105,3 +105,134 @@ export function clampToWalls(coin: Coin, board: Board): void {
     coin.vx = -Math.abs(coin.vx) * WALL_RESTITUTION;
   }
 }
+
+export interface FallEvent {
+  coin: Coin;
+  /** 낙하선을 얼마나 넘어섰는지 */
+  overshoot: number;
+  /** 낙하한 시각(초) */
+  at: number;
+}
+
+export interface World {
+  board: Board;
+  coins: Coin[];
+  pusher: Pusher;
+  /** 기울기 이벤트가 주는 x축 가속도 */
+  tiltAx: number;
+  /** 진동 이벤트가 이번 스텝에 줄 임펄스 세기. 적용 후 0으로 돌아간다. */
+  shakeImpulse: number;
+  fallen: FallEvent[];
+  elapsed: number;
+}
+
+export function createPusher(): Pusher {
+  return { y: PUSHER_BACK_Y, dir: 1, speedScale: 1, strokeScale: 1 };
+}
+
+export function stepPusher(pusher: Pusher, dt: number): void {
+  const front = PUSHER_BACK_Y + PUSHER_STROKE * pusher.strokeScale;
+  pusher.y += pusher.dir * PUSHER_SPEED * pusher.speedScale * dt;
+  if (pusher.y >= front) {
+    pusher.y = front;
+    pusher.dir = -1;
+  } else if (pusher.y <= PUSHER_BACK_Y) {
+    pusher.y = PUSHER_BACK_Y;
+    pusher.dir = 1;
+  }
+}
+
+/** 푸셔 앞면보다 뒤에 있는 코인을 앞으로 밀어낸다. 후퇴 중에는 밀지 않는다. */
+export function applyPusher(coin: Coin, pusher: Pusher): void {
+  const limit = pusher.y + COIN_RADIUS;
+  if (coin.y >= limit) return;
+  coin.y = limit;
+  if (pusher.dir === 1) {
+    coin.vy = Math.max(coin.vy, PUSHER_SPEED * pusher.speedScale);
+  } else if (coin.vy < 0) {
+    coin.vy = 0;
+  }
+}
+
+/**
+ * 공간 해시로 충돌 후보 쌍을 뽑는다. 항상 i < j 이고 같은 쌍이 두 번 나오지 않는다.
+ */
+export function candidatePairs(coins: Coin[], cellSize: number): Array<[number, number]> {
+  const grid = new Map<string, number[]>();
+  for (let i = 0; i < coins.length; i++) {
+    const key = `${Math.floor(coins[i].x / cellSize)},${Math.floor(coins[i].y / cellSize)}`;
+    const bucket = grid.get(key);
+    if (bucket) bucket.push(i);
+    else grid.set(key, [i]);
+  }
+
+  const pairs: Array<[number, number]> = [];
+  for (let i = 0; i < coins.length; i++) {
+    const cx = Math.floor(coins[i].x / cellSize);
+    const cy = Math.floor(coins[i].y / cellSize);
+    for (let ox = -1; ox <= 1; ox++) {
+      for (let oy = -1; oy <= 1; oy++) {
+        const bucket = grid.get(`${cx + ox},${cy + oy}`);
+        if (!bucket) continue;
+        for (const j of bucket) {
+          if (j <= i) continue;
+          const dx = coins[j].x - coins[i].x;
+          const dy = coins[j].y - coins[i].y;
+          if (dx * dx + dy * dy <= (COIN_RADIUS * 2) ** 2) pairs.push([i, j]);
+        }
+      }
+    }
+  }
+  return pairs;
+}
+
+/** 낙하선을 넘은 코인을 월드에서 제거하고 fallen에 기록한다. */
+export function collectFallen(world: World): void {
+  const remaining: Coin[] = [];
+  const dropped: FallEvent[] = [];
+  for (const coin of world.coins) {
+    if (coin.y > world.board.fallLine) {
+      dropped.push({ coin, overshoot: coin.y - world.board.fallLine, at: world.elapsed });
+    } else {
+      remaining.push(coin);
+    }
+  }
+  if (dropped.length === 0) return;
+
+  // 같은 스텝에 여러 개면 더 많이 넘어간 쪽이 먼저, 같으면 id가 작은 쪽이 먼저
+  dropped.sort((a, b) => b.overshoot - a.overshoot || a.coin.id - b.coin.id);
+  world.coins = remaining;
+  world.fallen.push(...dropped);
+}
+
+export function stepWorld(world: World, dt: number): void {
+  world.elapsed += dt;
+  stepPusher(world.pusher, dt);
+
+  const damp = Math.max(0, 1 - FRICTION * dt);
+  for (const coin of world.coins) {
+    coin.vx += world.tiltAx * dt;
+    coin.vx *= damp;
+    coin.vy *= damp;
+    coin.x += coin.vx * dt;
+    coin.y += coin.vy * dt;
+  }
+
+  const pairs = candidatePairs(world.coins, COIN_RADIUS * 2);
+  for (const [i, j] of pairs) resolvePair(world.coins[i], world.coins[j]);
+
+  for (const coin of world.coins) {
+    applyPusher(coin, world.pusher);
+    clampToWalls(coin, world.board);
+  }
+
+  collectFallen(world);
+}
+
+/** 가장 먼저 떨어진 참가자 코인. 아직 없으면 null. */
+export function winnerOf(world: World): FallEvent | null {
+  for (const event of world.fallen) {
+    if (event.coin.ownerIndex >= 0) return event;
+  }
+  return null;
+}

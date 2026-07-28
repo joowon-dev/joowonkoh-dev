@@ -1,10 +1,21 @@
 import { describe, it, expect } from "vitest";
 import {
   COIN_RADIUS,
+  FIXED_DT,
+  PUSHER_BACK_Y,
+  PUSHER_STROKE,
   createCoin,
+  createPusher,
   resolvePair,
   clampToWalls,
+  stepPusher,
+  applyPusher,
+  candidatePairs,
+  collectFallen,
+  stepWorld,
+  winnerOf,
   type Board,
+  type World,
 } from "./physics";
 
 const board: Board = { width: 400, fallLine: 320 };
@@ -107,5 +118,207 @@ describe("clampToWalls", () => {
     clampToWalls(c, board);
     expect(c.x).toBe(200);
     expect(c.vx).toBe(40);
+  });
+});
+
+function makeWorld(coins: ReturnType<typeof createCoin>[]): World {
+  return {
+    board: { width: 400, fallLine: 320 },
+    coins,
+    pusher: createPusher(),
+    tiltAx: 0,
+    shakeImpulse: 0,
+    fallen: [],
+    elapsed: 0,
+  };
+}
+
+describe("stepPusher", () => {
+  it("앞으로 나갔다가 방향을 바꾼다", () => {
+    const p = createPusher();
+    for (let i = 0; i < 2000; i++) stepPusher(p, FIXED_DT);
+    expect(p.y).toBeGreaterThanOrEqual(PUSHER_BACK_Y);
+    expect(p.y).toBeLessThanOrEqual(PUSHER_BACK_Y + PUSHER_STROKE + 0.001);
+  });
+
+  it("행정 배율을 키우면 더 멀리 나간다", () => {
+    const normal = createPusher();
+    const long = createPusher();
+    long.strokeScale = 2;
+    let maxNormal = -Infinity;
+    let maxLong = -Infinity;
+    for (let i = 0; i < 2000; i++) {
+      stepPusher(normal, FIXED_DT);
+      stepPusher(long, FIXED_DT);
+      maxNormal = Math.max(maxNormal, normal.y);
+      maxLong = Math.max(maxLong, long.y);
+    }
+    expect(maxLong).toBeGreaterThan(maxNormal);
+  });
+});
+
+describe("applyPusher", () => {
+  it("푸셔 뒤로 들어간 코인을 앞면 밖으로 되돌린다", () => {
+    const p = createPusher();
+    p.y = 0;
+    p.dir = 1;
+    const c = createCoin({ id: 1, x: 100, y: -50 });
+    applyPusher(c, p);
+    expect(c.y).toBeCloseTo(COIN_RADIUS, 5);
+  });
+
+  it("전진 중이면 코인에 앞으로 가는 속도를 준다", () => {
+    const p = createPusher();
+    p.y = 0;
+    p.dir = 1;
+    const c = createCoin({ id: 1, x: 100, y: -50, vy: 0 });
+    applyPusher(c, p);
+    expect(c.vy).toBeGreaterThan(0);
+  });
+
+  it("후퇴 중에는 코인을 끌고 오지 않는다", () => {
+    const p = createPusher();
+    p.y = 0;
+    p.dir = -1;
+    const c = createCoin({ id: 1, x: 100, y: 100, vy: 0 });
+    applyPusher(c, p);
+    expect(c.y).toBe(100);
+    expect(c.vy).toBe(0);
+  });
+});
+
+describe("candidatePairs", () => {
+  it("가까운 코인 쌍을 찾는다", () => {
+    const coins = [
+      createCoin({ id: 1, x: 100, y: 100 }),
+      createCoin({ id: 2, x: 110, y: 100 }),
+    ];
+    expect(candidatePairs(coins, COIN_RADIUS * 2)).toEqual([[0, 1]]);
+  });
+
+  it("멀리 떨어진 코인 쌍은 제외한다", () => {
+    const coins = [
+      createCoin({ id: 1, x: 0, y: 0 }),
+      createCoin({ id: 2, x: 300, y: 300 }),
+    ];
+    expect(candidatePairs(coins, COIN_RADIUS * 2)).toEqual([]);
+  });
+
+  it("같은 쌍을 두 번 반환하지 않는다", () => {
+    const coins = Array.from({ length: 20 }, (_, i) =>
+      createCoin({ id: i, x: 100 + (i % 5) * 5, y: 100 + Math.floor(i / 5) * 5 }),
+    );
+    const pairs = candidatePairs(coins, COIN_RADIUS * 2);
+    const keys = pairs.map(([i, j]) => `${i}-${j}`);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const [i, j] of pairs) expect(i).toBeLessThan(j);
+  });
+});
+
+describe("collectFallen", () => {
+  it("낙하선을 넘은 코인을 월드에서 빼고 기록한다", () => {
+    const c = createCoin({ id: 7, x: 100, y: 400, ownerIndex: 2, kind: "player" });
+    const w = makeWorld([c]);
+    collectFallen(w);
+    expect(w.coins).toHaveLength(0);
+    expect(w.fallen).toHaveLength(1);
+    expect(w.fallen[0].coin.id).toBe(7);
+    expect(w.fallen[0].overshoot).toBeCloseTo(80, 5);
+  });
+
+  it("낙하선 안쪽 코인은 남긴다", () => {
+    const w = makeWorld([createCoin({ id: 1, x: 100, y: 100 })]);
+    collectFallen(w);
+    expect(w.coins).toHaveLength(1);
+    expect(w.fallen).toHaveLength(0);
+  });
+
+  it("같은 프레임에 여러 개가 떨어지면 더 많이 넘어간 코인이 앞에 온다", () => {
+    const w = makeWorld([
+      createCoin({ id: 1, x: 100, y: 330, ownerIndex: 0, kind: "player" }),
+      createCoin({ id: 2, x: 200, y: 360, ownerIndex: 1, kind: "player" }),
+    ]);
+    collectFallen(w);
+    expect(w.fallen.map((f) => f.coin.id)).toEqual([2, 1]);
+  });
+
+  it("넘어간 거리가 완전히 같으면 id가 작은 코인이 앞에 온다", () => {
+    const w = makeWorld([
+      createCoin({ id: 9, x: 100, y: 350, ownerIndex: 0, kind: "player" }),
+      createCoin({ id: 3, x: 200, y: 350, ownerIndex: 1, kind: "player" }),
+    ]);
+    collectFallen(w);
+    expect(w.fallen.map((f) => f.coin.id)).toEqual([3, 9]);
+  });
+});
+
+describe("winnerOf", () => {
+  it("가장 먼저 떨어진 참가자 코인을 고른다", () => {
+    const w = makeWorld([]);
+    w.fallen = [
+      { coin: createCoin({ id: 1, x: 0, y: 0 }), overshoot: 5, at: 1 },
+      { coin: createCoin({ id: 2, x: 0, y: 0, ownerIndex: 4, kind: "player" }), overshoot: 3, at: 2 },
+      { coin: createCoin({ id: 3, x: 0, y: 0, ownerIndex: 6, kind: "player" }), overshoot: 9, at: 3 },
+    ];
+    expect(winnerOf(w)?.coin.ownerIndex).toBe(4);
+  });
+
+  it("중립 코인만 떨어졌으면 당첨자가 없다", () => {
+    const w = makeWorld([]);
+    w.fallen = [{ coin: createCoin({ id: 1, x: 0, y: 0 }), overshoot: 5, at: 1 }];
+    expect(winnerOf(w)).toBeNull();
+  });
+});
+
+describe("stepWorld", () => {
+  it("푸셔가 코인을 앞으로 민다", () => {
+    const c = createCoin({ id: 1, x: 200, y: 0 });
+    const w = makeWorld([c]);
+    for (let i = 0; i < 240; i++) stepWorld(w, FIXED_DT);
+    expect(w.coins[0].y).toBeGreaterThan(0);
+  });
+
+  it("기울기가 있으면 코인이 그 방향으로 간다", () => {
+    const w = makeWorld([createCoin({ id: 1, x: 200, y: 100 })]);
+    w.tiltAx = 200;
+    for (let i = 0; i < 60; i++) stepWorld(w, FIXED_DT);
+    expect(w.coins[0].x).toBeGreaterThan(200);
+  });
+
+  it("코인이 판 밖으로 새지 않는다", () => {
+    const coins = Array.from({ length: 60 }, (_, i) =>
+      createCoin({ id: i, x: 20 + (i % 10) * 30, y: 40 + Math.floor(i / 10) * 26 }),
+    );
+    const w = makeWorld(coins);
+    for (let i = 0; i < 1200; i++) stepWorld(w, FIXED_DT);
+    for (const c of w.coins) {
+      expect(c.x).toBeGreaterThanOrEqual(COIN_RADIUS - 0.001);
+      expect(c.x).toBeLessThanOrEqual(w.board.width - COIN_RADIUS + 0.001);
+      expect(Number.isFinite(c.y)).toBe(true);
+    }
+  });
+
+  it("elapsed가 누적된다", () => {
+    const w = makeWorld([]);
+    for (let i = 0; i < 120; i++) stepWorld(w, FIXED_DT);
+    expect(w.elapsed).toBeCloseTo(1, 5);
+  });
+
+  it("같은 초기 상태를 두 번 돌리면 결과가 같다", () => {
+    const build = () =>
+      makeWorld(
+        Array.from({ length: 40 }, (_, i) =>
+          createCoin({ id: i, x: 20 + (i % 8) * 40, y: 40 + Math.floor(i / 8) * 30 }),
+        ),
+      );
+    const a = build();
+    const b = build();
+    for (let i = 0; i < 600; i++) {
+      stepWorld(a, FIXED_DT);
+      stepWorld(b, FIXED_DT);
+    }
+    expect(a.coins.map((c) => [c.id, c.x, c.y])).toEqual(
+      b.coins.map((c) => [c.id, c.x, c.y]),
+    );
   });
 });
