@@ -1,5 +1,12 @@
 import { randRange, pick, type Rng } from "./random";
-import { type CoinKind, type World } from "./physics";
+import {
+  NEUTRAL_RADII,
+  centerX,
+  halfWidthAt,
+  type Coin,
+  type CoinKind,
+  type World,
+} from "./physics";
 
 /** 이 시각(초)부터 막판 스퍼트에 들어간다 */
 export const FINAL_SPURT_AT = 45;
@@ -106,21 +113,112 @@ export function applyFinalSpurt(world: World, elapsed: number): void {
   world.pusher.strokeScale = 1 + Math.min(0.8, (over / 15) * 0.8);
 }
 
-const GOLD_CHANCE = 0.12;
-const SPRING_CHANCE = 0.1;
+const BOMB_CHANCE = 0.1;
+const WARP_CHANCE = 0.08;
 
 /** 중립 코인의 종류를 뽑는다. 참가자 코인은 절대 나오지 않는다. */
 export function rollNeutralKind(rng: Rng): CoinKind {
   const r = rng();
-  if (r < GOLD_CHANCE) return "gold";
-  if (r < GOLD_CHANCE + SPRING_CHANCE) return "spring";
+  if (r < BOMB_CHANCE) return "bomb";
+  if (r < BOMB_CHANCE + WARP_CHANCE) return "warp";
   return "neutral";
 }
 
-export function kindMass(kind: CoinKind): number {
-  return kind === "gold" ? 2.5 : 1;
+/** 중립 코인의 반지름을 3종 중에서 뽑는다. 이벤트 코인은 눈에 띄도록 항상 큰 쪽. */
+export function rollNeutralRadius(kind: CoinKind, rng: Rng): number {
+  if (kind === "bomb" || kind === "warp") return NEUTRAL_RADII[2];
+  return pick(rng, NEUTRAL_RADII);
+}
+
+/** 질량은 넓이(반지름²)에 비례한다. 참가자 코인이 기준값 1. */
+export function radiusMass(radius: number): number {
+  return (radius / NEUTRAL_RADII[1]) ** 2;
 }
 
 export function kindRestitution(kind: CoinKind): number {
-  return kind === "spring" ? 0.75 : 0.15;
+  return kind === "warp" ? 0.5 : 0.15;
+}
+
+/** 이벤트 코인이 터지기까지의 시간(초). 평범한 코인은 null. */
+export function rollFuse(kind: CoinKind, rng: Rng): number | null {
+  if (kind === "bomb") return randRange(rng, 3.5, 9);
+  if (kind === "warp") return randRange(rng, 4, 10);
+  return null;
+}
+
+export const BOMB_RADIUS = 110;
+const BOMB_POWER = 420;
+const WARP_TARGETS = 6;
+
+/** 터진 이벤트 코인이 남기는 연출 정보. 물리에는 영향을 주지 않는다. */
+export interface CoinEffect {
+  type: "bomb" | "warp";
+  x: number;
+  y: number;
+  /** 연출 경과 시간(초) */
+  t: number;
+}
+
+/** 판 안의 무작위 좌표 하나. 벽 안쪽으로 코인 반지름만큼 여유를 둔다. */
+function randomSpot(world: World, coin: Coin, rng: Rng): { x: number; y: number } {
+  const board = world.board;
+  const y = randRange(rng, coin.radius, board.fallLine - coin.radius * 2);
+  const limit = Math.max(0, halfWidthAt(board, y) - coin.radius);
+  return { x: centerX(board) + randRange(rng, -limit, limit), y };
+}
+
+/**
+ * 이벤트 코인의 도화선을 진행시키고, 터진 코인의 효과를 월드에 적용한다.
+ * 터진 코인은 월드에서 사라지며, 연출용 CoinEffect 배열을 반환한다.
+ *
+ * - 폭탄: 주변 코인을 바깥으로 날린다 (거리에 반비례하는 임펄스)
+ * - 순간이동: 자기 주변 코인 몇 개를 판 위 무작위 지점으로 보낸다
+ */
+export function tickCoinEvents(world: World, rng: Rng, dt: number): CoinEffect[] {
+  const effects: CoinEffect[] = [];
+  const detonated: Coin[] = [];
+
+  for (const coin of world.coins) {
+    if (coin.fuse === null) continue;
+    coin.fuse -= dt;
+    if (coin.fuse <= 0) detonated.push(coin);
+  }
+  if (detonated.length === 0) return effects;
+
+  const exploded = new Set(detonated);
+  world.coins = world.coins.filter((c) => !exploded.has(c));
+
+  for (const coin of detonated) {
+    if (coin.kind === "bomb") {
+      for (const other of world.coins) {
+        const dx = other.x - coin.x;
+        const dy = other.y - coin.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > BOMB_RADIUS) continue;
+        // 완전히 겹친 코인은 방향을 정할 수 없으므로 앞쪽으로 밀어낸다
+        const nx = dist === 0 ? 0 : dx / dist;
+        const ny = dist === 0 ? 1 : dy / dist;
+        const falloff = 1 - dist / BOMB_RADIUS;
+        const power = (BOMB_POWER * falloff) / other.mass;
+        other.vx += nx * power;
+        other.vy += ny * power;
+      }
+    } else {
+      // warp — 가까운 코인부터 몇 개를 무작위 지점으로 보낸다
+      const nearby = world.coins
+        .map((c) => ({ c, d: Math.hypot(c.x - coin.x, c.y - coin.y) }))
+        .sort((a, b) => a.d - b.d || a.c.id - b.c.id)
+        .slice(0, WARP_TARGETS);
+      for (const { c } of nearby) {
+        const spot = randomSpot(world, c, rng);
+        c.x = spot.x;
+        c.y = spot.y;
+        c.vx = 0;
+        c.vy = 0;
+      }
+    }
+    effects.push({ type: coin.kind === "bomb" ? "bomb" : "warp", x: coin.x, y: coin.y, t: 0 });
+  }
+
+  return effects;
 }

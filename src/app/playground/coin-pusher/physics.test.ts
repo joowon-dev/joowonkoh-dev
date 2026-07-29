@@ -2,8 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   COIN_RADIUS,
   FIXED_DT,
+  MAX_COIN_RADIUS,
   PUSHER_BACK_Y,
   PUSHER_STROKE,
+  centerX,
+  halfWidthAt,
   createCoin,
   createPusher,
   resolvePair,
@@ -18,7 +21,7 @@ import {
   type World,
 } from "./physics";
 
-const board: Board = { width: 400, fallLine: 320 };
+const board: Board = { width: 400, backWidth: 400, fallLine: 320 };
 
 describe("createCoin", () => {
   it("기본값은 중립 코인이다", () => {
@@ -121,9 +124,61 @@ describe("clampToWalls", () => {
   });
 });
 
+describe("halfWidthAt", () => {
+  const taper: Board = { width: 300, backWidth: 100, fallLine: 400 };
+
+  it("뒤에서는 backWidth의 절반이다", () => {
+    expect(halfWidthAt(taper, PUSHER_BACK_Y)).toBeCloseTo(50, 5);
+  });
+
+  it("낙하선에서는 width의 절반이다", () => {
+    expect(halfWidthAt(taper, taper.fallLine)).toBeCloseTo(150, 5);
+  });
+
+  it("앞으로 갈수록 단조 증가한다", () => {
+    let prev = -Infinity;
+    for (let y = PUSHER_BACK_Y; y <= taper.fallLine; y += 20) {
+      const w = halfWidthAt(taper, y);
+      expect(w).toBeGreaterThan(prev);
+      prev = w;
+    }
+  });
+
+  it("판 밖의 y는 양 끝값으로 고정된다", () => {
+    expect(halfWidthAt(taper, PUSHER_BACK_Y - 500)).toBeCloseTo(50, 5);
+    expect(halfWidthAt(taper, taper.fallLine + 500)).toBeCloseTo(150, 5);
+  });
+});
+
+describe("크기가 다른 코인", () => {
+  it("반지름 합만큼 벌어진다", () => {
+    const big = createCoin({ id: 1, x: 100, y: 100, radius: 19 });
+    const small = createCoin({ id: 2, x: 110, y: 100, radius: 10 });
+    resolvePair(big, small);
+    expect(Math.hypot(small.x - big.x, small.y - big.y)).toBeCloseTo(29, 5);
+  });
+
+  it("큰 코인은 벽에서 더 멀리 떨어져 멈춘다", () => {
+    const big = createCoin({ id: 1, x: -50, y: 100, radius: 19 });
+    const small = createCoin({ id: 2, x: -50, y: 100, radius: 10 });
+    clampToWalls(big, board);
+    clampToWalls(small, board);
+    expect(big.x).toBeCloseTo(19, 5);
+    expect(small.x).toBeCloseTo(10, 5);
+  });
+
+  it("셀 크기가 가장 큰 코인 기준이면 큰 코인 쌍도 놓치지 않는다", () => {
+    const coins = [
+      createCoin({ id: 1, x: 100, y: 100, radius: 19 }),
+      createCoin({ id: 2, x: 130, y: 100, radius: 19 }),
+    ];
+    expect(candidatePairs(coins, MAX_COIN_RADIUS * 2)).toEqual([[0, 1]]);
+  });
+});
+
 function makeWorld(coins: ReturnType<typeof createCoin>[]): World {
   return {
-    board: { width: 400, fallLine: 320 },
+    board: { width: 400, backWidth: 400, fallLine: 320 },
     coins,
     pusher: createPusher(),
     tiltAx: 0,
@@ -294,6 +349,25 @@ describe("stepWorld", () => {
       expect(c.x).toBeGreaterThanOrEqual(COIN_RADIUS - 0.001);
       expect(c.x).toBeLessThanOrEqual(w.board.width - COIN_RADIUS + 0.001);
       expect(Number.isFinite(c.y)).toBe(true);
+    }
+  });
+
+  it("좁아지는 판에서도 코인이 벽을 뚫지 않는다", () => {
+    const w = makeWorld(
+      Array.from({ length: 50 }, (_, i) =>
+        createCoin({
+          id: i,
+          x: 150 + (i % 10) * 10,
+          y: 20 + Math.floor(i / 10) * 30,
+          radius: [10, 14, 19][i % 3],
+        }),
+      ),
+    );
+    w.board = { width: 300, backWidth: 120, fallLine: 400 };
+    for (let i = 0; i < 1200; i++) stepWorld(w, FIXED_DT);
+    for (const c of w.coins) {
+      const limit = halfWidthAt(w.board, c.y) - c.radius;
+      expect(Math.abs(c.x - centerX(w.board))).toBeLessThanOrEqual(limit + 0.001);
     }
   });
 

@@ -1,12 +1,18 @@
+/** 참가자 코인의 반지름. 중립 코인은 NEUTRAL_RADII 중 하나를 쓴다. */
 export const COIN_RADIUS = 14;
+/** 중립 코인 크기 3종 (작은 / 보통 / 큰) */
+export const NEUTRAL_RADII = [10, 14, 19] as const;
+/** 공간 해시 셀 크기의 하한. 가장 큰 코인의 지름 이상이어야 충돌이 누락되지 않는다. */
+export const MAX_COIN_RADIUS = 19;
+
 export const FIXED_DT = 1 / 120;
 export const FRICTION = 3.2; // 속도 감쇠 계수 (1/s)
 export const PUSHER_BACK_Y = -20; // 푸셔 앞면이 가장 뒤로 물러났을 때의 y
-export const PUSHER_STROKE = 90; // 푸셔가 앞으로 나오는 거리
-export const PUSHER_SPEED = 70; // 푸셔 이동 속도 (unit/s)
+export const PUSHER_STROKE = 130; // 푸셔가 앞으로 나오는 거리
+export const PUSHER_SPEED = 78; // 푸셔 이동 속도 (unit/s)
 export const WALL_RESTITUTION = 0.4;
 
-export type CoinKind = "player" | "neutral" | "gold" | "spring";
+export type CoinKind = "player" | "neutral" | "bomb" | "warp";
 
 export interface Coin {
   id: number;
@@ -17,16 +23,36 @@ export interface Coin {
   y: number;
   vx: number;
   vy: number;
+  radius: number;
   mass: number;
   restitution: number;
   /** 월드에 투입된 시각(초). 렌더의 낙하 연출에 쓴다. */
   bornAt: number;
+  /** 렌더 전용 회전각(rad). 물리에는 영향을 주지 않는다. */
+  spin: number;
+  /** bomb/warp 코인이 터지기까지 남은 시간(초). 그 외 코인은 null. */
+  fuse: number | null;
 }
 
 export interface Board {
+  /** 낙하선(가장 앞)에서의 판 폭 — 가장 넓은 쪽 */
   width: number;
+  /** 푸셔 뒤(PUSHER_BACK_Y)에서의 판 폭 — 가장 좁은 쪽 */
+  backWidth: number;
   /** 코인 중심이 이 값을 넘으면 판 앞으로 떨어진다 */
   fallLine: number;
+}
+
+/** 판은 뒤에서 앞으로 갈수록 서서히 넓어진다. 해당 깊이에서의 반쪽 폭. */
+export function halfWidthAt(board: Board, y: number): number {
+  const span = board.fallLine - PUSHER_BACK_Y;
+  const t = span <= 0 ? 1 : Math.min(1, Math.max(0, (y - PUSHER_BACK_Y) / span));
+  return (board.backWidth + (board.width - board.backWidth) * t) / 2;
+}
+
+/** 판의 좌우 가운데. x 좌표계는 0..width이고 가운데가 기준선이다. */
+export function centerX(board: Board): number {
+  return board.width / 2;
 }
 
 export interface Pusher {
@@ -47,9 +73,12 @@ export function createCoin(init: CoinInit): Coin {
     kind: "neutral",
     vx: 0,
     vy: 0,
+    radius: COIN_RADIUS,
     mass: 1,
     restitution: 0.15,
     bornAt: 0,
+    spin: 0,
+    fuse: null,
     ...init,
   };
 }
@@ -59,7 +88,7 @@ export function resolvePair(a: Coin, b: Coin): void {
   let dx = b.x - a.x;
   let dy = b.y - a.y;
   let dist = Math.hypot(dx, dy);
-  const minDist = COIN_RADIUS * 2;
+  const minDist = a.radius + b.radius;
 
   if (dist >= minDist) return;
 
@@ -95,13 +124,21 @@ export function resolvePair(a: Coin, b: Coin): void {
   b.vy += j * ny * invB;
 }
 
-/** 좌우 벽 밖으로 나간 코인을 되돌린다. 인자를 직접 수정한다. */
+/** 좌우 벽 밖으로 나간 코인을 되돌린다. 벽은 깊이에 따라 벌어진다. 인자를 직접 수정한다. */
 export function clampToWalls(coin: Coin, board: Board): void {
-  if (coin.x < COIN_RADIUS) {
-    coin.x = COIN_RADIUS;
+  const cx = centerX(board);
+  const limit = halfWidthAt(board, coin.y) - coin.radius;
+  // 판 뒤쪽이 코인 하나보다 좁아지는 극단적 설정이면 가운데로 모은다
+  if (limit <= 0) {
+    coin.x = cx;
+    coin.vx = 0;
+    return;
+  }
+  if (coin.x < cx - limit) {
+    coin.x = cx - limit;
     coin.vx = Math.abs(coin.vx) * WALL_RESTITUTION;
-  } else if (coin.x > board.width - COIN_RADIUS) {
-    coin.x = board.width - COIN_RADIUS;
+  } else if (coin.x > cx + limit) {
+    coin.x = cx + limit;
     coin.vx = -Math.abs(coin.vx) * WALL_RESTITUTION;
   }
 }
@@ -142,7 +179,7 @@ export function stepPusher(pusher: Pusher, dt: number): void {
 
 /** 푸셔 앞면보다 뒤에 있는 코인을 앞으로 밀어낸다. 후퇴 중에는 밀지 않는다. */
 export function applyPusher(coin: Coin, pusher: Pusher): void {
-  const limit = pusher.y + COIN_RADIUS;
+  const limit = pusher.y + coin.radius;
   if (coin.y >= limit) return;
   coin.y = limit;
   if (pusher.dir === 1) {
@@ -154,7 +191,7 @@ export function applyPusher(coin: Coin, pusher: Pusher): void {
 
 /**
  * 공간 해시로 충돌 후보 쌍을 뽑는다. 항상 i < j 이고 같은 쌍이 두 번 나오지 않는다.
- * 전제조건: cellSize는 COIN_RADIUS * 2 이상이어야 한다. 이보다 작으면 인접하지 않은
+ * 전제조건: cellSize는 MAX_COIN_RADIUS * 2 이상이어야 한다. 이보다 작으면 인접하지 않은
  * 셀에 걸친 충돌 쌍이 조용히 누락될 수 있다.
  */
 export function candidatePairs(coins: Coin[], cellSize: number): Array<[number, number]> {
@@ -178,7 +215,8 @@ export function candidatePairs(coins: Coin[], cellSize: number): Array<[number, 
           if (j <= i) continue;
           const dx = coins[j].x - coins[i].x;
           const dy = coins[j].y - coins[i].y;
-          if (dx * dx + dy * dy <= (COIN_RADIUS * 2) ** 2) pairs.push([i, j]);
+          const reach = coins[i].radius + coins[j].radius;
+          if (dx * dx + dy * dy <= reach * reach) pairs.push([i, j]);
         }
       }
     }
@@ -216,9 +254,11 @@ export function stepWorld(world: World, dt: number): void {
     coin.vy *= damp;
     coin.x += coin.vx * dt;
     coin.y += coin.vy * dt;
+    // 굴러가는 느낌을 주는 렌더용 회전 — 이동 거리에 비례한다
+    coin.spin += (Math.hypot(coin.vx, coin.vy) * dt) / coin.radius;
   }
 
-  const pairs = candidatePairs(world.coins, COIN_RADIUS * 2);
+  const pairs = candidatePairs(world.coins, MAX_COIN_RADIUS * 2);
   for (const [i, j] of pairs) resolvePair(world.coins[i], world.coins[j]);
 
   for (const coin of world.coins) {

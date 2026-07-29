@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import { parseNames } from "./setup";
 
 const MIN_PLAYERS = 2;
-// 판(420×240)의 실측 수용 한계. 시드 40개씩 로스터 크기별로 실제 게임 루프를 돌려 측정한 결과,
-// 40명까지는 당첨자가 결정될 때 모든 참가자의 코인이 판에 이미 올라와 있었다(대기 중 0%).
-// 50명부터 대기 중 당첨(10%)이 나타나고 200명에서는 81%가 코인조차 못 올려본 채 게임이 끝나
-// 추첨으로서 공정하지 않다. 따라서 40은 UI가 임의로 정한 값이 아니라 공정성 한계선이다.
+// 판의 실측 수용 한계. 로스터 크기별로 실제 게임 루프를 돌려 측정한 결과, 40명까지는 당첨자가
+// 결정되는 시점에 모든 참가자의 코인이 이미 판에 올라와 있었다(대기 중 0%). 이 선을 넘기면
+// 투입 순서가 늦은 참가자는 코인이 판에 오르기도 전에 게임이 끝나 당첨 확률이 0에 가까워진다.
+// 따라서 40은 성능 상한이 아니라 공정성 상한이다. 판 크기나 투입 속도를 바꾸면 다시 재야 한다.
 const MAX_PLAYERS = 40;
 
 interface SetupPanelProps {
@@ -32,8 +32,8 @@ export default function SetupPanel({ initialRaw = "", onStart }: SetupPanelProps
         코인 밀기 추첨기
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-        참가자 이름을 넣으면 각자의 코인이 판 위로 쏟아집니다. 푸셔에 밀려 가장 먼저 앞으로
-        떨어진 코인의 주인이 당첨.
+        참가자 이름을 넣으면 코인이 미는 판 위로 우르르 쏟아집니다. 푸셔에 밀려 가장 먼저 앞으로
+        떨어진 코인의 주인이 당첨. 중간에 폭탄 코인과 순간이동 코인이 판을 뒤집어 놓습니다.
       </p>
 
       <label htmlFor="players" className="mt-8 block text-xs font-medium text-text-muted">

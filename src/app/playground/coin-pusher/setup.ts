@@ -1,23 +1,36 @@
 import { createRng, randRange, type Rng } from "./random";
-import { kindMass, kindRestitution, rollNeutralKind } from "./events";
+import {
+  radiusMass,
+  kindRestitution,
+  rollFuse,
+  rollNeutralKind,
+  rollNeutralRadius,
+} from "./events";
 import {
   COIN_RADIUS,
+  PUSHER_BACK_Y,
+  centerX,
   createCoin,
   createPusher,
+  halfWidthAt,
   type Coin,
   type World,
 } from "./physics";
 
-export const BOARD_WIDTH = 420;
-export const FALL_LINE = 220;
+/** 낙하선 쪽(앞) 판 폭 — 가장 넓다 */
+export const BOARD_WIDTH = 300;
+/** 푸셔 쪽(뒤) 판 폭 — 여기서부터 앞으로 서서히 넓어진다 */
+export const BOARD_BACK_WIDTH = 170;
+export const FALL_LINE = 420;
 
-/** 중립 코인이 처음 깔리는 구간 (푸셔 앞 ~ 낙하선 직전) */
-const PRESET_MIN_Y = 40;
-const PRESET_MAX_Y = FALL_LINE - COIN_RADIUS * 2;
+/** 코인이 쏟아지는 구간 — 미는 판 위 */
+const PLATE_MIN_Y = PUSHER_BACK_Y + 4;
+const PLATE_MAX_Y = PUSHER_BACK_Y + 70;
 
-/** 참가자 코인이 우르르 떨어지는 구간 */
-const DROP_MIN_Y = 10;
-const DROP_MAX_Y = 120;
+/** 처음 깔리는 중립 코인이 전부 쏟아지는 데 걸리는 시간(초) */
+export const INITIAL_POUR_SECONDS = 7;
+/** 참가자 코인이 전부 쏟아지는 데 걸리는 시간(초) */
+export const PLAYER_POUR_SECONDS = 2.2;
 
 export interface QueuedCoin {
   coin: Coin;
@@ -47,14 +60,43 @@ export function parseNames(raw: string): string[] {
   return out;
 }
 
-function randomX(rng: Rng): number {
-  return randRange(rng, COIN_RADIUS, BOARD_WIDTH - COIN_RADIUS);
+const board = { width: BOARD_WIDTH, backWidth: BOARD_BACK_WIDTH, fallLine: FALL_LINE };
+
+/** 미는 판 위의 무작위 투입 지점. 벽 안쪽으로 반지름만큼 여유를 둔다. */
+function plateSpot(rng: Rng, radius: number): { x: number; y: number } {
+  const y = randRange(rng, PLATE_MIN_Y, PLATE_MAX_Y);
+  const limit = Math.max(1, halfWidthAt(board, y) - radius);
+  return { x: centerX(board) + randRange(rng, -limit, limit), y };
+}
+
+/** 미는 판 위로 쏟아지는 중립 코인 하나를 만든다. */
+function makeNeutral(rng: Rng, id: number, bornAt: number): Coin {
+  const kind = rollNeutralKind(rng);
+  const radius = rollNeutralRadius(kind, rng);
+  const spot = plateSpot(rng, radius);
+  return createCoin({
+    id,
+    ...spot,
+    kind,
+    radius,
+    mass: radiusMass(radius),
+    restitution: kindRestitution(kind),
+    fuse: rollFuse(kind, rng),
+    vx: randRange(rng, -30, 30),
+    vy: randRange(rng, 10, 70),
+    bornAt,
+  });
+}
+
+/** 처음 깔릴 중립 코인 수. 인원에 비례하되 상·하한을 둔다. */
+export function initialCoinCount(playerCount: number): number {
+  return Math.min(170, Math.max(80, Math.round(playerCount * 3)));
 }
 
 export function createGame(names: string[], seed: number): Game {
   const rng = createRng(seed);
   const world: World = {
-    board: { width: BOARD_WIDTH, fallLine: FALL_LINE },
+    board: { ...board },
     coins: [],
     pusher: createPusher(),
     tiltAx: 0,
@@ -63,50 +105,46 @@ export function createGame(names: string[], seed: number): Game {
   };
 
   let nextCoinId = 0;
+  const queue: QueuedCoin[] = [];
 
-  // 미리 깔려 있는 중립 코인 — 인원에 비례하되 상·하한을 둔다
-  const presetCount = Math.min(120, Math.max(14, Math.round(names.length * 1.6)));
-  for (let i = 0; i < presetCount; i++) {
-    const kind = rollNeutralKind(rng);
-    world.coins.push(
-      createCoin({
-        id: nextCoinId++,
-        x: randomX(rng),
-        y: randRange(rng, PRESET_MIN_Y, PRESET_MAX_Y),
-        kind,
-        mass: kindMass(kind),
-        restitution: kindRestitution(kind),
-      }),
-    );
+  // 1단계 — 판을 채울 중립 코인이 미는 판 위로 우르르 쏟아진다
+  const initialCount = initialCoinCount(names.length);
+  for (let i = 0; i < initialCount; i++) {
+    const at = (i / initialCount) * INITIAL_POUR_SECONDS + randRange(rng, 0, 0.05);
+    queue.push({ at, coin: makeNeutral(rng, nextCoinId++, at) });
   }
 
-  // 참가자 코인 — 낙하 순서를 섞고, 지점·시각·초기 속도를 무작위로 준다
+  // 2단계 — 참가자 코인. 낙하 순서를 섞고 지점·시각·초기 속도를 무작위로 준다
   const order = names.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
 
-  const queue: QueuedCoin[] = [];
-  let at = 0;
-  for (const ownerIndex of order) {
-    at += randRange(rng, 0.06, 0.2);
+  order.forEach((ownerIndex, i) => {
+    const at =
+      INITIAL_POUR_SECONDS +
+      0.4 +
+      (order.length <= 1 ? 0 : (i / (order.length - 1)) * PLAYER_POUR_SECONDS) +
+      randRange(rng, 0, 0.06);
+    const spot = plateSpot(rng, COIN_RADIUS);
     queue.push({
       at,
       coin: createCoin({
         id: nextCoinId++,
         ownerIndex,
         kind: "player",
-        x: randomX(rng),
-        y: randRange(rng, DROP_MIN_Y, DROP_MAX_Y),
-        vx: randRange(rng, -40, 40),
-        vy: randRange(rng, -10, 60),
-        mass: kindMass("player"),
+        ...spot,
+        radius: COIN_RADIUS,
+        mass: radiusMass(COIN_RADIUS),
         restitution: kindRestitution("player"),
+        vx: randRange(rng, -30, 30),
+        vy: randRange(rng, 10, 70),
       }),
     });
-  }
+  });
 
+  queue.sort((a, b) => a.at - b.at);
   return { world, names, queue, seed, rng, nextCoinId };
 }
 
@@ -127,22 +165,10 @@ export function releaseDue(game: Game): Coin[] {
   return released;
 }
 
-/** 중립 코인을 판 뒤쪽에 추가로 투입한다. */
+/** 중립 코인을 미는 판 위에 추가로 투입한다. */
 export function spawnNeutral(game: Game, count: number): void {
   for (let i = 0; i < count; i++) {
-    const kind = rollNeutralKind(game.rng);
-    game.world.coins.push(
-      createCoin({
-        id: game.nextCoinId++,
-        x: randomX(game.rng),
-        y: randRange(game.rng, DROP_MIN_Y, DROP_MAX_Y),
-        vy: randRange(game.rng, 0, 40),
-        kind,
-        mass: kindMass(kind),
-        restitution: kindRestitution(kind),
-        bornAt: game.world.elapsed,
-      }),
-    );
+    game.world.coins.push(makeNeutral(game.rng, game.nextCoinId++, game.world.elapsed));
   }
 }
 
