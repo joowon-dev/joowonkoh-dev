@@ -26,8 +26,30 @@ export interface Scheduler {
   active: ActiveEvent | null;
 }
 
-const GAP_MIN = 5;
-const GAP_MAX = 11;
+const GAP_MIN = 2.2;
+const GAP_MAX = 5;
+
+/**
+ * 이벤트 추첨 가중치. 순위를 실제로 뒤집는 쪽(융기·역류)을 무겁게 준다.
+ * 균등 추첨이면 판을 흔들기만 하고 순서는 그대로인 이벤트가 절반을 넘는다.
+ */
+const EVENT_WEIGHTS: Record<EventType, number> = {
+  burst: 4,
+  backdraft: 3,
+  shake: 2,
+  tilt: 2,
+  rush: 1,
+};
+
+function pickEvent(rng: Rng): EventType {
+  const total = EVENT_TYPES.reduce((sum, t) => sum + EVENT_WEIGHTS[t], 0);
+  let r = rng() * total;
+  for (const type of EVENT_TYPES) {
+    r -= EVENT_WEIGHTS[type];
+    if (r < 0) return type;
+  }
+  return EVENT_TYPES[EVENT_TYPES.length - 1];
+}
 
 function rollMagnitude(type: EventType, rng: Rng): number {
   if (type === "shake") return randRange(rng, 120, 260);
@@ -71,7 +93,7 @@ export function updateScheduler(s: Scheduler, elapsed: number, dt: number): Even
 
   if (elapsed < s.nextAt) return null;
 
-  const type = pick(s.rng, EVENT_TYPES);
+  const type = pickEvent(s.rng);
   const duration = rollDuration(type, s.rng);
   const magnitude = rollMagnitude(type, s.rng);
   // burst는 터질 지점이 필요하다. 더미가 몰려 있는 앞쪽 절반에서 고른다.
