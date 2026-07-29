@@ -5,12 +5,14 @@ import {
   MAX_BLOCK_EXTENT,
   MAX_BLOCK_HALF_HEIGHT,
   ROW_COUNT,
+  SPLITTER_HALF_SPAN,
   ZONE_TOP,
   allCircles,
   allSegments,
   blockCircles,
   blockExtent,
   blockSegments,
+  centerSplitters,
   layoutBlocks,
   wallDeflectors,
   type Block,
@@ -198,6 +200,64 @@ describe("layoutBlocks", () => {
     expect(layoutBlocks(createRng(7), ZONE_BOTTOM)).not.toEqual(
       layoutBlocks(createRng(8), ZONE_BOTTOM),
     );
+  });
+});
+
+describe("centerSplitters", () => {
+  const splitters = centerSplitters(ZONE_BOTTOM);
+
+  it("존재한다 — 벽 유도판이 안쪽으로만 미는 것을 상쇄하는 장치다", () => {
+    expect(splitters.length).toBeGreaterThan(0);
+    expect(splitters.length % 2).toBe(0);
+  });
+
+  it("한가운데에서 좌우 바깥 아래로 갈라진다", () => {
+    for (let i = 0; i < splitters.length; i += 2) {
+      const left = splitters[i];
+      const right = splitters[i + 1];
+      // 꼭짓점이 판 한가운데
+      expect(left.x1).toBeCloseTo(WORLD_WIDTH / 2, 6);
+      expect(right.x1).toBeCloseTo(WORLD_WIDTH / 2, 6);
+      // 좌우로 벌어지며 아래로 내려간다
+      expect(left.x2).toBeLessThan(left.x1);
+      expect(right.x2).toBeGreaterThan(right.x1);
+      expect(left.y2).toBeGreaterThan(left.y1);
+      expect(right.y2).toBeGreaterThan(right.y1);
+      // 좌우 대칭이어야 어느 쪽도 유리해지지 않는다
+      expect(left.x1 - left.x2).toBeCloseTo(right.x2 - right.x1, 6);
+      expect(left.y2 - left.y1).toBeCloseTo(right.y2 - right.y1, 6);
+    }
+  });
+
+  it("마찰각보다 가팔라 구슬이 미끄러진다", () => {
+    for (const s of splitters) {
+      expect(Math.abs(Math.atan2(s.y2 - s.y1, s.x2 - s.x1))).toBeGreaterThan(FRICTION_ANGLE);
+    }
+  });
+
+  it("벽 유도판과 같은 단에 서지 않는다 — 서로 반대 방향이라 상쇄된다", () => {
+    const rowY = (s: { y1: number; y2: number }) => (s.y1 + s.y2) / 2;
+    const deflectorRows = wallDeflectors(ZONE_BOTTOM).map(rowY);
+    for (const s of splitters) {
+      for (const d of deflectorRows) {
+        expect(Math.abs(rowY(s) - d)).toBeGreaterThan(1);
+      }
+    }
+  });
+
+  it("어느 시드에서도 무작위 블록과 겹치지 않는다", () => {
+    // 분산판 자신의 두께(1)까지 포함해서 잰다
+    const half = SPLITTER_HALF_SPAN + 1;
+    for (let seed = 0; seed < 300; seed++) {
+      for (const block of layoutBlocks(createRng(seed), ZONE_BOTTOM)) {
+        for (const s of splitters) {
+          const sameRow = Math.abs(block.y - (s.y1 + s.y2) / 2) < MAX_BLOCK_HALF_HEIGHT;
+          if (!sameRow) continue;
+          const gap = Math.abs(block.x - WORLD_WIDTH / 2) - blockExtent(block) - half;
+          expect(gap).toBeGreaterThan(0);
+        }
+      }
+    }
   });
 });
 

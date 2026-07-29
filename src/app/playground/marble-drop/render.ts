@@ -198,7 +198,6 @@ function drawMarble(
 function drawBucket(
   ctx: CanvasRenderingContext2D,
   bucket: Bucket,
-  name: string,
   cam: Camera,
   palette: Palette,
 ): void {
@@ -221,32 +220,61 @@ function drawBucket(
   ctx.lineTo(bottomRight.sx, topLeft.sy);
   ctx.stroke();
 
-  // 이름 — 좁은 양동이는 세로로 쓴다
+  // 담긴 수 / 목표 — 입구 위라 구슬에 가리지 않는다
   const cx = (topLeft.sx + bottomRight.sx) / 2;
-  ctx.save();
-  ctx.fillStyle = full ? palette.text : palette.textMuted;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  const size = Math.max(9, Math.min(15, w * 0.34));
-  ctx.font = `600 ${size}px system-ui, sans-serif`;
-  if (labelIsVertical(bucket, cam)) {
-    // 글자를 눕히지 않고 한 자씩 세로로 쌓는다. 90도 돌린 한글은 읽기 어렵고,
-    // 어느 쪽으로 돌리든 아래에서 위로 읽히거나 글자가 누워버린다.
-    const chars = [...name];
-    const lineHeight = size * 1.05;
-    const top = topLeft.sy + h * 0.5 - ((chars.length - 1) * lineHeight) / 2;
-    chars.forEach((ch, i) => ctx.fillText(ch, cx, top + i * lineHeight, w * 0.9));
-  } else {
-    ctx.fillText(name, cx, topLeft.sy + h * 0.5, w * 0.9);
-  }
-  ctx.restore();
-
-  // 담긴 수 / 목표
   ctx.fillStyle = full ? palette.text : palette.textMuted;
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
   ctx.font = `500 ${Math.max(8, Math.min(12, w * 0.26))}px system-ui, sans-serif`;
   ctx.fillText(`${bucket.count}/${bucket.capacity}`, cx, topLeft.sy - 3, w * 0.95);
+}
+
+/**
+ * 양동이 이름. **쌓인 구슬보다 나중에 그린다.**
+ *
+ * 처음에는 양동이 몸통과 같이 그렸는데, 구슬이 차오르면 이름이 그 아래 깔려 안 보였다.
+ * 정작 이름을 확인하고 싶은 순간이 바로 양동이가 찼을 때다. 맨 위에 올리되 흰 테두리를
+ * 둘러, 파란 구슬 위에서도 글자가 읽히게 한다.
+ */
+function drawBucketLabel(
+  ctx: CanvasRenderingContext2D,
+  bucket: Bucket,
+  name: string,
+  cam: Camera,
+  palette: Palette,
+): void {
+  const topLeft = projectPoint(bucket.x0, bucket.top, cam);
+  const bottomRight = projectPoint(bucket.x1, WORLD_HEIGHT, cam);
+  const w = bottomRight.sx - topLeft.sx;
+  const h = bottomRight.sy - topLeft.sy;
+  const cx = (topLeft.sx + bottomRight.sx) / 2;
+
+  const size = Math.max(10, Math.min(16, w * 0.36));
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `700 ${size}px system-ui, sans-serif`;
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(3, size * 0.42);
+  ctx.strokeStyle = palette.bg;
+  ctx.fillStyle = palette.text;
+
+  const write = (text: string, x: number, y: number, maxWidth: number) => {
+    ctx.strokeText(text, x, y, maxWidth);
+    ctx.fillText(text, x, y, maxWidth);
+  };
+
+  if (labelIsVertical(bucket, cam)) {
+    // 글자를 눕히지 않고 한 자씩 세로로 쌓는다. 90도 돌린 한글은 읽기 어렵고,
+    // 어느 쪽으로 돌리든 아래에서 위로 읽히거나 글자가 누워버린다.
+    const chars = [...name];
+    const lineHeight = size * 1.08;
+    const top = topLeft.sy + h * 0.5 - ((chars.length - 1) * lineHeight) / 2;
+    chars.forEach((ch, i) => write(ch, cx, top + i * lineHeight, w * 0.9));
+  } else {
+    write(name, cx, topLeft.sy + h * 0.5, w * 0.9);
+  }
+  ctx.restore();
 }
 
 export function drawScene(
@@ -272,8 +300,8 @@ export function drawScene(
   ctx.lineWidth = 1;
   ctx.strokeRect(tl.sx, tl.sy, br.sx - tl.sx, br.sy - tl.sy);
 
-  // 양동이 (구슬보다 먼저 — 담긴 구슬이 위에 그려져야 한다)
-  world.buckets.forEach((b) => drawBucket(ctx, b, game.names[b.ownerIndex] ?? "", cam, palette));
+  // 양동이 몸통 (구슬보다 먼저 — 담긴 구슬이 위에 그려져야 한다)
+  for (const b of world.buckets) drawBucket(ctx, b, cam, palette);
 
   // 벽·유도판
   for (const s of world.staticSolids) strokeSegment(ctx, s, cam, palette.frame);
@@ -296,6 +324,11 @@ export function drawScene(
       if (spot.y < b.top) break; // 넘치면 그리지 않는다
       drawMarble(ctx, spot.x, spot.y, cam, palette);
     }
+  }
+
+  // 이름은 쌓인 구슬 위에 올린다 — 가득 찼을 때야말로 이름이 보여야 한다
+  for (const b of world.buckets) {
+    drawBucketLabel(ctx, b, game.names[b.ownerIndex] ?? "", cam, palette);
   }
 
   // 방금 담긴 자리에 번지는 표시

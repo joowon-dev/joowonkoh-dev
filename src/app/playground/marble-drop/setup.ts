@@ -1,5 +1,5 @@
 import { createRng, randRange, type Rng } from "../_shared/random";
-import { layoutBlocks, wallDeflectors, type Block } from "./blocks";
+import { centerSplitters, layoutBlocks, wallDeflectors, type Block } from "./blocks";
 import {
   MARBLE_RADIUS,
   WORLD_HEIGHT,
@@ -147,7 +147,11 @@ export function createGame(names: string[], seed: number): Game {
 
   const world: World = {
     marbles: [],
-    staticSolids: [...bucketWalls(buckets), ...wallDeflectors(zoneBottom)],
+    staticSolids: [
+      ...bucketWalls(buckets),
+      ...wallDeflectors(zoneBottom),
+      ...centerSplitters(zoneBottom),
+    ],
     buckets,
     elapsed: 0,
     captures: [],

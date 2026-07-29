@@ -293,7 +293,7 @@ const DEFLECTOR_LENGTH = 11;
 const DEFLECTOR_DROP = 5;
 
 /**
- * 유도판을 세울 단. 2레인짜리 단(가운데 쏠림)에만 세우되 **맨 아래 단은 제외한다.**
+ * 벽 유도판을 세울 단. 2레인짜리 단(가운데 쏠림)에만 세우되 **맨 아래 단은 제외한다.**
  *
  * 모든 2레인 단에 세웠더니 이번에는 반대로 가장자리 양동이가 굶었다(10명 기준 0.9%).
  * 양동이 바로 위에서 안쪽으로 퍼올리면 구슬이 가장자리로 돌아올 기회가 없기 때문이다.
@@ -301,6 +301,62 @@ const DEFLECTOR_DROP = 5;
  */
 function isDeflectorRow(row: number): boolean {
   return row % 2 === 1 && row < ROW_COUNT - 1;
+}
+
+/**
+ * 가운데 분산판을 세울 단.
+ *
+ * 벽 유도판은 구슬을 **안쪽으로만** 민다. 그것만 있으면 가장자리 양동이가 계속 굶으므로,
+ * 반대 방향으로 미는 장치를 같은 수만큼 둔다. 가운데 레인 자리를 무작위 블록 대신 고정된
+ * ∧ 지붕으로 채워, 한가운데로 내려오던 구슬을 좌우 바깥으로 가른다.
+ *
+ * 3레인 단에만 세운다 — 2레인 단은 레인이 가운데 가까이 있어 자리가 겹친다.
+ * 맨 위·맨 아래 단은 비워 둔다. 맨 위는 구슬이 아직 퍼지기 전이고, 맨 아래에서 가르면
+ * 양동이 직전에 방향이 정해져 버린다.
+ */
+function isSplitterRow(row: number): boolean {
+  return usesWideLanes(row) && row > 0 && row < ROW_COUNT - 1;
+}
+
+/**
+ * 가운데 분산판의 반폭과 낙차.
+ *
+ * 반폭 상한은 옆 레인 블록이 가장 가까이 올 수 있는 지점에서 나온다:
+ * 레인 중심 17 + 레인 오프셋 8.25 + 흔들림 3 + 블록 반폭 10.5 = 38.75.
+ * 여기에 분산판 자신의 두께 1까지 빼면 반폭은 10 미만이어야 한다.
+ */
+export const SPLITTER_HALF_SPAN = 9;
+const SPLITTER_DROP = 5.5;
+
+/**
+ * 가운데 레인에 서는 고정 분산판. 이벤트 블록이 아니라 판의 뼈대다.
+ * 벽 유도판과 정확히 반대 방향으로 작용해 안쪽 쏠림을 상쇄한다.
+ */
+export function centerSplitters(zoneBottom: number): SolidSegment[] {
+  const rowHeight = (zoneBottom - ZONE_TOP) / ROW_COUNT;
+  const out: SolidSegment[] = [];
+  for (let row = 0; row < ROW_COUNT; row++) {
+    if (!isSplitterRow(row)) continue;
+    const y = ZONE_TOP + rowHeight * (row + 0.5) - SPLITTER_DROP / 2;
+    const x = WORLD_WIDTH / 2;
+    out.push(
+      createSegment({
+        x1: x,
+        y1: y,
+        x2: x - SPLITTER_HALF_SPAN,
+        y2: y + SPLITTER_DROP,
+        half: 1,
+      }),
+      createSegment({
+        x1: x,
+        y1: y,
+        x2: x + SPLITTER_HALF_SPAN,
+        y2: y + SPLITTER_DROP,
+        half: 1,
+      }),
+    );
+  }
+  return out;
 }
 
 /** 3레인(폭 전체)을 쓰는 단. 맨 아래 단은 가장자리를 덮어야 하므로 항상 3레인이다. */
@@ -375,12 +431,13 @@ export function layoutBlocks(rng: Rng, zoneBottom: number): Block[] {
     const centers: readonly number[] = (usesWideLanes(row) ? LANE_X : LANE_X_ODD).map(
       (x) => x + laneOffset,
     );
+    // 가운데 분산판이 서는 단에서는 가운데 레인을 비워 둔다 — 그 자리는 분산판 몫이다
+    const available = centers
+      .map((_, i) => i)
+      .filter((i) => !(isSplitterRow(row) && i === 1));
     // 되도록 다 채운다. 가끔 한 자리만 비워 판마다 모양이 달라지게 한다.
-    const keep = centers.length === 3 && rng() < 0.25 ? 2 : centers.length;
-    const lanes = shuffle(
-      rng,
-      centers.map((_, i) => i),
-    )
+    const keep = available.length === 3 && rng() < 0.25 ? 2 : available.length;
+    const lanes = shuffle(rng, available)
       .slice(0, keep)
       .sort((a, b) => a - b);
 
