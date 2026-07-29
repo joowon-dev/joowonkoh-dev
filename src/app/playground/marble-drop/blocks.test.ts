@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import { createRng } from "../_shared/random";
 import { blockZoneBottom, layoutBuckets, MAX_PLAYERS, targetCount } from "./setup";
 import {
+  BOTTOM_BAND,
   MAX_BLOCK_EXTENT,
+  NARROW_BLOCK_EXTENT,
   MAX_BLOCK_HALF_HEIGHT,
   ROW_COUNT,
   SPLITTER_HALF_SPAN,
+  mainZoneBottom,
   ZONE_TOP,
   allCircles,
   allSegments,
@@ -145,6 +148,35 @@ describe("layoutBlocks", () => {
     }
   });
 
+  it("좁은 단 블록은 더 작다 — 흔들 여유를 남기려면 줄여야 한다", () => {
+    const rowHeight = (mainZoneBottom(ZONE_BOTTOM) - ZONE_TOP) / ROW_COUNT;
+    // 벽 유도판이 서는 단 = 좁은 단
+    const narrowY = new Set(wallDeflectors(ZONE_BOTTOM).map((s) => (s.y1 + s.y2) / 2));
+    let counted = 0;
+    for (let seed = 0; seed < 300; seed++) {
+      for (const block of layoutBlocks(createRng(seed), ZONE_BOTTOM)) {
+        if (block.y >= ZONE_TOP + rowHeight * ROW_COUNT) continue; // 양동이 위 띠는 별개
+        if (!narrowY.has(block.y)) continue;
+        expect(blockExtent(block)).toBeLessThanOrEqual(NARROW_BLOCK_EXTENT);
+        counted++;
+      }
+    }
+    expect(counted).toBeGreaterThan(0);
+  });
+
+  it("좁은 단 블록도 매판 자리가 바뀐다 — 슬롯이 꽉 끼면 배치가 얼어붙는다", () => {
+    // 슬롯에 여유가 없으면 항상 슬롯 한가운데로 떨어져 판마다 배치가 똑같아진다.
+    // 실제로 그렇게 됐을 때 10명 판 자리 점유율이 24% 대 2%로 벌어졌다.
+    const narrowY = new Set(wallDeflectors(ZONE_BOTTOM).map((s) => (s.y1 + s.y2) / 2));
+    const xs = new Set<number>();
+    for (let seed = 0; seed < 100; seed++) {
+      for (const b of layoutBlocks(createRng(seed), ZONE_BOTTOM)) {
+        if (narrowY.has(b.y)) xs.add(Math.round(b.x));
+      }
+    }
+    expect(xs.size).toBeGreaterThan(10);
+  });
+
   it("같은 단에 선 블록끼리 좌우로 겹치지 않는다", () => {
     for (let seed = 0; seed < 300; seed++) {
       const byRow = new Map<number, Block[]>();
@@ -171,15 +203,15 @@ describe("layoutBlocks", () => {
       targetCount(MAX_PLAYERS),
     );
     const zoneBottom = blockZoneBottom(buckets);
-    const rowHeight = (zoneBottom - ZONE_TOP) / ROW_COUNT;
+    const rowHeight = (mainZoneBottom(zoneBottom) - ZONE_TOP) / ROW_COUNT;
     expect(rowHeight / 2).toBeGreaterThanOrEqual(MAX_BLOCK_HALF_HEIGHT);
   });
 
   it("빈 단 없이 촘촘하게 찬다", () => {
     for (let seed = 0; seed < 100; seed++) {
       const blocks = layoutBlocks(createRng(seed), ZONE_BOTTOM);
-      // 6단 × 레인 2~3개
-      expect(blocks.length).toBeGreaterThanOrEqual(ROW_COUNT * 2);
+      // 6단 × 레인 2~3개 + 양동이 위 1~2개
+      expect(blocks.length).toBeGreaterThanOrEqual(ROW_COUNT * 2 + 1);
     }
   });
 
@@ -187,10 +219,47 @@ describe("layoutBlocks", () => {
     for (let seed = 0; seed < 100; seed++) {
       const blocks = layoutBlocks(createRng(seed), ZONE_BOTTOM);
       const rows = new Set(blocks.map((b) => b.y));
-      expect(rows.size).toBe(ROW_COUNT);
+      // 정규 단 + 양동이 위 띠
+      expect(rows.size).toBe(ROW_COUNT + 1);
       for (const b of blocks) {
         expect(b.y).toBeGreaterThan(ZONE_TOP);
         expect(b.y).toBeLessThan(ZONE_BOTTOM);
+      }
+    }
+  });
+
+  it("양동이 코앞에도 이벤트 블록이 1~2개 선다", () => {
+    const bandY = ZONE_BOTTOM - BOTTOM_BAND / 2;
+    const counts = new Set<number>();
+    for (let seed = 0; seed < 100; seed++) {
+      const bottom = layoutBlocks(createRng(seed), ZONE_BOTTOM).filter((b) => b.y === bandY);
+      expect(bottom.length).toBeGreaterThanOrEqual(1);
+      expect(bottom.length).toBeLessThanOrEqual(2);
+      counts.add(bottom.length);
+      // 위아래로 얇은 종류만 — 굵은 회전 블록은 마지막 단이나 양동이를 침범한다
+      for (const b of bottom) expect(["bumper", "slider"]).toContain(b.kind);
+    }
+    // 1개짜리와 2개짜리가 둘 다 나온다
+    expect(counts).toEqual(new Set([1, 2]));
+  });
+
+  it("마지막 단과 양동이 위 블록이 위아래로 겹치지 않는다", () => {
+    const rowHeight = (mainZoneBottom(ZONE_BOTTOM) - ZONE_TOP) / ROW_COUNT;
+    const lastRowBottom = ZONE_TOP + rowHeight * (ROW_COUNT - 0.5) + MAX_BLOCK_HALF_HEIGHT;
+    const bandY = ZONE_BOTTOM - BOTTOM_BAND / 2;
+    for (let seed = 0; seed < 100; seed++) {
+      for (const b of layoutBlocks(createRng(seed), ZONE_BOTTOM)) {
+        if (b.y !== bandY) continue;
+        // 범퍼는 반지름, 왕복 판은 기울어진 절반 길이만큼 위로 뻗는다
+        const halfHeight =
+          b.kind === "bumper"
+            ? b.radius
+            : b.kind === "slider"
+              ? Math.abs(Math.sin(b.tilt)) * (b.length / 2) + b.half
+              : Infinity; // 다른 종류는 이 띠에 오면 안 된다
+
+        expect(b.y - halfHeight).toBeGreaterThan(lastRowBottom);
+        expect(b.y + halfHeight).toBeLessThan(ZONE_BOTTOM);
       }
     }
   });
@@ -235,13 +304,13 @@ describe("centerSplitters", () => {
     }
   });
 
-  it("벽 유도판과 같은 단에 서지 않는다 — 서로 반대 방향이라 상쇄된다", () => {
+  it("벽 유도판과 같은 단에 선다 — 한 단에서 안팎이 동시에 작용해야 상쇄된다", () => {
     const rowY = (s: { y1: number; y2: number }) => (s.y1 + s.y2) / 2;
-    const deflectorRows = wallDeflectors(ZONE_BOTTOM).map(rowY);
-    for (const s of splitters) {
-      for (const d of deflectorRows) {
-        expect(Math.abs(rowY(s) - d)).toBeGreaterThan(1);
-      }
+    const deflectorRows = new Set(wallDeflectors(ZONE_BOTTOM).map(rowY));
+    const splitterRows = new Set(splitters.map(rowY));
+    expect(splitterRows.size).toBe(deflectorRows.size);
+    for (const y of splitterRows) {
+      expect([...deflectorRows].some((d) => Math.abs(d - y) < 0.001)).toBe(true);
     }
   });
 
@@ -284,10 +353,25 @@ describe("wallDeflectors", () => {
   });
 
   it("맨 아래 단에는 세우지 않는다 — 가장자리가 굶는다", () => {
-    const rowHeight = (ZONE_BOTTOM - ZONE_TOP) / ROW_COUNT;
+    const rowHeight = (mainZoneBottom(ZONE_BOTTOM) - ZONE_TOP) / ROW_COUNT;
     const lastRowY = ZONE_TOP + rowHeight * (ROW_COUNT - 1 + 0.5);
     for (const s of deflectors) {
       expect(Math.abs((s.y1 + s.y2) / 2 - lastRowY)).toBeGreaterThan(1);
+    }
+  });
+
+  it("어느 시드에서도 무작위 블록과 겹치지 않는다", () => {
+    // 유도판이 안쪽으로 뻗는 끝(자신의 두께 포함)
+    const reach = Math.max(...deflectors.map((s) => Math.min(s.x2, WORLD_WIDTH - s.x2))) + 1;
+    for (let seed = 0; seed < 300; seed++) {
+      for (const block of layoutBlocks(createRng(seed), ZONE_BOTTOM)) {
+        for (const s of deflectors) {
+          const sameRow = Math.abs(block.y - (s.y1 + s.y2) / 2) < MAX_BLOCK_HALF_HEIGHT;
+          if (!sameRow) continue;
+          const fromWall = Math.min(block.x, WORLD_WIDTH - block.x);
+          expect(fromWall - blockExtent(block)).toBeGreaterThan(reach);
+        }
+      }
     }
   });
 });

@@ -175,6 +175,19 @@ export const ROW_COUNT = 6;
 export const ZONE_TOP = 18;
 
 /**
+ * 정규 단이 끝난 뒤 양동이 위에 남겨 두는 띠. 여기에 이벤트 블록이 1~2개 더 선다.
+ *
+ * 마지막 단을 지나면 남은 것은 자유낙하뿐이라 그 시점에 결과가 사실상 정해진다.
+ * 양동이 코앞에서 한 번 더 튕기면 다 내려온 구슬도 옆 칸으로 넘어갈 수 있다.
+ */
+export const BOTTOM_BAND = 12;
+
+/** 정규 단이 쓰는 구간의 아래 끝. 그 아래 BOTTOM_BAND는 마지막 블록 몫이다. */
+export function mainZoneBottom(zoneBottom: number): number {
+  return zoneBottom - BOTTOM_BAND;
+}
+
+/**
  * 종류별 가중치. 회전 바와 범퍼가 흐름을 가장 크게 바꿔서 조금 더 자주 나온다.
  * 쐐기는 유일한 정적 블록이라 너무 많으면 판이 심심해진다.
  */
@@ -204,8 +217,13 @@ export const MAX_BLOCK_EXTENT = 10.5;
 /** 블록이 위아래로 차지하는 최대 반높이. 단 간격의 절반보다 작아야 위아래 단이 겹치지 않는다. */
 export const MAX_BLOCK_HALF_HEIGHT = 9.1;
 
-function makeBlock(kind: BlockKind, x: number, y: number, rng: Rng): Block {
+/**
+ * `scale`은 좁은 단에서 블록을 줄이는 데 쓴다. 두께만은 1 미만으로 내리지 않는다 —
+ * 구슬 반지름이 1이라 더 얇아지면 빠른 구슬이 뚫고 지나가는 것처럼 보인다.
+ */
+function makeBlock(kind: BlockKind, x: number, y: number, rng: Rng, scale = 1): Block {
   const dir = rng() < 0.5 ? 1 : -1;
+  const thickness = (base: number) => Math.max(0.8, base * scale);
   switch (kind) {
     case "spinner":
       return {
@@ -213,8 +231,8 @@ function makeBlock(kind: BlockKind, x: number, y: number, rng: Rng): Block {
         x,
         y,
         arms: 2,
-        length: 8,
-        half: 1.1,
+        length: 8 * scale,
+        half: thickness(1.1),
         omega: dir * randRange(rng, 2.2, 3.4),
         phase: rng() * Math.PI * 2,
       };
@@ -224,21 +242,21 @@ function makeBlock(kind: BlockKind, x: number, y: number, rng: Rng): Block {
         x,
         y,
         arms: 6,
-        length: 7,
-        half: 0.85,
+        length: 7 * scale,
+        half: thickness(0.85),
         omega: dir * randRange(rng, 0.7, 1.2),
         phase: rng() * Math.PI * 2,
       };
     case "bumper":
-      return { kind, x, y, radius: randRange(rng, 3.2, 4.2) };
+      return { kind, x, y, radius: Math.max(2.4, randRange(rng, 3.2, 4.2) * scale) };
     case "slider":
       return {
         kind,
         x,
         y,
-        length: 11,
-        half: 1,
-        halfSpan: 4,
+        length: 11 * scale,
+        half: thickness(1),
+        halfSpan: 4 * scale,
         // 반드시 마찰각보다 가팔라야 한다. 그렇지 않으면 수평일 때와 똑같이 구슬이
         // 판 위에 얹힌 채 같이 왔다갔다 한다.
         tilt: dir * randRange(rng, FRICTION_ANGLE * 1.5, FRICTION_ANGLE * 2.4),
@@ -250,9 +268,9 @@ function makeBlock(kind: BlockKind, x: number, y: number, rng: Rng): Block {
         kind,
         x,
         y,
-        halfSpan: randRange(rng, 7, 9),
-        height: randRange(rng, 4.5, 6),
-        half: 1,
+        halfSpan: randRange(rng, 7, 9) * scale,
+        height: randRange(rng, 4.5, 6) * scale,
+        half: thickness(1),
       };
   }
 }
@@ -275,25 +293,38 @@ function clampX(block: Block): Block {
  * 시작하자마자 양 끝 싸움으로 정해져 보는 재미가 없다. 레인을 셋으로 늘려 끝까지 덮는다.
  */
 const LANE_X = [17, 50, 83] as const;
-/**
- * 홀수 단이 쓰는 레인. 짝수 단 레인의 정확히 가운데다.
- *
- * 모든 단이 같은 x를 쓰면 레인 **사이의 틈**이 위아래로 뚫린 직행 통로가 된다. 실측에서
- * 그 통로 아래 양동이만 15%씩 먹었다. 벽돌을 엇갈려 쌓듯 단마다 레인을 반 칸씩 옮기면
- * 어느 x로 내려와도 두 단에 한 번은 블록을 만난다.
- */
-const LANE_X_ODD = [33.5, 66.5] as const;
 /** 레인 간격. 블록 반폭 상한 둘과 좌우 흔들림을 더한 값보다 커야 옆 레인과 겹치지 않는다. */
 export const LANE_SPACING = LANE_X[1] - LANE_X[0];
 /** 레인 중심에서 좌우로 흔드는 폭 */
 const LANE_JITTER = 3;
+/**
+ * 좁은 단 블록의 축소 배율과 그 결과 반폭 상한.
+ *
+ * 이 단은 벽 유도판·가운데 분산판과 폭을 나눠 쓰므로 정상 크기(반폭 10.5)로는 들어가지
+ * 않는다. 배율을 더 낮춰 작게 만드는 방법도 있지만, 그러면 블록과 분산판 사이에
+ * 아무것도 없는 세로 통로가 생긴다 — 실측에서 그 통로 바로 아래 두 양동이가 각각 25%를
+ * 먹었다. 슬롯을 꽉 채울 수 있는 크기를 유지하고, 남는 여유만큼만 흔드는 편이 낫다.
+ */
+const NARROW_SCALE = 0.85;
+export const NARROW_BLOCK_EXTENT = 9;
+/** 좁은 단에서 블록과 고정 구조물 사이에 두는 최소 간격 */
+const NARROW_MARGIN = 1;
+
+/**
+ * 양동이 위 띠에 세울 수 있는 블록. **위아래로 얇은 종류만** 쓴다 —
+ * 회전 바와 물레방아는 반높이가 8~9라 마지막 단이나 양동이를 침범한다.
+ */
+const BOTTOM_KINDS = ["bumper", "slider"] as const;
+/** 양동이 위 띠에서 블록을 좌우로 흔드는 폭 */
+const BOTTOM_JITTER = 4;
 
 /** 벽 유도판의 길이와 낙차 */
 const DEFLECTOR_LENGTH = 11;
 const DEFLECTOR_DROP = 5;
 
 /**
- * 벽 유도판을 세울 단. 2레인짜리 단(가운데 쏠림)에만 세우되 **맨 아래 단은 제외한다.**
+ * 벽 유도판 — 그리고 같은 단에 서는 가운데 분산판 — 을 세울 단.
+ * 좁은 단(레인 2개)에만 세우되 **맨 아래 단은 제외한다.**
  *
  * 모든 2레인 단에 세웠더니 이번에는 반대로 가장자리 양동이가 굶었다(10명 기준 0.9%).
  * 양동이 바로 위에서 안쪽으로 퍼올리면 구슬이 가장자리로 돌아올 기회가 없기 때문이다.
@@ -304,39 +335,44 @@ function isDeflectorRow(row: number): boolean {
 }
 
 /**
- * 가운데 분산판을 세울 단.
- *
- * 벽 유도판은 구슬을 **안쪽으로만** 민다. 그것만 있으면 가장자리 양동이가 계속 굶으므로,
- * 반대 방향으로 미는 장치를 같은 수만큼 둔다. 가운데 레인 자리를 무작위 블록 대신 고정된
- * ∧ 지붕으로 채워, 한가운데로 내려오던 구슬을 좌우 바깥으로 가른다.
- *
- * 3레인 단에만 세운다 — 2레인 단은 레인이 가운데 가까이 있어 자리가 겹친다.
- * 맨 위·맨 아래 단은 비워 둔다. 맨 위는 구슬이 아직 퍼지기 전이고, 맨 아래에서 가르면
- * 양동이 직전에 방향이 정해져 버린다.
- */
-function isSplitterRow(row: number): boolean {
-  return usesWideLanes(row) && row > 0 && row < ROW_COUNT - 1;
-}
-
-/**
  * 가운데 분산판의 반폭과 낙차.
  *
- * 반폭 상한은 옆 레인 블록이 가장 가까이 올 수 있는 지점에서 나온다:
- * 레인 중심 17 + 레인 오프셋 8.25 + 흔들림 3 + 블록 반폭 10.5 = 38.75.
- * 여기에 분산판 자신의 두께 1까지 빼면 반폭은 10 미만이어야 한다.
+ * 좁다면 블록과 분산판 사이에 세로 통로가 남고, 넓다면 블록이 들어갈 자리가 없다.
+ * 이 값과 NARROW_SCALE은 한 쌍이다 — 한쪽을 바꾸면 narrowSlots()의 폭이 블록 반폭의
+ * 두 배 이상인지 다시 확인해야 한다.
  */
-export const SPLITTER_HALF_SPAN = 9;
+export const SPLITTER_HALF_SPAN = 14;
 const SPLITTER_DROP = 5.5;
 
 /**
- * 가운데 레인에 서는 고정 분산판. 이벤트 블록이 아니라 판의 뼈대다.
- * 벽 유도판과 정확히 반대 방향으로 작용해 안쪽 쏠림을 상쇄한다.
+ * 좁은 단에서 블록이 들어갈 두 구간. 벽 유도판이 끝나는 곳부터 분산판이 시작하는 곳까지다.
+ * 구간을 꽉 채우는 블록을 놓고 남는 만큼만 흔들면, 어디에도 아래로 뚫린 통로가 없다.
+ */
+function narrowSlots(): ReadonlyArray<readonly [number, number]> {
+  const inner = DEFLECTOR_LENGTH + 1 + NARROW_MARGIN;
+  const outer = WORLD_WIDTH / 2 - SPLITTER_HALF_SPAN - 1 - NARROW_MARGIN;
+  return [
+    [inner, outer],
+    [WORLD_WIDTH - outer, WORLD_WIDTH - inner],
+  ];
+}
+
+/**
+ * 판 한가운데 서는 고정 분산판. 이벤트 블록이 아니라 판의 뼈대다.
+ *
+ * 벽 유도판은 구슬을 **안쪽으로만** 민다. 그것만 있으면 가장자리 양동이가 계속 굶으므로,
+ * 반대 방향으로 미는 장치를 같은 수만큼 둔다. 한가운데로 내려오던 구슬을 ∧ 지붕으로
+ * 받아 좌우 바깥으로 가른다.
+ *
+ * **벽 유도판과 같은 단에 선다.** 다른 단에 두면 한 단은 전부 안으로, 다음 단은 전부
+ * 밖으로 미는 식이 되어 층마다 쏠림이 번갈아 생긴다. 같은 단에 두면 한 번 지나갈 때마다
+ * 안팎이 동시에 작용해 그 자리에서 상쇄된다.
  */
 export function centerSplitters(zoneBottom: number): SolidSegment[] {
-  const rowHeight = (zoneBottom - ZONE_TOP) / ROW_COUNT;
+  const rowHeight = (mainZoneBottom(zoneBottom) - ZONE_TOP) / ROW_COUNT;
   const out: SolidSegment[] = [];
   for (let row = 0; row < ROW_COUNT; row++) {
-    if (!isSplitterRow(row)) continue;
+    if (!isDeflectorRow(row)) continue;
     const y = ZONE_TOP + rowHeight * (row + 0.5) - SPLITTER_DROP / 2;
     const x = WORLD_WIDTH / 2;
     out.push(
@@ -372,7 +408,7 @@ function usesWideLanes(row: number): boolean {
  * 비스듬히 튀어나온 판을 세운다. 좌우 대칭이라 어느 쪽도 유리해지지 않는다.
  */
 export function wallDeflectors(zoneBottom: number): SolidSegment[] {
-  const rowHeight = (zoneBottom - ZONE_TOP) / ROW_COUNT;
+  const rowHeight = (mainZoneBottom(zoneBottom) - ZONE_TOP) / ROW_COUNT;
   const out: SolidSegment[] = [];
   for (let row = 0; row < ROW_COUNT; row++) {
     if (!isDeflectorRow(row)) continue;
@@ -417,26 +453,41 @@ function shuffle<T>(rng: Rng, items: T[]): T[] {
  * 달라지므로 배치는 매판 바뀌지만, 네 단을 합치면 어느 레인도 오래 비어 있지 않다.
  */
 export function layoutBlocks(rng: Rng, zoneBottom: number): Block[] {
-  const rowHeight = (zoneBottom - ZONE_TOP) / ROW_COUNT;
+  const rowHeight = (mainZoneBottom(zoneBottom) - ZONE_TOP) / ROW_COUNT;
   const blocks: Block[] = [];
 
   // 레인 전체를 매판 좌우로 밀어준다. 레인이 고정이면 블록 **바로 아래** 양동이는 늘
   // 굶고 레인 **사이** 양동이는 늘 배부르다 — 어느 자리가 유리한지가 판마다 같아진다.
   // 통째로 밀면 그 무늬가 매판 다른 자리에 떨어져 평균이 고르게 펴진다.
-  const laneOffset = randRange(rng, -LANE_SPACING / 4, LANE_SPACING / 4);
+  // 폭은 단 종류마다 다르므로 -1~1로 정규화해 두고 아래에서 곱한다.
+  const laneShift = randRange(rng, -1, 1);
 
   for (let row = 0; row < ROW_COUNT; row++) {
     const y = ZONE_TOP + rowHeight * (row + 0.5);
-    // 단마다 레인을 반 칸씩 엇갈리게 한다
-    const centers: readonly number[] = (usesWideLanes(row) ? LANE_X : LANE_X_ODD).map(
-      (x) => x + laneOffset,
-    );
-    // 가운데 분산판이 서는 단에서는 가운데 레인을 비워 둔다 — 그 자리는 분산판 몫이다
-    const available = centers
-      .map((_, i) => i)
-      .filter((i) => !(isSplitterRow(row) && i === 1));
+
+    // 좁은 단은 벽 유도판·분산판과 폭을 나눠 쓴다. 남은 구간을 꽉 채우는 크기로 놓고
+    // 남는 여유 안에서만 흔든다 — 통로가 생기지 않는 유일한 방법이다.
+    if (!usesWideLanes(row)) {
+      let previous: BlockKind | null = null;
+      for (const [from, to] of narrowSlots()) {
+        let kind = rollKind(rng);
+        if (kind === previous) kind = rollKind(rng);
+        previous = kind;
+        const block = makeBlock(kind, 0, y, rng, NARROW_SCALE);
+        const extent = blockExtent(block);
+        const lo = from + extent;
+        const hi = to - extent;
+        block.x = lo >= hi ? (from + to) / 2 : randRange(rng, lo, hi);
+        blocks.push(block);
+      }
+      continue;
+    }
+
+    // 넓은 단은 레인 셋을 쓴다. 단마다 레인을 엇갈리게 해서 위아래로 뚫린 틈을 막는다.
+    const centers = LANE_X.map((x) => x + laneShift * (LANE_SPACING / 4));
     // 되도록 다 채운다. 가끔 한 자리만 비워 판마다 모양이 달라지게 한다.
-    const keep = available.length === 3 && rng() < 0.25 ? 2 : available.length;
+    const available = centers.map((_, i) => i);
+    const keep = rng() < 0.25 ? 2 : available.length;
     const lanes = shuffle(rng, available)
       .slice(0, keep)
       .sort((a, b) => a - b);
@@ -448,9 +499,21 @@ export function layoutBlocks(rng: Rng, zoneBottom: number): Block[] {
       if (kind === previous) kind = rollKind(rng);
       previous = kind;
       blocks.push(
-        clampX(makeBlock(kind, centers[lane] + randRange(rng, -LANE_JITTER, LANE_JITTER), y, rng)),
+        clampX(
+          makeBlock(kind, centers[lane] + randRange(rng, -LANE_JITTER, LANE_JITTER), y, rng),
+        ),
       );
     }
+  }
+
+  // 양동이 코앞의 마지막 관문. 1개면 한가운데, 2개면 좌우로 갈라 세운다.
+  const bottomY = zoneBottom - BOTTOM_BAND / 2;
+  const bottomCenters = rng() < 0.5 ? [WORLD_WIDTH / 2] : [30, 70];
+  for (const center of bottomCenters) {
+    const kind = BOTTOM_KINDS[Math.floor(rng() * BOTTOM_KINDS.length)];
+    blocks.push(
+      clampX(makeBlock(kind, center + randRange(rng, -BOTTOM_JITTER, BOTTOM_JITTER), bottomY, rng)),
+    );
   }
 
   return blocks;
