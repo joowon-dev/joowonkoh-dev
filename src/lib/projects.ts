@@ -3,6 +3,8 @@ export interface Project {
   description: string;
   tags: string[];
   href: string;
+  /** 목록에서 감춘다. 페이지 자체는 그대로 살아 있고 링크로 접근할 수 있다. */
+  hidden?: boolean;
 }
 
 export const projects: Project[] = [
@@ -17,11 +19,16 @@ export const projects: Project[] = [
     description: "입김으로 부는 종이비행기 게임 🐱🛩️",
     tags: ["Game", "Web Audio", "Supabase"],
     href: "/playground/paper-plane",
+    hidden: true,
   },
   {
     title: "joowonkoh.com",
     description: "이 사이트! Next.js + MDX 블로그",
     tags: ["Next.js", "TypeScript"],
     href: "https://github.com/joowonkoh",
+    hidden: true,
   },
 ];
+
+/** 목록에 노출할 항목. 홈과 플레이그라운드가 같은 기준을 쓰도록 여기서 한 번만 거른다. */
+export const visibleProjects = projects.filter((p) => !p.hidden);

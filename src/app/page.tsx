@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAllPosts, postHref } from "@/lib/mdx";
-import { projects } from "@/lib/projects";
+import { visibleProjects } from "@/lib/projects";
 import ProjectCard from "@/components/ProjectCard";
 
 export default function Home() {
@@ -27,7 +27,7 @@ export default function Home() {
           Featured Projects
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {projects.map((project) => (
+          {visibleProjects.map((project) => (
             <ProjectCard key={project.title} project={project} />
           ))}
         </div>
