@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllPosts, postHref } from "@/lib/mdx";
 import { visibleProjects } from "@/lib/projects";
 import ProjectCard from "@/components/ProjectCard";
+
+// 제목·설명·OG는 루트 레이아웃 값을 그대로 쓴다. canonical만 홈 주소로 지정한다.
+export const metadata: Metadata = {
+  alternates: { canonical: "https://joowonkoh.com" },
+};
 
 export default function Home() {
   const recentPosts = getAllPosts().slice(0, 3);

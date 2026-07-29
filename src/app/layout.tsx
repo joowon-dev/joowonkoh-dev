@@ -27,9 +27,10 @@ export const metadata: Metadata = {
     description: "Developer & Creator — 새로운 것을 만들고 공유합니다.",
     images: ["/logo.png"],
   },
-  alternates: {
-    canonical: "https://joowonkoh.com",
-  },
+  // canonical은 여기에 두면 안 된다. 루트 레이아웃의 metadata는 자기 값을 지정하지 않은
+  // 모든 하위 페이지가 그대로 물려받으므로, 홈 주소를 넣어두면 /blog·/playground 등
+  // 전 페이지가 "내 정식 주소는 홈이다"라고 선언하게 되고 검색 색인에서 홈으로 합쳐진다.
+  // 페이지마다 자기 주소를 지정한다. (홈은 src/app/page.tsx)
 };
 
 export default function RootLayout({
