@@ -1,4 +1,4 @@
-import { projects } from "@/lib/projects";
+import { visibleProjects } from "@/lib/projects";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default function PlaygroundPage() {
         사이드 프로젝트 모음
       </p>
       <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 stagger-children">
-        {projects.map((project) => {
+        {visibleProjects.map((project) => {
           const isExternal = project.href.startsWith("http");
           return (
           <a

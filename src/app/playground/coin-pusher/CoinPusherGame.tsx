@@ -8,7 +8,7 @@ import WinnerOverlay from "./WinnerOverlay";
 import { useGameLoop } from "./useGameLoop";
 import { createRng } from "./random";
 import { createScheduler, type EventType, type Scheduler } from "./events";
-import { FIXED_DT, winnerOf } from "./physics";
+import { winnerOf } from "./physics";
 import { createGame, type Game } from "./setup";
 import { FALL_ANIM_SECONDS, NEUTRAL_INTERVAL, simulate, type FallingCoin } from "./loop";
 
@@ -103,28 +103,6 @@ export default function CoinPusherGame() {
 
   useGameLoop(onStep, onFrame, phase === "playing", speed);
 
-  const skip = useCallback(() => {
-    const game = gameRef.current;
-    const scheduler = schedulerRef.current;
-    if (!game || !scheduler) return;
-
-    // 결과가 나올 때까지 시뮬레이션만 빠르게 돌린다 (최대 4분치)
-    const maxSteps = Math.round(240 / FIXED_DT);
-    for (let i = 0; i < maxSteps && !winnerOf(game.world); i++) {
-      simulate(game, scheduler, fallingRef.current, nextNeutralAtRef, FIXED_DT);
-    }
-
-    const win = winnerOf(game.world);
-    // 240초 안에 결과가 안 나오면(극히 드묾) phase를 바꾸지 않고 조용히 반환한다.
-    // world.elapsed는 이미 240초만큼 앞서 있어 다음 프레임 HUD가 껑충 뛰겠지만,
-    // 멈춘 상태가 아니라 rAF 루프가 이어서 정상 진행되므로 별도 처리를 두지 않는다.
-    if (!win) return;
-    fallingRef.current.length = 0;
-    wonAtRef.current = win.at;
-    setWinner(game.names[win.coin.ownerIndex] ?? "");
-    setPhase("result");
-  }, []);
-
   const showOverlay = phase === "result" && winner !== null;
 
   if (phase === "intro") {
@@ -193,16 +171,6 @@ export default function CoinPusherGame() {
             </span>
           )}
         </div>
-      </div>
-
-      <div className="absolute inset-x-0 bottom-0 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <button
-          type="button"
-          onClick={skip}
-          className="w-full max-w-sm rounded-2xl border border-border bg-card-bg/90 px-6 py-3 font-display text-sm font-semibold text-text-secondary shadow-ambient backdrop-blur transition hover:border-accent hover:text-text-primary active:scale-[0.98]"
-        >
-          결과 바로 보기
-        </button>
       </div>
 
       {showOverlay && (
