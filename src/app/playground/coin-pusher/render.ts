@@ -7,6 +7,7 @@ import {
   type Coin,
 } from "./physics";
 import type { Game } from "./setup";
+import { BURST_RADIUS, BURST_SECONDS } from "./events";
 import { FALL_ANIM_SECONDS, type FallingCoin } from "./loop";
 
 /** 화면상 y축을 이 비율로 압축해 비스듬한 시점을 만든다 */
@@ -293,16 +294,53 @@ export function drawScene(
     drawCoin(ctx, coin, cam, palette, game.names, elapsed, dropOffset, 1);
   }
 
-  // 낙하선 — 판 앞 가장자리
+  // 낙하선 — 문이 열린 구간만 트여 있고 나머지는 벽이다.
+  // 벽을 그리지 않으면 코인이 보이지 않는 무언가에 막혀 쌓이는 것처럼 보인다.
+  const gate = game.world.gate;
+  const gateLeft = projectPoint(Math.max(0, gate.center - gate.width / 2), board.fallLine, cam).sx;
+  const gateRight = projectPoint(
+    Math.min(board.width, gate.center + gate.width / 2),
+    board.fallLine,
+    cam,
+  ).sx;
+  const wallH = 9 * cam.scale;
+
+  ctx.fillStyle = palette.pusherFace;
+  if (gateLeft > front.left) ctx.fillRect(front.left, frontSy - wallH, gateLeft - front.left, wallH);
+  if (front.right > gateRight) {
+    ctx.fillRect(gateRight, frontSy - wallH, front.right - gateRight, wallH);
+  }
+
+  // 열린 구간 — 여기 있는 코인만 떨어진다
   ctx.strokeStyle = palette.accent;
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 4;
   ctx.shadowColor = palette.accent;
-  ctx.shadowBlur = 12;
+  ctx.shadowBlur = 16;
   ctx.beginPath();
-  ctx.moveTo(front.left, frontSy);
-  ctx.lineTo(front.right, frontSy);
+  ctx.moveTo(gateLeft, frontSy);
+  ctx.lineTo(gateRight, frontSy);
   ctx.stroke();
   ctx.shadowBlur = 0;
+
+  // 융기 이벤트 — 솟구치는 지점에서 퍼져 나가는 충격파
+  const burst = game.world.burst;
+  if (burst) {
+    const { sx, sy } = projectPoint(burst.x, burst.y, cam);
+    const p = Math.min(1, burst.t / BURST_SECONDS);
+    for (const delay of [0, 0.3]) {
+      const q = Math.min(1, Math.max(0, (p - delay) / (1 - delay)));
+      if (q <= 0) continue;
+      ctx.save();
+      ctx.globalAlpha = (1 - q) * 0.85;
+      ctx.strokeStyle = palette.accent;
+      ctx.lineWidth = 5 * (1 - q) * cam.scale;
+      const r = BURST_RADIUS * q * cam.scale;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, r, r * PERSPECTIVE_SCALE, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
 
   // 판 밖으로 떨어지는 코인 — 물리에서 분리된 순수 연출
   for (const f of falling) {

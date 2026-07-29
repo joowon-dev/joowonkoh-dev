@@ -16,6 +16,7 @@ import {
   FIXED_DT,
   NEUTRAL_RADII,
   createCoin,
+  createGate,
   createPusher,
   stepWorld,
   type World,
@@ -26,7 +27,10 @@ function makeWorld(): World {
     board: { width: 400, backWidth: 400, fallLine: 320 },
     coins: [createCoin({ id: 1, x: 200, y: 100 })],
     pusher: createPusher(),
+    gate: createGate({ width: 400, backWidth: 400, fallLine: 320 }),
     tiltAx: 0,
+    tiltAy: 0,
+    burst: null,
     fallen: [],
     elapsed: 0,
   };
@@ -54,9 +58,9 @@ describe("updateScheduler", () => {
     expect(runScheduler(42, 60).length).toBeGreaterThan(2);
   });
 
-  it("세 종류 이벤트만 나온다", () => {
+  it("정해진 종류의 이벤트만 나온다", () => {
     for (const e of runScheduler(7, 120)) {
-      expect(["shake", "tilt", "rush"]).toContain(e.type);
+      expect(["shake", "tilt", "rush", "backdraft", "gaterush", "burst"]).toContain(e.type);
     }
   });
 
@@ -133,7 +137,7 @@ describe("applyScheduler", () => {
   it("tilt는 월드에 x 가속도를 준다", () => {
     const w = makeWorld();
     const s = createScheduler(createRng(1));
-    s.active = { type: "tilt", remaining: 2, magnitude: 150 };
+    s.active = { type: "tilt", remaining: 2, duration: 2, magnitude: 150, x: 0.5, y: 0.5 };
     applyScheduler(w, s);
     expect(Math.abs(w.tiltAx)).toBeCloseTo(150, 5);
   });
@@ -141,7 +145,7 @@ describe("applyScheduler", () => {
   it("rush는 푸셔 속도 배율을 올린다", () => {
     const w = makeWorld();
     const s = createScheduler(createRng(1));
-    s.active = { type: "rush", remaining: 2, magnitude: 2 };
+    s.active = { type: "rush", remaining: 2, duration: 2, magnitude: 2, x: 0.5, y: 0.5 };
     applyScheduler(w, s);
     expect(w.pusher.speedScale).toBeCloseTo(2, 5);
   });
@@ -149,7 +153,7 @@ describe("applyScheduler", () => {
   it("shake는 코인 속도를 흔든다", () => {
     const w = makeWorld();
     const s = createScheduler(createRng(1));
-    s.active = { type: "shake", remaining: 1, magnitude: 200 };
+    s.active = { type: "shake", remaining: 1, duration: 1, magnitude: 200, x: 0.5, y: 0.5 };
     applyScheduler(w, s);
     expect(Math.hypot(w.coins[0].vx, w.coins[0].vy)).toBeGreaterThan(0);
   });

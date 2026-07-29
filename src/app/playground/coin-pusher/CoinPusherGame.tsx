@@ -18,6 +18,9 @@ const EVENT_LABEL: Record<EventType, string> = {
   shake: "판이 흔들린다!",
   tilt: "판이 기울어진다!",
   rush: "푸셔 가속!",
+  backdraft: "역류! 판이 뒤로 밀린다",
+  gaterush: "출구가 빨라진다!",
+  burst: "판이 솟구친다!",
 };
 
 export default function CoinPusherGame() {
@@ -69,7 +72,9 @@ export default function CoinPusherGame() {
     if (fired) setBanner(EVENT_LABEL[fired]);
     else if (scheduler.active === null) setBanner(null);
 
-    shakeRef.current = scheduler.active?.type === "shake" ? 6 : 0;
+    // 흔들림과 융기가 화면을 흔든다
+    const kind = scheduler.active?.type;
+    shakeRef.current = kind === "shake" ? 6 : kind === "burst" ? 7 : 0;
 
     const win = winnerOf(game.world);
     if (win && wonAtRef.current === null) {

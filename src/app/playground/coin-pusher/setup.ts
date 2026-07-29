@@ -5,6 +5,7 @@ import {
   PUSHER_BACK_Y,
   centerX,
   createCoin,
+  createGate,
   createPusher,
   halfWidthAt,
   type Coin,
@@ -80,25 +81,27 @@ function makeNeutral(rng: Rng, id: number, bornAt: number): Coin {
 }
 
 /**
- * 참가자 코인이 한꺼번에 떨어질 자리들. 미는 판 위에 반지름 간격의 격자로 흩는다.
+ * 참가자 코인이 한꺼번에 떨어질 자리들. **전원이 같은 깊이(y)** 에 서고 x만 다르다.
+ *
+ * 깊이를 다르게 주면(격자로 여러 줄을 만들면) 그 줄이 곧 결과가 된다. 더미는 통째로
+ * 밀려가는 컨베이어라 시작 깊이 순서가 끝까지 거의 그대로 보존되기 때문이다. 실측으로
+ * 20명 격자 배치에서는 뒷줄 출발이 앞줄 출발보다 10배 넘게 이겼다 — 참가자에게 줄을
+ * 무작위로 배정하니 "공정"하긴 하지만, 판이 시작 8초 만에 사실상 결정돼 보는 재미가 없다.
+ * 같은 깊이에 세우면 구조적인 예측 인자가 사라지고 더미의 혼돈이 승부를 가린다.
+ *
  * 자리 i를 누구에게 줄지는 호출부가 섞은 순서로 정한다.
  */
 function scatterSpots(rng: Rng, count: number, radius: number): Array<{ x: number; y: number }> {
-  // 간격을 지름이 아니라 반지름으로 잡아 일부러 겹치게 둔다. 판 뒤쪽은 코인 5개
-  // 남짓 폭이라 겹치지 않게 놓으려면 격자가 낙하선까지 내려가 버린다.
-  const step = radius + 2;
+  const y = PLATE_MIN_Y + 10;
+  const limit = Math.max(1, halfWidthAt(board, y) - radius);
+  const left = centerX(board) - limit;
+  const span = limit * 2;
   const spots: Array<{ x: number; y: number }> = [];
-  for (let row = 0; spots.length < count; row++) {
-    // 격자가 미는 판 깊이를 넘으면 다시 판 위쪽부터 겹쳐 쌓는다
-    const y = PLATE_MIN_Y + ((row * step) % Math.max(step, PLATE_MAX_Y - PLATE_MIN_Y));
-    const limit = Math.max(1, halfWidthAt(board, y) - radius);
-    const cols = Math.max(1, Math.floor((limit * 2) / step));
-    for (let c = 0; c < cols && spots.length < count; c++) {
-      spots.push({
-        x: centerX(board) - limit + step * (c + 0.5) + randRange(rng, -2, 2),
-        y: y + randRange(rng, -2, 2),
-      });
-    }
+  for (let i = 0; i < count; i++) {
+    // 좌우로 고르게 편 뒤 살짝만 흔든다. 인원이 많으면 서로 겹치지만, 겹침은 x축으로
+    // 풀리므로 깊이 우열은 생기지 않는다.
+    const x = left + (span * (i + 0.5)) / count;
+    spots.push({ x, y: y + randRange(rng, -2, 2) });
   }
   return spots;
 }
@@ -114,7 +117,10 @@ export function createGame(names: string[], seed: number): Game {
     board: { ...board },
     coins: [],
     pusher: createPusher(),
+    gate: createGate(board),
     tiltAx: 0,
+    tiltAy: 0,
+    burst: null,
     fallen: [],
     elapsed: 0,
   };

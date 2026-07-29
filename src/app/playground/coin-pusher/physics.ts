@@ -53,6 +53,54 @@ export function centerX(board: Board): number {
   return board.width / 2;
 }
 
+/**
+ * 낙하선 앞을 막는 문. 좁게 열린 구간 하나가 좌우로 계속 움직이고, 코인은 그 구간에
+ * 있을 때만 떨어진다. 이게 없으면 앞쪽에서 출발한 코인이 그대로 1등이라 판이 시작하자마자
+ * 결정된다 — 문이 코인을 앞줄에 쌓아뒀다가 한 번에 쏟아내면서 순위를 계속 뒤집는다.
+ */
+export interface Gate {
+  /** 열린 구간의 중심 x */
+  center: number;
+  /** 열린 구간의 폭 */
+  width: number;
+  dir: 1 | -1;
+  /** 이벤트로 조절되는 속도 배율 */
+  speedScale: number;
+}
+
+/** 열린 구간의 폭 (판 앞쪽 너비 대비) */
+export const GATE_WIDTH_RATIO = 0.3;
+export const GATE_SPEED = 62;
+
+export function createGate(board: Board): Gate {
+  return { center: board.width / 2, width: board.width * GATE_WIDTH_RATIO, dir: 1, speedScale: 1 };
+}
+
+/** 문을 좌우로 왕복시킨다. 판 끝까지 가서 모서리도 열리게 한다. */
+export function stepGate(gate: Gate, board: Board, dt: number): void {
+  gate.center += gate.dir * GATE_SPEED * gate.speedScale * dt;
+  if (gate.center >= board.width) {
+    gate.center = board.width;
+    gate.dir = -1;
+  } else if (gate.center <= 0) {
+    gate.center = 0;
+    gate.dir = 1;
+  }
+}
+
+export function gateOpenAt(gate: Gate, x: number): boolean {
+  return Math.abs(x - gate.center) <= gate.width / 2;
+}
+
+/** 문이 닫힌 자리에서는 낙하선이 벽이다. 인자를 직접 수정한다. */
+export function clampToFrontEdge(coin: Coin, board: Board, gate: Gate): void {
+  if (gateOpenAt(gate, coin.x)) return;
+  const limit = board.fallLine - coin.radius;
+  if (coin.y <= limit) return;
+  coin.y = limit;
+  if (coin.vy > 0) coin.vy = 0;
+}
+
 export interface Pusher {
   /** 푸셔 앞면의 y. 이 면이 뒤쪽 벽 역할을 한다. */
   y: number;
@@ -152,8 +200,13 @@ export interface World {
   board: Board;
   coins: Coin[];
   pusher: Pusher;
+  gate: Gate;
   /** 기울기 이벤트가 주는 x축 가속도 */
   tiltAx: number;
+  /** 역류 이벤트가 주는 y축 가속도. 음수면 코인이 뒤로 밀린다. */
+  tiltAy: number;
+  /** 진행 중인 융기 이벤트의 지점과 경과 시간. 렌더 연출에만 쓴다. */
+  burst: { x: number; y: number; t: number } | null;
   fallen: FallEvent[];
   elapsed: number;
 }
@@ -243,10 +296,12 @@ export function collectFallen(world: World): void {
 export function stepWorld(world: World, dt: number): void {
   world.elapsed += dt;
   stepPusher(world.pusher, dt);
+  stepGate(world.gate, world.board, dt);
 
   const damp = Math.max(0, 1 - FRICTION * dt);
   for (const coin of world.coins) {
     coin.vx += world.tiltAx * dt;
+    coin.vy += world.tiltAy * dt;
     coin.vx *= damp;
     coin.vy *= damp;
     coin.x += coin.vx * dt;
@@ -261,6 +316,7 @@ export function stepWorld(world: World, dt: number): void {
   for (const coin of world.coins) {
     applyPusher(coin, world.pusher);
     clampToWalls(coin, world.board);
+    clampToFrontEdge(coin, world.board, world.gate);
   }
 
   collectFallen(world);
