@@ -54,7 +54,9 @@ export default function SetupPanel({ initialRaw = "", onStart, onBack }: SetupPa
         onChange={(e) => setRaw(e.target.value)}
         rows={8}
         placeholder={"주원\n민지\n현우\n서연"}
-        className="mt-2 w-full resize-y rounded-2xl border border-border bg-card-bg p-4 font-mono text-sm text-text-primary outline-none transition focus:border-accent"
+        // 모바일에서 글꼴이 16px보다 작으면 iOS Safari가 입력창을 누르는 순간 화면을 자동
+        // 확대하고, 그 상태에서 가로 스크롤이 생긴다. 작은 화면에서는 16px을 유지한다.
+        className="mt-2 w-full resize-y rounded-2xl border border-border bg-card-bg p-4 font-mono text-base text-text-primary outline-none transition focus:border-accent sm:text-sm"
       />
 
       <div className="mt-3 flex items-center justify-between text-xs">
