@@ -10,7 +10,7 @@ import { createRng } from "./random";
 import { createScheduler, type EventType, type Scheduler } from "./events";
 import { FIXED_DT, winnerOf } from "./physics";
 import { createGame, type Game } from "./setup";
-import { FALL_ANIM_SECONDS, NEUTRAL_INTERVAL, createFx, simulate, type Fx } from "./loop";
+import { FALL_ANIM_SECONDS, NEUTRAL_INTERVAL, simulate, type FallingCoin } from "./loop";
 
 type Phase = "setup" | "playing" | "result";
 
@@ -23,7 +23,7 @@ const EVENT_LABEL: Record<EventType, string> = {
 export default function CoinPusherGame() {
   const gameRef = useRef<Game | null>(null);
   const schedulerRef = useRef<Scheduler | null>(null);
-  const fxRef = useRef<Fx>(createFx());
+  const fallingRef = useRef<FallingCoin[]>([]);
   const shakeRef = useRef(0);
   const stageRef = useRef<StageHandle | null>(null);
   const nextNeutralAtRef = useRef(0);
@@ -45,7 +45,7 @@ export default function CoinPusherGame() {
     const game = createGame(names, nextSeed);
     gameRef.current = game;
     schedulerRef.current = createScheduler(createRng(nextSeed ^ 0x9e3779b9));
-    fxRef.current = createFx();
+    fallingRef.current = [];
     shakeRef.current = 0;
     nextNeutralAtRef.current = NEUTRAL_INTERVAL;
     wonAtRef.current = null;
@@ -65,14 +65,11 @@ export default function CoinPusherGame() {
     const scheduler = schedulerRef.current;
     if (!game || !scheduler) return;
 
-    const fired = simulate(game, scheduler, fxRef.current, nextNeutralAtRef, dt);
+    const fired = simulate(game, scheduler, fallingRef.current, nextNeutralAtRef, dt);
     if (fired) setBanner(EVENT_LABEL[fired]);
     else if (scheduler.active === null) setBanner(null);
 
-    // 흔들림 이벤트와 폭발 연출이 화면을 흔든다
-    const shaking = scheduler.active?.type === "shake" ? 6 : 0;
-    const blasting = fxRef.current.effects.some((e) => e.type === "bomb" && e.t < 0.25) ? 5 : 0;
-    shakeRef.current = Math.max(shaking, blasting);
+    shakeRef.current = scheduler.active?.type === "shake" ? 6 : 0;
 
     const win = winnerOf(game.world);
     if (win && wonAtRef.current === null) {
@@ -108,7 +105,7 @@ export default function CoinPusherGame() {
     // 결과가 나올 때까지 시뮬레이션만 빠르게 돌린다 (최대 4분치)
     const maxSteps = Math.round(240 / FIXED_DT);
     for (let i = 0; i < maxSteps && !winnerOf(game.world); i++) {
-      simulate(game, scheduler, fxRef.current, nextNeutralAtRef, FIXED_DT);
+      simulate(game, scheduler, fallingRef.current, nextNeutralAtRef, FIXED_DT);
     }
 
     const win = winnerOf(game.world);
@@ -116,7 +113,7 @@ export default function CoinPusherGame() {
     // world.elapsed는 이미 240초만큼 앞서 있어 다음 프레임 HUD가 껑충 뛰겠지만,
     // 멈춘 상태가 아니라 rAF 루프가 이어서 정상 진행되므로 별도 처리를 두지 않는다.
     if (!win) return;
-    fxRef.current.falling.length = 0;
+    fallingRef.current.length = 0;
     wonAtRef.current = win.at;
     setWinner(game.names[win.coin.ownerIndex] ?? "");
     setPhase("result");
@@ -141,7 +138,7 @@ export default function CoinPusherGame() {
   // 캔버스가 화면을 다 덮고 HUD와 버튼은 그 위에 얹는다.
   return (
     <div className="fixed inset-0 z-40 overflow-hidden bg-bg">
-      <Stage gameRef={gameRef} fxRef={fxRef} shakeRef={shakeRef} handleRef={stageRef} />
+      <Stage gameRef={gameRef} fallingRef={fallingRef} shakeRef={shakeRef} handleRef={stageRef} />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex items-center gap-3 rounded-full border border-border bg-card-bg/85 px-4 py-1.5 text-xs text-text-secondary shadow-ambient backdrop-blur">

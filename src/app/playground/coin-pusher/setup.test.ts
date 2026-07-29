@@ -19,7 +19,7 @@ import {
 } from "./physics";
 import { createScheduler } from "./events";
 import { createRng } from "./random";
-import { NEUTRAL_INTERVAL, createFx, simulate } from "./loop";
+import { NEUTRAL_INTERVAL, simulate, type FallingCoin } from "./loop";
 
 describe("parseNames", () => {
   it("줄바꿈으로 나눈다", () => {
@@ -81,6 +81,33 @@ describe("createGame", () => {
     }
   });
 
+  it("참가자 코인은 전부 같은 시각에 한꺼번에 투입된다", () => {
+    // 순차 투입은 먼저 들어온 코인이 더 오래 밀려서 구조적으로 유리하다.
+    // 실측으로 20명 기준 마지막 투입 코인의 승률이 0이었던 적이 있다.
+    const g = createGame(Array.from({ length: 20 }, (_, i) => `p${i}`), 7);
+    expect(new Set(playerCoins(g).map((q) => q.at)).size).toBe(1);
+  });
+
+  it("참가자 번호와 큐 순서가 묶여 있지 않다", () => {
+    // 같은 시각의 코인들은 큐 순서대로 world.coins에 들어가고 충돌 해소도 그 순서로 돈다.
+    // 참가자 번호 순으로 넣으면 배열 앞쪽 참가자가 체계적으로 유리해진다.
+    const names = Array.from({ length: 12 }, (_, i) => `p${i}`);
+    const identity = names.map((_, i) => i);
+    const shuffled = [1, 2, 3, 4, 5].filter((seed) => {
+      const owners = createGame(names, seed)
+        .queue.filter((q) => q.coin.ownerIndex >= 0)
+        .map((q) => q.coin.ownerIndex);
+      return JSON.stringify(owners) !== JSON.stringify(identity);
+    });
+    expect(shuffled).toHaveLength(5);
+  });
+
+  it("참가자 코인은 서로 다른 자리에서 시작한다", () => {
+    const g = createGame(Array.from({ length: 12 }, (_, i) => `p${i}`), 3);
+    const spots = new Set(playerCoins(g).map((q) => `${q.coin.x},${q.coin.y}`));
+    expect(spots.size).toBe(12);
+  });
+
   it("참가자 코인은 크기·질량·반발계수가 모두 같다", () => {
     const g = createGame(names, 1);
     expect(new Set(playerCoins(g).map((q) => q.coin.radius)).size).toBe(1);
@@ -88,12 +115,9 @@ describe("createGame", () => {
     expect(new Set(playerCoins(g).map((q) => q.coin.restitution)).size).toBe(1);
   });
 
-  it("참가자 코인에는 특수 종류도 도화선도 붙지 않는다", () => {
+  it("참가자 코인은 전부 player 종류다", () => {
     const g = createGame(names, 1);
-    for (const { coin } of playerCoins(g)) {
-      expect(coin.kind).toBe("player");
-      expect(coin.fuse).toBeNull();
-    }
+    expect(playerCoins(g).every((q) => q.coin.kind === "player")).toBe(true);
   });
 
   it("중립 코인은 세 가지 크기로 나온다", () => {
@@ -217,10 +241,10 @@ describe("통합", () => {
   function runUntilWinner(names: string[], seed: number, maxSeconds: number) {
     const g = createGame(names, seed);
     const scheduler = createScheduler(createRng(seed ^ 0x9e3779b9));
-    const fx = createFx();
+    const falling: FallingCoin[] = [];
     const nextNeutralAt = { current: NEUTRAL_INTERVAL };
     for (let i = 0; i < Math.round(maxSeconds / FIXED_DT); i++) {
-      simulate(g, scheduler, fx, nextNeutralAt, FIXED_DT);
+      simulate(g, scheduler, falling, nextNeutralAt, FIXED_DT);
       if (g.world.fallen.some((f) => f.coin.ownerIndex >= 0)) return g;
     }
     return g;
