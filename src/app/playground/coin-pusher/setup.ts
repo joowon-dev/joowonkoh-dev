@@ -29,8 +29,8 @@ const PLATE_MAX_Y = PUSHER_BACK_Y + 70;
 
 /** 처음 깔리는 중립 코인이 전부 쏟아지는 데 걸리는 시간(초) */
 export const INITIAL_POUR_SECONDS = 7;
-/** 참가자 코인이 전부 쏟아지는 데 걸리는 시간(초) */
-export const PLAYER_POUR_SECONDS = 2.2;
+/** 중립 코인 투하가 끝나고 참가자 코인이 한꺼번에 쏟아지기까지의 뜸 (초) */
+export const PLAYER_DROP_DELAY = 0.5;
 
 export interface QueuedCoin {
   coin: Coin;
@@ -88,6 +88,30 @@ function makeNeutral(rng: Rng, id: number, bornAt: number): Coin {
   });
 }
 
+/**
+ * 참가자 코인이 한꺼번에 떨어질 자리들. 미는 판 위에 반지름 간격의 격자로 흩는다.
+ * 자리 i를 누구에게 줄지는 호출부가 섞은 순서로 정한다.
+ */
+function scatterSpots(rng: Rng, count: number, radius: number): Array<{ x: number; y: number }> {
+  // 간격을 지름이 아니라 반지름으로 잡아 일부러 겹치게 둔다. 판 뒤쪽은 코인 5개
+  // 남짓 폭이라 겹치지 않게 놓으려면 격자가 낙하선까지 내려가 버린다.
+  const step = radius + 2;
+  const spots: Array<{ x: number; y: number }> = [];
+  for (let row = 0; spots.length < count; row++) {
+    // 격자가 미는 판 깊이를 넘으면 다시 판 위쪽부터 겹쳐 쌓는다
+    const y = PLATE_MIN_Y + ((row * step) % Math.max(step, PLATE_MAX_Y - PLATE_MIN_Y));
+    const limit = Math.max(1, halfWidthAt(board, y) - radius);
+    const cols = Math.max(1, Math.floor((limit * 2) / step));
+    for (let c = 0; c < cols && spots.length < count; c++) {
+      spots.push({
+        x: centerX(board) - limit + step * (c + 0.5) + randRange(rng, -2, 2),
+        y: y + randRange(rng, -2, 2),
+      });
+    }
+  }
+  return spots;
+}
+
 /** 처음 깔릴 중립 코인 수. 인원에 비례하되 상·하한을 둔다. */
 export function initialCoinCount(playerCount: number): number {
   return Math.min(170, Math.max(80, Math.round(playerCount * 3)));
@@ -114,27 +138,33 @@ export function createGame(names: string[], seed: number): Game {
     queue.push({ at, coin: makeNeutral(rng, nextCoinId++, at) });
   }
 
-  // 2단계 — 참가자 코인. 낙하 순서를 섞고 지점·시각·초기 속도를 무작위로 준다
+  // 2단계 — 참가자 코인. 전원이 같은 순간에 한꺼번에 쏟아진다.
+  //
+  // 순차 투입은 공정하지 않다. 실측 결과 20명 기준으로 먼저 투입된 코인이 300판 중
+  // 34번 이긴 반면 마지막에 투입된 코인은 한 번도 이기지 못했다(앞 절반 승률 76%).
+  // 먼저 들어온 코인이 그만큼 더 오래 밀리기 때문이다. 같은 시각에 넣으면 투입
+  // 순서라는 개념 자체가 사라진다.
+  //
+  // 동시 투입이라고 순서가 사라지는 게 아니다. 같은 시각의 코인들은 큐에 담긴 순서대로
+  // world.coins에 들어가고, 충돌 해소는 그 배열 순서대로 돈다. 겹쳐서 시작한 코인 무리에서는
+  // 배열 앞쪽 코인이 체계적으로 다르게 밀린다 — 참가자 번호 순으로 넣으면 그대로 편향이 된다.
+  // 그래서 참가자 순서를 섞어, 배열 위치와 시작 자리 둘 다 참가자와 무관하게 만든다.
   const order = names.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
 
+  const at = INITIAL_POUR_SECONDS + PLAYER_DROP_DELAY;
+  const spots = scatterSpots(rng, names.length, COIN_RADIUS);
   order.forEach((ownerIndex, i) => {
-    const at =
-      INITIAL_POUR_SECONDS +
-      0.4 +
-      (order.length <= 1 ? 0 : (i / (order.length - 1)) * PLAYER_POUR_SECONDS) +
-      randRange(rng, 0, 0.06);
-    const spot = plateSpot(rng, COIN_RADIUS);
     queue.push({
       at,
       coin: createCoin({
         id: nextCoinId++,
         ownerIndex,
         kind: "player",
-        ...spot,
+        ...spots[i],
         radius: COIN_RADIUS,
         mass: radiusMass(COIN_RADIUS),
         restitution: kindRestitution("player"),

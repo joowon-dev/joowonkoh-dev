@@ -7,18 +7,12 @@ import Stage, { type StageHandle } from "./Stage";
 import WinnerOverlay from "./WinnerOverlay";
 import { useGameLoop } from "./useGameLoop";
 import { createRng } from "./random";
-import { createScheduler, type EventType, type Scheduler } from "./events";
+import { createScheduler, type Scheduler } from "./events";
 import { FIXED_DT, winnerOf } from "./physics";
 import { createGame, type Game } from "./setup";
 import { FALL_ANIM_SECONDS, NEUTRAL_INTERVAL, createFx, simulate, type Fx } from "./loop";
 
 type Phase = "setup" | "playing" | "result";
-
-const EVENT_LABEL: Record<EventType, string> = {
-  shake: "판이 흔들린다!",
-  tilt: "판이 기울어진다!",
-  rush: "푸셔 가속!",
-};
 
 export default function CoinPusherGame() {
   const gameRef = useRef<Game | null>(null);
@@ -36,7 +30,6 @@ export default function CoinPusherGame() {
   const [winner, setWinner] = useState<string | null>(null);
   const [remaining, setRemaining] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [banner, setBanner] = useState<string | null>(null);
   const [speed, setSpeed] = useState(1);
 
   const begin = useCallback((names: string[], rawText: string) => {
@@ -55,7 +48,6 @@ export default function CoinPusherGame() {
     setWinner(null);
     setRemaining(names.length);
     setElapsed(0);
-    setBanner(null);
     setSpeed(1);
     setPhase("playing");
   }, []);
@@ -65,9 +57,9 @@ export default function CoinPusherGame() {
     const scheduler = schedulerRef.current;
     if (!game || !scheduler) return;
 
-    const fired = simulate(game, scheduler, fxRef.current, nextNeutralAtRef, dt);
-    if (fired) setBanner(EVENT_LABEL[fired]);
-    else if (scheduler.active === null) setBanner(null);
+    // 돌발 이벤트는 계속 일어나지만 배너로 알리지는 않는다 — 화면이 산만해진다.
+    // 흔들림·기울기·가속은 판의 움직임 자체로 보인다.
+    simulate(game, scheduler, fxRef.current, nextNeutralAtRef, dt);
 
     // 흔들림 이벤트와 폭발 연출이 화면을 흔든다
     const shaking = scheduler.active?.type === "shake" ? 6 : 0;
@@ -150,16 +142,6 @@ export default function CoinPusherGame() {
             |
           </span>
           <span className="tabular-nums">{elapsed.toFixed(1)}초</span>
-        </div>
-        <div className="flex h-7 items-center justify-center">
-          {banner && (
-            <span
-              key={banner}
-              className="animate-fade-in-up rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-white shadow-ambient"
-            >
-              {banner}
-            </span>
-          )}
         </div>
       </div>
 

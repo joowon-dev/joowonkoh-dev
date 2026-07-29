@@ -1,4 +1,5 @@
 import {
+  NEUTRAL_RADII,
   PUSHER_BACK_Y,
   centerX,
   halfWidthAt,
@@ -67,8 +68,10 @@ export interface Palette {
   boardFar: string;
   boardEdge: string;
   pusher: string;
-  coin: string;
-  coinSide: string;
+  /** 푸셔 앞면(두께) — 판보다 진해야 밀고 나오는 게 보인다 */
+  pusherFace: string;
+  /** NEUTRAL_RADII와 같은 순서의 [윗면, 옆면] 색 3쌍 */
+  coinBySize: ReadonlyArray<readonly [string, string]>;
   bomb: string;
   bombSide: string;
   warp: string;
@@ -94,8 +97,13 @@ export function readPalette(el: HTMLElement): Palette {
     boardFar: "#d9dee7",
     boardEdge: border,
     pusher: "#c4cad5",
-    coin: "#c9ced6",
-    coinSide: "#9aa1ab",
+    pusherFace: "#8b94a3",
+    // 중립 코인은 크기별로 색이 조금씩 다르다 (작을수록 밝고, 클수록 진하다)
+    coinBySize: [
+      ["#e2e7ef", "#b6bfcd"],
+      ["#c6ccd7", "#98a1b0"],
+      ["#a7b0c0", "#7c8697"],
+    ],
     bomb: "#ef5a52",
     bombSide: "#b9302a",
     warp: "#9b6bf2",
@@ -112,11 +120,13 @@ function coinThickness(radius: number): number {
   return radius * (5 / 14);
 }
 
-function coinColors(coin: Coin, palette: Palette): [string, string] {
+function coinColors(coin: Coin, palette: Palette): readonly [string, string] {
   if (coin.kind === "player") return [palette.player, palette.playerSide];
   if (coin.kind === "bomb") return [palette.bomb, palette.bombSide];
   if (coin.kind === "warp") return [palette.warp, palette.warpSide];
-  return [palette.coin, palette.coinSide];
+  // 크기 3종 중 몇 번째인지로 색을 고른다. 목록에 없는 반지름이면 가운데 색.
+  const size = NEUTRAL_RADII.indexOf(coin.radius as (typeof NEUTRAL_RADII)[number]);
+  return palette.coinBySize[size < 0 ? 1 : size];
 }
 
 /** 판의 좌우 가장자리를 화면 x로 옮긴다 */
@@ -363,7 +373,7 @@ export function drawScene(
   ctx.fill();
   const pusherEdge = edgeX(board, pusherY, cam);
   const pusherSy = projectPoint(0, pusherY, cam).sy;
-  ctx.fillStyle = palette.coinSide;
+  ctx.fillStyle = palette.pusherFace;
   ctx.beginPath();
   ctx.moveTo(pusherEdge.left, pusherSy);
   ctx.lineTo(pusherEdge.right, pusherSy);
