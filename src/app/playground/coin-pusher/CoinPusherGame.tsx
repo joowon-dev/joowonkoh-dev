@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import SetupPanel from "./SetupPanel";
 import Stage, { type StageHandle } from "./Stage";
-import WinnerOverlay from "./WinnerOverlay";
-import { useGameLoop } from "./useGameLoop";
-import { createRng } from "./random";
+import WinnerOverlay from "../_shared/WinnerOverlay";
+import { useGameLoop } from "../_shared/useGameLoop";
+import { createRng } from "../_shared/random";
 import { createScheduler, type EventType, type Scheduler } from "./events";
-import { winnerOf } from "./physics";
+import { FIXED_DT, winnerOf } from "./physics";
 import { createGame, type Game } from "./setup";
 import { FALL_ANIM_SECONDS, NEUTRAL_INTERVAL, simulate, type FallingCoin } from "./loop";
 
@@ -101,7 +101,7 @@ export default function CoinPusherGame() {
     if (wonAt !== null && game.world.elapsed - wonAt >= FALL_ANIM_SECONDS) setPhase("result");
   }, []);
 
-  useGameLoop(onStep, onFrame, phase === "playing", speed);
+  useGameLoop(onStep, onFrame, phase === "playing", speed, FIXED_DT);
 
   const showOverlay = phase === "result" && winner !== null;
 
@@ -176,6 +176,7 @@ export default function CoinPusherGame() {
       {showOverlay && (
         <WinnerOverlay
           name={winner}
+          subtitle="가장 먼저 떨어졌습니다 🪙"
           seed={seed}
           onRestart={() => begin(gameRef.current?.names ?? [], raw)}
           onEdit={() => setPhase("setup")}

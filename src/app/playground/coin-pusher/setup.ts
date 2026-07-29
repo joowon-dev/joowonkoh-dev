@@ -1,4 +1,4 @@
-import { createRng, randRange, type Rng } from "./random";
+import { createRng, randRange, type Rng } from "../_shared/random";
 import { COIN_RESTITUTION, radiusMass, rollNeutralRadius } from "./events";
 import {
   COIN_RADIUS,
