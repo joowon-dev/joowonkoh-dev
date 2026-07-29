@@ -3,7 +3,16 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Playground",
-  description: "사이드 프로젝트 모음",
+  description: "직접 만들어 본 웹 미니게임과 도구 모음.",
+  alternates: { canonical: "https://joowonkoh.com/playground" },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: "Joowon Koh",
+    title: "Playground — Joowon Koh",
+    description: "직접 만들어 본 웹 미니게임과 도구 모음.",
+    url: "https://joowonkoh.com/playground",
+  },
 };
 
 export default function PlaygroundPage() {
