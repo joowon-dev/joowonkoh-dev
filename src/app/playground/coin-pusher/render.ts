@@ -7,7 +7,7 @@ import {
   type Coin,
 } from "./physics";
 import type { Game } from "./setup";
-import { BURST_RADIUS, BURST_SECONDS, CATAPULT_RADIUS, CATAPULT_SECONDS } from "./events";
+import { BURST_RADIUS, BURST_SECONDS } from "./events";
 import { FALL_ANIM_SECONDS, type FallingCoin } from "./loop";
 
 /** 화면상 y축을 이 비율로 압축해 비스듬한 시점을 만든다 */
@@ -60,6 +60,17 @@ export function projectPoint(x: number, y: number, cam: Camera): { sx: number; s
   };
 }
 
+/** 기울기 가속도가 최대일 때 화면이 기우는 각도(rad). 2.5도쯤 — 더 주면 판이 화면 밖으로 돈다. */
+const MAX_LEAN = 0.044;
+/** 이 가속도에서 MAX_LEAN에 도달한다. rollMagnitude의 tilt 상한과 맞춘 값. */
+const LEAN_FULL_AX = 240;
+
+/** 기울기 가속도를 화면 회전각으로 옮긴다. 오른쪽으로 밀리면(+) 오른쪽이 내려간다. */
+export function leanAngle(tiltAx: number): number {
+  const t = Math.max(-1, Math.min(1, tiltAx / LEAN_FULL_AX));
+  return t * MAX_LEAN;
+}
+
 export interface Palette {
   bg: string;
   /** 판 바닥(앞쪽) */
@@ -70,10 +81,8 @@ export interface Palette {
   pusher: string;
   /** 푸셔 앞면(두께) — 판보다 진해야 밀고 나오는 게 보인다 */
   pusherFace: string;
-  /** NEUTRAL_RADII와 같은 순서의 [윗면, 옆면] 색 3쌍 */
+  /** NEUTRAL_RADII와 같은 개수·순서의 [윗면, 옆면] 색 쌍 */
   coinBySize: ReadonlyArray<readonly [string, string]>;
-  /** 투석 구역 표시색 */
-  catapult: string;
   player: string;
   playerSide: string;
   text: string;
@@ -96,13 +105,16 @@ export function readPalette(el: HTMLElement): Palette {
     boardEdge: border,
     pusher: "#c4cad5",
     pusherFace: "#8b94a3",
-    // 중립 코인은 크기별로 색이 조금씩 다르다 (작을수록 밝고, 클수록 진하다)
+    // 중립 코인은 크기별로 색이 다르다. 작을수록 밝고 클수록 진하며, 큰 쪽은 살짝
+    // 따뜻한 색으로 빠져 은화/동화가 섞인 것처럼 보인다. NEUTRAL_RADII와 길이가 같아야 한다.
     coinBySize: [
-      ["#e2e7ef", "#b6bfcd"],
+      ["#eef1f6", "#c6cedb"],
+      ["#dbe1ea", "#aeb8c7"],
       ["#c6ccd7", "#98a1b0"],
-      ["#a7b0c0", "#7c8697"],
+      ["#c8bda8", "#9d9179"],
+      ["#c2ab8a", "#93805f"],
+      ["#a99172", "#7b674c"],
     ],
-    catapult: "#f59e0b",
     player: accent,
     playerSide: accent,
     text,
@@ -117,9 +129,9 @@ function coinThickness(radius: number): number {
 
 function coinColors(coin: Coin, palette: Palette): readonly [string, string] {
   if (coin.kind === "player") return [palette.player, palette.playerSide];
-  // 크기 3종 중 몇 번째인지로 색을 고른다. 목록에 없는 반지름이면 가운데 색.
+  // 크기 목록 중 몇 번째인지로 색을 고른다. 목록에 없는 반지름이면 가운데 색.
   const size = NEUTRAL_RADII.indexOf(coin.radius as (typeof NEUTRAL_RADII)[number]);
-  return palette.coinBySize[size < 0 ? 1 : size];
+  return palette.coinBySize[size < 0 ? Math.floor(palette.coinBySize.length / 2) : size];
 }
 
 /** 판의 좌우 가장자리를 화면 x로 옮긴다 */
@@ -245,6 +257,15 @@ export function drawScene(
     // 화면 흔들림 — 물리와 무관한 연출이라 렌더 시각으로만 흔든다
     ctx.translate(Math.sin(elapsed * 61) * shake, Math.cos(elapsed * 47) * shake * 0.6);
   }
+  // 판이 기울면 화면도 같이 기운다. 코인이 좌우 어느 쪽으로 쏠리는지 눈으로 보이게 하는
+  // 연출이며, 물리의 tiltAx가 부호를 바꿀 때 화면도 반대로 넘어간다.
+  const lean = leanAngle(game.world.tiltAx);
+  if (lean !== 0) {
+    const cx = projectPoint(centerX(board), board.fallLine / 2, cam);
+    ctx.translate(cx.sx, cx.sy);
+    ctx.rotate(lean);
+    ctx.translate(-cx.sx, -cx.sy);
+  }
 
   const backSy = projectPoint(0, PUSHER_BACK_Y, cam).sy;
   const frontSy = projectPoint(0, board.fallLine, cam).sy;
@@ -326,32 +347,6 @@ export function drawScene(
       ctx.stroke();
       ctx.restore();
     }
-  }
-
-  // 투석 이벤트 — 걷어간 구역을 안쪽으로 조여드는 고리로 보여준다.
-  // 융기(퍼져 나감)와 반대 방향이라 둘을 눈으로 구분할 수 있다.
-  const catapult = game.world.catapult;
-  if (catapult) {
-    const { sx, sy } = projectPoint(catapult.x, catapult.y, cam);
-    const p = Math.min(1, catapult.t / CATAPULT_SECONDS);
-    ctx.save();
-    ctx.globalAlpha = 1 - p;
-    ctx.strokeStyle = palette.catapult;
-    ctx.lineWidth = 4 * cam.scale;
-    const r = CATAPULT_RADIUS * (1 - p * 0.85) * cam.scale;
-    ctx.beginPath();
-    ctx.ellipse(sx, sy, r, r * PERSPECTIVE_SCALE, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    // 뒤로 날아간다는 방향을 화살촉으로 표시
-    ctx.fillStyle = palette.catapult;
-    const lift = r * 0.5 + 14 * cam.scale;
-    ctx.beginPath();
-    ctx.moveTo(sx, sy - lift - 10 * cam.scale);
-    ctx.lineTo(sx - 7 * cam.scale, sy - lift);
-    ctx.lineTo(sx + 7 * cam.scale, sy - lift);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
   }
 
   // 판 밖으로 떨어지는 코인 — 물리에서 분리된 순수 연출

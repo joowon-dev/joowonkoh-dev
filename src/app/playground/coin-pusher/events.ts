@@ -1,17 +1,10 @@
 import { randRange, pick, type Rng } from "./random";
-import {
-  NEUTRAL_RADII,
-  PLATE_MAX_Y,
-  PLATE_MIN_Y,
-  centerX,
-  halfWidthAt,
-  type World,
-} from "./physics";
+import { COIN_RADIUS, NEUTRAL_RADII, centerX, halfWidthAt, type World } from "./physics";
 
 /** 이 시각(초)부터 막판 스퍼트에 들어간다 */
 export const FINAL_SPURT_AT = 30;
 
-const EVENT_TYPES = ["shake", "tilt", "rush", "catapult", "burst"] as const;
+const EVENT_TYPES = ["shake", "tilt", "rush", "burst"] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
 export interface ActiveEvent {
@@ -21,11 +14,9 @@ export interface ActiveEvent {
   /** 시작 시점의 지속 시간. 연출 진행도를 구하는 데 쓴다. */
   duration: number;
   magnitude: number;
-  /** burst·catapult 이벤트가 일어나는 지점 (판 크기 대비 0~1 비율) */
+  /** burst 이벤트가 일어나는 지점 (판 크기 대비 0~1 비율) */
   x: number;
   y: number;
-  /** 한 번만 일어나야 하는 이벤트(투석)가 이미 실행됐는지 */
-  fired: boolean;
 }
 
 export interface Scheduler {
@@ -39,14 +30,13 @@ const GAP_MIN = 2.2;
 const GAP_MAX = 5;
 
 /**
- * 이벤트 추첨 가중치. 순위를 실제로 뒤집는 쪽(융기 1순위, 투석 2순위)을 무겁게 준다.
+ * 이벤트 추첨 가중치. 순위를 실제로 뒤집는 쪽(융기 1순위, 좌우 기울기 2순위)을 무겁게 준다.
  * 균등 추첨이면 판을 흔들기만 하고 순서는 그대로인 이벤트가 절반을 넘는다.
  */
 const EVENT_WEIGHTS: Record<EventType, number> = {
-  burst: 4,
-  catapult: 3,
+  burst: 5,
+  tilt: 3,
   shake: 2,
-  tilt: 2,
   rush: 1,
 };
 
@@ -62,16 +52,15 @@ function pickEvent(rng: Rng): EventType {
 
 function rollMagnitude(type: EventType, rng: Rng): number {
   if (type === "shake") return randRange(rng, 120, 260);
-  if (type === "tilt") return randRange(rng, 90, 200) * (rng() < 0.5 ? -1 : 1);
+  // 부호는 어느 쪽으로 먼저 기우는지만 정한다. 이후 좌우로 번갈아 기운다.
+  if (type === "tilt") return randRange(rng, 120, 240) * (rng() < 0.5 ? -1 : 1);
   if (type === "burst") return randRange(rng, 900, 1500);
-  if (type === "catapult") return 0; // 세기 개념이 없다 — 반경 안을 전부 뒤로 보낸다
   return randRange(rng, 1.7, 2.4);
 }
 
 function rollDuration(type: EventType, rng: Rng): number {
   if (type === "shake") return randRange(rng, 0.4, 0.9);
-  if (type === "tilt") return randRange(rng, 1.5, 3.0);
-  if (type === "catapult") return CATAPULT_SECONDS;
+  if (type === "tilt") return randRange(rng, 2.4, 4.2);
   if (type === "burst") return BURST_SECONDS;
   return randRange(rng, 2.5, 4.5);
 }
@@ -80,11 +69,9 @@ function rollDuration(type: EventType, rng: Rng): number {
 export const BURST_RADIUS = 130;
 export const BURST_SECONDS = 0.45;
 
-/** 투석 이벤트가 걷어가는 반경과 연출 지속 시간 */
-export const CATAPULT_RADIUS = 105;
-export const CATAPULT_SECONDS = 0.6;
-/** 한 번에 뒤로 보낼 수 있는 최대 코인 수. 판 위쪽이 감당 못 할 만큼 몰리지 않게 한다. */
-export const CATAPULT_MAX_COINS = 16;
+/** 기울기 한 주기(한쪽 끝 → 반대쪽 끝 → 제자리)에 걸리는 시간(초).
+ * 지속 시간(2.4~4.2초)이 이보다 길어 한 이벤트 안에서 좌우로 여러 번 넘나든다. */
+export const TILT_PERIOD = 1.6;
 
 export function createScheduler(rng: Rng, startAt?: number): Scheduler {
   return {
@@ -102,31 +89,14 @@ function eventSpot(world: World, active: ActiveEvent): { x: number; y: number } 
 }
 
 /**
- * 투석 — 반경 안의 코인을 판 뒤쪽(미는 판 위)으로 되돌려 보낸다.
+ * 기울기 — 판이 왼쪽으로 기울었다가 오른쪽으로 넘어가기를 반복한다.
  *
- * 융기가 코인을 사방으로 "밀어낸다"면 투석은 아예 출발선으로 "돌려보낸다". 앞줄에 나와
- * 있던 코인이 한 번에 원점으로 가므로 순위가 가장 크게 요동친다. 반경 안을 전부 보내면
- * 판 뒤쪽이 감당 못 하므로 가까운 순으로 CATAPULT_MAX_COINS개까지만 보낸다.
- *
- * bornAt을 현재 시각으로 갱신해 렌더의 낙하 진입 연출이 다시 재생된다 — 화면에서는
- * 코인이 위에서 다시 떨어지는 것처럼 보인다.
+ * 한 방향으로만 기울면 더미 전체가 그쪽 벽에 붙어버릴 뿐 앞뒤 순서는 그대로다. 좌우로
+ * 번갈아 기울여야 더미가 벽을 오가며 무너지고, 벽에 밀렸던 코인이 반대쪽으로 쏟아지면서
+ * 순위가 섞인다. 사인파라 방향이 바뀌는 순간 가속도가 0을 지나 부드럽게 넘어간다.
  */
-function catapultCoins(world: World, rng: Rng, cx: number, cy: number): void {
-  const hit = world.coins
-    .map((coin) => ({ coin, d: Math.hypot(coin.x - cx, coin.y - cy) }))
-    .filter((e) => e.d <= CATAPULT_RADIUS)
-    .sort((a, b) => a.d - b.d || a.coin.id - b.coin.id)
-    .slice(0, CATAPULT_MAX_COINS);
-
-  for (const { coin } of hit) {
-    const y = randRange(rng, PLATE_MIN_Y, PLATE_MAX_Y);
-    const limit = Math.max(1, halfWidthAt(world.board, y) - coin.radius);
-    coin.x = centerX(world.board) + randRange(rng, -limit, limit);
-    coin.y = y;
-    coin.vx = randRange(rng, -30, 30);
-    coin.vy = randRange(rng, 10, 60);
-    coin.bornAt = world.elapsed;
-  }
+function tiltAt(magnitude: number, elapsedInEvent: number): number {
+  return magnitude * Math.cos((elapsedInEvent / TILT_PERIOD) * Math.PI * 2);
 }
 
 /** 이벤트를 진행시킨다. 이번 호출에 새로 시작한 이벤트가 있으면 그 종류를 반환한다. */
@@ -148,7 +118,7 @@ export function updateScheduler(s: Scheduler, elapsed: number, dt: number): Even
   // burst는 터질 지점이 필요하다. 더미가 몰려 있는 앞쪽 절반에서 고른다.
   const x = randRange(s.rng, 0, 1);
   const y = randRange(s.rng, 0.45, 0.95);
-  s.active = { type, remaining: duration, duration, magnitude, x, y, fired: false };
+  s.active = { type, remaining: duration, duration, magnitude, x, y };
   return type;
 }
 
@@ -157,7 +127,6 @@ export function updateScheduler(s: Scheduler, elapsed: number, dt: number): Even
  * 새로운 EventType을 추가할 때는 대응하는 리셋 라인을 여기에 추가해야 한다. */
 export function applyScheduler(world: World, s: Scheduler, dtScale = 1): void {
   world.burst = null;
-  world.catapult = null;
   world.tiltAx = 0;
   world.pusher.speedScale = 1;
 
@@ -165,17 +134,7 @@ export function applyScheduler(world: World, s: Scheduler, dtScale = 1): void {
   if (!active) return;
 
   if (active.type === "tilt") {
-    world.tiltAx = active.magnitude;
-    return;
-  }
-  if (active.type === "catapult") {
-    const spot = eventSpot(world, active);
-    world.catapult = { x: spot.x, y: spot.y, t: active.duration - active.remaining };
-    // 걷어가는 것은 이벤트가 시작된 한 프레임에만 일어난다. 이후 지속 시간은 연출용이다.
-    if (!active.fired) {
-      active.fired = true;
-      catapultCoins(world, s.rng, spot.x, spot.y);
-    }
+    world.tiltAx = tiltAt(active.magnitude, active.duration - active.remaining);
     return;
   }
   if (active.type === "rush") {
@@ -225,14 +184,14 @@ export function applyFinalSpurt(world: World, elapsed: number): void {
   world.pusher.strokeScale = 1 + Math.min(0.8, (over / 15) * 0.8);
 }
 
-/** 중립 코인의 반지름을 3종 중에서 뽑는다. */
+/** 중립 코인의 반지름을 NEUTRAL_RADII 중에서 뽑는다. 크기별 확률은 같다. */
 export function rollNeutralRadius(rng: Rng): number {
   return pick(rng, NEUTRAL_RADII);
 }
 
-/** 질량은 넓이(반지름²)에 비례한다. 기준 크기 코인이 1. */
+/** 질량은 넓이(반지름²)에 비례한다. 참가자 코인 크기가 기준이라 그 질량이 1. */
 export function radiusMass(radius: number): number {
-  return (radius / NEUTRAL_RADII[1]) ** 2;
+  return (radius / COIN_RADIUS) ** 2;
 }
 
 /** 모든 코인의 반발계수는 같다. 코인 종류로 유불리가 갈리지 않게 하기 위한 것이다. */

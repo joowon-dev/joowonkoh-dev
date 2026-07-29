@@ -62,7 +62,7 @@ function plateSpot(rng: Rng, radius: number): { x: number; y: number } {
   return { x: centerX(board) + randRange(rng, -limit, limit), y };
 }
 
-/** 미는 판 위로 쏟아지는 중립 코인 하나를 만든다. 크기 3종 중 하나를 무작위로 받는다. */
+/** 미는 판 위로 쏟아지는 중립 코인 하나를 만든다. 크기는 NEUTRAL_RADII 중 하나를 무작위로 받는다. */
 function makeNeutral(rng: Rng, id: number, bornAt: number): Coin {
   const radius = rollNeutralRadius(rng);
   const spot = plateSpot(rng, radius);
@@ -117,7 +117,6 @@ export function createGame(names: string[], seed: number): Game {
     pusher: createPusher(),
     tiltAx: 0,
     burst: null,
-    catapult: null,
     fallen: [],
     elapsed: 0,
   };

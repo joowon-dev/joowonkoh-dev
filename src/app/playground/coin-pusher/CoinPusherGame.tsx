@@ -16,9 +16,8 @@ type Phase = "intro" | "setup" | "playing" | "result";
 
 const EVENT_LABEL: Record<EventType, string> = {
   shake: "판이 흔들린다!",
-  tilt: "판이 기울어진다!",
+  tilt: "판이 좌우로 기운다!",
   rush: "푸셔 가속!",
-  catapult: "투석! 코인이 뒤로 날아간다",
   burst: "판이 솟구친다!",
 };
 
@@ -75,7 +74,7 @@ export default function CoinPusherGame() {
 
     // 흔들림과 융기가 화면을 흔든다
     const kind = scheduler.active?.type;
-    shakeRef.current = kind === "shake" ? 6 : kind === "burst" ? 7 : kind === "catapult" ? 5 : 0;
+    shakeRef.current = kind === "shake" ? 6 : kind === "burst" ? 7 : 0;
 
     const win = winnerOf(game.world);
     if (win && wonAtRef.current === null) {

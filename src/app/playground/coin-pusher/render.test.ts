@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PERSPECTIVE_SCALE, computeCamera, projectPoint } from "./render";
+import { PERSPECTIVE_SCALE, computeCamera, leanAngle, projectPoint } from "./render";
 import { PUSHER_BACK_Y, type Board } from "./physics";
 
 const board: Board = { width: 420, backWidth: 420, fallLine: 220 };
@@ -96,3 +96,19 @@ describe("projectPoint", () => {
     expect(Number.isFinite(p.sy)).toBe(true);
   });
 });
+
+describe("leanAngle", () => {
+  it("기울기가 없으면 화면도 안 기운다", () => {
+    expect(leanAngle(0)).toBe(0);
+  });
+
+  it("좌우 부호가 반대 방향 회전이 된다", () => {
+    expect(leanAngle(200)).toBeGreaterThan(0);
+    expect(leanAngle(-200)).toBeCloseTo(-leanAngle(200), 10);
+  });
+
+  it("아무리 세게 기울여도 각도에 상한이 있다", () => {
+    expect(Math.abs(leanAngle(100000))).toBeCloseTo(Math.abs(leanAngle(240)), 10);
+  });
+});
+

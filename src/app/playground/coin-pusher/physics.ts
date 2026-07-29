@@ -1,9 +1,11 @@
 /** 참가자 코인의 반지름. 중립 코인은 NEUTRAL_RADII 중 하나를 쓴다. */
 export const COIN_RADIUS = 14;
-/** 중립 코인 크기 3종 (작은 / 보통 / 큰) */
-export const NEUTRAL_RADII = [10, 14, 19] as const;
-/** 공간 해시 셀 크기의 하한. 가장 큰 코인의 지름 이상이어야 충돌이 누락되지 않는다. */
-export const MAX_COIN_RADIUS = 19;
+/** 중립 코인 크기 6종. 참가자 코인 크기(COIN_RADIUS=14)를 가운데 끼고 위아래로 벌어진다.
+ * 크기가 다양할수록 더미가 고르게 쌓이지 않아 밀리는 모양이 매번 달라진다. */
+export const NEUTRAL_RADII = [8, 11, 14, 17, 21, 25] as const;
+/** 공간 해시 셀 크기의 하한. 가장 큰 코인의 지름 이상이어야 충돌이 누락되지 않는다.
+ * NEUTRAL_RADII를 늘릴 때 이 값도 같이 올려야 한다. */
+export const MAX_COIN_RADIUS = 25;
 
 export const FIXED_DT = 1 / 120;
 export const FRICTION = 3.2; // 속도 감쇠 계수 (1/s)
@@ -48,8 +50,7 @@ export function halfWidthAt(board: Board, y: number): number {
   return (board.backWidth + (board.width - board.backWidth) * t) / 2;
 }
 
-/** 코인이 쏟아져 들어오는 구간 — 미는 판(푸셔 상판) 위.
- * setup의 최초 투입과 events의 투석이 같은 구역을 써야 하므로 여기에 둔다. */
+/** 코인이 쏟아져 들어오는 구간 — 미는 판(푸셔 상판) 위. */
 export const PLATE_MIN_Y = PUSHER_BACK_Y + 4;
 export const PLATE_MAX_Y = PUSHER_BACK_Y + 70;
 
@@ -157,12 +158,10 @@ export interface World {
   board: Board;
   coins: Coin[];
   pusher: Pusher;
-  /** 기울기 이벤트가 주는 x축 가속도 */
+  /** 기울기 이벤트가 주는 x축 가속도. 이벤트 진행 중 좌우로 부호가 바뀐다. */
   tiltAx: number;
   /** 진행 중인 융기 이벤트의 지점과 경과 시간. 렌더 연출에만 쓴다. */
   burst: { x: number; y: number; t: number } | null;
-  /** 진행 중인 투석 이벤트가 걷어간 구역과 경과 시간. 렌더 연출에만 쓴다. */
-  catapult: { x: number; y: number; t: number } | null;
   fallen: FallEvent[];
   elapsed: number;
 }
