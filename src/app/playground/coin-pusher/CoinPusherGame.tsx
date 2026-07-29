@@ -12,14 +12,13 @@ import { FIXED_DT, winnerOf } from "./physics";
 import { createGame, type Game } from "./setup";
 import { FALL_ANIM_SECONDS, NEUTRAL_INTERVAL, simulate, type FallingCoin } from "./loop";
 
-type Phase = "setup" | "playing" | "result";
+type Phase = "intro" | "setup" | "playing" | "result";
 
 const EVENT_LABEL: Record<EventType, string> = {
   shake: "판이 흔들린다!",
   tilt: "판이 기울어진다!",
   rush: "푸셔 가속!",
   backdraft: "역류! 판이 뒤로 밀린다",
-  gaterush: "출구가 빨라진다!",
   burst: "판이 솟구친다!",
 };
 
@@ -33,7 +32,7 @@ export default function CoinPusherGame() {
   /** 당첨 코인이 낙하선을 넘은 시각(초). 아직이면 null. */
   const wonAtRef = useRef<number | null>(null);
 
-  const [phase, setPhase] = useState<Phase>("setup");
+  const [phase, setPhase] = useState<Phase>("intro");
   const [raw, setRaw] = useState("");
   const [seed, setSeed] = useState(0);
   const [winner, setWinner] = useState<string | null>(null);
@@ -68,8 +67,10 @@ export default function CoinPusherGame() {
     const scheduler = schedulerRef.current;
     if (!game || !scheduler) return;
 
+    const wasScrambled = game.scrambled;
     const fired = simulate(game, scheduler, fallingRef.current, nextNeutralAtRef, dt);
-    if (fired) setBanner(EVENT_LABEL[fired]);
+    if (!wasScrambled && game.scrambled) setBanner("코인을 뒤섞는다!");
+    else if (fired) setBanner(EVENT_LABEL[fired]);
     else if (scheduler.active === null) setBanner(null);
 
     // 흔들림과 융기가 화면을 흔든다
@@ -126,15 +127,44 @@ export default function CoinPusherGame() {
 
   const showOverlay = phase === "result" && winner !== null;
 
-  if (phase === "setup") {
+  if (phase === "intro") {
     return (
-      <div className="animate-fade-in-up px-4 py-10">
-        <SetupPanel initialRaw={raw} onStart={begin} />
-        <p className="mt-8 text-center text-xs text-text-muted">
+      <div className="animate-fade-in-up mx-auto w-full max-w-lg px-4 py-16 text-center">
+        <span className="mb-4 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-accent">
+          Coin Pusher
+        </span>
+        <h1 className="font-display text-2xl font-bold leading-snug tracking-tight md:text-3xl">
+          코인 밀기 추첨기
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+          참가자 이름을 넣으면 코인이 미는 판 위로 우르르 쏟아집니다. 푸셔에 밀려 가장 먼저 앞으로
+          떨어진 코인의 주인이 당첨.
+        </p>
+        <button
+          type="button"
+          onClick={() => setPhase("setup")}
+          className="mt-10 w-full rounded-2xl bg-accent px-6 py-4 font-display text-sm font-semibold text-white shadow-ambient transition hover:shadow-ambient-hover active:scale-[0.98]"
+        >
+          시작하기
+        </button>
+        <p className="mt-8 text-xs text-text-muted">
           <Link href="/playground" className="underline-offset-4 hover:underline">
             ← 플레이그라운드로
           </Link>
         </p>
+      </div>
+    );
+  }
+
+  // 참가자 입력도 뷰포트를 통째로 쓴다. 이름을 많이 붙여넣을수록 화면이 넓은 쪽이 낫다.
+  if (phase === "setup") {
+    return (
+      <div className="fixed inset-0 z-40 overflow-y-auto bg-bg">
+        <div className="flex min-h-full items-center justify-center px-[max(1rem,env(safe-area-inset-left))] py-[max(1.5rem,env(safe-area-inset-top))]">
+          <div className="animate-fade-in-up w-full max-w-lg">
+            <SetupPanel initialRaw={raw} onStart={begin} onBack={() => setPhase("intro")} />
+          </div>
+        </div>
       </div>
     );
   }

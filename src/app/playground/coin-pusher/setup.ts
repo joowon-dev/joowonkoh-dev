@@ -5,7 +5,6 @@ import {
   PUSHER_BACK_Y,
   centerX,
   createCoin,
-  createGate,
   createPusher,
   halfWidthAt,
   type Coin,
@@ -23,7 +22,7 @@ const PLATE_MIN_Y = PUSHER_BACK_Y + 4;
 const PLATE_MAX_Y = PUSHER_BACK_Y + 70;
 
 /** 처음 깔리는 중립 코인이 전부 쏟아지는 데 걸리는 시간(초) */
-export const INITIAL_POUR_SECONDS = 7;
+export const INITIAL_POUR_SECONDS = 3;
 /** 중립 코인 투하가 끝나고 참가자 코인이 한꺼번에 쏟아지기까지의 뜸 (초) */
 export const PLAYER_DROP_DELAY = 0.5;
 
@@ -40,6 +39,8 @@ export interface Game {
   seed: number;
   rng: Rng;
   nextCoinId: number;
+  /** 참가자 코인이 다 들어온 뒤 한 번만 도는 무작위 섞기를 이미 했는지 */
+  scrambled: boolean;
 }
 
 /** 줄바꿈 또는 쉼표로 구분된 이름을 정리한다. 공백 제거, 빈 값 제외, 중복 제거. */
@@ -117,7 +118,6 @@ export function createGame(names: string[], seed: number): Game {
     board: { ...board },
     coins: [],
     pusher: createPusher(),
-    gate: createGate(board),
     tiltAx: 0,
     tiltAy: 0,
     burst: null,
@@ -172,7 +172,7 @@ export function createGame(names: string[], seed: number): Game {
   });
 
   queue.sort((a, b) => a.at - b.at);
-  return { world, names, queue, seed, rng, nextCoinId };
+  return { world, names, queue, seed, rng, nextCoinId, scrambled: false };
 }
 
 /** 투입 시각이 된 큐 코인을 월드로 옮기고, 옮긴 코인들을 반환한다. */
@@ -197,6 +197,21 @@ export function spawnNeutral(game: Game, count: number): void {
   for (let i = 0; i < count; i++) {
     game.world.coins.push(makeNeutral(game.rng, game.nextCoinId++, game.world.elapsed));
   }
+}
+
+/**
+ * 판 위 모든 코인을 한 번 무작위로 흔들어 섞는다. 참가자 코인이 다 들어온 직후 딱 한 번
+ * 돈다. 코인이 줄 맞춰 내려앉은 상태 그대로 밀려가지 않게 하는 것이 목적이다.
+ * 세기 분포는 모든 코인이 같으므로 특정 참가자가 유리해지지 않는다.
+ */
+export function scrambleCoins(game: Game): void {
+  for (const coin of game.world.coins) {
+    const angle = game.rng() * Math.PI * 2;
+    const power = randRange(game.rng, 90, 240);
+    coin.vx += Math.cos(angle) * power;
+    coin.vy += Math.sin(angle) * power;
+  }
+  game.scrambled = true;
 }
 
 /** 참가자 코인이 전부 투입됐는지 */
