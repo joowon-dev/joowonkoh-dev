@@ -1,4 +1,4 @@
-import { randRange, pick, type Rng } from "./random";
+import { randRange, type Rng } from "./random";
 import { COIN_RADIUS, NEUTRAL_RADII, centerX, halfWidthAt, type World } from "./physics";
 
 /** 이 시각(초)부터 막판 스퍼트에 들어간다 */
@@ -184,9 +184,26 @@ export function applyFinalSpurt(world: World, elapsed: number): void {
   world.pusher.strokeScale = 1 + Math.min(0.8, (over / 15) * 0.8);
 }
 
-/** 중립 코인의 반지름을 NEUTRAL_RADII 중에서 뽑는다. 크기별 확률은 같다. */
+/**
+ * 크기별 추첨 가중치. 기준 크기(14)가 가장 흔하고, 거기서 멀어질수록 급격히 드물어진다.
+ * `1 / (1 + (d/4)²)` 꼴이라 d=0에서 1, d=3에서 0.64, d=11에서 0.12로 떨어진다.
+ * 결과 분포는 14가 34%, 11·17이 각각 22%, 8이 10%, 21이 8%, 25가 4%다.
+ */
+const RADIUS_FALLOFF = 4;
+const NEUTRAL_RADIUS_WEIGHTS: readonly number[] = NEUTRAL_RADII.map(
+  (r) => 1 / (1 + ((r - COIN_RADIUS) / RADIUS_FALLOFF) ** 2),
+);
+const NEUTRAL_WEIGHT_TOTAL = NEUTRAL_RADIUS_WEIGHTS.reduce((a, b) => a + b, 0);
+
+/** 중립 코인의 반지름을 뽑는다. 기준 크기에서 멀수록 덜 나온다. */
 export function rollNeutralRadius(rng: Rng): number {
-  return pick(rng, NEUTRAL_RADII);
+  let r = rng() * NEUTRAL_WEIGHT_TOTAL;
+  for (let i = 0; i < NEUTRAL_RADII.length; i++) {
+    r -= NEUTRAL_RADIUS_WEIGHTS[i];
+    // 부동소수 오차로 마지막까지 안 걸리는 경우를 대비해 아래에서 마지막 값을 돌려준다
+    if (r < 0) return NEUTRAL_RADII[i];
+  }
+  return NEUTRAL_RADII[NEUTRAL_RADII.length - 1];
 }
 
 /** 질량은 넓이(반지름²)에 비례한다. 참가자 코인 크기가 기준이라 그 질량이 1. */

@@ -224,10 +224,45 @@ describe("isFinalSpurt / applyFinalSpurt", () => {
 });
 
 describe("rollNeutralRadius", () => {
-  it("정해진 크기가 모두 나온다", () => {
+  function counts(n: number) {
     const rng = createRng(3);
-    const radii = new Set(Array.from({ length: 300 }, () => rollNeutralRadius(rng)));
-    expect(radii).toEqual(new Set(NEUTRAL_RADII));
+    const map = new Map<number, number>(NEUTRAL_RADII.map((r) => [r, 0]));
+    for (let i = 0; i < n; i++) {
+      const r = rollNeutralRadius(rng);
+      map.set(r, (map.get(r) ?? 0) + 1);
+    }
+    return map;
+  }
+
+  it("정해진 크기가 모두 나온다", () => {
+    const map = counts(4000);
+    for (const r of NEUTRAL_RADII) expect(map.get(r)).toBeGreaterThan(0);
+  });
+
+  it("정해진 크기 밖의 값은 안 나온다", () => {
+    const rng = createRng(9);
+    const radii = new Set(Array.from({ length: 500 }, () => rollNeutralRadius(rng)));
+    for (const r of radii) expect(NEUTRAL_RADII).toContain(r);
+  });
+
+  it("기준 크기가 가장 많이 나온다", () => {
+    const map = counts(4000);
+    const top = [...map.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    expect(top).toBe(COIN_RADIUS);
+  });
+
+  it("기준 크기에서 멀어질수록 덜 나온다", () => {
+    const map = counts(4000);
+    // 기준 크기 양옆으로 각각, 멀어지는 순서대로 빈도가 단조 감소해야 한다
+    const smaller = NEUTRAL_RADII.filter((r) => r < COIN_RADIUS).sort((a, b) => b - a);
+    const bigger = NEUTRAL_RADII.filter((r) => r > COIN_RADIUS).sort((a, b) => a - b);
+    for (const side of [smaller, bigger]) {
+      let prev = map.get(COIN_RADIUS)!;
+      for (const r of side) {
+        expect(map.get(r)!).toBeLessThan(prev);
+        prev = map.get(r)!;
+      }
+    }
   });
 });
 
