@@ -7,13 +7,9 @@ import {
   applyScheduler,
   isFinalSpurt,
   applyFinalSpurt,
-  rollNeutralKind,
   rollNeutralRadius,
   radiusMass,
-  kindRestitution,
-  rollFuse,
-  tickCoinEvents,
-  BOMB_RADIUS,
+  COIN_RESTITUTION,
 } from "./events";
 import {
   COIN_RADIUS,
@@ -192,48 +188,15 @@ describe("isFinalSpurt / applyFinalSpurt", () => {
   });
 });
 
-describe("rollNeutralKind", () => {
-  it("참가자 코인 종류는 절대 나오지 않는다", () => {
-    const rng = createRng(11);
-    for (let i = 0; i < 500; i++) {
-      expect(rollNeutralKind(rng)).not.toBe("player");
-    }
-  });
-
-  it("세 종류가 모두 나온다", () => {
-    const rng = createRng(11);
-    const kinds = new Set(Array.from({ length: 500 }, () => rollNeutralKind(rng)));
-    expect(kinds).toEqual(new Set(["neutral", "bomb", "warp"]));
-  });
-
-  it("대부분은 평범한 중립 코인이다", () => {
-    const rng = createRng(11);
-    const rolls = Array.from({ length: 1000 }, () => rollNeutralKind(rng));
-    const plain = rolls.filter((k) => k === "neutral").length;
-    expect(plain).toBeGreaterThan(700);
-  });
-});
-
 describe("rollNeutralRadius", () => {
-  it("평범한 코인은 세 가지 크기가 모두 나온다", () => {
+  it("세 가지 크기가 모두 나온다", () => {
     const rng = createRng(3);
-    const radii = new Set(
-      Array.from({ length: 300 }, () => rollNeutralRadius("neutral", rng)),
-    );
+    const radii = new Set(Array.from({ length: 300 }, () => rollNeutralRadius(rng)));
     expect(radii).toEqual(new Set(NEUTRAL_RADII));
   });
-
-  it("이벤트 코인은 항상 가장 큰 크기다", () => {
-    const rng = createRng(3);
-    for (const kind of ["bomb", "warp"] as const) {
-      for (let i = 0; i < 50; i++) {
-        expect(rollNeutralRadius(kind, rng)).toBe(NEUTRAL_RADII[2]);
-      }
-    }
-  });
 });
 
-describe("radiusMass / kindRestitution", () => {
+describe("radiusMass", () => {
   it("큰 코인이 더 무겁다", () => {
     expect(radiusMass(NEUTRAL_RADII[2])).toBeGreaterThan(radiusMass(NEUTRAL_RADII[1]));
     expect(radiusMass(NEUTRAL_RADII[1])).toBeGreaterThan(radiusMass(NEUTRAL_RADII[0]));
@@ -243,79 +206,8 @@ describe("radiusMass / kindRestitution", () => {
     expect(radiusMass(COIN_RADIUS)).toBeCloseTo(1, 5);
   });
 
-  it("순간이동 코인이 더 잘 튄다", () => {
-    expect(kindRestitution("warp")).toBeGreaterThan(kindRestitution("neutral"));
-    expect(kindRestitution("warp")).toBeGreaterThan(kindRestitution("player"));
+  it("반발계수는 코인 종류와 무관하게 하나다", () => {
+    expect(COIN_RESTITUTION).toBeGreaterThan(0);
   });
 });
 
-describe("rollFuse", () => {
-  it("이벤트 코인만 도화선을 갖는다", () => {
-    const rng = createRng(5);
-    expect(rollFuse("neutral", rng)).toBeNull();
-    expect(rollFuse("player", rng)).toBeNull();
-    expect(rollFuse("bomb", rng)).toBeGreaterThan(0);
-    expect(rollFuse("warp", rng)).toBeGreaterThan(0);
-  });
-});
-
-describe("tickCoinEvents", () => {
-  function worldWith(coins: Parameters<typeof createCoin>[0][]): World {
-    const w = makeWorld();
-    w.coins = coins.map(createCoin);
-    return w;
-  }
-
-  it("도화선이 남아 있으면 아무 일도 없다", () => {
-    const w = worldWith([{ id: 1, x: 200, y: 100, kind: "bomb", fuse: 5 }]);
-    expect(tickCoinEvents(w, createRng(1), FIXED_DT)).toEqual([]);
-    expect(w.coins).toHaveLength(1);
-    expect(w.coins[0].fuse).toBeLessThan(5);
-  });
-
-  it("도화선이 다하면 코인이 사라지고 연출이 생긴다", () => {
-    const w = worldWith([{ id: 1, x: 200, y: 100, kind: "bomb", fuse: 0.001 }]);
-    const fx = tickCoinEvents(w, createRng(1), FIXED_DT);
-    expect(fx).toHaveLength(1);
-    expect(fx[0].type).toBe("bomb");
-    expect(w.coins).toHaveLength(0);
-  });
-
-  it("폭탄은 주변 코인을 바깥으로 날린다", () => {
-    const w = worldWith([
-      { id: 1, x: 200, y: 100, kind: "bomb", fuse: 0.001 },
-      { id: 2, x: 240, y: 100 },
-    ]);
-    tickCoinEvents(w, createRng(1), FIXED_DT);
-    expect(w.coins[0].vx).toBeGreaterThan(0); // 폭탄 반대쪽으로 밀린다
-  });
-
-  it("폭발 반경 밖의 코인은 건드리지 않는다", () => {
-    const w = worldWith([
-      { id: 1, x: 200, y: 100, kind: "bomb", fuse: 0.001 },
-      { id: 2, x: 200, y: 100 + BOMB_RADIUS + 20 },
-    ]);
-    tickCoinEvents(w, createRng(1), FIXED_DT);
-    expect(w.coins[0].vx).toBe(0);
-    expect(w.coins[0].vy).toBe(0);
-  });
-
-  it("순간이동은 주변 코인을 판 안 다른 곳으로 보낸다", () => {
-    const w = worldWith([
-      { id: 1, x: 200, y: 100, kind: "warp", fuse: 0.001 },
-      { id: 2, x: 210, y: 100 },
-    ]);
-    const before = { x: w.coins[1].x, y: w.coins[1].y };
-    tickCoinEvents(w, createRng(9), FIXED_DT);
-    const moved = w.coins[0];
-    expect([moved.x, moved.y]).not.toEqual([before.x, before.y]);
-    expect(moved.y).toBeLessThan(w.board.fallLine);
-    expect(moved.vx).toBe(0);
-  });
-
-  it("이벤트 코인이 없으면 도화선을 진행시키지 않는다", () => {
-    const w = worldWith([{ id: 1, x: 200, y: 100 }]);
-    expect(tickCoinEvents(w, createRng(1), FIXED_DT)).toEqual([]);
-    expect(w.coins[0].fuse).toBeNull();
-  });
-});

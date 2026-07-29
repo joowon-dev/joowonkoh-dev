@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useImperativeHandle, useRef, type RefObject } from "react";
 import { computeCamera, drawScene, readPalette, type Palette } from "./render";
-import type { Fx } from "./loop";
+import type { FallingCoin } from "./loop";
 import type { Game } from "./setup";
 
 export interface StageHandle {
@@ -12,14 +12,14 @@ export interface StageHandle {
 
 interface StageProps {
   gameRef: RefObject<Game | null>;
-  fxRef: RefObject<Fx>;
+  fallingRef: RefObject<FallingCoin[]>;
   /** 진행 중인 흔들림 세기(화면 픽셀). 0이면 흔들지 않는다. */
   shakeRef: RefObject<number>;
   handleRef: RefObject<StageHandle | null>;
   className?: string;
 }
 
-export default function Stage({ gameRef, fxRef, shakeRef, handleRef, className }: StageProps) {
+export default function Stage({ gameRef, fallingRef, shakeRef, handleRef, className }: StageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const paletteRef = useRef<Palette | null>(null);
 
@@ -45,8 +45,8 @@ export default function Stage({ gameRef, fxRef, shakeRef, handleRef, className }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     const cam = computeCamera({ w, h }, game.world.board);
-    drawScene(ctx, game, cam, paletteRef.current, fxRef.current, shakeRef.current);
-  }, [gameRef, fxRef, shakeRef]);
+    drawScene(ctx, game, cam, paletteRef.current, fallingRef.current, shakeRef.current);
+  }, [gameRef, fallingRef, shakeRef]);
 
   useImperativeHandle(handleRef, () => ({ draw }), [draw]);
 

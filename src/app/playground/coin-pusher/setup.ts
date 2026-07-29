@@ -1,11 +1,5 @@
 import { createRng, randRange, type Rng } from "./random";
-import {
-  radiusMass,
-  kindRestitution,
-  rollFuse,
-  rollNeutralKind,
-  rollNeutralRadius,
-} from "./events";
+import { COIN_RESTITUTION, radiusMass, rollNeutralRadius } from "./events";
 import {
   COIN_RADIUS,
   PUSHER_BACK_Y,
@@ -69,19 +63,16 @@ function plateSpot(rng: Rng, radius: number): { x: number; y: number } {
   return { x: centerX(board) + randRange(rng, -limit, limit), y };
 }
 
-/** 미는 판 위로 쏟아지는 중립 코인 하나를 만든다. */
+/** 미는 판 위로 쏟아지는 중립 코인 하나를 만든다. 크기 3종 중 하나를 무작위로 받는다. */
 function makeNeutral(rng: Rng, id: number, bornAt: number): Coin {
-  const kind = rollNeutralKind(rng);
-  const radius = rollNeutralRadius(kind, rng);
+  const radius = rollNeutralRadius(rng);
   const spot = plateSpot(rng, radius);
   return createCoin({
     id,
     ...spot,
-    kind,
     radius,
     mass: radiusMass(radius),
-    restitution: kindRestitution(kind),
-    fuse: rollFuse(kind, rng),
+    restitution: COIN_RESTITUTION,
     vx: randRange(rng, -30, 30),
     vy: randRange(rng, 10, 70),
     bornAt,
@@ -167,7 +158,7 @@ export function createGame(names: string[], seed: number): Game {
         ...spots[i],
         radius: COIN_RADIUS,
         mass: radiusMass(COIN_RADIUS),
-        restitution: kindRestitution("player"),
+        restitution: COIN_RESTITUTION,
         vx: randRange(rng, -30, 30),
         vy: randRange(rng, 10, 70),
       }),

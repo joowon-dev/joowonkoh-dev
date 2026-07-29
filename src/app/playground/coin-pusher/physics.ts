@@ -12,7 +12,7 @@ export const PUSHER_STROKE = 130; // 푸셔가 앞으로 나오는 거리
 export const PUSHER_SPEED = 78; // 푸셔 이동 속도 (unit/s)
 export const WALL_RESTITUTION = 0.4;
 
-export type CoinKind = "player" | "neutral" | "bomb" | "warp";
+export type CoinKind = "player" | "neutral";
 
 export interface Coin {
   id: number;
@@ -30,8 +30,6 @@ export interface Coin {
   bornAt: number;
   /** 렌더 전용 회전각(rad). 물리에는 영향을 주지 않는다. */
   spin: number;
-  /** bomb/warp 코인이 터지기까지 남은 시간(초). 그 외 코인은 null. */
-  fuse: number | null;
 }
 
 export interface Board {
@@ -78,7 +76,6 @@ export function createCoin(init: CoinInit): Coin {
     restitution: 0.15,
     bornAt: 0,
     spin: 0,
-    fuse: null,
     ...init,
   };
 }

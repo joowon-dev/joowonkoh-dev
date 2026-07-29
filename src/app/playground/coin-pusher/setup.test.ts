@@ -19,7 +19,7 @@ import {
 } from "./physics";
 import { createScheduler } from "./events";
 import { createRng } from "./random";
-import { NEUTRAL_INTERVAL, createFx, simulate } from "./loop";
+import { NEUTRAL_INTERVAL, simulate, type FallingCoin } from "./loop";
 
 describe("parseNames", () => {
   it("줄바꿈으로 나눈다", () => {
@@ -115,12 +115,9 @@ describe("createGame", () => {
     expect(new Set(playerCoins(g).map((q) => q.coin.restitution)).size).toBe(1);
   });
 
-  it("참가자 코인에는 특수 종류도 도화선도 붙지 않는다", () => {
+  it("참가자 코인은 전부 player 종류다", () => {
     const g = createGame(names, 1);
-    for (const { coin } of playerCoins(g)) {
-      expect(coin.kind).toBe("player");
-      expect(coin.fuse).toBeNull();
-    }
+    expect(playerCoins(g).every((q) => q.coin.kind === "player")).toBe(true);
   });
 
   it("중립 코인은 세 가지 크기로 나온다", () => {
@@ -244,10 +241,10 @@ describe("통합", () => {
   function runUntilWinner(names: string[], seed: number, maxSeconds: number) {
     const g = createGame(names, seed);
     const scheduler = createScheduler(createRng(seed ^ 0x9e3779b9));
-    const fx = createFx();
+    const falling: FallingCoin[] = [];
     const nextNeutralAt = { current: NEUTRAL_INTERVAL };
     for (let i = 0; i < Math.round(maxSeconds / FIXED_DT); i++) {
-      simulate(g, scheduler, fx, nextNeutralAt, FIXED_DT);
+      simulate(g, scheduler, falling, nextNeutralAt, FIXED_DT);
       if (g.world.fallen.some((f) => f.coin.ownerIndex >= 0)) return g;
     }
     return g;

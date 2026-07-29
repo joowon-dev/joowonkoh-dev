@@ -7,8 +7,7 @@ import {
   type Coin,
 } from "./physics";
 import type { Game } from "./setup";
-import { BOMB_RADIUS, type CoinEffect } from "./events";
-import { EFFECT_SECONDS, FALL_ANIM_SECONDS, type FallingCoin, type Fx } from "./loop";
+import { FALL_ANIM_SECONDS, type FallingCoin } from "./loop";
 
 /** 화면상 y축을 이 비율로 압축해 비스듬한 시점을 만든다 */
 export const PERSPECTIVE_SCALE = 0.72;
@@ -72,10 +71,6 @@ export interface Palette {
   pusherFace: string;
   /** NEUTRAL_RADII와 같은 순서의 [윗면, 옆면] 색 3쌍 */
   coinBySize: ReadonlyArray<readonly [string, string]>;
-  bomb: string;
-  bombSide: string;
-  warp: string;
-  warpSide: string;
   player: string;
   playerSide: string;
   text: string;
@@ -104,10 +99,6 @@ export function readPalette(el: HTMLElement): Palette {
       ["#c6ccd7", "#98a1b0"],
       ["#a7b0c0", "#7c8697"],
     ],
-    bomb: "#ef5a52",
-    bombSide: "#b9302a",
-    warp: "#9b6bf2",
-    warpSide: "#6d40c0",
     player: accent,
     playerSide: accent,
     text,
@@ -122,8 +113,6 @@ function coinThickness(radius: number): number {
 
 function coinColors(coin: Coin, palette: Palette): readonly [string, string] {
   if (coin.kind === "player") return [palette.player, palette.playerSide];
-  if (coin.kind === "bomb") return [palette.bomb, palette.bombSide];
-  if (coin.kind === "warp") return [palette.warp, palette.warpSide];
   // 크기 3종 중 몇 번째인지로 색을 고른다. 목록에 없는 반지름이면 가운데 색.
   const size = NEUTRAL_RADII.indexOf(coin.radius as (typeof NEUTRAL_RADII)[number]);
   return palette.coinBySize[size < 0 ? 1 : size];
@@ -217,33 +206,6 @@ function drawCoin(
     ctx.textBaseline = "middle";
     const label = name.length > 4 ? `${name.slice(0, 3)}…` : name;
     ctx.fillText(label, sx, y);
-  } else if (coin.kind === "bomb" || coin.kind === "warp") {
-    // 도화선이 짧아질수록 빨리 깜박인다
-    const remain = coin.fuse ?? 0;
-    const blink = 0.55 + 0.45 * Math.sin(elapsed * (remain < 1.5 ? 26 : 9));
-    ctx.globalAlpha = alpha * blink;
-    ctx.fillStyle = "#ffffff";
-    if (coin.kind === "bomb") {
-      ctx.beginPath();
-      ctx.ellipse(sx, y, rx * 0.3, ry * 0.3, 0, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      // 순간이동 — 회전하는 두 점
-      for (const dir of [0, Math.PI]) {
-        const a = coin.spin * 2 + dir;
-        ctx.beginPath();
-        ctx.ellipse(
-          sx + Math.cos(a) * rx * 0.45,
-          y + Math.sin(a) * ry * 0.45,
-          rx * 0.17,
-          ry * 0.17,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      }
-    }
   } else {
     // 평범한 코인 — 회전이 보이도록 각인 하나를 돌린다
     ctx.globalAlpha = alpha * 0.5;
@@ -264,75 +226,12 @@ function drawCoin(
   ctx.restore();
 }
 
-function drawEffect(
-  ctx: CanvasRenderingContext2D,
-  fx: CoinEffect,
-  cam: Camera,
-  palette: Palette,
-): void {
-  const { sx, sy } = projectPoint(fx.x, fx.y, cam);
-  const p = Math.min(1, fx.t / EFFECT_SECONDS);
-  const alpha = 1 - p;
-
-  ctx.save();
-  if (fx.type === "bomb") {
-    // 퍼져 나가는 충격파 두 겹
-    for (const [delay, width] of [
-      [0, 6],
-      [0.25, 3],
-    ] as const) {
-      const q = Math.min(1, Math.max(0, (p - delay) / (1 - delay)));
-      if (q <= 0) continue;
-      const r = BOMB_RADIUS * q * cam.scale;
-      ctx.globalAlpha = alpha * (1 - q) * 0.9;
-      ctx.strokeStyle = palette.bomb;
-      ctx.lineWidth = width * cam.scale;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy, r, r * PERSPECTIVE_SCALE, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    // 중심 섬광
-    ctx.globalAlpha = alpha * 0.8;
-    ctx.fillStyle = "#ffd9a0";
-    const flash = 26 * (1 - p) * cam.scale;
-    ctx.beginPath();
-    ctx.ellipse(sx, sy, flash, flash * PERSPECTIVE_SCALE, 0, 0, Math.PI * 2);
-    ctx.fill();
-  } else {
-    // 순간이동 — 안쪽으로 빨려 들어가는 고리와 튀는 불꽃
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = palette.warp;
-    ctx.lineWidth = 3 * cam.scale;
-    const r = 70 * (1 - p) * cam.scale;
-    ctx.beginPath();
-    ctx.ellipse(sx, sy, r, r * PERSPECTIVE_SCALE, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = palette.warp;
-    for (let i = 0; i < 6; i++) {
-      const a = (i / 6) * Math.PI * 2 + p * 3;
-      const d = 60 * p * cam.scale;
-      ctx.beginPath();
-      ctx.ellipse(
-        sx + Math.cos(a) * d,
-        sy + Math.sin(a) * d * PERSPECTIVE_SCALE,
-        3 * cam.scale,
-        3 * cam.scale * PERSPECTIVE_SCALE,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-    }
-  }
-  ctx.restore();
-}
-
 export function drawScene(
   ctx: CanvasRenderingContext2D,
   game: Game,
   cam: Camera,
   palette: Palette,
-  fx: Fx,
+  falling: FallingCoin[],
   shake = 0,
 ): void {
   const { board, elapsed } = game.world;
@@ -406,14 +305,11 @@ export function drawScene(
   ctx.shadowBlur = 0;
 
   // 판 밖으로 떨어지는 코인 — 물리에서 분리된 순수 연출
-  for (const f of fx.falling) {
+  for (const f of falling) {
     const drop = 260 * f.t * f.t * cam.scale;
     const alpha = Math.max(0, 1 - f.t / FALL_ANIM_SECONDS);
     drawCoin(ctx, f.coin, cam, palette, game.names, elapsed, drop, alpha);
   }
-
-  // 폭발·순간이동 연출
-  for (const effect of fx.effects) drawEffect(ctx, effect, cam, palette);
 
   ctx.restore();
 }
