@@ -18,7 +18,7 @@ import {
   stepWorld,
 } from "./physics";
 import { createScheduler } from "./events";
-import { createRng } from "./random";
+import { createRng } from "../_shared/random";
 import { NEUTRAL_INTERVAL, simulate, type FallingCoin } from "./loop";
 
 describe("parseNames", () => {

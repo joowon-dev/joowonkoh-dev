@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createRng } from "./random";
+import { createRng } from "../_shared/random";
 import {
   FINAL_SPURT_AT,
   createScheduler,

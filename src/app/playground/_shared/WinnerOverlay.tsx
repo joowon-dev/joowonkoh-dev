@@ -9,12 +9,20 @@ const CONFETTI_COLORS = ["#f2c23e", "#5ec9a5", "#2563eb", "#ef6f6c", "#c9ced6"];
 
 interface WinnerOverlayProps {
   name: string;
+  /** 이름 아래 한 줄. 게임마다 당첨 방식이 달라 문구를 받는다. */
+  subtitle: string;
   seed: number;
   onRestart: () => void;
   onEdit: () => void;
 }
 
-export default function WinnerOverlay({ name, seed, onRestart, onEdit }: WinnerOverlayProps) {
+export default function WinnerOverlay({
+  name,
+  subtitle,
+  seed,
+  onRestart,
+  onEdit,
+}: WinnerOverlayProps) {
   const confetti = useMemo(() => {
     const rng = createRng(seed);
     return Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
@@ -68,7 +76,7 @@ export default function WinnerOverlay({ name, seed, onRestart, onEdit }: WinnerO
         <p className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight text-text-primary md:text-6xl">
           {name}
         </p>
-        <p className="mt-3 text-sm text-text-secondary">가장 먼저 떨어졌습니다 🪙</p>
+        <p className="mt-3 text-sm text-text-secondary">{subtitle}</p>
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button

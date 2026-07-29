@@ -1,4 +1,4 @@
-import { randRange, type Rng } from "./random";
+import { randRange, type Rng } from "../_shared/random";
 import { COIN_RADIUS, NEUTRAL_RADII, centerX, halfWidthAt, type World } from "./physics";
 
 /** 이 시각(초)부터 막판 스퍼트에 들어간다 */
