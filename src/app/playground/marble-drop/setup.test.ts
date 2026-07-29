@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MARBLE_RADIUS, WORLD_HEIGHT, WORLD_WIDTH } from "./physics";
 import {
+  BOMB_CHANCE,
   MAX_ACTIVE_MARBLES,
   MAX_PLAYERS,
   MIN_PLAYERS,
@@ -10,6 +11,7 @@ import {
   bucketWalls,
   createGame,
   layoutBuckets,
+  makeMarble,
   parseNames,
   spawnDue,
   targetCount,
@@ -160,6 +162,29 @@ describe("spawnDue", () => {
       expect(m.x).toBeGreaterThanOrEqual(MARBLE_RADIUS);
       expect(m.x).toBeLessThanOrEqual(WORLD_WIDTH - MARBLE_RADIUS);
     }
+  });
+
+  it("폭탄이 가끔 섞이지만 대부분은 보통 구슬이다", () => {
+    const game = createGame(names(10), 7);
+    game.world.elapsed = 400;
+    // 상한 때문에 실제 투입은 제한되므로 makeMarble을 직접 여러 번 부른다
+    const kinds = Array.from({ length: 4000 }, () => makeMarble(game).kind);
+    const bombs = kinds.filter((k) => k === "bomb").length;
+    expect(bombs).toBeGreaterThan(0);
+    expect(bombs / kinds.length).toBeLessThan(BOMB_CHANCE * 2);
+    expect(bombs / kinds.length).toBeGreaterThan(BOMB_CHANCE / 2);
+  });
+
+  it("폭탄도 보통 구슬과 같은 자리에서 떨어진다 — 특정 양동이를 노리지 않는다", () => {
+    const game = createGame(names(10), 11);
+    const xs = { normal: [] as number[], bomb: [] as number[] };
+    for (let i = 0; i < 6000; i++) {
+      const m = makeMarble(game);
+      xs[m.kind].push(m.x);
+    }
+    const mean = (a: number[]) => a.reduce((s, v) => s + v, 0) / a.length;
+    // 두 분포의 평균이 판 가운데 근처에서 만난다
+    expect(Math.abs(mean(xs.bomb) - mean(xs.normal))).toBeLessThan(6);
   });
 
   it("상한에 닿으면 더 넣지 않지만 시계는 계속 간다", () => {

@@ -1,5 +1,5 @@
 import { allCircles, allSegments } from "./blocks";
-import { leadingBucket, stepWorld, winnerBucket, type Bucket } from "./physics";
+import { BOMB_PENALTY, leadingBucket, stepWorld, winnerBucket, type Bucket } from "./physics";
 import { spawnDue, type Game } from "./setup";
 
 /**
@@ -21,19 +21,31 @@ export interface Outcome {
 /**
  * 한 스텝 진행. React 상태를 건드리지 않으므로 rAF 루프와 테스트가 같은 코드를 쓴다.
  */
-export function simulate(game: Game, dt: number): void {
+export function simulate(game: Game, dt: number): string | null {
   spawnDue(game);
 
   // 블록 도형은 스텝이 끝난 시각 기준으로 만든다. 구슬이 움직인 뒤의 위치와 맞물려야
   // 회전 팔이 구슬을 스치고 지나가는 일이 없다.
   const t = game.world.elapsed + dt;
+  const before = game.world.captures.length;
   stepWorld(game.world, dt, allSegments(game.blocks, t), allCircles(game.blocks));
+
+  // 이번 스텝에 터진 폭탄이 있으면 누구를 때렸는지 알린다
+  let bombed: string | null = null;
+  for (let i = before; i < game.world.captures.length; i++) {
+    const c = game.world.captures[i];
+    if (c.kind !== "bomb") continue;
+    const bucket = game.world.buckets[c.bucketIndex];
+    bombed = `💣 ${game.names[bucket.ownerIndex] ?? ""} −${BOMB_PENALTY}`;
+  }
 
   // 캡처 연출 기록이 무한히 쌓이지 않게 오래된 것을 버린다
   const cutoff = game.world.elapsed - CAPTURE_FLASH_SECONDS;
   if (game.world.captures.length > 0 && game.world.captures[0].at < cutoff) {
     game.world.captures = game.world.captures.filter((c) => c.at >= cutoff);
   }
+
+  return bombed;
 }
 
 /** 판이 끝났으면 결과를, 아직이면 null. */

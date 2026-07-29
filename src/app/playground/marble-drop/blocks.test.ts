@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "../_shared/random";
+import { blockZoneBottom, layoutBuckets, MAX_PLAYERS, targetCount } from "./setup";
 import {
   MAX_BLOCK_EXTENT,
+  MAX_BLOCK_HALF_HEIGHT,
   ROW_COUNT,
   ZONE_TOP,
   allCircles,
@@ -14,9 +16,9 @@ import {
   type Block,
   type RotorBlock,
 } from "./blocks";
-import { WORLD_WIDTH } from "./physics";
+import { FRICTION_ANGLE, WORLD_WIDTH } from "./physics";
 
-const ZONE_BOTTOM = 140;
+const ZONE_BOTTOM = 130;
 
 function spinner(): RotorBlock {
   return { kind: "spinner", x: 50, y: 50, arms: 2, length: 10, half: 1, omega: 2, phase: 0 };
@@ -48,6 +50,7 @@ describe("blockSegments", () => {
       length: 12,
       half: 1,
       halfSpan: 5,
+      tilt: 0,
       omega: 1,
       phase: 0,
     };
@@ -59,6 +62,33 @@ describe("blockSegments", () => {
     // 끝점에서는 속도가 0, 중심에서는 최대
     expect(Math.abs(at1.vx)).toBeLessThan(Math.abs(at0.vx));
     expect(at0.spin).toBeNull();
+  });
+
+  it("왕복 판은 마찰각보다 가파르게 기운다 — 그래야 구슬이 얹히지 않고 미끄러진다", () => {
+    for (let seed = 0; seed < 300; seed++) {
+      for (const block of layoutBlocks(createRng(seed), ZONE_BOTTOM)) {
+        if (block.kind !== "slider") continue;
+        expect(Math.abs(block.tilt)).toBeGreaterThan(FRICTION_ANGLE);
+        const s = blockSegments(block, 0)[0];
+        expect(Math.abs(s.y2 - s.y1)).toBeGreaterThan(0.5);
+      }
+    }
+  });
+
+  it("쐐기와 벽 유도판도 마찰각보다 가파르다", () => {
+    const steepEnough = (s: { x1: number; y1: number; x2: number; y2: number }) =>
+      Math.abs(Math.atan2(s.y2 - s.y1, s.x2 - s.x1));
+    for (const s of wallDeflectors(ZONE_BOTTOM)) {
+      expect(steepEnough(s)).toBeGreaterThan(FRICTION_ANGLE);
+    }
+    for (let seed = 0; seed < 100; seed++) {
+      for (const block of layoutBlocks(createRng(seed), ZONE_BOTTOM)) {
+        if (block.kind !== "wedge") continue;
+        for (const s of blockSegments(block, 0)) {
+          expect(steepEnough(s)).toBeGreaterThan(FRICTION_ANGLE);
+        }
+      }
+    }
   });
 
   it("쐐기는 두 선분이고 시간에 무관하다", () => {
@@ -129,6 +159,25 @@ describe("layoutBlocks", () => {
           expect(gap).toBeGreaterThan(0);
         }
       }
+    }
+  });
+
+  it("위아래 단이 서로 겹치지 않는다", () => {
+    // 가장 빡빡한 경우는 양동이가 제일 깊은 10명 판이다
+    const buckets = layoutBuckets(
+      Array.from({ length: MAX_PLAYERS }, (_, i) => i),
+      targetCount(MAX_PLAYERS),
+    );
+    const zoneBottom = blockZoneBottom(buckets);
+    const rowHeight = (zoneBottom - ZONE_TOP) / ROW_COUNT;
+    expect(rowHeight / 2).toBeGreaterThanOrEqual(MAX_BLOCK_HALF_HEIGHT);
+  });
+
+  it("빈 단 없이 촘촘하게 찬다", () => {
+    for (let seed = 0; seed < 100; seed++) {
+      const blocks = layoutBlocks(createRng(seed), ZONE_BOTTOM);
+      // 6단 × 레인 2~3개
+      expect(blocks.length).toBeGreaterThanOrEqual(ROW_COUNT * 2);
     }
   });
 

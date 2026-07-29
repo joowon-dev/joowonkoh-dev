@@ -5,6 +5,7 @@ import {
   WORLD_HEIGHT,
   WORLD_WIDTH,
   type Bucket,
+  type MarbleKind,
   type SolidSegment,
   type World,
 } from "./physics";
@@ -66,6 +67,7 @@ export interface Palette {
   frame: string;
   marble: string;
   marbleHi: string;
+  bomb: string;
   blockStatic: string;
   blockMoving: string;
   bumper: string;
@@ -87,6 +89,7 @@ export function readPalette(el: HTMLElement): Palette {
     frame: v("--color-border", "#d9dbe0"),
     marble: accent,
     marbleHi: "#ffffff",
+    bomb: "#1b1d21",
     blockStatic: v("--color-text-muted", "#8b8f98"),
     blockMoving: v("--color-text-secondary", "#5b606b"),
     bumper: "#ef6f6c",
@@ -160,18 +163,32 @@ function drawMarble(
   y: number,
   cam: Camera,
   palette: Palette,
-  alpha = 1,
+  kind: MarbleKind = "normal",
 ): void {
   const p = projectPoint(x, y, cam);
-  const r = MARBLE_RADIUS * cam.scale;
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = palette.marble;
+  const bomb = kind === "bomb";
+  // 폭탄은 조금 크게 그린다. 눈에 띄어야 긴장이 생긴다. 다만 물리 반지름은 보통 구슬과
+  // 같으므로 너무 키우면 블록을 스쳐 지나가는 것이 어색해 보인다.
+  const r = MARBLE_RADIUS * cam.scale * (bomb ? 1.25 : 1);
+
+  ctx.fillStyle = bomb ? palette.bomb : palette.marble;
   ctx.beginPath();
   ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
   ctx.fill();
+
+  if (bomb) {
+    // 붉은 테 — 파란 구슬 무리 속에서 한눈에 구분된다
+    ctx.strokeStyle = palette.bumper;
+    ctx.lineWidth = Math.max(1, r * 0.28);
+    ctx.beginPath();
+    ctx.arc(p.sx, p.sy, r * 1.2, 0, Math.PI * 2);
+    ctx.stroke();
+    return;
+  }
+
   // 왼쪽 위 하이라이트 — 구슬처럼 보이게 하는 최소한의 표현
   ctx.fillStyle = palette.marbleHi;
-  ctx.globalAlpha = alpha * 0.5;
+  ctx.globalAlpha = 0.5;
   ctx.beginPath();
   ctx.arc(p.sx - r * 0.32, p.sy - r * 0.32, r * 0.32, 0, Math.PI * 2);
   ctx.fill();
@@ -264,8 +281,13 @@ export function drawScene(
   // 이벤트 블록
   for (const block of game.blocks) drawBlock(ctx, block, world.elapsed, cam, palette);
 
-  // 날아다니는 구슬
-  for (const m of world.marbles) drawMarble(ctx, m.x, m.y, cam, palette);
+  // 날아다니는 구슬 — 폭탄을 나중에 그려 다른 구슬에 가리지 않게 한다
+  for (const m of world.marbles) {
+    if (m.kind === "normal") drawMarble(ctx, m.x, m.y, cam, palette);
+  }
+  for (const m of world.marbles) {
+    if (m.kind === "bomb") drawMarble(ctx, m.x, m.y, cam, palette, "bomb");
+  }
 
   // 양동이에 쌓인 구슬
   for (const b of world.buckets) {
@@ -281,11 +303,19 @@ export function drawScene(
     const age = (world.elapsed - c.at) / CAPTURE_FLASH_SECONDS;
     if (age < 0 || age > 1) continue;
     const p = projectPoint(c.x, c.y, cam);
-    ctx.globalAlpha = (1 - age) * 0.5;
-    ctx.strokeStyle = palette.accent;
-    ctx.lineWidth = 2;
+    const bomb = c.kind === "bomb";
+    ctx.globalAlpha = (1 - age) * (bomb ? 0.85 : 0.5);
+    ctx.strokeStyle = bomb ? palette.bumper : palette.accent;
+    ctx.lineWidth = bomb ? 4 : 2;
     ctx.beginPath();
-    ctx.arc(p.sx, p.sy, MARBLE_RADIUS * cam.scale * (1 + age * 2.5), 0, Math.PI * 2);
+    // 폭탄은 훨씬 크게 번진다 — 무슨 일이 일어났는지 놓치면 안 된다
+    ctx.arc(
+      p.sx,
+      p.sy,
+      MARBLE_RADIUS * cam.scale * (1 + age * (bomb ? 12 : 2.5)),
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
     ctx.globalAlpha = 1;
   }

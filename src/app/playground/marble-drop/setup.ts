@@ -28,8 +28,14 @@ export const MAX_PLAYERS = 10;
  * 고정 목표로 두면 2명 19초 / 10명 11초로 갈렸다. 아래 계수는 실측으로 맞춘 값이다.
  */
 export function targetCount(playerCount: number): number {
-  return Math.round(26 + playerCount * 2.5);
+  return Math.round(20 + playerCount * 3.6);
 }
+
+/**
+ * 투입되는 구슬이 폭탄일 확률. 인원과 무관하게 고정이므로 **양동이 하나가 판당 맞는
+ * 폭탄 수**는 인원이 몇이든 대략 한 번으로 일정하다.
+ */
+export const BOMB_CHANCE = 0.035;
 /** 초당 스폰 개수 = 참가자 수 × 이 값 */
 export const SPAWN_PER_PLAYER = 2;
 /** 동시에 떠 있을 수 있는 구슬 수의 상한. 닿으면 그 틱의 스폰을 거른다. */
@@ -159,11 +165,15 @@ export function createGame(names: string[], seed: number): Game {
   };
 }
 
-/** 화면 맨 위 가로 전 구간에서 균등한 위치로 구슬 하나를 만든다. */
+/**
+ * 화면 맨 위 가로 전 구간에서 균등한 위치로 구슬 하나를 만든다.
+ * 폭탄도 같은 자리에서 같은 방식으로 떨어진다 — 특정 양동이를 노리지 않는다.
+ */
 export function makeMarble(game: Game): Marble {
   const margin = MARBLE_RADIUS + 1;
   return createMarble({
     id: game.nextMarbleId++,
+    kind: game.rng() < BOMB_CHANCE ? "bomb" : "normal",
     x: randRange(game.rng, margin, WORLD_WIDTH - margin),
     y: -MARBLE_RADIUS * 2,
     vx: randRange(game.rng, -7, 7),

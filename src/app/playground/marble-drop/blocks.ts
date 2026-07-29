@@ -2,6 +2,7 @@ import { randRange, type Rng } from "../_shared/random";
 import {
   BUMPER_MIN_KICK,
   BUMPER_RESTITUTION,
+  FRICTION_ANGLE,
   WORLD_WIDTH,
   createSegment,
   type SolidCircle,
@@ -32,7 +33,11 @@ export interface BumperBlock {
   radius: number;
 }
 
-/** 수평으로 왕복하는 판 */
+/**
+ * 좌우로 왕복하는 판. **수평이 아니라 살짝 기울어져 있다** — 수평으로 두면 구슬이
+ * 판 위에 줄지어 얹힌 채 같이 왔다갔다 하면서 흐름이 끊긴다. 기울여 두면 실려가다가
+ * 미끄러져 내려간다.
+ */
 export interface SliderBlock {
   kind: "slider";
   x: number;
@@ -42,6 +47,8 @@ export interface SliderBlock {
   half: number;
   /** 중심에서 좌우로 움직이는 최대 거리 */
   halfSpan: number;
+  /** 기울기(rad). 부호가 내려가는 방향이다. */
+  tilt: number;
   omega: number;
   phase: number;
 }
@@ -100,12 +107,14 @@ export function blockSegments(block: Block, t: number): SolidSegment[] {
       const phase = block.phase + block.omega * t;
       const cx = block.x + Math.sin(phase) * block.halfSpan;
       const vx = Math.cos(phase) * block.halfSpan * block.omega;
+      const dx = (Math.cos(block.tilt) * block.length) / 2;
+      const dy = (Math.sin(block.tilt) * block.length) / 2;
       return [
         createSegment({
-          x1: cx - block.length / 2,
-          y1: block.y,
-          x2: cx + block.length / 2,
-          y2: block.y,
+          x1: cx - dx,
+          y1: block.y - dy,
+          x2: cx + dx,
+          y2: block.y + dy,
           half: block.half,
           vx,
         }),
@@ -157,9 +166,13 @@ export function allCircles(blocks: Block[]): SolidCircle[] {
 
 /* ------------------------------------------------------------------ 배치 */
 
-export const ROW_COUNT = 4;
+/**
+ * 블록 단 수. 4단일 때는 화면에 빈 공간이 너무 많았다. 단을 늘리려면 블록 치수도 같이
+ * 줄여야 한다 — 단 간격의 절반이 MAX_BLOCK_HALF_HEIGHT보다 작아지면 위아래 단이 겹친다.
+ */
+export const ROW_COUNT = 6;
 /** 블록 지대의 위쪽 경계. 이 위는 구슬이 속도를 얻는 구간이다. */
-export const ZONE_TOP = 26;
+export const ZONE_TOP = 18;
 
 /**
  * 종류별 가중치. 회전 바와 범퍼가 흐름을 가장 크게 바꿔서 조금 더 자주 나온다.
@@ -187,7 +200,9 @@ function rollKind(rng: Rng): BlockKind {
  * 종류별 최대 반폭(blockExtent)의 상한. 레인 간격(LANE_SPACING)에서 좌우 흔들림을 뺀
  * 값보다 작아야 옆 레인 블록과 겹치지 않는다. 치수를 키울 때 이 관계를 같이 확인해야 한다.
  */
-export const MAX_BLOCK_EXTENT = 12.5;
+export const MAX_BLOCK_EXTENT = 10.5;
+/** 블록이 위아래로 차지하는 최대 반높이. 단 간격의 절반보다 작아야 위아래 단이 겹치지 않는다. */
+export const MAX_BLOCK_HALF_HEIGHT = 9.1;
 
 function makeBlock(kind: BlockKind, x: number, y: number, rng: Rng): Block {
   const dir = rng() < 0.5 ? 1 : -1;
@@ -198,7 +213,7 @@ function makeBlock(kind: BlockKind, x: number, y: number, rng: Rng): Block {
         x,
         y,
         arms: 2,
-        length: 11,
+        length: 8,
         half: 1.1,
         omega: dir * randRange(rng, 2.2, 3.4),
         phase: rng() * Math.PI * 2,
@@ -209,21 +224,24 @@ function makeBlock(kind: BlockKind, x: number, y: number, rng: Rng): Block {
         x,
         y,
         arms: 6,
-        length: 9.5,
-        half: 0.9,
+        length: 7,
+        half: 0.85,
         omega: dir * randRange(rng, 0.7, 1.2),
         phase: rng() * Math.PI * 2,
       };
     case "bumper":
-      return { kind, x, y, radius: randRange(rng, 3.8, 4.8) };
+      return { kind, x, y, radius: randRange(rng, 3.2, 4.2) };
     case "slider":
       return {
         kind,
         x,
         y,
-        length: 13,
+        length: 11,
         half: 1,
-        halfSpan: 5,
+        halfSpan: 4,
+        // 반드시 마찰각보다 가팔라야 한다. 그렇지 않으면 수평일 때와 똑같이 구슬이
+        // 판 위에 얹힌 채 같이 왔다갔다 한다.
+        tilt: dir * randRange(rng, FRICTION_ANGLE * 1.5, FRICTION_ANGLE * 2.4),
         omega: dir * randRange(rng, 1.1, 1.8),
         phase: rng() * Math.PI * 2,
       };
@@ -232,8 +250,8 @@ function makeBlock(kind: BlockKind, x: number, y: number, rng: Rng): Block {
         kind,
         x,
         y,
-        halfSpan: randRange(rng, 9, 10.5),
-        height: randRange(rng, 6, 8),
+        halfSpan: randRange(rng, 7, 9),
+        height: randRange(rng, 4.5, 6),
         half: 1,
       };
   }
@@ -357,8 +375,8 @@ export function layoutBlocks(rng: Rng, zoneBottom: number): Block[] {
     const centers: readonly number[] = (usesWideLanes(row) ? LANE_X : LANE_X_ODD).map(
       (x) => x + laneOffset,
     );
-    // 세 레인짜리 단은 둘 또는 셋, 두 레인짜리 단은 항상 둘을 채운다
-    const keep = centers.length === 3 && rng() < 0.5 ? 2 : centers.length;
+    // 되도록 다 채운다. 가끔 한 자리만 비워 판마다 모양이 달라지게 한다.
+    const keep = centers.length === 3 && rng() < 0.25 ? 2 : centers.length;
     const lanes = shuffle(
       rng,
       centers.map((_, i) => i),

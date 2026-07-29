@@ -16,12 +16,19 @@ type Phase = "intro" | "setup" | "playing" | "result";
 const VICTORY_LINGER = 0.8;
 /** 그동안의 재생 속도. 마지막 구슬이 떨어지는 것을 보여준다. */
 const VICTORY_SPEED = 0.3;
+/** 폭탄 알림이 화면에 떠 있는 시간(초, 게임 시간 기준) */
+const BANNER_SECONDS = 1.4;
 
 export default function MarbleDropGame() {
   const gameRef = useRef<Game | null>(null);
   const stageRef = useRef<StageHandle | null>(null);
   /** 당첨이 확정된 시각(초). 아직이면 null. */
   const wonAtRef = useRef<number | null>(null);
+  /**
+   * 폭탄 알림. 스텝마다 setState를 부르면 폭탄이 연달아 터질 때 렌더가 몰아치므로
+   * ref에 담아 두고 프레임당 한 번만 상태로 옮긴다.
+   */
+  const bannerRef = useRef<{ text: string; until: number } | null>(null);
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [raw, setRaw] = useState("");
@@ -30,6 +37,7 @@ export default function MarbleDropGame() {
   const [forced, setForced] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [lead, setLead] = useState<{ name: string; count: number; capacity: number } | null>(null);
+  const [banner, setBanner] = useState<string | null>(null);
   const [speed, setSpeed] = useState(1);
 
   const begin = useCallback((names: string[], rawText: string) => {
@@ -37,6 +45,7 @@ export default function MarbleDropGame() {
     const nextSeed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
     gameRef.current = createGame(names, nextSeed);
     wonAtRef.current = null;
+    bannerRef.current = null;
 
     setRaw(rawText);
     setSeed(nextSeed);
@@ -44,6 +53,7 @@ export default function MarbleDropGame() {
     setForced(false);
     setElapsed(0);
     setLead(null);
+    setBanner(null);
     setSpeed(1);
     setPhase("playing");
   }, []);
@@ -52,7 +62,10 @@ export default function MarbleDropGame() {
     const game = gameRef.current;
     if (!game) return;
 
-    simulate(game, dt);
+    const bombed = simulate(game, dt);
+    if (bombed) {
+      bannerRef.current = { text: bombed, until: game.world.elapsed + BANNER_SECONDS };
+    }
 
     if (wonAtRef.current === null) {
       const outcome = outcomeOf(game);
@@ -71,6 +84,8 @@ export default function MarbleDropGame() {
     if (!game) return;
 
     setElapsed(game.world.elapsed);
+    const active = bannerRef.current;
+    setBanner(active && game.world.elapsed < active.until ? active.text : null);
     const top = leadingBucket(game.world);
     setLead(
       top
@@ -135,7 +150,7 @@ export default function MarbleDropGame() {
     <div className="fixed inset-0 z-40 overflow-hidden bg-bg">
       <Stage gameRef={gameRef} handleRef={stageRef} />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex items-center gap-3 rounded-full border border-border bg-card-bg/85 px-4 py-1.5 text-xs text-text-secondary shadow-ambient backdrop-blur">
           {lead && (
             <>
@@ -151,6 +166,18 @@ export default function MarbleDropGame() {
             </>
           )}
           <span className="tabular-nums">{elapsed.toFixed(1)}초</span>
+        </div>
+        <div className="flex h-7 items-center justify-center">
+          {banner && (
+            <span
+              key={banner}
+              role="status"
+              aria-live="polite"
+              className="animate-fade-in-up rounded-full bg-[#ef6f6c] px-3 py-1 text-[11px] font-semibold tabular-nums text-white shadow-ambient"
+            >
+              {banner}
+            </span>
+          )}
         </div>
       </div>
 

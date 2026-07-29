@@ -12,7 +12,7 @@ export const FIXED_DT = 1 / 120;
  * 구슬도 늘어난다. 초당 스폰을 줄여 판을 늘리는 대신 이쪽을 택했다 — 스폰을 줄이면
  * 쏟아지는 맛이 사라진다.
  */
-export const MARBLE_RADIUS = 1.2;
+export const MARBLE_RADIUS = 1.0;
 export const GRAVITY = 118;
 /** 공기 저항 계수(1/s). 없으면 구슬이 아래로 갈수록 계속 빨라져 블록을 뚫고 지나간다. */
 export const AIR_DRAG = 0.55;
@@ -20,7 +20,10 @@ export const AIR_DRAG = 0.55;
  * 속도 상한. 한 스텝(1/120초)에 구슬 반지름보다 많이 움직이면 얇은 블록을 그냥 통과한다.
  * MARBLE_RADIUS / FIXED_DT 보다 넉넉히 낮게 잡아 터널링을 막는다.
  */
-export const MAX_SPEED = 105;
+export const MAX_SPEED = 95;
+
+/** 폭탄 구슬이 들어간 양동이가 잃는 구슬 수 */
+export const BOMB_PENALTY = 6;
 
 export const MARBLE_RESTITUTION = 0.3;
 /**
@@ -34,8 +37,22 @@ export const BLOCK_RESTITUTION = 0.42;
 export const BUMPER_RESTITUTION = 1.25;
 /** 범퍼에 아주 느리게 닿아도 최소 이만큼은 튕겨나간다. 범퍼 위에 구슬이 얹히는 것을 막는다. */
 export const BUMPER_MIN_KICK = 34;
-/** 움직이는 표면이 접선 방향으로 구슬을 얼마나 끌고 가는지 (0~1) */
-export const SURFACE_GRIP = 0.3;
+/**
+ * 마찰 계수. 접선 임펄스는 **법선 임펄스의 이 배수까지만** 걸린다(쿨롱 마찰).
+ *
+ * 처음에는 접선 상대속도를 매 충돌마다 일정 비율로 깎았는데, 그건 법선력과 무관한
+ * 무한히 센 마찰이라 기울어진 블록 위에서 구슬이 미끄러지지 못하고 접착제에 붙은 것처럼
+ * 기어내려왔다. 한도를 법선력에 묶으면 경사에서는 중력이 마찰을 이겨 제대로 흘러내리고,
+ * 움직이는 표면은 여전히 구슬을 끌고 간다.
+ */
+export const FRICTION_COEFF = 0.18;
+
+/**
+ * 마찰각 — 이 각도보다 가파른 면에서는 중력이 마찰을 이겨 구슬이 미끄러진다.
+ * 기울어진 블록의 각도는 반드시 이 값보다 커야 한다. 처음에 판을 7~13도로 기울였더니
+ * 마찰각(0.22일 때 12.4도)보다 낮아서 절반은 여전히 붙어 있었다.
+ */
+export const FRICTION_ANGLE = Math.atan(FRICTION_COEFF);
 
 /**
  * 아래 넷은 코인 밀기에서 얻은 안정화 장치다. 겹침을 매 스텝 완전히 풀면 붙어 있는
@@ -53,8 +70,15 @@ export const SOLVER_ITERATIONS = 2;
 /** 이 시간이 지나도 양동이에 못 들어간 구슬은 회수한다. 어딘가에 낀 구슬이 쌓이는 것을 막는다. */
 export const MARBLE_MAX_AGE = 18;
 
+/**
+ * 구슬 종류. 물리는 완전히 같고 양동이에 들어갔을 때만 다르다 —
+ * 보통 구슬은 하나를 더하고, 폭탄은 `BOMB_PENALTY`만큼 덜어낸다.
+ */
+export type MarbleKind = "normal" | "bomb";
+
 export interface Marble {
   id: number;
+  kind: MarbleKind;
   x: number;
   y: number;
   vx: number;
@@ -69,11 +93,12 @@ export function createMarble(init: {
   id: number;
   x: number;
   y: number;
+  kind?: MarbleKind;
   vx?: number;
   vy?: number;
   bornAt?: number;
 }): Marble {
-  return { vx: 0, vy: 0, bornAt: 0, spin: 0, ...init };
+  return { kind: "normal", vx: 0, vy: 0, bornAt: 0, spin: 0, ...init };
 }
 
 /* ------------------------------------------------------------------ 충돌 도형 */
@@ -229,16 +254,19 @@ export function resolveSegment(m: Marble, s: SolidSegment): void {
   if (vn >= 0) return;
 
   const e = -vn < RESTING_SPEED ? 0 : s.restitution;
-  const j = -(1 + e) * vn;
-  m.vx += j * nx;
-  m.vy += j * ny;
+  const jn = -(1 + e) * vn;
+  m.vx += jn * nx;
+  m.vy += jn * ny;
 
-  // 접선 마찰 — 이게 있어야 회전판과 왕복 판이 구슬을 실어 나른다
+  // 접선 마찰 — 표면 속도를 향해 끌어당기되, 세기는 법선 임펄스에 비례하는 한도 안에서만.
+  // 이게 있어야 회전판과 왕복 판이 구슬을 실어 나르고, 한도가 있어야 경사에서 미끄러진다.
   const tx = -ny;
   const ty = nx;
   const vt = rvx * tx + rvy * ty;
-  m.vx -= vt * SURFACE_GRIP * tx;
-  m.vy -= vt * SURFACE_GRIP * ty;
+  const limit = FRICTION_COEFF * Math.abs(jn);
+  const jt = Math.max(-limit, Math.min(limit, -vt));
+  m.vx += jt * tx;
+  m.vy += jt * ty;
 }
 
 /** 구슬과 원 도형(범퍼)의 충돌. */
@@ -356,9 +384,10 @@ export interface Bucket {
   filledAt: number | null;
 }
 
-/** 이번 스텝에 양동이로 들어간 구슬. 렌더의 튀는 연출에만 쓴다. */
+/** 이번 스텝에 양동이로 들어간 구슬. 렌더 연출과 폭탄 알림에 쓴다. */
 export interface CaptureEvent {
   bucketIndex: number;
+  kind: MarbleKind;
   x: number;
   y: number;
   at: number;
@@ -386,13 +415,20 @@ export function collectIntoBuckets(world: World): void {
       const b = world.buckets[i];
       if (m.y < b.top + MARBLE_RADIUS) continue;
       if (m.x < b.x0 || m.x > b.x1) continue;
-      // 구슬은 물리에서 빼되 개수는 정원에서 멈춘다. 당첨이 확정된 뒤에도 슬로우모션
-      // 연출 동안 구슬이 계속 떨어지므로, 막지 않으면 화면에 "48/46"이 뜨고 쌓인 구슬이
-      // 양동이 위로 넘쳐 그려진다.
-      if (b.count < b.capacity) {
+
+      if (m.kind === "bomb") {
+        // 폭탄은 담긴 구슬을 덜어낸다. 어느 자리도 안심할 수 없게 만드는 장치다 —
+        // 앞서가는 양동이일수록 잃을 것이 많다.
+        b.count = Math.max(0, b.count - BOMB_PENALTY);
+        // 같은 스텝에 가득 찼다가 폭탄을 맞을 수 있다. 정원 아래로 내려가면 무효로 돌린다.
+        if (b.count < b.capacity) b.filledAt = null;
+        world.captures.push({ bucketIndex: i, kind: "bomb", x: m.x, y: m.y, at: world.elapsed });
+      } else if (b.count < b.capacity) {
+        // 개수는 정원에서 멈춘다. 당첨이 확정된 뒤에도 슬로우모션 연출 동안 구슬이 계속
+        // 떨어지므로, 막지 않으면 화면에 "48/46"이 뜨고 쌓인 구슬이 양동이 위로 넘친다.
         b.count++;
         if (b.count >= b.capacity && b.filledAt === null) b.filledAt = world.elapsed;
-        world.captures.push({ bucketIndex: i, x: m.x, y: m.y, at: world.elapsed });
+        world.captures.push({ bucketIndex: i, kind: "normal", x: m.x, y: m.y, at: world.elapsed });
       }
       captured = true;
       break;

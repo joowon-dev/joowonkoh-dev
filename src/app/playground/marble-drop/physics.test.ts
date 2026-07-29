@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  BOMB_PENALTY,
   BUMPER_MIN_KICK,
   BUMPER_RESTITUTION,
   GRAVITY,
@@ -300,6 +301,44 @@ describe("collectIntoBuckets", () => {
     w.marbles = [createMarble({ id: 1, x: 25, y: b.top + 5 })];
     collectIntoBuckets(w);
     expect(b.filledAt).toBe(4);
+  });
+
+  it("폭탄은 담긴 구슬을 덜어낸다", () => {
+    const b = bucket({ x0: 0, x1: 50, capacity: 20, count: 10 });
+    const w = world({
+      buckets: [b],
+      elapsed: 3,
+      marbles: [createMarble({ id: 0, kind: "bomb", x: 25, y: b.top + 5 })],
+    });
+    collectIntoBuckets(w);
+    expect(b.count).toBe(10 - BOMB_PENALTY);
+    expect(w.marbles).toHaveLength(0);
+    expect(w.captures[0].kind).toBe("bomb");
+  });
+
+  it("폭탄으로 개수가 0 아래로 내려가지 않는다", () => {
+    const b = bucket({ x0: 0, x1: 50, capacity: 20, count: 2 });
+    const w = world({
+      buckets: [b],
+      marbles: [createMarble({ id: 0, kind: "bomb", x: 25, y: b.top + 5 })],
+    });
+    collectIntoBuckets(w);
+    expect(b.count).toBe(0);
+  });
+
+  it("가득 찬 뒤 같은 스텝에 폭탄을 맞으면 당첨이 취소된다", () => {
+    const b = bucket({ x0: 0, x1: 50, capacity: 10, count: 9 });
+    const w = world({
+      buckets: [b],
+      elapsed: 5,
+      marbles: [
+        createMarble({ id: 0, x: 25, y: b.top + 5 }),
+        createMarble({ id: 1, kind: "bomb", x: 25, y: b.top + 5 }),
+      ],
+    });
+    collectIntoBuckets(w);
+    expect(b.count).toBe(10 - BOMB_PENALTY);
+    expect(b.filledAt).toBeNull();
   });
 
   it("정원을 넘겨 세지 않는다 — 넘치면 화면에 48/46이 뜬다", () => {
