@@ -10,6 +10,8 @@ import {
   createCoin,
   createPusher,
   resolvePair,
+  PENETRATION_SLOP,
+  RESTING_SPEED,
   clampToWalls,
   stepPusher,
   applyPusher,
@@ -42,11 +44,39 @@ describe("createCoin", () => {
 });
 
 describe("resolvePair", () => {
-  it("겹친 코인을 반지름 두 배까지 밀어낸다", () => {
+  it("겹친 코인을 밀어내되 한 번에 다 밀지는 않는다", () => {
     const a = createCoin({ id: 1, x: 100, y: 100 });
     const b = createCoin({ id: 2, x: 110, y: 100 });
     resolvePair(a, b);
-    expect(Math.hypot(b.x - a.x, b.y - a.y)).toBeCloseTo(COIN_RADIUS * 2, 5);
+    const gap = Math.hypot(b.x - a.x, b.y - a.y);
+    expect(gap).toBeGreaterThan(10);
+    expect(gap).toBeLessThan(COIN_RADIUS * 2);
+  });
+
+  it("반복하면 슬롭만큼만 겹친 상태로 수렴한다", () => {
+    const a = createCoin({ id: 1, x: 100, y: 100 });
+    const b = createCoin({ id: 2, x: 110, y: 100 });
+    for (let i = 0; i < 40; i++) resolvePair(a, b);
+    const gap = Math.hypot(b.x - a.x, b.y - a.y);
+    expect(gap).toBeCloseTo(COIN_RADIUS * 2 - PENETRATION_SLOP, 3);
+  });
+
+  it("슬롭 이하로 겹친 코인은 건드리지 않는다", () => {
+    // 겹침이 슬롭보다 작으면 위치를 그대로 둔다 — 이 여유가 더미의 떨림을 막는다
+    const a = createCoin({ id: 1, x: 100, y: 100 });
+    const b = createCoin({ id: 2, x: 100 + COIN_RADIUS * 2 - PENETRATION_SLOP / 2, y: 100 });
+    const before = [a.x, b.x];
+    resolvePair(a, b);
+    expect([a.x, b.x]).toEqual(before);
+  });
+
+  it("느리게 맞닿으면 튕겨나가지 않는다", () => {
+    // 접근 속도가 RESTING_SPEED 미만이면 반발계수를 무시하고 붙는다
+    const a = createCoin({ id: 1, x: 100, y: 100, vx: RESTING_SPEED / 4, restitution: 0.9 });
+    const b = createCoin({ id: 2, x: 120, y: 100, vx: -RESTING_SPEED / 4, restitution: 0.9 });
+    resolvePair(a, b);
+    expect(a.vx).toBeCloseTo(0, 5);
+    expect(b.vx).toBeCloseTo(0, 5);
   });
 
   it("떨어져 있으면 아무것도 하지 않는다", () => {
@@ -151,11 +181,11 @@ describe("halfWidthAt", () => {
 });
 
 describe("크기가 다른 코인", () => {
-  it("반지름 합만큼 벌어진다", () => {
+  it("반지름 합에서 슬롭만큼 뺀 거리까지 벌어진다", () => {
     const big = createCoin({ id: 1, x: 100, y: 100, radius: 19 });
     const small = createCoin({ id: 2, x: 110, y: 100, radius: 10 });
-    resolvePair(big, small);
-    expect(Math.hypot(small.x - big.x, small.y - big.y)).toBeCloseTo(29, 5);
+    for (let i = 0; i < 40; i++) resolvePair(big, small);
+    expect(Math.hypot(small.x - big.x, small.y - big.y)).toBeCloseTo(29 - PENETRATION_SLOP, 3);
   });
 
   it("큰 코인은 벽에서 더 멀리 떨어져 멈춘다", () => {

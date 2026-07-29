@@ -51,7 +51,9 @@ function pickEvent(rng: Rng): EventType {
 }
 
 function rollMagnitude(type: EventType, rng: Rng): number {
-  if (type === "shake") return randRange(rng, 120, 260);
+  // 흔들림은 매 스텝 다시 적용되므로 세기가 곧 코인이 떠는 정도다. 진동이 심해 보기
+  // 불편하다는 피드백을 받아 절반쯤으로 낮췄다.
+  if (type === "shake") return randRange(rng, 60, 130);
   // 부호는 어느 쪽으로 먼저 기우는지만 정한다. 이후 좌우로 번갈아 기운다.
   if (type === "tilt") return randRange(rng, 120, 240) * (rng() < 0.5 ? -1 : 1);
   if (type === "burst") return randRange(rng, 900, 1500);
