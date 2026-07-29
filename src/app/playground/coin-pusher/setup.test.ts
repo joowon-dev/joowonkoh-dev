@@ -129,7 +129,7 @@ describe("createGame", () => {
     expect(playerCoins(g).every((q) => q.coin.kind === "player")).toBe(true);
   });
 
-  it("중립 코인은 세 가지 크기로 나온다", () => {
+  it("중립 코인은 정해진 크기로 나온다", () => {
     const g = createGame(Array.from({ length: 40 }, (_, i) => `p${i}`), 42);
     const radii = new Set(
       g.queue.filter((q) => q.coin.ownerIndex < 0).map((q) => q.coin.radius),

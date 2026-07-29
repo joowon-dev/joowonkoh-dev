@@ -185,7 +185,6 @@ function makeWorld(coins: ReturnType<typeof createCoin>[]): World {
     pusher: createPusher(),
     tiltAx: 0,
     burst: null,
-    catapult: null,
     fallen: [],
     elapsed: 0,
   };
