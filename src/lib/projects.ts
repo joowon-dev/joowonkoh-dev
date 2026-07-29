@@ -9,6 +9,12 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "구슬 폭포 추첨기",
+    description: "양동이를 가장 먼저 채운 사람이 당첨 🫧",
+    tags: ["Game", "Canvas", "Physics"],
+    href: "/playground/marble-drop",
+  },
+  {
     title: "코인 밀기 추첨기",
     description: "코인을 쏟아붓고 먼저 떨어진 사람이 당첨 🪙",
     tags: ["Game", "Canvas", "Physics"],
