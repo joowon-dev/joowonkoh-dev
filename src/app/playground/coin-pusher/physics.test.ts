@@ -184,8 +184,8 @@ function makeWorld(coins: ReturnType<typeof createCoin>[]): World {
     coins,
     pusher: createPusher(),
     tiltAx: 0,
-    tiltAy: 0,
     burst: null,
+    catapult: null,
     fallen: [],
     elapsed: 0,
   };
@@ -334,13 +334,6 @@ describe("stepWorld", () => {
     const w = makeWorld([c]);
     for (let i = 0; i < 240; i++) stepWorld(w, FIXED_DT);
     expect(w.coins[0].y).toBeGreaterThan(0);
-  });
-
-  it("역류(tiltAy)가 있으면 코인이 뒤로 밀린다", () => {
-    const w = makeWorld([createCoin({ id: 1, x: 200, y: 200 })]);
-    w.tiltAy = -200;
-    for (let i = 0; i < 60; i++) stepWorld(w, FIXED_DT);
-    expect(w.coins[0].y).toBeLessThan(200);
   });
 
   it("기울기가 있으면 코인이 그 방향으로 간다", () => {
