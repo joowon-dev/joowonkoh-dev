@@ -4,7 +4,7 @@ import { NEUTRAL_RADII, centerX, halfWidthAt, type World } from "./physics";
 /** 이 시각(초)부터 막판 스퍼트에 들어간다 */
 export const FINAL_SPURT_AT = 30;
 
-const EVENT_TYPES = ["shake", "tilt", "rush", "backdraft", "gaterush", "burst"] as const;
+const EVENT_TYPES = ["shake", "tilt", "rush", "backdraft", "burst"] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
 export interface ActiveEvent {
@@ -34,7 +34,6 @@ function rollMagnitude(type: EventType, rng: Rng): number {
   if (type === "tilt") return randRange(rng, 90, 200) * (rng() < 0.5 ? -1 : 1);
   // 역류 — 판 전체를 뒤로 당긴다. 앞줄에 붙어 있던 코인이 제일 크게 손해를 본다.
   if (type === "backdraft") return -randRange(rng, 150, 260);
-  if (type === "gaterush") return randRange(rng, 2.2, 3.4);
   if (type === "burst") return randRange(rng, 900, 1500);
   return randRange(rng, 1.7, 2.4);
 }
@@ -43,7 +42,6 @@ function rollDuration(type: EventType, rng: Rng): number {
   if (type === "shake") return randRange(rng, 0.4, 0.9);
   if (type === "tilt") return randRange(rng, 1.5, 3.0);
   if (type === "backdraft") return randRange(rng, 1.1, 2.0);
-  if (type === "gaterush") return randRange(rng, 3.0, 5.0);
   if (type === "burst") return BURST_SECONDS;
   return randRange(rng, 2.5, 4.5);
 }
@@ -91,7 +89,6 @@ export function applyScheduler(world: World, s: Scheduler, dtScale = 1): void {
   world.tiltAx = 0;
   world.tiltAy = 0;
   world.pusher.speedScale = 1;
-  world.gate.speedScale = 1;
 
   const active = s.active;
   if (!active) return;
@@ -106,10 +103,6 @@ export function applyScheduler(world: World, s: Scheduler, dtScale = 1): void {
   }
   if (active.type === "rush") {
     world.pusher.speedScale = active.magnitude;
-    return;
-  }
-  if (active.type === "gaterush") {
-    world.gate.speedScale = active.magnitude;
     return;
   }
   if (active.type === "burst") {

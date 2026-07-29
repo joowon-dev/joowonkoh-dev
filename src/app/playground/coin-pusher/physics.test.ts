@@ -8,10 +8,6 @@ import {
   centerX,
   halfWidthAt,
   createCoin,
-  createGate,
-  gateOpenAt,
-  stepGate,
-  clampToFrontEdge,
   createPusher,
   resolvePair,
   clampToWalls,
@@ -187,7 +183,6 @@ function makeWorld(coins: ReturnType<typeof createCoin>[]): World {
     board: { ...wideBoard },
     coins,
     pusher: createPusher(),
-    gate: { ...createGate(wideBoard), width: wideBoard.width },
     tiltAx: 0,
     tiltAy: 0,
     burst: null,
@@ -275,62 +270,6 @@ describe("candidatePairs", () => {
     const keys = pairs.map(([i, j]) => `${i}-${j}`);
     expect(new Set(keys).size).toBe(keys.length);
     for (const [i, j] of pairs) expect(i).toBeLessThan(j);
-  });
-});
-
-describe("문(Gate)", () => {
-  const b: Board = { width: 300, backWidth: 170, fallLine: 420 };
-
-  it("가운데에서 시작해 좌우로 왕복한다", () => {
-    const g = createGate(b);
-    let min = Infinity;
-    let max = -Infinity;
-    for (let i = 0; i < 4000; i++) {
-      stepGate(g, b, FIXED_DT);
-      min = Math.min(min, g.center);
-      max = Math.max(max, g.center);
-    }
-    expect(min).toBeCloseTo(0, 3);
-    expect(max).toBeCloseTo(b.width, 3);
-  });
-
-  it("판 끝까지 가서 모서리도 열린다", () => {
-    const g = createGate(b);
-    let openedLeftEdge = false;
-    let openedRightEdge = false;
-    for (let i = 0; i < 4000; i++) {
-      stepGate(g, b, FIXED_DT);
-      if (gateOpenAt(g, 5)) openedLeftEdge = true;
-      if (gateOpenAt(g, b.width - 5)) openedRightEdge = true;
-    }
-    expect(openedLeftEdge).toBe(true);
-    expect(openedRightEdge).toBe(true);
-  });
-
-  it("열린 구간 밖의 코인은 낙하선을 못 넘는다", () => {
-    const g = createGate(b);
-    g.center = 20;
-    const coin = createCoin({ id: 1, x: 280, y: b.fallLine + 5, vy: 90 });
-    clampToFrontEdge(coin, b, g);
-    expect(coin.y).toBeCloseTo(b.fallLine - coin.radius, 5);
-    expect(coin.vy).toBe(0);
-  });
-
-  it("열린 구간 안의 코인은 그대로 통과시킨다", () => {
-    const g = createGate(b);
-    g.center = 280;
-    const coin = createCoin({ id: 1, x: 280, y: b.fallLine + 5, vy: 90 });
-    clampToFrontEdge(coin, b, g);
-    expect(coin.y).toBe(b.fallLine + 5);
-    expect(coin.vy).toBe(90);
-  });
-
-  it("문이 닫혀 있으면 코인이 앞으로 새지 않는다", () => {
-    const w = makeWorld([createCoin({ id: 1, x: 200, y: 300, vy: 400 })]);
-    w.gate = { center: 0, width: 20, dir: 1, speedScale: 0 };
-    for (let i = 0; i < 600; i++) stepWorld(w, FIXED_DT);
-    expect(w.fallen).toHaveLength(0);
-    expect(w.coins).toHaveLength(1);
   });
 });
 

@@ -16,7 +16,6 @@ import {
   FIXED_DT,
   NEUTRAL_RADII,
   createCoin,
-  createGate,
   createPusher,
   stepWorld,
   type World,
@@ -27,7 +26,6 @@ function makeWorld(): World {
     board: { width: 400, backWidth: 400, fallLine: 320 },
     coins: [createCoin({ id: 1, x: 200, y: 100 })],
     pusher: createPusher(),
-    gate: createGate({ width: 400, backWidth: 400, fallLine: 320 }),
     tiltAx: 0,
     tiltAy: 0,
     burst: null,
@@ -60,7 +58,7 @@ describe("updateScheduler", () => {
 
   it("정해진 종류의 이벤트만 나온다", () => {
     for (const e of runScheduler(7, 120)) {
-      expect(["shake", "tilt", "rush", "backdraft", "gaterush", "burst"]).toContain(e.type);
+      expect(["shake", "tilt", "rush", "backdraft", "burst"]).toContain(e.type);
     }
   });
 

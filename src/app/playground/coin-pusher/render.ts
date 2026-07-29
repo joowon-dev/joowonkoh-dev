@@ -294,31 +294,14 @@ export function drawScene(
     drawCoin(ctx, coin, cam, palette, game.names, elapsed, dropOffset, 1);
   }
 
-  // 낙하선 — 문이 열린 구간만 트여 있고 나머지는 벽이다.
-  // 벽을 그리지 않으면 코인이 보이지 않는 무언가에 막혀 쌓이는 것처럼 보인다.
-  const gate = game.world.gate;
-  const gateLeft = projectPoint(Math.max(0, gate.center - gate.width / 2), board.fallLine, cam).sx;
-  const gateRight = projectPoint(
-    Math.min(board.width, gate.center + gate.width / 2),
-    board.fallLine,
-    cam,
-  ).sx;
-  const wallH = 9 * cam.scale;
-
-  ctx.fillStyle = palette.pusherFace;
-  if (gateLeft > front.left) ctx.fillRect(front.left, frontSy - wallH, gateLeft - front.left, wallH);
-  if (front.right > gateRight) {
-    ctx.fillRect(gateRight, frontSy - wallH, front.right - gateRight, wallH);
-  }
-
-  // 열린 구간 — 여기 있는 코인만 떨어진다
+  // 낙하선 — 판 앞 가장자리
   ctx.strokeStyle = palette.accent;
   ctx.lineWidth = 4;
   ctx.shadowColor = palette.accent;
   ctx.shadowBlur = 16;
   ctx.beginPath();
-  ctx.moveTo(gateLeft, frontSy);
-  ctx.lineTo(gateRight, frontSy);
+  ctx.moveTo(front.left, frontSy);
+  ctx.lineTo(front.right, frontSy);
   ctx.stroke();
   ctx.shadowBlur = 0;
 

@@ -13,9 +13,10 @@ const MAX_PLAYERS = 40;
 interface SetupPanelProps {
   initialRaw?: string;
   onStart: (names: string[], raw: string) => void;
+  onBack: () => void;
 }
 
-export default function SetupPanel({ initialRaw = "", onStart }: SetupPanelProps) {
+export default function SetupPanel({ initialRaw = "", onStart, onBack }: SetupPanelProps) {
   const [raw, setRaw] = useState(initialRaw);
   const names = useMemo(() => parseNames(raw), [raw]);
 
@@ -24,7 +25,14 @@ export default function SetupPanel({ initialRaw = "", onStart }: SetupPanelProps
   const canStart = !tooFew && !tooMany;
 
   return (
-    <div className="mx-auto w-full max-w-lg">
+    <div className="w-full">
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-6 block text-xs text-text-muted underline-offset-4 transition hover:text-text-primary hover:underline"
+      >
+        ← 뒤로
+      </button>
       <span className="mb-3 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-accent">
         Coin Pusher
       </span>
@@ -33,7 +41,7 @@ export default function SetupPanel({ initialRaw = "", onStart }: SetupPanelProps
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-text-secondary">
         참가자 이름을 넣으면 코인이 미는 판 위로 우르르 쏟아집니다. 푸셔에 밀려 가장 먼저 앞으로
-        떨어진 코인의 주인이 당첨. 중간에 폭탄 코인과 순간이동 코인이 판을 뒤집어 놓습니다.
+        떨어진 코인의 주인이 당첨. 중간중간 판이 흔들리고 기울고 솟구쳐 순위가 뒤집힙니다.
       </p>
 
       <label htmlFor="players" className="mt-8 block text-xs font-medium text-text-muted">

@@ -7,7 +7,7 @@ import {
   type Scheduler,
 } from "./events";
 import { stepWorld, type Coin } from "./physics";
-import { allDropped, releaseDue, spawnNeutral, type Game } from "./setup";
+import { allDropped, releaseDue, scrambleCoins, spawnNeutral, type Game } from "./setup";
 
 /** 판 밖으로 떨어져 나가는 중인 코인. 물리에서 분리된 순수 연출. */
 export interface FallingCoin {
@@ -34,6 +34,9 @@ export function simulate(
   dt: number,
 ): EventType | null {
   releaseDue(game);
+
+  // 참가자 코인이 다 들어오면 한 번만 전체를 섞는다
+  if (allDropped(game) && !game.scrambled) scrambleCoins(game);
 
   const fired = updateScheduler(scheduler, game.world.elapsed, dt);
   applyScheduler(game.world, scheduler, dt);
