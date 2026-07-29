@@ -2,7 +2,8 @@ import { createRng, randRange, type Rng } from "./random";
 import { COIN_RESTITUTION, radiusMass, rollNeutralRadius } from "./events";
 import {
   COIN_RADIUS,
-  PUSHER_BACK_Y,
+  PLATE_MAX_Y,
+  PLATE_MIN_Y,
   centerX,
   createCoin,
   createPusher,
@@ -16,10 +17,6 @@ export const BOARD_WIDTH = 300;
 /** 푸셔 쪽(뒤) 판 폭 — 여기서부터 앞으로 서서히 넓어진다 */
 export const BOARD_BACK_WIDTH = 170;
 export const FALL_LINE = 420;
-
-/** 코인이 쏟아지는 구간 — 미는 판 위 */
-const PLATE_MIN_Y = PUSHER_BACK_Y + 4;
-const PLATE_MAX_Y = PUSHER_BACK_Y + 70;
 
 /** 처음 깔리는 중립 코인이 전부 쏟아지는 데 걸리는 시간(초) */
 export const INITIAL_POUR_SECONDS = 3;
@@ -119,8 +116,8 @@ export function createGame(names: string[], seed: number): Game {
     coins: [],
     pusher: createPusher(),
     tiltAx: 0,
-    tiltAy: 0,
     burst: null,
+    catapult: null,
     fallen: [],
     elapsed: 0,
   };

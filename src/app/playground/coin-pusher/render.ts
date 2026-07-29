@@ -7,7 +7,7 @@ import {
   type Coin,
 } from "./physics";
 import type { Game } from "./setup";
-import { BURST_RADIUS, BURST_SECONDS } from "./events";
+import { BURST_RADIUS, BURST_SECONDS, CATAPULT_RADIUS, CATAPULT_SECONDS } from "./events";
 import { FALL_ANIM_SECONDS, type FallingCoin } from "./loop";
 
 /** 화면상 y축을 이 비율로 압축해 비스듬한 시점을 만든다 */
@@ -72,6 +72,8 @@ export interface Palette {
   pusherFace: string;
   /** NEUTRAL_RADII와 같은 순서의 [윗면, 옆면] 색 3쌍 */
   coinBySize: ReadonlyArray<readonly [string, string]>;
+  /** 투석 구역 표시색 */
+  catapult: string;
   player: string;
   playerSide: string;
   text: string;
@@ -100,6 +102,7 @@ export function readPalette(el: HTMLElement): Palette {
       ["#c6ccd7", "#98a1b0"],
       ["#a7b0c0", "#7c8697"],
     ],
+    catapult: "#f59e0b",
     player: accent,
     playerSide: accent,
     text,
@@ -323,6 +326,32 @@ export function drawScene(
       ctx.stroke();
       ctx.restore();
     }
+  }
+
+  // 투석 이벤트 — 걷어간 구역을 안쪽으로 조여드는 고리로 보여준다.
+  // 융기(퍼져 나감)와 반대 방향이라 둘을 눈으로 구분할 수 있다.
+  const catapult = game.world.catapult;
+  if (catapult) {
+    const { sx, sy } = projectPoint(catapult.x, catapult.y, cam);
+    const p = Math.min(1, catapult.t / CATAPULT_SECONDS);
+    ctx.save();
+    ctx.globalAlpha = 1 - p;
+    ctx.strokeStyle = palette.catapult;
+    ctx.lineWidth = 4 * cam.scale;
+    const r = CATAPULT_RADIUS * (1 - p * 0.85) * cam.scale;
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, r, r * PERSPECTIVE_SCALE, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // 뒤로 날아간다는 방향을 화살촉으로 표시
+    ctx.fillStyle = palette.catapult;
+    const lift = r * 0.5 + 14 * cam.scale;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - lift - 10 * cam.scale);
+    ctx.lineTo(sx - 7 * cam.scale, sy - lift);
+    ctx.lineTo(sx + 7 * cam.scale, sy - lift);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   }
 
   // 판 밖으로 떨어지는 코인 — 물리에서 분리된 순수 연출

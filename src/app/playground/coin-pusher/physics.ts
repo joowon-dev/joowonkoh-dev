@@ -48,6 +48,11 @@ export function halfWidthAt(board: Board, y: number): number {
   return (board.backWidth + (board.width - board.backWidth) * t) / 2;
 }
 
+/** 코인이 쏟아져 들어오는 구간 — 미는 판(푸셔 상판) 위.
+ * setup의 최초 투입과 events의 투석이 같은 구역을 써야 하므로 여기에 둔다. */
+export const PLATE_MIN_Y = PUSHER_BACK_Y + 4;
+export const PLATE_MAX_Y = PUSHER_BACK_Y + 70;
+
 /** 판의 좌우 가운데. x 좌표계는 0..width이고 가운데가 기준선이다. */
 export function centerX(board: Board): number {
   return board.width / 2;
@@ -154,10 +159,10 @@ export interface World {
   pusher: Pusher;
   /** 기울기 이벤트가 주는 x축 가속도 */
   tiltAx: number;
-  /** 역류 이벤트가 주는 y축 가속도. 음수면 코인이 뒤로 밀린다. */
-  tiltAy: number;
   /** 진행 중인 융기 이벤트의 지점과 경과 시간. 렌더 연출에만 쓴다. */
   burst: { x: number; y: number; t: number } | null;
+  /** 진행 중인 투석 이벤트가 걷어간 구역과 경과 시간. 렌더 연출에만 쓴다. */
+  catapult: { x: number; y: number; t: number } | null;
   fallen: FallEvent[];
   elapsed: number;
 }
@@ -251,7 +256,6 @@ export function stepWorld(world: World, dt: number): void {
   const damp = Math.max(0, 1 - FRICTION * dt);
   for (const coin of world.coins) {
     coin.vx += world.tiltAx * dt;
-    coin.vy += world.tiltAy * dt;
     coin.vx *= damp;
     coin.vy *= damp;
     coin.x += coin.vx * dt;

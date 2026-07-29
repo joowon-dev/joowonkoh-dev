@@ -10,11 +10,17 @@ import {
   rollNeutralRadius,
   radiusMass,
   COIN_RESTITUTION,
+  CATAPULT_SECONDS,
+  CATAPULT_MAX_COINS,
 } from "./events";
 import {
   COIN_RADIUS,
   FIXED_DT,
   NEUTRAL_RADII,
+  PLATE_MAX_Y,
+  PLATE_MIN_Y,
+  centerX,
+  halfWidthAt,
   createCoin,
   createPusher,
   stepWorld,
@@ -27,8 +33,8 @@ function makeWorld(): World {
     coins: [createCoin({ id: 1, x: 200, y: 100 })],
     pusher: createPusher(),
     tiltAx: 0,
-    tiltAy: 0,
     burst: null,
+    catapult: null,
     fallen: [],
     elapsed: 0,
   };
@@ -58,7 +64,7 @@ describe("updateScheduler", () => {
 
   it("정해진 종류의 이벤트만 나온다", () => {
     for (const e of runScheduler(7, 120)) {
-      expect(["shake", "tilt", "rush", "backdraft", "burst"]).toContain(e.type);
+      expect(["shake", "tilt", "rush", "catapult", "burst"]).toContain(e.type);
     }
   });
 
@@ -135,7 +141,7 @@ describe("applyScheduler", () => {
   it("tilt는 월드에 x 가속도를 준다", () => {
     const w = makeWorld();
     const s = createScheduler(createRng(1));
-    s.active = { type: "tilt", remaining: 2, duration: 2, magnitude: 150, x: 0.5, y: 0.5 };
+    s.active = { type: "tilt", remaining: 2, duration: 2, magnitude: 150, x: 0.5, y: 0.5, fired: false };
     applyScheduler(w, s);
     expect(Math.abs(w.tiltAx)).toBeCloseTo(150, 5);
   });
@@ -143,7 +149,7 @@ describe("applyScheduler", () => {
   it("rush는 푸셔 속도 배율을 올린다", () => {
     const w = makeWorld();
     const s = createScheduler(createRng(1));
-    s.active = { type: "rush", remaining: 2, duration: 2, magnitude: 2, x: 0.5, y: 0.5 };
+    s.active = { type: "rush", remaining: 2, duration: 2, magnitude: 2, x: 0.5, y: 0.5, fired: false };
     applyScheduler(w, s);
     expect(w.pusher.speedScale).toBeCloseTo(2, 5);
   });
@@ -151,7 +157,7 @@ describe("applyScheduler", () => {
   it("shake는 코인 속도를 흔든다", () => {
     const w = makeWorld();
     const s = createScheduler(createRng(1));
-    s.active = { type: "shake", remaining: 1, duration: 1, magnitude: 200, x: 0.5, y: 0.5 };
+    s.active = { type: "shake", remaining: 1, duration: 1, magnitude: 200, x: 0.5, y: 0.5, fired: false };
     applyScheduler(w, s);
     expect(Math.hypot(w.coins[0].vx, w.coins[0].vy)).toBeGreaterThan(0);
   });
@@ -165,6 +171,94 @@ describe("applyScheduler", () => {
     applyScheduler(w, s);
     expect(w.tiltAx).toBe(0);
     expect(w.pusher.speedScale).toBe(1);
+  });
+});
+
+describe("투석(catapult)", () => {
+  function worldWithCoins() {
+    const w = makeWorld();
+    w.coins = [];
+    // 반경 안(가까이)과 밖(멀리)에 하나씩
+    w.coins.push(createCoin({ id: 1, x: 200, y: 300 }));
+    w.coins.push(createCoin({ id: 2, x: 200, y: 60 }));
+    return w;
+  }
+
+  function fire(w: World, seed: number) {
+    const s = createScheduler(createRng(seed));
+    // x=0.5, y=300/320 → 코인 1 바로 위
+    s.active = {
+      type: "catapult",
+      remaining: CATAPULT_SECONDS,
+      duration: CATAPULT_SECONDS,
+      magnitude: 0,
+      x: 0.5,
+      y: 300 / w.board.fallLine,
+      fired: false,
+    };
+    applyScheduler(w, s);
+    return s;
+  }
+
+  it("반경 안의 코인을 미는 판 위로 되돌린다", () => {
+    const w = worldWithCoins();
+    fire(w, 1);
+    const moved = w.coins.find((c) => c.id === 1)!;
+    expect(moved.y).toBeGreaterThanOrEqual(PLATE_MIN_Y);
+    expect(moved.y).toBeLessThanOrEqual(PLATE_MAX_Y);
+  });
+
+  it("반경 밖의 코인은 건드리지 않는다", () => {
+    const w = worldWithCoins();
+    fire(w, 1);
+    const far = w.coins.find((c) => c.id === 2)!;
+    expect(far.y).toBe(60);
+    expect(far.x).toBe(200);
+  });
+
+  it("되돌린 코인은 낙하 연출이 다시 재생되도록 bornAt이 갱신된다", () => {
+    const w = worldWithCoins();
+    w.elapsed = 12.5;
+    fire(w, 1);
+    expect(w.coins.find((c) => c.id === 1)!.bornAt).toBeCloseTo(12.5, 5);
+  });
+
+  it("코인을 없애지 않는다", () => {
+    const w = worldWithCoins();
+    fire(w, 1);
+    expect(w.coins).toHaveLength(2);
+  });
+
+  it("지속 시간 동안 여러 번 호출해도 한 번만 걷어간다", () => {
+    const w = worldWithCoins();
+    const s = fire(w, 1);
+    const after = { ...w.coins.find((c) => c.id === 1)! };
+    for (let i = 0; i < 30; i++) applyScheduler(w, s);
+    const now = w.coins.find((c) => c.id === 1)!;
+    expect([now.x, now.y]).toEqual([after.x, after.y]);
+  });
+
+  it("한 번에 되돌리는 코인 수에 상한이 있다", () => {
+    const w = makeWorld();
+    // 한 지점에 몰아넣어 전부 반경 안에 들어가게 한다
+    w.coins = Array.from({ length: 60 }, (_, i) =>
+      createCoin({ id: i, x: 200 + (i % 6), y: 300 + Math.floor(i / 6) }),
+    );
+    fire(w, 2);
+    const sentBack = w.coins.filter((c) => c.y <= PLATE_MAX_Y).length;
+    expect(sentBack).toBe(CATAPULT_MAX_COINS);
+  });
+
+  it("되돌린 코인도 판 좌우 벽 안에 있다", () => {
+    const w = makeWorld();
+    w.coins = Array.from({ length: 40 }, (_, i) =>
+      createCoin({ id: i, x: 200 + (i % 5), y: 300 + Math.floor(i / 5) }),
+    );
+    fire(w, 3);
+    for (const c of w.coins.filter((x) => x.y <= PLATE_MAX_Y)) {
+      const limit = halfWidthAt(w.board, c.y) - c.radius;
+      expect(Math.abs(c.x - centerX(w.board))).toBeLessThanOrEqual(limit + 0.001);
+    }
   });
 });
 
