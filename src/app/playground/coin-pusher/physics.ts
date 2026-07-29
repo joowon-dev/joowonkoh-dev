@@ -12,7 +12,27 @@ export const FRICTION = 3.2; // 속도 감쇠 계수 (1/s)
 export const PUSHER_BACK_Y = -20; // 푸셔 앞면이 가장 뒤로 물러났을 때의 y
 export const PUSHER_STROKE = 130; // 푸셔가 앞으로 나오는 거리
 export const PUSHER_SPEED = 78; // 푸셔 이동 속도 (unit/s)
-export const WALL_RESTITUTION = 0.4;
+export const WALL_RESTITUTION = 0.2;
+
+/**
+ * 아래 세 상수는 더미가 떠는 것을 막는다. 코인이 서로, 또는 푸셔와 더미 사이에 끼면
+ * 매 스텝 "겹쳤다 → 밀어냈다"가 반복되면서 제자리에서 진동한다.
+ *
+ * - `PENETRATION_SLOP`: 이만큼의 겹침은 그냥 둔다. 0으로 두면 아무리 작은 겹침도 매
+ *   프레임 밀어내므로 붙어 있는 코인들이 미세하게 계속 떤다.
+ * - `POSITION_CORRECTION`: 남은 겹침을 한 번에 다 밀지 않고 이 비율만 민다. 1이면
+ *   과보정으로 되밀림이 생기고, 그 되밀림이 다음 프레임의 겹침이 되어 진동이 이어진다.
+ *   대신 `SOLVER_ITERATIONS`번 반복해 깊은 겹침도 몇 스텝 안에 풀린다.
+ * - `RESTING_SPEED`: 이보다 느리게 부딪히면 반발계수를 무시하고 그냥 붙는다. 더미
+ *   안에서 끝없이 이어지는 잔 튐이 사라진다.
+ */
+export const PENETRATION_SLOP = 0.4;
+export const POSITION_CORRECTION = 0.6;
+export const RESTING_SPEED = 14;
+/** 한 스텝에 충돌을 몇 번 반복해 풀지 */
+export const SOLVER_ITERATIONS = 2;
+/** 이보다 느린 코인은 멈춘 것으로 본다. 눈에 안 보이는 잔 속도로 계속 떠는 것을 막는다. */
+export const SLEEP_SPEED = 1.5;
 
 export type CoinKind = "player" | "neutral";
 
@@ -108,18 +128,22 @@ export function resolvePair(a: Coin, b: Coin): void {
   const invB = 1 / b.mass;
   const invSum = invA + invB;
 
-  // 위치 보정 — 질량 역수 비율로 나눠 민다
-  const overlap = minDist - dist;
-  a.x -= nx * overlap * (invA / invSum);
-  a.y -= ny * overlap * (invA / invSum);
-  b.x += nx * overlap * (invB / invSum);
-  b.y += ny * overlap * (invB / invSum);
+  // 위치 보정 — 질량 역수 비율로 나눠 민다.
+  // 슬롭 이하의 겹침은 두고, 남은 겹침도 한 번에 다 밀지 않는다(위 상수 설명 참고).
+  const overlap = Math.max(0, minDist - dist - PENETRATION_SLOP) * POSITION_CORRECTION;
+  if (overlap > 0) {
+    a.x -= nx * overlap * (invA / invSum);
+    a.y -= ny * overlap * (invA / invSum);
+    b.x += nx * overlap * (invB / invSum);
+    b.y += ny * overlap * (invB / invSum);
+  }
 
   // 법선 방향 상대 속도가 음수(다가오는 중)일 때만 임펄스
   const vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
   if (vn > 0) return;
 
-  const e = Math.max(a.restitution, b.restitution);
+  // 느리게 맞닿는 접촉은 튀지 않고 붙는다
+  const e = -vn < RESTING_SPEED ? 0 : Math.max(a.restitution, b.restitution);
   const j = (-(1 + e) * vn) / invSum;
   a.vx -= j * nx * invA;
   a.vy -= j * ny * invA;
@@ -257,14 +281,24 @@ export function stepWorld(world: World, dt: number): void {
     coin.vx += world.tiltAx * dt;
     coin.vx *= damp;
     coin.vy *= damp;
+    // 눈에 안 보일 만큼 느린 코인은 세워둔다. 이게 없으면 더미 안 코인들이 영원히
+    // 미세하게 떨고, 회전 각인이 그 떨림을 눈에 보이게 키운다.
+    if (Math.hypot(coin.vx, coin.vy) < SLEEP_SPEED) {
+      coin.vx = 0;
+      coin.vy = 0;
+    }
     coin.x += coin.vx * dt;
     coin.y += coin.vy * dt;
     // 굴러가는 느낌을 주는 렌더용 회전 — 이동 거리에 비례한다
     coin.spin += (Math.hypot(coin.vx, coin.vy) * dt) / coin.radius;
   }
 
+  // 겹침을 한 번에 다 풀지 않으므로 같은 후보 쌍을 여러 번 돈다. 후보 추출은 한 번만
+  // 하면 되고(스텝 안에서 코인이 셀을 넘어갈 만큼 움직이지 않는다) 비용은 반복 횟수만큼이다.
   const pairs = candidatePairs(world.coins, MAX_COIN_RADIUS * 2);
-  for (const [i, j] of pairs) resolvePair(world.coins[i], world.coins[j]);
+  for (let iter = 0; iter < SOLVER_ITERATIONS; iter++) {
+    for (const [i, j] of pairs) resolvePair(world.coins[i], world.coins[j]);
+  }
 
   for (const coin of world.coins) {
     applyPusher(coin, world.pusher);

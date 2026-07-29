@@ -60,10 +60,33 @@ export function projectPoint(x: number, y: number, cam: Camera): { sx: number; s
   };
 }
 
-/** 기울기 가속도가 최대일 때 화면이 기우는 각도(rad). 2.5도쯤 — 더 주면 판이 화면 밖으로 돈다. */
-const MAX_LEAN = 0.044;
+/**
+ * 기울기 가속도가 최대일 때 화면이 기우는 각도(rad). 0.9도쯤.
+ *
+ * 처음에는 2.5도를 줬는데 기울기가 1.6초 주기로 좌우를 오가다 보니 화면 전체가 계속
+ * 흔들려 멀미가 난다는 피드백을 받았다. 화면이 통째로 움직이는 연출은 눈에 잘 띄는 만큼
+ * 피로도 크므로, 판이 기운다는 것만 알아볼 정도로 줄였다. 코인이 실제로 쏠리는 것은
+ * 물리(`tiltAx`)가 그대로 보여준다.
+ */
+const MAX_LEAN = 0.016;
 /** 이 가속도에서 MAX_LEAN에 도달한다. rollMagnitude의 tilt 상한과 맞춘 값. */
 const LEAN_FULL_AX = 240;
+
+/**
+ * 화면 전체를 움직이는 연출(흔들림·기울기)에 곱하는 배율. OS에서 "동작 줄이기"를 켠
+ * 사용자에게는 0이라 화면이 아예 안 움직인다 — 코인의 실제 움직임은 그대로 보인다.
+ * 매 프레임 matchMedia를 부르지 않도록 한 번만 읽고 캐시한다.
+ */
+let reducedMotion: boolean | null = null;
+function cameraMotionScale(): number {
+  if (reducedMotion === null) {
+    reducedMotion =
+      typeof window !== "undefined" && typeof window.matchMedia === "function"
+        ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        : false;
+  }
+  return reducedMotion ? 0 : 1;
+}
 
 /** 기울기 가속도를 화면 회전각으로 옮긴다. 오른쪽으로 밀리면(+) 오른쪽이 내려간다. */
 export function leanAngle(tiltAx: number): number {
@@ -252,14 +275,18 @@ export function drawScene(
 ): void {
   const { board, elapsed } = game.world;
 
+  const motion = cameraMotionScale();
+
   ctx.save();
-  if (shake > 0) {
-    // 화면 흔들림 — 물리와 무관한 연출이라 렌더 시각으로만 흔든다
-    ctx.translate(Math.sin(elapsed * 61) * shake, Math.cos(elapsed * 47) * shake * 0.6);
+  if (shake > 0 && motion > 0) {
+    // 화면 흔들림 — 물리와 무관한 연출이라 렌더 시각으로만 흔든다.
+    // 진동수를 낮게 잡는다. 같은 진폭이라도 빠르게 떠는 화면이 훨씬 더 멀미를 부른다.
+    const amp = shake * motion;
+    ctx.translate(Math.sin(elapsed * 27) * amp, Math.cos(elapsed * 21) * amp * 0.6);
   }
   // 판이 기울면 화면도 같이 기운다. 코인이 좌우 어느 쪽으로 쏠리는지 눈으로 보이게 하는
   // 연출이며, 물리의 tiltAx가 부호를 바꿀 때 화면도 반대로 넘어간다.
-  const lean = leanAngle(game.world.tiltAx);
+  const lean = leanAngle(game.world.tiltAx) * motion;
   if (lean !== 0) {
     const cx = projectPoint(centerX(board), board.fallLine / 2, cam);
     ctx.translate(cx.sx, cx.sy);

@@ -72,9 +72,10 @@ export default function CoinPusherGame() {
     else if (fired) setBanner(EVENT_LABEL[fired]);
     else if (scheduler.active === null) setBanner(null);
 
-    // 흔들림과 융기가 화면을 흔든다
+    // 흔들림과 융기가 화면을 흔든다. 진폭은 형태를 알아볼 정도로만 준다 —
+    // 크게 주면 화면 전체가 떨려 멀미가 난다(융기는 0.45초짜리라 조금 더 준다).
     const kind = scheduler.active?.type;
-    shakeRef.current = kind === "shake" ? 6 : kind === "burst" ? 7 : 0;
+    shakeRef.current = kind === "shake" ? 1.6 : kind === "burst" ? 2.4 : 0;
 
     const win = winnerOf(game.world);
     if (win && wonAtRef.current === null) {
