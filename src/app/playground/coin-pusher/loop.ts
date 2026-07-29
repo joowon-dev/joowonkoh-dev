@@ -36,7 +36,7 @@ export function simulate(
   releaseDue(game);
 
   const fired = updateScheduler(scheduler, game.world.elapsed, dt);
-  applyScheduler(game.world, scheduler);
+  applyScheduler(game.world, scheduler, dt);
   applyFinalSpurt(game.world, game.world.elapsed);
 
   // 코인이 전부 들어온 뒤부터 중립 코인을 계속 투입한다

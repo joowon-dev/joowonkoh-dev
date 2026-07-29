@@ -8,6 +8,10 @@ import {
   centerX,
   halfWidthAt,
   createCoin,
+  createGate,
+  gateOpenAt,
+  stepGate,
+  clampToFrontEdge,
   createPusher,
   resolvePair,
   clampToWalls,
@@ -176,12 +180,17 @@ describe("크기가 다른 코인", () => {
   });
 });
 
+const wideBoard: Board = { width: 400, backWidth: 400, fallLine: 320 };
+
 function makeWorld(coins: ReturnType<typeof createCoin>[]): World {
   return {
-    board: { width: 400, backWidth: 400, fallLine: 320 },
+    board: { ...wideBoard },
     coins,
     pusher: createPusher(),
+    gate: { ...createGate(wideBoard), width: wideBoard.width },
     tiltAx: 0,
+    tiltAy: 0,
+    burst: null,
     fallen: [],
     elapsed: 0,
   };
@@ -269,6 +278,62 @@ describe("candidatePairs", () => {
   });
 });
 
+describe("문(Gate)", () => {
+  const b: Board = { width: 300, backWidth: 170, fallLine: 420 };
+
+  it("가운데에서 시작해 좌우로 왕복한다", () => {
+    const g = createGate(b);
+    let min = Infinity;
+    let max = -Infinity;
+    for (let i = 0; i < 4000; i++) {
+      stepGate(g, b, FIXED_DT);
+      min = Math.min(min, g.center);
+      max = Math.max(max, g.center);
+    }
+    expect(min).toBeCloseTo(0, 3);
+    expect(max).toBeCloseTo(b.width, 3);
+  });
+
+  it("판 끝까지 가서 모서리도 열린다", () => {
+    const g = createGate(b);
+    let openedLeftEdge = false;
+    let openedRightEdge = false;
+    for (let i = 0; i < 4000; i++) {
+      stepGate(g, b, FIXED_DT);
+      if (gateOpenAt(g, 5)) openedLeftEdge = true;
+      if (gateOpenAt(g, b.width - 5)) openedRightEdge = true;
+    }
+    expect(openedLeftEdge).toBe(true);
+    expect(openedRightEdge).toBe(true);
+  });
+
+  it("열린 구간 밖의 코인은 낙하선을 못 넘는다", () => {
+    const g = createGate(b);
+    g.center = 20;
+    const coin = createCoin({ id: 1, x: 280, y: b.fallLine + 5, vy: 90 });
+    clampToFrontEdge(coin, b, g);
+    expect(coin.y).toBeCloseTo(b.fallLine - coin.radius, 5);
+    expect(coin.vy).toBe(0);
+  });
+
+  it("열린 구간 안의 코인은 그대로 통과시킨다", () => {
+    const g = createGate(b);
+    g.center = 280;
+    const coin = createCoin({ id: 1, x: 280, y: b.fallLine + 5, vy: 90 });
+    clampToFrontEdge(coin, b, g);
+    expect(coin.y).toBe(b.fallLine + 5);
+    expect(coin.vy).toBe(90);
+  });
+
+  it("문이 닫혀 있으면 코인이 앞으로 새지 않는다", () => {
+    const w = makeWorld([createCoin({ id: 1, x: 200, y: 300, vy: 400 })]);
+    w.gate = { center: 0, width: 20, dir: 1, speedScale: 0 };
+    for (let i = 0; i < 600; i++) stepWorld(w, FIXED_DT);
+    expect(w.fallen).toHaveLength(0);
+    expect(w.coins).toHaveLength(1);
+  });
+});
+
 describe("collectFallen", () => {
   it("낙하선을 넘은 코인을 월드에서 빼고 기록한다", () => {
     const c = createCoin({ id: 7, x: 100, y: 400, ownerIndex: 2, kind: "player" });
@@ -330,6 +395,13 @@ describe("stepWorld", () => {
     const w = makeWorld([c]);
     for (let i = 0; i < 240; i++) stepWorld(w, FIXED_DT);
     expect(w.coins[0].y).toBeGreaterThan(0);
+  });
+
+  it("역류(tiltAy)가 있으면 코인이 뒤로 밀린다", () => {
+    const w = makeWorld([createCoin({ id: 1, x: 200, y: 200 })]);
+    w.tiltAy = -200;
+    for (let i = 0; i < 60; i++) stepWorld(w, FIXED_DT);
+    expect(w.coins[0].y).toBeLessThan(200);
   });
 
   it("기울기가 있으면 코인이 그 방향으로 간다", () => {

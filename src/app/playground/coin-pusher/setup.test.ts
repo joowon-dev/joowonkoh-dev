@@ -102,6 +102,15 @@ describe("createGame", () => {
     expect(shuffled).toHaveLength(5);
   });
 
+  it("참가자 코인은 전부 같은 깊이에서 시작한다", () => {
+    // 시작 깊이가 다르면 그 순서가 곧 결과가 된다. 더미는 통째로 밀려가는 컨베이어라
+    // 시작 깊이 순서가 끝까지 거의 보존되기 때문이다(20명 격자 배치 실측: 뒷줄 출발이
+    // 앞줄 출발보다 10배 넘게 이겼다). 같은 깊이면 구조적 예측 인자가 사라진다.
+    const g = createGame(Array.from({ length: 20 }, (_, i) => `p${i}`), 11);
+    const ys = playerCoins(g).map((q) => q.coin.y);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeLessThanOrEqual(4.001);
+  });
+
   it("참가자 코인은 서로 다른 자리에서 시작한다", () => {
     const g = createGame(Array.from({ length: 12 }, (_, i) => `p${i}`), 3);
     const spots = new Set(playerCoins(g).map((q) => `${q.coin.x},${q.coin.y}`));
