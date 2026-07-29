@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { PERSPECTIVE_SCALE, computeCamera, projectPoint } from "./render";
 import { PUSHER_BACK_Y, type Board } from "./physics";
 
-const board: Board = { width: 420, fallLine: 220 };
+const board: Board = { width: 420, backWidth: 420, fallLine: 220 };
 
 describe("computeCamera", () => {
   it("판 너비가 화면 안에 들어간다", () => {
@@ -20,6 +20,22 @@ describe("computeCamera", () => {
     expect(large.scale).toBeGreaterThan(small.scale);
   });
 
+  it("아주 큰 화면에서도 배율에 상한이 있다", () => {
+    // 상한이 없으면 판 폭에 맞춰 코인 하나가 100px을 넘어 판이 코인 몇 개 폭처럼 보인다
+    const huge = computeCamera({ w: 4000, h: 4000 }, board);
+    const wide = computeCamera({ w: 2000, h: 2000 }, board);
+    expect(huge.scale).toBe(wide.scale);
+    expect(huge.scale).toBeLessThan((4000 - 36) / board.width);
+  });
+
+  it("판이 화면보다 작아도 가운데 정렬된다", () => {
+    const vp = { w: 4000, h: 4000 };
+    const cam = computeCamera(vp, board);
+    const leftGap = projectPoint(0, 0, cam).sx;
+    const rightGap = vp.w - projectPoint(board.width, 0, cam).sx;
+    expect(leftGap).toBeCloseTo(rightGap, 1);
+  });
+
   it("배율은 항상 양수다", () => {
     expect(computeCamera({ w: 100, h: 100 }, board).scale).toBeGreaterThan(0);
   });
@@ -29,8 +45,8 @@ describe("computeCamera", () => {
     const cam = computeCamera(vp, board);
     // 높이 제약이 아님을 확인해 너비 제약임을 증명
     const depth = (board.fallLine - PUSHER_BACK_Y) * PERSPECTIVE_SCALE;
-    const widthFit = (vp.w - 32) / board.width; // SIDE_PADDING = 16
-    const heightFit = (vp.h - 48) / depth; // VERTICAL_PADDING = 24
+    const widthFit = (vp.w - 36) / board.width; // SIDE_PADDING = 18
+    const heightFit = (vp.h - 40) / depth; // VERTICAL_PADDING = 20
     expect(heightFit).toBeGreaterThan(widthFit); // 높이가 더 여유로움
     expect(cam.scale).toBeCloseTo(widthFit, 5); // 배율은 너비 제약값
   });
@@ -53,7 +69,7 @@ describe("computeCamera", () => {
     const leftGap = projectPoint(0, 0, cam).sx;
     const rightGap = vp.w - projectPoint(board.width, 0, cam).sx;
     expect(leftGap).toBeCloseTo(rightGap, 1); // 대칭
-    expect(leftGap).toBeGreaterThan(16); // SIDE_PADDING보다 큼 (구 코드와 다름)
+    expect(leftGap).toBeGreaterThan(18); // SIDE_PADDING보다 큼 (구 코드와 다름)
   });
 });
 

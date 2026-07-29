@@ -1,18 +1,25 @@
 import { describe, it, expect } from "vitest";
 import {
-  BOARD_WIDTH,
   FALL_LINE,
   parseNames,
   createGame,
+  initialCoinCount,
   releaseDue,
   spawnNeutral,
   allDropped,
 } from "./setup";
-import { COIN_RADIUS, FIXED_DT, stepWorld } from "./physics";
+import {
+  COIN_RADIUS,
+  FIXED_DT,
+  NEUTRAL_RADII,
+  PUSHER_BACK_Y,
+  centerX,
+  halfWidthAt,
+  stepWorld,
+} from "./physics";
 import { createScheduler } from "./events";
 import { createRng } from "./random";
-import { NEUTRAL_INTERVAL, simulate } from "./loop";
-import type { FallingCoin } from "./render";
+import { NEUTRAL_INTERVAL, createFx, simulate } from "./loop";
 
 describe("parseNames", () => {
   it("줄바꿈으로 나눈다", () => {
@@ -42,71 +49,97 @@ describe("parseNames", () => {
 
 describe("createGame", () => {
   const names = ["주원", "민지", "현우", "서연"];
+  const playerCoins = (g: ReturnType<typeof createGame>) =>
+    g.queue.filter((q) => q.coin.ownerIndex >= 0);
 
-  it("참가자 수만큼 코인을 큐에 넣는다", () => {
+  it("참가자 수만큼 참가자 코인을 큐에 넣는다", () => {
     const g = createGame(names, 1);
-    expect(g.queue).toHaveLength(4);
-    expect(g.queue.map((q) => q.coin.ownerIndex).sort()).toEqual([0, 1, 2, 3]);
+    expect(playerCoins(g)).toHaveLength(4);
+    expect(playerCoins(g).map((q) => q.coin.ownerIndex).sort()).toEqual([0, 1, 2, 3]);
   });
 
-  it("참가자 코인은 처음엔 월드에 없다", () => {
+  it("처음에는 판이 비어 있고 코인이 전부 큐에서 쏟아진다", () => {
     const g = createGame(names, 1);
-    expect(g.world.coins.every((c) => c.ownerIndex === -1)).toBe(true);
+    expect(g.world.coins).toHaveLength(0);
+    expect(g.queue.length).toBe(initialCoinCount(names.length) + names.length);
   });
 
-  it("중립 코인이 미리 깔려 있다", () => {
+  it("중립 코인이 참가자 코인보다 먼저 쏟아진다", () => {
     const g = createGame(names, 1);
-    expect(g.world.coins.length).toBeGreaterThan(0);
+    const firstPlayerAt = Math.min(...playerCoins(g).map((q) => q.at));
+    const neutrals = g.queue.filter((q) => q.coin.ownerIndex < 0);
+    expect(neutrals.filter((q) => q.at < firstPlayerAt).length).toBe(neutrals.length);
   });
 
-  it("모든 코인은 판 안에 있다", () => {
+  it("모든 코인은 미는 판 위, 판 안쪽에서 시작한다", () => {
     const g = createGame(names, 1);
-    for (const c of [...g.world.coins, ...g.queue.map((q) => q.coin)]) {
-      expect(c.x).toBeGreaterThanOrEqual(COIN_RADIUS);
-      expect(c.x).toBeLessThanOrEqual(BOARD_WIDTH - COIN_RADIUS);
-      expect(c.y).toBeLessThan(FALL_LINE);
+    for (const { coin } of g.queue) {
+      const limit = halfWidthAt(g.world.board, coin.y) - coin.radius;
+      expect(Math.abs(coin.x - centerX(g.world.board))).toBeLessThanOrEqual(limit + 0.001);
+      expect(coin.y).toBeGreaterThanOrEqual(PUSHER_BACK_Y);
+      expect(coin.y).toBeLessThan(FALL_LINE);
     }
   });
 
-  it("참가자 코인은 질량과 반발계수가 모두 같다", () => {
+  it("참가자 코인은 크기·질량·반발계수가 모두 같다", () => {
     const g = createGame(names, 1);
-    const masses = new Set(g.queue.map((q) => q.coin.mass));
-    const rest = new Set(g.queue.map((q) => q.coin.restitution));
-    expect(masses.size).toBe(1);
-    expect(rest.size).toBe(1);
+    expect(new Set(playerCoins(g).map((q) => q.coin.radius)).size).toBe(1);
+    expect(new Set(playerCoins(g).map((q) => q.coin.mass)).size).toBe(1);
+    expect(new Set(playerCoins(g).map((q) => q.coin.restitution)).size).toBe(1);
   });
 
-  it("참가자 코인에는 특수 종류가 붙지 않는다", () => {
+  it("참가자 코인에는 특수 종류도 도화선도 붙지 않는다", () => {
     const g = createGame(names, 1);
-    expect(g.queue.every((q) => q.coin.kind === "player")).toBe(true);
+    for (const { coin } of playerCoins(g)) {
+      expect(coin.kind).toBe("player");
+      expect(coin.fuse).toBeNull();
+    }
+  });
+
+  it("중립 코인은 세 가지 크기로 나온다", () => {
+    const g = createGame(Array.from({ length: 40 }, (_, i) => `p${i}`), 42);
+    const radii = new Set(
+      g.queue.filter((q) => q.coin.ownerIndex < 0).map((q) => q.coin.radius),
+    );
+    expect(radii).toEqual(new Set(NEUTRAL_RADII));
+  });
+
+  it("참가자 코인은 기준 크기를 쓴다", () => {
+    const g = createGame(names, 1);
+    expect(playerCoins(g).every((q) => q.coin.radius === COIN_RADIUS)).toBe(true);
   });
 
   it("코인 id는 전부 다르다", () => {
     const g = createGame(names, 1);
-    const ids = [...g.world.coins, ...g.queue.map((q) => q.coin)].map((c) => c.id);
+    const ids = g.queue.map((q) => q.coin.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
   it("같은 시드면 같은 배치를 만든다", () => {
     const a = createGame(names, 777);
     const b = createGame(names, 777);
-    expect(a.world.coins.map((c) => [c.x, c.y, c.kind])).toEqual(
-      b.world.coins.map((c) => [c.x, c.y, c.kind]),
+    expect(a.queue.map((q) => [q.at, q.coin.x, q.coin.y, q.coin.kind])).toEqual(
+      b.queue.map((q) => [q.at, q.coin.x, q.coin.y, q.coin.kind]),
     );
   });
 
   it("다른 시드면 다른 배치를 만든다", () => {
     const a = createGame(names, 1);
     const b = createGame(names, 2);
-    expect(a.world.coins.map((c) => [c.x, c.y])).not.toEqual(
-      b.world.coins.map((c) => [c.x, c.y]),
+    expect(a.queue.map((q) => [q.coin.x, q.coin.y])).not.toEqual(
+      b.queue.map((q) => [q.coin.x, q.coin.y]),
     );
   });
 
   it("참가자가 많으면 중립 코인도 많아진다", () => {
-    const few = createGame(["a", "b"], 5);
-    const many = createGame(Array.from({ length: 40 }, (_, i) => `p${i}`), 5);
-    expect(many.world.coins.length).toBeGreaterThan(few.world.coins.length);
+    expect(initialCoinCount(40)).toBeGreaterThan(initialCoinCount(2));
+  });
+
+  it("큐는 투입 시각 순으로 정렬돼 있다", () => {
+    const g = createGame(names, 1);
+    for (let i = 1; i < g.queue.length; i++) {
+      expect(g.queue[i].at).toBeGreaterThanOrEqual(g.queue[i - 1].at);
+    }
   });
 });
 
@@ -123,7 +156,7 @@ describe("releaseDue", () => {
     const g = createGame(["주원", "민지", "현우"], 1);
     g.world.elapsed = 100;
     const released = releaseDue(g);
-    expect(released).toHaveLength(3);
+    expect(released).toHaveLength(initialCoinCount(3) + 3);
     expect(g.queue).toHaveLength(0);
     expect(g.world.coins.filter((c) => c.ownerIndex >= 0)).toHaveLength(3);
   });
@@ -184,10 +217,10 @@ describe("통합", () => {
   function runUntilWinner(names: string[], seed: number, maxSeconds: number) {
     const g = createGame(names, seed);
     const scheduler = createScheduler(createRng(seed ^ 0x9e3779b9));
-    const falling: FallingCoin[] = [];
+    const fx = createFx();
     const nextNeutralAt = { current: NEUTRAL_INTERVAL };
     for (let i = 0; i < Math.round(maxSeconds / FIXED_DT); i++) {
-      simulate(g, scheduler, falling, nextNeutralAt, FIXED_DT);
+      simulate(g, scheduler, fx, nextNeutralAt, FIXED_DT);
       if (g.world.fallen.some((f) => f.coin.ownerIndex >= 0)) return g;
     }
     return g;
