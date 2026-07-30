@@ -21,6 +21,13 @@ export const projects: Project[] = [
     href: "/playground/coin-pusher",
   },
   {
+    title: "개바리 째려보기",
+    description: "다른 사람이 다가오면 개바리가 대신 째려봅니다 🐕",
+    tags: ["Web", "MediaPipe", "Camera"],
+    href: "/playground/gaebari-glare",
+    hidden: true,
+  },
+  {
     title: "종이비행기 날리기",
     description: "입김으로 부는 종이비행기 게임 🐱🛩️",
     tags: ["Game", "Web Audio", "Supabase"],
