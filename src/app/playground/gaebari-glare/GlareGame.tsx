@@ -5,13 +5,41 @@ import type { FaceDetector } from "@mediapipe/tasks-vision";
 import Gaebari, { GAEBARI_LABELS } from "./Gaebari";
 import { CameraPermissionGate } from "./CameraPermissionGate";
 import { SENSITIVITY_RANGE, useSettings } from "./useSettings";
-import { createTracker, intruderTrack, selfTrack, stepTracker, type Box } from "./detect";
+import {
+  createTracker,
+  intruderTrack,
+  lookDirection,
+  selfTrack,
+  stepTracker,
+  type Box,
+  type LookDirection,
+} from "./detect";
 import { createGlareState, stepGlare, type GlareLevel } from "./state";
 
 /** 검출 루프 주기(ms). 10fps — 60fps로 돌릴 이유가 없고 노트북 팬만 돈다. */
 const DETECT_INTERVAL = 100;
 const VIDEO_WIDTH = 640;
 const VIDEO_HEIGHT = 480;
+
+/**
+ * MediaPipe wasm이 첫 추론 때 stderr로 찍는 정보 로그. 오류가 아닌데 Next 개발
+ * 오버레이가 stderr를 전부 에러로 띄워서 화면을 덮는다. 이 한 줄만 걸러낸다.
+ */
+const WASM_NOTICE = /XNNPACK delegate/;
+let restoreConsole: (() => void) | null = null;
+
+function muteWasmNotice() {
+  if (restoreConsole) return;
+  const original = console.error;
+  console.error = (...args: unknown[]) => {
+    if (typeof args[0] === "string" && WASM_NOTICE.test(args[0])) return;
+    original(...args);
+  };
+  restoreConsole = () => {
+    console.error = original;
+    restoreConsole = null;
+  };
+}
 
 type Phase = "ready" | "starting" | "running" | "denied" | "unsupported" | "failed";
 
@@ -22,6 +50,7 @@ export default function GlareGame() {
   /** 화면에 보여주는 숫자. 이 앱이 다루는 정보가 이게 전부라는 걸 그대로 드러낸다. */
   const [faceCount, setFaceCount] = useState(0);
   const [selfLocked, setSelfLocked] = useState(false);
+  const [direction, setDirection] = useState<LookDirection>(1);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -42,9 +71,11 @@ export default function GlareGame() {
     streamRef.current = null;
     trackerRef.current = createTracker();
     glareRef.current = createGlareState();
+    restoreConsole?.();
     setLevel("idle");
     setFaceCount(0);
     setSelfLocked(false);
+    setDirection(1);
   }, []);
 
   // 탭을 닫거나 다른 페이지로 가면 카메라를 확실히 끈다
@@ -80,6 +111,7 @@ export default function GlareGame() {
 
     let detector: FaceDetector;
     try {
+      muteWasmNotice();
       // 여기서 처음으로 wasm을 받는다. 페이지를 열기만 한 사람은 한 바이트도 안 받는다.
       const { FaceDetector: FD, FilesetResolver } = await import("@mediapipe/tasks-vision");
       const fileset = await FilesetResolver.forVisionTasks("/mediapipe");
@@ -132,6 +164,7 @@ export default function GlareGame() {
       setFaceCount(boxes.length);
       setSelfLocked(me !== null);
       setLevel((prev) => (prev === next.level ? prev : next.level));
+      setDirection((prev) => lookDirection(prev, me, intruder));
     };
     loop();
   }, [stop]);
@@ -149,7 +182,7 @@ export default function GlareGame() {
 
       <div className="relative mt-8 overflow-hidden rounded-3xl border border-border bg-accent-soft">
         <div className="flex aspect-square items-end justify-center">
-          <Gaebari level={level} className="h-full w-full max-w-sm" />
+          <Gaebari level={level} direction={direction} className="h-full w-full max-w-sm" />
         </div>
 
         {/* 이 문구는 어떤 상태에서도 사라지지 않는다. 숨길 이유가 없는 물건이라는 걸 화면이 직접 말한다. */}

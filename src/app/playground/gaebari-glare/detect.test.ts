@@ -5,6 +5,7 @@ import {
   createTracker,
   intruderTrack,
   iou,
+  lookDirection,
   selfTrack,
   stepTracker,
   type Box,
@@ -154,6 +155,40 @@ describe("누가 나인가", () => {
     // 상대가 아주 오래 머물러 age가 내 트랙을 앞질러도 sticky여야 한다
     s = hold(s, [ME, OTHER], MIN_SELF_AGE * 3);
     expect(s.selfId).toBe(mine);
+  });
+});
+
+describe("보는 방향", () => {
+  const track = (b: Box) => ({ id: 1, box: b, age: 50, misses: 0 });
+
+  it("프레임 왼쪽에 있으면 화면 왼쪽을 본다", () => {
+    // 웹캠 원본은 거울이 아니다 — 내 오른쪽에 선 사람이 프레임 왼쪽에 찍히고,
+    // 나를 마주 본 개바리가 내 오른쪽을 보려면 화면에서는 왼쪽을 봐야 한다
+    expect(lookDirection(1, track(ME), track(box(0.05, 0.3, 0.12, 0.16)))).toBe(-1);
+  });
+
+  it("프레임 오른쪽에 있으면 화면 오른쪽을 본다", () => {
+    expect(lookDirection(-1, track(ME), track(OTHER))).toBe(1);
+  });
+
+  it("바로 뒤에 서 있으면 방향을 안 바꾼다", () => {
+    // 좌우로 떨리는 것을 막는 여유구간
+    const behind = box(ME.x + 0.02, 0.2, ME.w, ME.h);
+    expect(lookDirection(-1, track(ME), track(behind))).toBe(-1);
+    expect(lookDirection(1, track(ME), track(behind))).toBe(1);
+  });
+
+  it("대상이 없으면 직전 방향을 유지한다", () => {
+    // 잠깐 안 잡혔다고 고개를 정면으로 되돌리면 하강 지연을 둔 의미가 없다
+    expect(lookDirection(-1, track(ME), null)).toBe(-1);
+    expect(lookDirection(-1, null, track(OTHER))).toBe(-1);
+  });
+
+  it("경계를 확실히 넘으면 방향이 바뀐다", () => {
+    let d = lookDirection(1, track(ME), track(box(0.05, 0.3, 0.12, 0.16)));
+    expect(d).toBe(-1);
+    d = lookDirection(d, track(ME), track(OTHER));
+    expect(d).toBe(1);
   });
 });
 

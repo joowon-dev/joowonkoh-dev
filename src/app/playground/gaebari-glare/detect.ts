@@ -125,6 +125,38 @@ export function selfTrack(s: TrackerState): Track | null {
   return s.tracks.find((t) => t.id === s.selfId) ?? null;
 }
 
+/** 개바리가 볼 방향. -1이 화면 왼쪽. */
+export type LookDirection = -1 | 1;
+
+/**
+ * 방향을 바꾸려면 이만큼은 옆에 있어야 한다. 바로 뒤에 선 사람 때문에
+ * 개바리가 좌우로 떨리는 것을 막는다.
+ */
+export const DIRECTION_DEADZONE = 0.06;
+
+const centerX = (b: Box): number => b.x + b.w / 2;
+
+/**
+ * 침입자가 있는 쪽.
+ *
+ * 웹캠 원본 프레임은 거울이 아니다 — 내 오른쪽에 선 사람은 프레임 왼쪽에 찍힌다.
+ * 개바리는 나를 마주 보고 있으므로, 내 오른쪽을 보려면 화면에서는 왼쪽을 봐야 한다.
+ * 결국 프레임에서의 좌우가 그대로 화면에서의 좌우가 된다.
+ *
+ * @param prev 직전 방향. 판단할 근거가 없으면 그대로 유지한다 — 대상이 잠깐 사라졌다고
+ *             고개를 정면으로 되돌리면 하강 지연을 둔 의미가 없다.
+ */
+export function lookDirection(
+  prev: LookDirection,
+  self: Track | null,
+  intruder: Track | null,
+): LookDirection {
+  if (!self || !intruder) return prev;
+  const dx = centerX(intruder.box) - centerX(self.box);
+  if (Math.abs(dx) < DIRECTION_DEADZONE) return prev;
+  return dx < 0 ? -1 : 1;
+}
+
 /**
  * 째려볼 대상 — 나를 제외한 트랙 중 박스가 가장 큰 것.
  * 여기서는 크기를 써도 된다. "나"라는 기준점이 이미 고정돼 있으므로,

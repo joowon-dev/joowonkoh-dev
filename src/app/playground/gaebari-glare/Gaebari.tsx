@@ -1,5 +1,6 @@
 "use client";
 
+import type { LookDirection } from "./detect";
 import type { GlareLevel } from "./state";
 
 /**
@@ -9,9 +10,8 @@ import type { GlareLevel } from "./state";
  * 교체 전제는 그대로다 — 나중에 그림이나 짧은 webm 루프로 갈아끼울 때
  * 이 파일 하나만 바꾸면 된다. 바깥은 level prop만 넘긴다.
  *
- * 째려보는 방향은 화면 오른쪽으로 고정한다. 침입자가 어느 쪽에서 오는지는
- * 웹캠 좌우 반전 때문에 직관과 어긋나고, 어느 쪽이든 "저기 누가 왔다"는
- * 신호만 전달되면 충분하다.
+ * 째려보는 쪽은 direction으로 받는다. 눈동자·고개가 같은 방향으로 함께 움직여야
+ * "저쪽을 본다"로 읽힌다 — 눈만 돌아가면 그냥 사시처럼 보인다.
  */
 
 interface Pose {
@@ -48,8 +48,19 @@ const EYE_R = 14;
 
 const EASE = "300ms cubic-bezier(0.34, 1.15, 0.64, 1)";
 
-export default function Gaebari({ level, className }: { level: GlareLevel; className?: string }) {
-  const p = POSES[level];
+export default function Gaebari({
+  level,
+  direction = 1,
+  className,
+}: {
+  level: GlareLevel;
+  /** 째려볼 쪽. -1이면 화면 왼쪽. */
+  direction?: LookDirection;
+  className?: string;
+}) {
+  const base = POSES[level];
+  // 좌우 대칭인 값(눈꺼풀·눈썹·입·귀)은 그대로 두고, 방향이 있는 값만 뒤집는다
+  const p: Pose = { ...base, pupil: base.pupil * direction, tilt: base.tilt * direction };
 
   return (
     <svg
