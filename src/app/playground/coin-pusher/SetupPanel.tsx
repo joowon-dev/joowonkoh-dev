@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { parseNames } from "./setup";
+import SkinPicker from "./SkinPicker";
+import { DEFAULT_SKIN, skinOf, type SkinId } from "./skins";
 
 const MIN_PLAYERS = 2;
 // 판의 실측 수용 한계. 로스터 크기별로 실제 게임 루프를 돌려 측정한 결과, 40명까지는 당첨자가
@@ -12,12 +14,19 @@ const MAX_PLAYERS = 40;
 
 interface SetupPanelProps {
   initialRaw?: string;
-  onStart: (names: string[], raw: string) => void;
+  initialSkin?: SkinId;
+  onStart: (names: string[], raw: string, skin: SkinId) => void;
   onBack: () => void;
 }
 
-export default function SetupPanel({ initialRaw = "", onStart, onBack }: SetupPanelProps) {
+export default function SetupPanel({
+  initialRaw = "",
+  initialSkin = DEFAULT_SKIN,
+  onStart,
+  onBack,
+}: SetupPanelProps) {
   const [raw, setRaw] = useState(initialRaw);
+  const [skin, setSkin] = useState<SkinId>(initialSkin);
   const names = useMemo(() => parseNames(raw), [raw]);
 
   const tooFew = names.length < MIN_PLAYERS;
@@ -90,14 +99,16 @@ export default function SetupPanel({ initialRaw = "", onStart, onBack }: SetupPa
         </div>
       )}
 
+      <SkinPicker value={skin} onChange={setSkin} />
+
       <button
         type="button"
         disabled={!canStart}
         aria-describedby="players-status"
-        onClick={() => onStart(names, raw)}
-        className="mt-8 w-full rounded-2xl bg-accent px-6 py-4 font-display text-sm font-semibold text-white shadow-ambient transition hover:shadow-ambient-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+        onClick={() => onStart(names, raw, skin)}
+        className="mt-6 w-full rounded-2xl bg-accent px-6 py-4 font-display text-sm font-semibold text-white shadow-ambient transition hover:shadow-ambient-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
       >
-        코인 쏟아붓기
+        {skinOf(skin).startLabel}
       </button>
     </div>
   );
