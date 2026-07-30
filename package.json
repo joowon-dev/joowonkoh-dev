@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/copy-mediapipe.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/copy-mediapipe.mjs",
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
@@ -15,6 +17,7 @@
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
+    "@mediapipe/tasks-vision": "^1.0.0",
     "@supabase/supabase-js": "^2.110.8",
     "gray-matter": "^4.0.3",
     "motion": "^12.42.2",
