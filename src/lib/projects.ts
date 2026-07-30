@@ -9,6 +9,12 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "낙서 댄스",
+    description: "커서를 움직이면 종이 위 낙서가 따라 춤춘다 💃",
+    tags: ["Interactive", "Canvas", "Animation"],
+    href: "/playground/doodle-dance",
+  },
+  {
     title: "구슬 폭포 추첨기",
     description: "양동이를 가장 먼저 채운 사람이 당첨 🫧",
     tags: ["Game", "Canvas", "Physics"],
