@@ -6,7 +6,7 @@ import { useGameLoop } from "../_shared/useGameLoop";
 import { computeCamera, drawFigure, makePaper } from "./draw";
 import { figureStrokes } from "./figure";
 import { createTracker, decaySpeed, driveOf, onLeave, onMove } from "./input";
-import { createBody, stepBody, toPose } from "./pose";
+import { createPlayer, poseAt, stepPlayer } from "./play";
 
 /**
  * 원본은 프레임 단위 손그림이라 초당 12장 정도로 넘어간다. 자세는 60fps로 계산하되
@@ -25,7 +25,7 @@ interface Paper {
 
 export default function DoodleDance() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const bodyRef = useRef(createBody());
+  const playerRef = useRef(createPlayer());
   const trackerRef = useRef(createTracker());
   const paperRef = useRef<Paper | null>(null);
   const lastDrawRef = useRef(0);
@@ -59,13 +59,13 @@ export default function DoodleDance() {
     if (bg) ctx.drawImage(bg.canvas, 0, 0, w, h);
 
     seedRef.current = (seedRef.current * 1664525 + 1013904223) >>> 0;
-    drawFigure(ctx, figureStrokes(toPose(bodyRef.current)), computeCamera(w, h), seedRef.current);
+    drawFigure(ctx, figureStrokes(poseAt(playerRef.current)), computeCamera(w, h), seedRef.current);
   }, []);
 
   const onStep = useCallback((dt: number) => {
     const tracker = trackerRef.current;
     decaySpeed(tracker, performance.now(), dt);
-    stepBody(bodyRef.current, driveOf(tracker), dt);
+    stepPlayer(playerRef.current, driveOf(tracker), dt);
   }, []);
 
   const onFrame = useCallback(() => {
@@ -119,7 +119,8 @@ export default function DoodleDance() {
         낙서 댄스
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-        마우스나 트랙패드를 움직이면 종이 위의 낙서가 따라 춤춥니다. 손을 멈추면 혼자 흐느적거려요.
+        마우스나 트랙패드를 움직이면 종이 위의 낙서가 춤을 춥니다. 빠르게 움직이면 빠르게, 손을 멈추면
+        거의 멈춰요.
       </p>
 
       <div className="relative mt-8 overflow-hidden rounded-2xl border border-border shadow-ambient">
@@ -140,8 +141,8 @@ export default function DoodleDance() {
       </div>
 
       <p className="mt-4 text-xs leading-relaxed text-text-muted">
-        좌우로 움직이면 몸이 기울고, 위아래로 움직이면 팔이 오르내립니다. 빠르게 움직일수록 격하게
-        춥니다.
+        춤 동작은 원본 영상의 74개 손그림 자세를 프레임 단위로 재어 그대로 옮긴 것입니다. 커서 속도가
+        재생 속도를, 좌우 위치가 기울기를, 위아래 위치가 손 높이를 얹습니다.
       </p>
     </div>
   );

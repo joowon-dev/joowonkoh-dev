@@ -1,9 +1,18 @@
-import type { Drive } from "./pose";
-
 /**
  * 포인터 추적. 브라우저 이벤트에서 온 정규 좌표(-1~1)를 받아 자세 계산이 쓰는
  * Drive로 바꾼다. DOM을 모르는 순수 모듈이라 테스트로 감각을 확인할 수 있다.
  */
+export interface Drive {
+  /** 커서 좌우 위치. -1(왼쪽 끝) ~ 1(오른쪽 끝) */
+  x: number;
+  /** 커서 상하 위치. -1(아래) ~ 1(위) */
+  y: number;
+  /** 커서 이동 속도를 0~1로 정규화한 값 */
+  speed: number;
+  /** 커서나 손가락이 판 위에 있는가. 없으면 혼자 천천히 춘다. */
+  active: boolean;
+}
+
 export interface Tracker {
   x: number;
   y: number;

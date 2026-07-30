@@ -1,5 +1,5 @@
 import { createRng } from "../_shared/random";
-import { FIGURE_BOTTOM, FIGURE_TOP, type Pt, type Stroke } from "./figure";
+import { FIGURE_BOTTOM, FIGURE_LEFT, FIGURE_RIGHT, FIGURE_TOP, type Pt, type Stroke } from "./figure";
 
 /**
  * 캔버스에 잉크를 얹는 층. 매력의 대부분은 여기 있는 두 가지에서 나온다.
@@ -13,9 +13,7 @@ export const INK = "#22211e";
 /** 몸이 화면 높이에서 차지하는 비율 */
 const FIT_HEIGHT = 0.8;
 /** 몸이 화면 폭에서 차지할 수 있는 최대 비율. 좁은 화면에서 팔이 잘리지 않게 한다. */
-const FIT_WIDTH = 0.9;
-/** 팔을 양쪽으로 다 뻗었을 때의 몸 공간 폭 */
-const FIGURE_WIDTH = 116;
+const FIT_WIDTH = 0.92;
 
 export interface Camera {
   scale: number;
@@ -25,13 +23,16 @@ export interface Camera {
 }
 
 export function computeCamera(w: number, h: number): Camera {
-  const span = FIGURE_TOP - FIGURE_BOTTOM;
-  const scale = Math.max(
-    0.1,
-    Math.min((h * FIT_HEIGHT) / span, (w * FIT_WIDTH) / FIGURE_WIDTH),
-  );
-  // 그림의 위아래 중간이 화면 중앙에 오도록 원점을 내린다
-  return { scale, cx: w / 2, cy: h / 2 + ((FIGURE_TOP + FIGURE_BOTTOM) / 2) * scale };
+  const spanY = FIGURE_TOP - FIGURE_BOTTOM;
+  const spanX = FIGURE_RIGHT - FIGURE_LEFT;
+  const scale = Math.max(0.1, Math.min((h * FIT_HEIGHT) / spanY, (w * FIT_WIDTH) / spanX));
+  // 상자의 가운데가 화면 가운데에 오도록 원점을 옮긴다. 상자가 좌우 대칭이 아니라서
+  // 골반을 화면 정중앙에 두면 왼쪽으로 뻗은 손이 잘린다.
+  return {
+    scale,
+    cx: w / 2 - ((FIGURE_LEFT + FIGURE_RIGHT) / 2) * scale,
+    cy: h / 2 + ((FIGURE_TOP + FIGURE_BOTTOM) / 2) * scale,
+  };
 }
 
 function project(p: Pt, cam: Camera): Pt {
