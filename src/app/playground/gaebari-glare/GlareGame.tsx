@@ -217,7 +217,9 @@ export default function GlareGame() {
           className={
             settings.showPreview && running
               ? `absolute bottom-10 left-4 -scale-x-100 rounded-xl border border-white/15 shadow-lg ${
-                  fs.isFullscreen ? "w-72" : "w-32 sm:w-40"
+                  // 전체화면에서는 화면 폭에 비례해 키운다. 작은 보기에서 같은 비율로
+                  // 키우면 눈을 가려서, 그쪽은 눈을 안 덮을 만큼만 올린다.
+                  fs.isFullscreen ? "w-[28vw] max-w-2xl" : "w-40 sm:w-48"
                 }`
               : "pointer-events-none absolute h-px w-px opacity-0"
           }
