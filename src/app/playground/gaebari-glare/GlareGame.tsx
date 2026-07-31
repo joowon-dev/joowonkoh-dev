@@ -205,6 +205,24 @@ export default function GlareGame() {
           />
         </div>
 
+        {/*
+          비디오는 검출용이라 미리보기를 껐어도 DOM에는 있어야 프레임이 나온다.
+          전체화면 요소 안에 둬야 전체화면에서도 보인다 — 바깥에 두면 화면에서 사라진다.
+          좌우를 뒤집어 거울처럼 보여준다.
+        */}
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          className={
+            settings.showPreview && running
+              ? `absolute bottom-10 left-4 -scale-x-100 rounded-xl border border-white/15 shadow-lg ${
+                  fs.isFullscreen ? "w-72" : "w-32 sm:w-40"
+                }`
+              : "pointer-events-none absolute h-px w-px opacity-0"
+          }
+        />
+
         {/* 이 문구는 어떤 상태에서도 사라지지 않는다. 숨길 이유가 없는 물건이라는 걸 화면이 직접 말한다. */}
         <p className="absolute inset-x-0 bottom-0 px-4 py-2 text-center text-xs text-white/35">
           얼굴 개수만 셉니다 · 저장·전송·녹화 없음
@@ -231,18 +249,6 @@ export default function GlareGame() {
           />
         )}
       </div>
-
-      {/* 비디오는 검출용이다. 미리보기를 껐어도 DOM에는 있어야 프레임이 나온다. */}
-      <video
-        ref={videoRef}
-        playsInline
-        muted
-        className={
-          settings.showPreview && running
-            ? "mt-4 w-full -scale-x-100 rounded-2xl border border-border"
-            : "pointer-events-none absolute h-px w-px opacity-0"
-        }
-      />
 
       <div className="mt-6">
         {!running ? (
