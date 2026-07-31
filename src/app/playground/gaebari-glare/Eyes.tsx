@@ -38,8 +38,12 @@ const PUPIL_R = 14;
 const LOOK_X = 15;
 const LOOK_Y = 10;
 
-const INK = "#23272f";
-const WHITE = "#ffffff";
+/**
+ * 검은 화면에 눈만 떠 있는 그림이다. 흰 눈매가 곧 눈의 윤곽이므로 테두리를 따로
+ * 두지 않는다 — 검은 배경 위에서는 어차피 안 보이고, 없는 편이 더 또렷하다.
+ */
+const WHITE = "#f7f7f5";
+const PUPIL = "#0b0b0d";
 /**
  * 눈매가 바뀌는 속도. 단계 전환은 이미 디바운스돼 있어 느긋해도 된다.
  * 브라우저가 path의 d 보간을 지원하면 부드럽게 바뀌고, 아니면 단계마다 바로 바뀐다 —
@@ -124,7 +128,7 @@ function Eye({
             cx={0}
             cy={0}
             r={PUPIL_R}
-            fill={INK}
+            fill={PUPIL}
             style={{
               // 눈매를 뒤집어 놨으므로 시선도 같이 뒤집어야 두 눈이 같은 곳을 본다
               transform: `translate(${gaze.x * LOOK_X * side}px, ${gaze.y * LOOK_Y}px)`,
@@ -133,14 +137,6 @@ function Eye({
           />
         </g>
 
-        <path
-          d={d}
-          fill="none"
-          stroke={INK}
-          strokeWidth={5}
-          strokeLinejoin="round"
-          style={{ transition: LID_EASE }}
-        />
       </g>
     </g>
   );

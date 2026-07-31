@@ -5,6 +5,7 @@ import type { FaceDetector } from "@mediapipe/tasks-vision";
 import Eyes, { LEVEL_LABELS } from "./Eyes";
 import { CameraPermissionGate } from "./CameraPermissionGate";
 import { SENSITIVITY_RANGE, useSettings } from "./useSettings";
+import { useFullscreen } from "../_shared/useFullscreen";
 import {
   createTracker,
   targetTrack,
@@ -53,6 +54,8 @@ export default function GlareGame() {
   const [selfLocked, setSelfLocked] = useState(false);
   const [gaze, setGaze] = useState<Gaze>(CENTER_GAZE);
 
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const fs = useFullscreen(stageRef);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const detectorRef = useRef<FaceDetector | null>(null);
@@ -183,15 +186,40 @@ export default function GlareGame() {
         </p>
       </header>
 
-      <div className="relative mt-8 overflow-hidden rounded-3xl border border-border bg-accent-soft">
-        <div className="flex aspect-[3/2] items-center justify-center p-8">
-          <Eyes level={level} gaze={gaze} className="w-full max-w-md" />
+      {/* 전체화면으로 들어가는 것은 이 상자다. 보조 모니터에 이것만 띄워 둔다. */}
+      <div
+        ref={stageRef}
+        className={`group relative overflow-hidden bg-black ${
+          fs.isFullscreen ? "" : "mt-8 rounded-3xl"
+        }`}
+      >
+        <div
+          className={`flex items-center justify-center ${
+            fs.isFullscreen ? "h-screen w-screen" : "aspect-[3/2] p-8"
+          }`}
+        >
+          <Eyes
+            level={level}
+            gaze={gaze}
+            className={fs.isFullscreen ? "w-[68vw] max-w-5xl" : "w-full max-w-md"}
+          />
         </div>
 
         {/* 이 문구는 어떤 상태에서도 사라지지 않는다. 숨길 이유가 없는 물건이라는 걸 화면이 직접 말한다. */}
-        <p className="absolute inset-x-0 bottom-0 bg-card-bg/85 px-4 py-2 text-center text-xs text-text-secondary">
+        <p className="absolute inset-x-0 bottom-0 px-4 py-2 text-center text-xs text-white/35">
           얼굴 개수만 셉니다 · 저장·전송·녹화 없음
         </p>
+
+        {fs.isSupported && (
+          // 검은 화면을 해치지 않게 평소엔 흐리게 두고, 가져다 대면 드러난다
+          <button
+            onClick={fs.toggle}
+            aria-label={fs.isFullscreen ? "전체화면 끝내기" : "전체화면으로 보기"}
+            className="absolute right-3 top-3 rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/50 opacity-40 transition hover:bg-white/20 hover:text-white hover:opacity-100 focus-visible:opacity-100 group-hover:opacity-100"
+          >
+            {fs.isFullscreen ? "나가기" : "전체화면"}
+          </button>
+        )}
 
         {(phase === "denied" || phase === "unsupported") && (
           <CameraPermissionGate
