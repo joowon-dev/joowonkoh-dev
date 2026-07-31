@@ -6,47 +6,110 @@ import type { GlareLevel } from "./state";
 /**
  * 상태별 개바리 표시.
  *
- * 스펙은 정적 PNG 4장으로 시작한다고 했지만 에셋이 없어 인라인 SVG로 그렸다.
- * 교체 전제는 그대로다 — 나중에 그림이나 짧은 webm 루프로 갈아끼울 때
- * 이 파일 하나만 바꾸면 된다. 바깥은 level prop만 넘긴다.
+ * 하얀 폼피츠. 복슬복슬한 실루엣은 타원 둘레에 작은 원을 둘러 만든다 —
+ * 털 한 올씩 그리는 것보다 훨씬 싸고, 이 크기에서는 구분이 안 간다.
  *
- * 째려보는 쪽은 direction으로 받는다. 눈동자·고개가 같은 방향으로 함께 움직여야
+ * 교체 전제는 그대로다. 나중에 그림이나 짧은 webm 루프로 갈아끼울 때
+ * 이 파일 하나만 바꾸면 된다. 바깥은 level과 direction만 넘긴다.
+ *
+ * 째려보는 쪽은 direction으로 받는다. 눈·고개가 같은 방향으로 함께 움직여야
  * "저쪽을 본다"로 읽힌다 — 눈만 돌아가면 그냥 사시처럼 보인다.
  */
 
 interface Pose {
-  /** 눈동자 가로 이동(px) */
-  pupil: number;
-  /** 위 눈꺼풀이 내려온 정도(px). 클수록 눈매가 사나워진다. */
+  /** 눈알이 옆으로 밀리는 정도(px) */
+  eye: number;
+  /** 위 눈꺼풀이 내려온 정도(px). 클수록 동그란 눈이 사나운 실눈이 된다. */
   lid: number;
-  /** 눈썹 각도(deg). 안쪽이 내려온다. */
+  /** 눈썹 주름 진하기 0~1. 평온할 땐 아예 없다. */
   brow: number;
   /** 고개 기울기(deg) */
   tilt: number;
-  /** 입이 뒤집힌 정도. 0이면 늘어진 개 입, 크면 아래로 꺾인 심통 */
+  /** 입이 뒤집힌 정도. 0이면 웃는 입, 크면 아래로 꺾인 심통 */
   frown: number;
-  /** 귀가 뒤로 젖혀진 정도(deg) */
+  /** 귀가 뒤로 눕는 정도(deg) */
   ear: number;
 }
 
 const POSES: Record<GlareLevel, Pose> = {
   // 평온하게 앉아 있음
-  idle: { pupil: 0, lid: 0, brow: 0, tilt: 0, frown: 0, ear: 0 },
+  idle: { eye: 0, lid: 0, brow: 0, tilt: 0, frown: 0, ear: 0 },
   // 눈만 옆으로 힐끗
-  glance: { pupil: 7, lid: 2, brow: -5, tilt: 0, frown: 1, ear: 6 },
+  glance: { eye: 3.5, lid: 2, brow: 0.35, tilt: 0, frown: 0.4, ear: 6 },
   // 고개까지 돌려 정면 응시
-  stare: { pupil: 10, lid: 6, brow: -12, tilt: 7, frown: 3.5, ear: 14 },
+  stare: { eye: 5.5, lid: 7, brow: 0.7, tilt: 6, frown: 1.1, ear: 14 },
   // 대놓고 째려봄
-  glare: { pupil: 12, lid: 11, brow: -20, tilt: 12, frown: 6, ear: 22 },
+  glare: { eye: 7, lid: 13, brow: 1, tilt: 10, frown: 1.8, ear: 22 },
 };
 
-const FUR = "#c9a227";
-const FUR_DARK = "#a8871c";
-const INK = "#2b2a26";
-const SNOUT = "#f3e6c4";
-const EYE_R = 14;
+const FUR = "#ffffff";
+/** 흰 개를 밝은 배경에 놓으면 윤곽이 사라진다. 한 겹 크게 깐 테두리로 띄운다. */
+const RIM = "#dfe3ea";
+const SHADE = "#eef1f5";
+const INK = "#241f1c";
+const EAR_INNER = "#f6d5d1";
+const TONGUE = "#e79a9a";
 
+const EYE_R = 14;
 const EASE = "300ms cubic-bezier(0.34, 1.15, 0.64, 1)";
+
+/**
+ * 좌표를 소수 둘째 자리에서 끊는다.
+ *
+ * Math.sin/cos는 구현체마다 마지막 자리가 다를 수 있어서, 서버(Node)와 브라우저가
+ * 같은 식으로 다른 문자열을 낸다 — 하이드레이션 불일치의 원인이다. 이 크기에서
+ * 0.01px은 보이지도 않는다.
+ */
+const round2 = (v: number): number => Math.round(v * 100) / 100;
+
+/** 타원 둘레에 원을 둘러 복슬복슬한 덩어리를 만든다. */
+function fluff(cx: number, cy: number, rx: number, ry: number, n: number, r: number, fill: string) {
+  const puffs = [];
+  for (let i = 0; i < n; i += 1) {
+    const a = (i / n) * Math.PI * 2;
+    // 반지름을 조금씩 흔들어 기계적인 톱니가 안 보이게 한다
+    const wobble = 1 + 0.12 * Math.sin(i * 2.7);
+    puffs.push(
+      <circle
+        key={i}
+        cx={round2(cx + Math.cos(a) * rx)}
+        cy={round2(cy + Math.sin(a) * ry)}
+        r={round2(r * wobble)}
+        fill={fill}
+      />,
+    );
+  }
+  return (
+    <g>
+      <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={fill} />
+      {puffs}
+    </g>
+  );
+}
+
+/** 테두리 한 겹 + 흰 몸 한 겹 */
+function FluffyBlob({
+  cx,
+  cy,
+  rx,
+  ry,
+  n,
+  r,
+}: {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  n: number;
+  r: number;
+}) {
+  return (
+    <g>
+      {fluff(cx, cy, rx, ry, n, r + 2.5, RIM)}
+      {fluff(cx, cy, rx, ry, n, r, FUR)}
+    </g>
+  );
+}
 
 export default function Gaebari({
   level,
@@ -60,7 +123,7 @@ export default function Gaebari({
 }) {
   const base = POSES[level];
   // 좌우 대칭인 값(눈꺼풀·눈썹·입·귀)은 그대로 두고, 방향이 있는 값만 뒤집는다
-  const p: Pose = { ...base, pupil: base.pupil * direction, tilt: base.tilt * direction };
+  const p: Pose = { ...base, eye: base.eye * direction, tilt: base.tilt * direction };
 
   return (
     <svg
@@ -69,67 +132,97 @@ export default function Gaebari({
       role="img"
       aria-label={`개바리 ${GAEBARI_LABELS[level]}`}
     >
-      {/* 몸 — 고개를 기울일 때 기준이 되어 준다. 목 없이 머리만 돌면 떠 있는 것처럼 보인다. */}
-      <ellipse cx="100" cy="188" rx="48" ry="38" fill={FUR_DARK} />
+      {/* 몸통과 앞발 */}
+      <FluffyBlob cx={100} cy={176} rx={44} ry={38} n={18} r={9} />
+      <FluffyBlob cx={66} cy={168} rx={12} ry={16} n={9} r={7} />
+      <FluffyBlob cx={134} cy={168} rx={12} ry={16} n={9} r={7} />
 
       <g
         style={{
           transform: `rotate(${p.tilt}deg)`,
-          transformOrigin: "100px 160px",
+          transformOrigin: "100px 150px",
           transition: `transform ${EASE}`,
         }}
       >
-        {/* 늘어진 귀. 머리 뒤에 그려서 옆으로 붙는다. 째려볼수록 뒤로 젖혀진다. */}
-        <Ear x={46} sign={-1} angle={p.ear} />
-        <Ear x={154} sign={1} angle={p.ear} />
+        {/* 쫑긋 선 삼각 귀. 째려볼수록 뒤로 눕는다. 머리 뒤에 그린다. */}
+        <Ear x={68} y={58} sign={-1} angle={p.ear} />
+        <Ear x={132} y={58} sign={1} angle={p.ear} />
 
-        {/* 머리 */}
-        <ellipse cx="100" cy="100" rx="60" ry="54" fill={FUR} />
+        <FluffyBlob cx={100} cy={94} rx={54} ry={49} n={24} r={11} />
 
-        {/* 주둥이 */}
-        <ellipse cx="100" cy="127" rx="33" ry="25" fill={SNOUT} />
+        {/* 주둥이 둘레의 옅은 그늘 — 흰색끼리 붙어 있어 경계가 필요하다 */}
+        <ellipse cx={100} cy={116} rx={34} ry={24} fill={SHADE} />
+        <ellipse cx={100} cy={113} rx={31} ry={21} fill={FUR} />
+
+        <Eye cx={78} cy={95} pose={p} />
+        <Eye cx={122} cy={95} pose={p} />
+
+        {/* 코 */}
+        <path
+          d="M 91 107 Q 100 103 109 107 Q 109 116 100 118 Q 91 116 91 107 Z"
+          fill={INK}
+        />
 
         {/* 입 — frown이 커지면 곡선이 위로 부풀고 입꼬리가 내려가 심통이 된다 */}
         <path
-          d={`M 100 122 L 100 132
-              M 100 132 Q 87 ${138 - p.frown * 2.4} 77 ${129 + p.frown * 1.3}
-              M 100 132 Q 113 ${138 - p.frown * 2.4} 123 ${129 + p.frown * 1.3}`}
+          d={`M 100 118 L 100 124
+              M 100 124 Q 91 ${129 - p.frown * 3.2} 83 ${123 + p.frown * 2.2}
+              M 100 124 Q 109 ${129 - p.frown * 3.2} 117 ${123 + p.frown * 2.2}`}
           stroke={INK}
-          strokeWidth="3.5"
+          strokeWidth="3"
           strokeLinecap="round"
           fill="none"
           style={{ transition: `d ${EASE}` }}
         />
 
-        {/* 코 */}
-        <ellipse cx="100" cy="114" rx="10" ry="7.5" fill={INK} />
-
-        <Eye cx={76} cy={93} pose={p} />
-        <Eye cx={124} cy={93} pose={p} />
+        {/* 웃을 때만 보이는 혓바닥 */}
+        <ellipse
+          cx={100}
+          cy={131}
+          rx={7}
+          ry={4}
+          fill={TONGUE}
+          style={{
+            opacity: Math.max(0, 1 - p.frown * 1.6),
+            transition: `opacity ${EASE}`,
+          }}
+        />
       </g>
     </svg>
   );
 }
 
-/** 늘어진 귀 하나. sign이 1이면 오른쪽. */
-function Ear({ x, sign, angle }: { x: number; sign: number; angle: number }) {
+/**
+ * 쫑긋 선 삼각 귀 하나. sign이 1이면 오른쪽 — 좌우 대칭이라 왼쪽 모양을 거울로 뒤집어 쓴다.
+ *
+ * 좌표를 귀 밑동(0,0) 기준으로 잡는다. 머리 위로 확실히 솟아야 폼피츠로 읽히므로
+ * 꼭짓점을 머리 윤곽보다 한참 위에 둔다.
+ */
+function Ear({ x, y, sign, angle }: { x: number; y: number; sign: number; angle: number }) {
+  const tri = (spread: number, height: number, fill: string) => (
+    <path
+      d={`M ${-spread} ${16} L ${-spread * 0.3} ${-height} L ${spread * 0.9} ${2} Z`}
+      fill={fill}
+      strokeWidth={5}
+      stroke={fill}
+      strokeLinejoin="round"
+    />
+  );
+
   return (
-    <g
-      style={{
-        // 붙은 자리를 축으로 뒤로 젖힌다
-        transform: `rotate(${sign * angle}deg)`,
-        transformOrigin: `${x}px 88px`,
-        transition: `transform ${EASE}`,
-      }}
-    >
-      <ellipse
-        cx={x + sign * 4}
-        cy={124}
-        rx={17}
-        ry={36}
-        fill={FUR_DARK}
-        transform={`rotate(${sign * 12} ${x} 124)`}
-      />
+    <g transform={`translate(${x} ${y})${sign < 0 ? "" : " scale(-1 1)"}`}>
+      <g
+        style={{
+          // 째려볼수록 바깥쪽으로 눕는다
+          transform: `rotate(${-angle}deg)`,
+          transformOrigin: "0px 10px",
+          transition: `transform ${EASE}`,
+        }}
+      >
+        {tri(24, 48, RIM)}
+        {tri(19, 42, FUR)}
+        {tri(10, 26, EAR_INNER)}
+      </g>
     </g>
   );
 }
@@ -138,39 +231,42 @@ function Eye({ cx, cy, pose }: { cx: number; cy: number; pose: Pose }) {
   const inner = cx < 100 ? -1 : 1;
   return (
     <g>
-      <circle cx={cx} cy={cy} r={EYE_R} fill="#ffffff" />
-      <circle
-        cx={cx}
-        cy={cy}
-        r={6.5}
-        fill={INK}
+      <g
         style={{
-          transform: `translateX(${pose.pupil}px)`,
+          transform: `translateX(${pose.eye}px)`,
           transition: `transform ${EASE}`,
         }}
-      />
-      {/* 위 눈꺼풀. 눈 원을 위에서 덮어 눈매를 좁힌다. */}
+      >
+        <circle cx={cx} cy={cy} r={EYE_R} fill={INK} />
+        {/* 반짝임. 눈이 통째로 까매서 이게 없으면 눈이 아니라 구멍으로 보인다. */}
+        <circle cx={cx - 4.5} cy={cy - 5} r={4.5} fill="#ffffff" />
+        <circle cx={cx + 5} cy={cy + 4} r={2} fill="#ffffff" opacity={0.6} />
+      </g>
+
+      {/* 위 눈꺼풀. 털색이라 눈을 위에서 덮으면 실눈이 된다. */}
       <path
-        d={`M ${cx - EYE_R} ${cy} a ${EYE_R} ${EYE_R} 0 0 1 ${EYE_R * 2} 0 Z`}
+        d={`M ${cx - EYE_R - 1} ${cy} a ${EYE_R + 1} ${EYE_R + 1} 0 0 1 ${(EYE_R + 1) * 2} 0 Z`}
         fill={FUR}
         style={{
-          transform: `translateY(${pose.lid - EYE_R}px)`,
+          transform: `translateY(${pose.lid - EYE_R - 1}px)`,
           transition: `transform ${EASE}`,
         }}
       />
-      {/* 눈썹. 안쪽 끝이 내려오도록 바깥 끝을 축으로 돌린다. */}
+
+      {/* 눈썹 주름. 평온할 땐 아예 안 보인다. */}
       <line
-        x1={cx - 12}
+        x1={cx - 11}
         y1={cy - EYE_R - 6}
-        x2={cx + 12}
+        x2={cx + 11}
         y2={cy - EYE_R - 6}
         stroke={INK}
-        strokeWidth="4.5"
+        strokeWidth="3.5"
         strokeLinecap="round"
+        opacity={pose.brow}
         style={{
-          transform: `rotate(${-inner * pose.brow}deg)`,
-          transformOrigin: `${cx - inner * 12}px ${cy - EYE_R - 6}px`,
-          transition: `transform ${EASE}`,
+          transform: `rotate(${-inner * pose.brow * 20}deg)`,
+          transformOrigin: `${cx - inner * 11}px ${cy - EYE_R - 6}px`,
+          transition: `transform ${EASE}, opacity ${EASE}`,
         }}
       />
     </g>
