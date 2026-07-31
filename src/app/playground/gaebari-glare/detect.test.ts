@@ -205,31 +205,35 @@ describe("시선 따라가기", () => {
     expect(g.y).toBeCloseTo(0, 3);
   });
 
-  it("프레임 좌표가 그대로 화면 좌표가 된다", () => {
-    // 웹캠 원본은 거울이 아니다 — 내 오른쪽에 선 사람이 프레임 왼쪽에 찍히고,
-    // 나를 마주 본 눈이 내 오른쪽을 보려면 화면에서도 왼쪽을 봐야 한다
-    expect(settle(0.15, 0.5).x).toBeLessThan(0);
-    expect(settle(0.85, 0.5).x).toBeGreaterThan(0);
+  it("좌우는 뒤집고 위아래는 그대로 간다", () => {
+    // 카메라는 나를 마주 보고 찍으므로 내 왼쪽에 선 사람이 프레임 오른쪽에 찍힌다
+    // (웹캠 미리보기를 거울처럼 뒤집어 보여주는 이유가 이것이다).
+    // 그 사람은 화면 기준으로도 내 왼쪽이므로 눈은 화면 왼쪽을 봐야 한다.
+    expect(settle(0.85, 0.5).x).toBeLessThan(0);
+    expect(settle(0.15, 0.5).x).toBeGreaterThan(0);
+    // 위아래는 뒤집을 것이 없다
     expect(settle(0.5, 0.15).y).toBeLessThan(0);
     expect(settle(0.5, 0.85).y).toBeGreaterThan(0);
   });
 
   it("눈이 다 돌아간 뒤로는 더 안 간다", () => {
+    // 프레임 오른쪽 밖 → 화면 왼쪽 끝에서 멈춘다
     const g = settle(1.5, -0.6);
-    expect(g.x).toBeCloseTo(1, 3);
+    expect(g.x).toBeCloseTo(-1, 3);
     expect(g.y).toBeCloseTo(-1, 3);
   });
 
   it("사람을 따라 시선이 이어진다", () => {
-    // 왼쪽 끝에서 오른쪽 끝으로 걸어간다. 눈이 중간 지점들을 거쳐 따라가야 한다.
+    // 프레임 왼쪽 끝에서 오른쪽 끝으로 걸어간다. 시선은 반대로 흐르되,
+    // 중간 지점들을 빠짐없이 거쳐야 한다.
     let g = settle(0.1, 0.5);
     const path: number[] = [];
     for (let i = 0; i <= 20; i += 1) {
       g = trackGaze(g, at(0.1 + (i / 20) * 0.8, 0.5));
       path.push(g.x);
     }
-    // 한 번도 되돌아가지 않고 계속 오른쪽으로
-    for (let i = 1; i < path.length; i += 1) expect(path[i]).toBeGreaterThan(path[i - 1]);
+    // 한 번도 되돌아가지 않는다
+    for (let i = 1; i < path.length; i += 1) expect(path[i]).toBeLessThan(path[i - 1]);
     // 중간값들이 실제로 존재한다 — 칸 단위로 튀지 않는다
     expect(path.filter((v) => v > -0.5 && v < 0.5).length).toBeGreaterThan(3);
   });
@@ -237,8 +241,8 @@ describe("시선 따라가기", () => {
   it("한 프레임에 목표까지 다 가지 않는다", () => {
     // 검출 박스가 떠는 대로 눈이 떨면 안 된다
     const one = trackGaze(CENTER_GAZE, at(0.9, 0.5));
-    expect(one.x).toBeGreaterThan(0);
-    expect(one.x).toBeLessThan(settle(0.9, 0.5).x);
+    expect(Math.abs(one.x)).toBeGreaterThan(0);
+    expect(Math.abs(one.x)).toBeLessThan(Math.abs(settle(0.9, 0.5).x));
   });
 
   it("검출이 떨려도 시선은 덜 떨린다", () => {

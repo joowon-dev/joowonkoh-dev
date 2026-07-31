@@ -152,9 +152,10 @@ const clamp1 = (v: number): number => Math.min(1, Math.max(-1, v));
  * 침입자를 눈으로 따라간다. 매 프레임 목표 지점 쪽으로 조금씩 다가가므로,
  * 사람이 움직이면 눈이 끊기지 않고 쫓아간다.
  *
- * 웹캠 원본 프레임은 거울이 아니다 — 내 오른쪽에 선 사람은 프레임 왼쪽에 찍힌다.
- * 눈은 나를 마주 보고 있으므로, 내 오른쪽을 보려면 화면에서는 왼쪽을 봐야 한다.
- * 결국 프레임에서의 좌표가 그대로 화면에서의 좌표가 된다. 위아래는 뒤집을 것이 없다.
+ * 좌우는 한 번 뒤집는다. 카메라는 나를 마주 보고 찍으므로 **내 왼쪽에 선 사람이
+ * 프레임 오른쪽에 찍힌다** — 웹캠 미리보기를 거울처럼 뒤집어 보여주는 이유가 이것이다.
+ * 그 사람은 화면 기준으로도 내 왼쪽에 있으니 눈은 화면 왼쪽을 봐야 한다.
+ * 위아래는 뒤집을 것이 없다.
  *
  * @param prev 직전 시선. 대상이 없으면 그대로 둔다 — 잠깐 안 잡혔다고 눈이
  *             정면으로 되돌아가면 하강 지연을 둔 의미가 없다.
@@ -162,7 +163,7 @@ const clamp1 = (v: number): number => Math.min(1, Math.max(-1, v));
 export function trackGaze(prev: Gaze, intruder: Track | null): Gaze {
   if (!intruder) return prev;
   const b = intruder.box;
-  const tx = clamp1((b.x + b.w / 2 - 0.5) * 2 * GAZE_GAIN);
+  const tx = clamp1(-(b.x + b.w / 2 - 0.5) * 2 * GAZE_GAIN);
   const ty = clamp1((b.y + b.h / 2 - 0.5) * 2 * GAZE_GAIN);
   return {
     x: prev.x + (tx - prev.x) * GAZE_SMOOTHING,
