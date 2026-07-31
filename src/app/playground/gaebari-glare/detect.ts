@@ -125,36 +125,48 @@ export function selfTrack(s: TrackerState): Track | null {
   return s.tracks.find((t) => t.id === s.selfId) ?? null;
 }
 
-/** 개바리가 볼 방향. -1이 화면 왼쪽. */
-export type LookDirection = -1 | 1;
+/** 아홉 칸 중 한 칸. -1이 왼쪽/위, 1이 오른쪽/아래. */
+export type Axis = -1 | 0 | 1;
+export interface LookCell {
+  col: Axis;
+  row: Axis;
+}
+
+export const CENTER_CELL: LookCell = { col: 0, row: 0 };
+
+/** 칸 경계. 프레임을 가로세로 3등분한다. */
+const LOW = 1 / 3;
+const HIGH = 2 / 3;
 
 /**
- * 방향을 바꾸려면 이만큼은 옆에 있어야 한다. 바로 뒤에 선 사람 때문에
- * 개바리가 좌우로 떨리는 것을 막는다.
+ * 칸을 벗어나려면 경계에서 이만큼 더 가야 한다. 경계에 딱 선 사람 때문에
+ * 눈이 두 칸 사이를 오가는 것을 막는다.
  */
-export const DIRECTION_DEADZONE = 0.06;
+export const CELL_MARGIN = 0.05;
 
-const centerX = (b: Box): number => b.x + b.w / 2;
+/** 한 축의 칸 번호. 지금 칸에 머무르려는 관성이 있다. */
+function axisCell(v: number, prev: Axis): Axis {
+  if (prev === -1) return v <= LOW + CELL_MARGIN ? -1 : v > HIGH + CELL_MARGIN ? 1 : 0;
+  if (prev === 1) return v >= HIGH - CELL_MARGIN ? 1 : v < LOW - CELL_MARGIN ? -1 : 0;
+  return v < LOW - CELL_MARGIN ? -1 : v > HIGH + CELL_MARGIN ? 1 : 0;
+}
 
 /**
- * 침입자가 있는 쪽.
+ * 침입자가 프레임의 어느 칸에 있는지.
  *
  * 웹캠 원본 프레임은 거울이 아니다 — 내 오른쪽에 선 사람은 프레임 왼쪽에 찍힌다.
- * 개바리는 나를 마주 보고 있으므로, 내 오른쪽을 보려면 화면에서는 왼쪽을 봐야 한다.
- * 결국 프레임에서의 좌우가 그대로 화면에서의 좌우가 된다.
+ * 눈은 나를 마주 보고 있으므로, 내 오른쪽을 보려면 화면에서는 왼쪽을 봐야 한다.
+ * 결국 프레임에서의 좌표가 그대로 화면에서의 좌표가 된다. 위아래는 뒤집을 것이 없다.
  *
- * @param prev 직전 방향. 판단할 근거가 없으면 그대로 유지한다 — 대상이 잠깐 사라졌다고
- *             고개를 정면으로 되돌리면 하강 지연을 둔 의미가 없다.
+ * @param prev 직전 칸. 대상이 없으면 그대로 유지한다 — 잠깐 안 잡혔다고 눈이
+ *             정면으로 되돌아가면 하강 지연을 둔 의미가 없다.
  */
-export function lookDirection(
-  prev: LookDirection,
-  self: Track | null,
-  intruder: Track | null,
-): LookDirection {
-  if (!self || !intruder) return prev;
-  const dx = centerX(intruder.box) - centerX(self.box);
-  if (Math.abs(dx) < DIRECTION_DEADZONE) return prev;
-  return dx < 0 ? -1 : 1;
+export function lookCell(prev: LookCell, intruder: Track | null): LookCell {
+  if (!intruder) return prev;
+  const b = intruder.box;
+  const col = axisCell(b.x + b.w / 2, prev.col);
+  const row = axisCell(b.y + b.h / 2, prev.row);
+  return col === prev.col && row === prev.row ? prev : { col, row };
 }
 
 /**

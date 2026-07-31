@@ -2,17 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FaceDetector } from "@mediapipe/tasks-vision";
-import Gaebari, { GAEBARI_LABELS } from "./Gaebari";
+import Eyes, { LEVEL_LABELS } from "./Eyes";
 import { CameraPermissionGate } from "./CameraPermissionGate";
 import { SENSITIVITY_RANGE, useSettings } from "./useSettings";
 import {
   createTracker,
   intruderTrack,
-  lookDirection,
+  lookCell,
+  CENTER_CELL,
   selfTrack,
   stepTracker,
   type Box,
-  type LookDirection,
+  type LookCell,
 } from "./detect";
 import { createGlareState, stepGlare, type GlareLevel } from "./state";
 
@@ -50,7 +51,7 @@ export default function GlareGame() {
   /** 화면에 보여주는 숫자. 이 앱이 다루는 정보가 이게 전부라는 걸 그대로 드러낸다. */
   const [faceCount, setFaceCount] = useState(0);
   const [selfLocked, setSelfLocked] = useState(false);
-  const [direction, setDirection] = useState<LookDirection>(1);
+  const [cell, setCell] = useState<LookCell>(CENTER_CELL);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -75,7 +76,7 @@ export default function GlareGame() {
     setLevel("idle");
     setFaceCount(0);
     setSelfLocked(false);
-    setDirection(1);
+    setCell(CENTER_CELL);
   }, []);
 
   // 탭을 닫거나 다른 페이지로 가면 카메라를 확실히 끈다
@@ -164,7 +165,7 @@ export default function GlareGame() {
       setFaceCount(boxes.length);
       setSelfLocked(me !== null);
       setLevel((prev) => (prev === next.level ? prev : next.level));
-      setDirection((prev) => lookDirection(prev, me, intruder));
+      setCell((prev) => lookCell(prev, intruder));
     };
     loop();
   }, [stop]);
@@ -181,8 +182,8 @@ export default function GlareGame() {
       </header>
 
       <div className="relative mt-8 overflow-hidden rounded-3xl border border-border bg-accent-soft">
-        <div className="flex aspect-square items-end justify-center">
-          <Gaebari level={level} direction={direction} className="h-full w-full max-w-sm" />
+        <div className="flex aspect-[3/2] items-center justify-center p-8">
+          <Eyes level={level} cell={cell} className="w-full max-w-md" />
         </div>
 
         {/* 이 문구는 어떤 상태에서도 사라지지 않는다. 숨길 이유가 없는 물건이라는 걸 화면이 직접 말한다. */}
@@ -245,7 +246,7 @@ export default function GlareGame() {
         <dl className="mt-6 grid grid-cols-3 gap-3 text-center">
           <Stat label="잡힌 얼굴" value={`${faceCount}`} />
           <Stat label="내 자리" value={selfLocked ? "잡힘" : "찾는 중"} />
-          <Stat label="개바리" value={GAEBARI_LABELS[level]} />
+          <Stat label="눈빛" value={LEVEL_LABELS[level]} />
         </dl>
       )}
 
