@@ -8,12 +8,12 @@ import { SENSITIVITY_RANGE, useSettings } from "./useSettings";
 import {
   createTracker,
   intruderTrack,
-  lookCell,
-  CENTER_CELL,
+  trackGaze,
+  CENTER_GAZE,
   selfTrack,
   stepTracker,
   type Box,
-  type LookCell,
+  type Gaze,
 } from "./detect";
 import { createGlareState, stepGlare, type GlareLevel } from "./state";
 
@@ -51,7 +51,7 @@ export default function GlareGame() {
   /** 화면에 보여주는 숫자. 이 앱이 다루는 정보가 이게 전부라는 걸 그대로 드러낸다. */
   const [faceCount, setFaceCount] = useState(0);
   const [selfLocked, setSelfLocked] = useState(false);
-  const [cell, setCell] = useState<LookCell>(CENTER_CELL);
+  const [gaze, setGaze] = useState<Gaze>(CENTER_GAZE);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -76,7 +76,7 @@ export default function GlareGame() {
     setLevel("idle");
     setFaceCount(0);
     setSelfLocked(false);
-    setCell(CENTER_CELL);
+    setGaze(CENTER_GAZE);
   }, []);
 
   // 탭을 닫거나 다른 페이지로 가면 카메라를 확실히 끈다
@@ -165,7 +165,7 @@ export default function GlareGame() {
       setFaceCount(boxes.length);
       setSelfLocked(me !== null);
       setLevel((prev) => (prev === next.level ? prev : next.level));
-      setCell((prev) => lookCell(prev, intruder));
+      setGaze((prev) => trackGaze(prev, intruder));
     };
     loop();
   }, [stop]);
@@ -183,7 +183,7 @@ export default function GlareGame() {
 
       <div className="relative mt-8 overflow-hidden rounded-3xl border border-border bg-accent-soft">
         <div className="flex aspect-[3/2] items-center justify-center p-8">
-          <Eyes level={level} cell={cell} className="w-full max-w-md" />
+          <Eyes level={level} gaze={gaze} className="w-full max-w-md" />
         </div>
 
         {/* 이 문구는 어떤 상태에서도 사라지지 않는다. 숨길 이유가 없는 물건이라는 걸 화면이 직접 말한다. */}

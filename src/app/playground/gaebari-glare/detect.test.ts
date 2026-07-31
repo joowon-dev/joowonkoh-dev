@@ -5,8 +5,10 @@ import {
   createTracker,
   intruderTrack,
   iou,
-  lookCell,
-  type LookCell,
+  trackGaze,
+  CENTER_GAZE,
+  GAZE_GAIN,
+  type Gaze,
   selfTrack,
   stepTracker,
   type Box,
@@ -159,66 +161,80 @@ describe("누가 나인가", () => {
   });
 });
 
-describe("보는 칸", () => {
+describe("시선 따라가기", () => {
   const track = (b: Box) => ({ id: 1, box: b, age: 50, misses: 0 });
   /** 중심이 (cx, cy)인 작은 박스 */
   const at = (cx: number, cy: number) => track(box(cx - 0.05, cy - 0.06, 0.1, 0.12));
 
-  it("아홉 칸을 모두 짚는다", () => {
+  /** 목표가 안 움직일 때 눈이 다다르는 곳 */
+  const settle = (cx: number, cy: number, from: Gaze = CENTER_GAZE): Gaze => {
+    let g = from;
+    for (let i = 0; i < 40; i += 1) g = trackGaze(g, at(cx, cy));
+    return g;
+  };
+
+  it("가운데 있는 사람은 정면으로 본다", () => {
+    const g = settle(0.5, 0.5);
+    expect(g.x).toBeCloseTo(0, 3);
+    expect(g.y).toBeCloseTo(0, 3);
+  });
+
+  it("프레임 좌표가 그대로 화면 좌표가 된다", () => {
     // 웹캠 원본은 거울이 아니다 — 내 오른쪽에 선 사람이 프레임 왼쪽에 찍히고,
-    // 나를 마주 본 눈이 내 오른쪽을 보려면 화면에서도 왼쪽을 봐야 한다.
-    // 결국 프레임 좌표가 그대로 화면 좌표가 된다.
-    const cases: Array<[number, number, LookCell]> = [
-      [0.15, 0.15, { col: -1, row: -1 }],
-      [0.5, 0.15, { col: 0, row: -1 }],
-      [0.85, 0.15, { col: 1, row: -1 }],
-      [0.15, 0.5, { col: -1, row: 0 }],
-      [0.5, 0.5, { col: 0, row: 0 }],
-      [0.85, 0.5, { col: 1, row: 0 }],
-      [0.15, 0.85, { col: -1, row: 1 }],
-      [0.5, 0.85, { col: 0, row: 1 }],
-      [0.85, 0.85, { col: 1, row: 1 }],
-    ];
-    for (const [cx, cy, want] of cases) {
-      // 어느 칸에서 출발하든 같은 답이 나와야 한다
-      expect(lookCell({ col: 0, row: 0 }, at(cx, cy))).toEqual(want);
-      expect(lookCell({ col: 1, row: 1 }, at(cx, cy))).toEqual(want);
-      expect(lookCell({ col: -1, row: -1 }, at(cx, cy))).toEqual(want);
+    // 나를 마주 본 눈이 내 오른쪽을 보려면 화면에서도 왼쪽을 봐야 한다
+    expect(settle(0.15, 0.5).x).toBeLessThan(0);
+    expect(settle(0.85, 0.5).x).toBeGreaterThan(0);
+    expect(settle(0.5, 0.15).y).toBeLessThan(0);
+    expect(settle(0.5, 0.85).y).toBeGreaterThan(0);
+  });
+
+  it("눈이 다 돌아간 뒤로는 더 안 간다", () => {
+    const g = settle(1.5, -0.6);
+    expect(g.x).toBeCloseTo(1, 3);
+    expect(g.y).toBeCloseTo(-1, 3);
+  });
+
+  it("사람을 따라 시선이 이어진다", () => {
+    // 왼쪽 끝에서 오른쪽 끝으로 걸어간다. 눈이 중간 지점들을 거쳐 따라가야 한다.
+    let g = settle(0.1, 0.5);
+    const path: number[] = [];
+    for (let i = 0; i <= 20; i += 1) {
+      g = trackGaze(g, at(0.1 + (i / 20) * 0.8, 0.5));
+      path.push(g.x);
     }
+    // 한 번도 되돌아가지 않고 계속 오른쪽으로
+    for (let i = 1; i < path.length; i += 1) expect(path[i]).toBeGreaterThan(path[i - 1]);
+    // 중간값들이 실제로 존재한다 — 칸 단위로 튀지 않는다
+    expect(path.filter((v) => v > -0.5 && v < 0.5).length).toBeGreaterThan(3);
   });
 
-  it("경계에 서 있으면 칸을 안 바꾼다", () => {
-    // 경계에 딱 선 사람 때문에 눈이 두 칸 사이를 오가는 것을 막는다
-    const onEdge = at(1 / 3, 0.5);
-    expect(lookCell({ col: -1, row: 0 }, onEdge)).toEqual({ col: -1, row: 0 });
-    expect(lookCell({ col: 0, row: 0 }, onEdge)).toEqual({ col: 0, row: 0 });
+  it("한 프레임에 목표까지 다 가지 않는다", () => {
+    // 검출 박스가 떠는 대로 눈이 떨면 안 된다
+    const one = trackGaze(CENTER_GAZE, at(0.9, 0.5));
+    expect(one.x).toBeGreaterThan(0);
+    expect(one.x).toBeLessThan(settle(0.9, 0.5).x);
   });
 
-  it("경계 근처에서 떨려도 칸이 안 흔들린다", () => {
-    let c: LookCell = { col: 0, row: 0 };
-    for (let i = 0; i < 40; i += 1) {
-      c = lookCell(c, at(1 / 3 + (i % 2 === 0 ? -0.02 : 0.02), 0.5));
+  it("검출이 떨려도 시선은 덜 떨린다", () => {
+    const jitter = 0.06;
+    let g = settle(0.5, 0.5);
+    let min = Infinity;
+    let max = -Infinity;
+    for (let i = 0; i < 60; i += 1) {
+      g = trackGaze(g, at(0.5 + (i % 2 === 0 ? -jitter : jitter), 0.5));
+      if (i > 20) {
+        min = Math.min(min, g.x);
+        max = Math.max(max, g.x);
+      }
     }
-    expect(c).toEqual({ col: 0, row: 0 });
+    // 입력 진폭을 화면 좌표로 옮긴 값보다 확실히 작아야 한다
+    expect(max - min).toBeLessThan(jitter * 2 * GAZE_GAIN);
   });
 
-  it("경계를 확실히 넘으면 칸이 바뀐다", () => {
-    let c = lookCell({ col: 0, row: 0 }, at(0.1, 0.5));
-    expect(c.col).toBe(-1);
-    c = lookCell(c, at(0.9, 0.5));
-    expect(c.col).toBe(1);
-  });
-
-  it("대상이 없으면 직전 칸을 유지한다", () => {
+  it("대상이 없으면 직전 시선을 그대로 둔다", () => {
     // 잠깐 안 잡혔다고 눈이 정면으로 되돌아가면 하강 지연을 둔 의미가 없다
-    const prev: LookCell = { col: -1, row: 1 };
-    expect(lookCell(prev, null)).toBe(prev);
-  });
-
-  it("칸이 그대로면 같은 객체를 돌려준다", () => {
-    // 매 프레임 새 객체를 만들면 setCell이 헛돌아 리렌더가 난다
-    const prev: LookCell = { col: 1, row: 0 };
-    expect(lookCell(prev, at(0.85, 0.5))).toBe(prev);
+    const prev: Gaze = { x: -0.7, y: 0.4 };
+    expect(trackGaze(prev, null)).toBe(prev);
   });
 });
 

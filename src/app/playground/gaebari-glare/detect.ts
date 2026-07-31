@@ -125,48 +125,49 @@ export function selfTrack(s: TrackerState): Track | null {
   return s.tracks.find((t) => t.id === s.selfId) ?? null;
 }
 
-/** 아홉 칸 중 한 칸. -1이 왼쪽/위, 1이 오른쪽/아래. */
-export type Axis = -1 | 0 | 1;
-export interface LookCell {
-  col: Axis;
-  row: Axis;
+/** 눈이 보는 곳. 가운데가 0, 좌우·위아래 끝이 ±1인 연속값. */
+export interface Gaze {
+  x: number;
+  y: number;
 }
 
-export const CENTER_CELL: LookCell = { col: 0, row: 0 };
-
-/** 칸 경계. 프레임을 가로세로 3등분한다. */
-const LOW = 1 / 3;
-const HIGH = 2 / 3;
+export const CENTER_GAZE: Gaze = { x: 0, y: 0 };
 
 /**
- * 칸을 벗어나려면 경계에서 이만큼 더 가야 한다. 경계에 딱 선 사람 때문에
- * 눈이 두 칸 사이를 오가는 것을 막는다.
+ * 프레임 끝까지 안 가도 눈이 끝까지 돌게 하는 배율. 1이면 화면 가장자리에
+ * 붙어야 눈이 다 돌아가는데, 실제로는 그 전에 프레임을 벗어난다.
  */
-export const CELL_MARGIN = 0.05;
-
-/** 한 축의 칸 번호. 지금 칸에 머무르려는 관성이 있다. */
-function axisCell(v: number, prev: Axis): Axis {
-  if (prev === -1) return v <= LOW + CELL_MARGIN ? -1 : v > HIGH + CELL_MARGIN ? 1 : 0;
-  if (prev === 1) return v >= HIGH - CELL_MARGIN ? 1 : v < LOW - CELL_MARGIN ? -1 : 0;
-  return v < LOW - CELL_MARGIN ? -1 : v > HIGH + CELL_MARGIN ? 1 : 0;
-}
+export const GAZE_GAIN = 1.35;
 
 /**
- * 침입자가 프레임의 어느 칸에 있는지.
+ * 한 프레임에 목표 지점으로 다가가는 비율. 1이면 검출 박스가 떠는 대로 눈도 떤다.
+ * 10fps에서 0.45면 두세 프레임 만에 따라붙으면서 떨림은 눌린다.
+ */
+export const GAZE_SMOOTHING = 0.45;
+
+/** 눈이 다 돌아간 뒤로는 더 갈 곳이 없다 */
+const clamp1 = (v: number): number => Math.min(1, Math.max(-1, v));
+
+/**
+ * 침입자를 눈으로 따라간다. 매 프레임 목표 지점 쪽으로 조금씩 다가가므로,
+ * 사람이 움직이면 눈이 끊기지 않고 쫓아간다.
  *
  * 웹캠 원본 프레임은 거울이 아니다 — 내 오른쪽에 선 사람은 프레임 왼쪽에 찍힌다.
  * 눈은 나를 마주 보고 있으므로, 내 오른쪽을 보려면 화면에서는 왼쪽을 봐야 한다.
  * 결국 프레임에서의 좌표가 그대로 화면에서의 좌표가 된다. 위아래는 뒤집을 것이 없다.
  *
- * @param prev 직전 칸. 대상이 없으면 그대로 유지한다 — 잠깐 안 잡혔다고 눈이
+ * @param prev 직전 시선. 대상이 없으면 그대로 둔다 — 잠깐 안 잡혔다고 눈이
  *             정면으로 되돌아가면 하강 지연을 둔 의미가 없다.
  */
-export function lookCell(prev: LookCell, intruder: Track | null): LookCell {
+export function trackGaze(prev: Gaze, intruder: Track | null): Gaze {
   if (!intruder) return prev;
   const b = intruder.box;
-  const col = axisCell(b.x + b.w / 2, prev.col);
-  const row = axisCell(b.y + b.h / 2, prev.row);
-  return col === prev.col && row === prev.row ? prev : { col, row };
+  const tx = clamp1((b.x + b.w / 2 - 0.5) * 2 * GAZE_GAIN);
+  const ty = clamp1((b.y + b.h / 2 - 0.5) * 2 * GAZE_GAIN);
+  return {
+    x: prev.x + (tx - prev.x) * GAZE_SMOOTHING,
+    y: prev.y + (ty - prev.y) * GAZE_SMOOTHING,
+  };
 }
 
 /**

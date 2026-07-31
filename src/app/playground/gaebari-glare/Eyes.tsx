@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { CENTER_CELL, type LookCell } from "./detect";
+import { CENTER_GAZE, type Gaze } from "./detect";
 import type { GlareLevel } from "./state";
 
 /**
@@ -11,7 +11,8 @@ import type { GlareLevel } from "./state";
  * 이러면 눈꺼풀을 배경색으로 덮을 필요가 없어서 어떤 배경 위에 놓아도 맞는다.
  *
  * 사나움은 두 값이 만든다 — 눈매 높이가 줄고(실눈), 안쪽 눈꼬리가 내려간다(찌푸림).
- * 시선은 아홉 칸 중 한 칸을 받아 눈동자를 그쪽으로 민다.
+ * 시선은 -1~1 연속값을 받아 눈동자를 그쪽으로 민다. 검출이 10fps라 프레임 사이가
+ * 비는데, 짧은 transition이 그 사이를 메워 눈이 끊기지 않고 흐른다.
  */
 
 interface Pose {
@@ -33,13 +34,23 @@ const POSES: Record<GlareLevel, Pose> = {
 const EYE_W = 34;
 /** 눈동자 반지름 */
 const PUPIL_R = 14;
-/** 눈동자가 한 칸당 움직이는 거리 */
+/** 시선이 끝까지 갔을 때 눈동자가 움직이는 거리 */
 const LOOK_X = 15;
 const LOOK_Y = 10;
 
 const INK = "#23272f";
 const WHITE = "#ffffff";
-const EASE = "300ms cubic-bezier(0.34, 1.15, 0.64, 1)";
+/**
+ * 눈매가 바뀌는 속도. 단계 전환은 이미 디바운스돼 있어 느긋해도 된다.
+ * 브라우저가 path의 d 보간을 지원하면 부드럽게 바뀌고, 아니면 단계마다 바로 바뀐다 —
+ * 어느 쪽이든 초당 몇 번씩 튀지는 않는다.
+ */
+const LID_EASE = "d 300ms cubic-bezier(0.34, 1.15, 0.64, 1)";
+/**
+ * 눈동자가 따라가는 속도. 검출 주기(100ms)보다 조금 길게 잡아 프레임 사이가
+ * 이어지게 한다. 더 길면 사람보다 눈이 확연히 늦는다.
+ */
+const GAZE_EASE = "130ms linear";
 
 /**
  * 안쪽(코 쪽)이 -x인 오른눈 기준 눈매. 왼눈은 거울로 뒤집어 쓴다.
@@ -58,12 +69,12 @@ function lidPath({ half, drop }: Pose): string {
 
 export default function Eyes({
   level,
-  cell = CENTER_CELL,
+  gaze = CENTER_GAZE,
   className,
 }: {
   level: GlareLevel;
-  /** 볼 칸. col/row 각각 -1, 0, 1. */
-  cell?: LookCell;
+  /** 볼 곳. 가운데가 0, 끝이 ±1. */
+  gaze?: Gaze;
   className?: string;
 }) {
   const pose = POSES[level];
@@ -78,8 +89,8 @@ export default function Eyes({
       role="img"
       aria-label={`눈 ${LEVEL_LABELS[level]}`}
     >
-      <Eye id={`${uid}-l`} x={72} pose={pose} cell={cell} side={-1} />
-      <Eye id={`${uid}-r`} x={168} pose={pose} cell={cell} side={1} />
+      <Eye id={`${uid}-l`} x={72} pose={pose} gaze={gaze} side={-1} />
+      <Eye id={`${uid}-r`} x={168} pose={pose} gaze={gaze} side={1} />
     </svg>
   );
 }
@@ -89,13 +100,13 @@ function Eye({
   id,
   x,
   pose,
-  cell,
+  gaze,
   side,
 }: {
   id: string;
   x: number;
   pose: Pose;
-  cell: LookCell;
+  gaze: Gaze;
   side: -1 | 1;
 }) {
   const d = lidPath(pose);
@@ -104,8 +115,7 @@ function Eye({
     <g transform={`translate(${x} 60)`}>
       <g transform={side < 0 ? "scale(-1 1)" : undefined}>
         <clipPath id={id}>
-          {/* clipPath 안에서는 transition이 안 먹는다. 단계 전환은 눈동자와 테두리가 끌고 간다. */}
-          <path d={d} />
+          <path d={d} style={{ transition: LID_EASE }} />
         </clipPath>
 
         <g clipPath={`url(#${id})`}>
@@ -117,13 +127,20 @@ function Eye({
             fill={INK}
             style={{
               // 눈매를 뒤집어 놨으므로 시선도 같이 뒤집어야 두 눈이 같은 곳을 본다
-              transform: `translate(${cell.col * LOOK_X * side}px, ${cell.row * LOOK_Y}px)`,
-              transition: `transform ${EASE}`,
+              transform: `translate(${gaze.x * LOOK_X * side}px, ${gaze.y * LOOK_Y}px)`,
+              transition: `transform ${GAZE_EASE}`,
             }}
           />
         </g>
 
-        <path d={d} fill="none" stroke={INK} strokeWidth={5} strokeLinejoin="round" />
+        <path
+          d={d}
+          fill="none"
+          stroke={INK}
+          strokeWidth={5}
+          strokeLinejoin="round"
+          style={{ transition: LID_EASE }}
+        />
       </g>
     </g>
   );
