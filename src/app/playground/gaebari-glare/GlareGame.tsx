@@ -7,7 +7,7 @@ import { CameraPermissionGate } from "./CameraPermissionGate";
 import { SENSITIVITY_RANGE, useSettings } from "./useSettings";
 import {
   createTracker,
-  intruderTrack,
+  targetTrack,
   trackGaze,
   CENTER_GAZE,
   selfTrack,
@@ -62,6 +62,8 @@ export default function GlareGame() {
   // 민감도가 바뀔 때마다 루프를 다시 만들지 않으려고 ref로 읽는다
   const sensitivityRef = useRef(settings.sensitivity);
   sensitivityRef.current = settings.sensitivity;
+  const soloRef = useRef(settings.soloGlare);
+  soloRef.current = settings.soloGlare;
 
   const stop = useCallback(() => {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
@@ -158,14 +160,14 @@ export default function GlareGame() {
       trackerRef.current = tracker;
 
       const me = selfTrack(tracker);
-      const intruder = me ? intruderTrack(tracker) : null;
-      const next = stepGlare(glareRef.current, intruder?.box.h ?? null, sensitivityRef.current);
+      const target = targetTrack(tracker, soloRef.current);
+      const next = stepGlare(glareRef.current, target?.box.h ?? null, sensitivityRef.current);
       glareRef.current = next;
 
       setFaceCount(boxes.length);
       setSelfLocked(me !== null);
       setLevel((prev) => (prev === next.level ? prev : next.level));
-      setGaze((prev) => trackGaze(prev, intruder));
+      setGaze((prev) => trackGaze(prev, target));
     };
     loop();
   }, [stop]);
@@ -279,6 +281,19 @@ export default function GlareGame() {
           />
           웹캠 화면 같이 보기
         </label>
+
+        <label className="mt-3 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.soloGlare}
+            onChange={(e) => update({ soloGlare: e.target.checked })}
+            className="accent-accent"
+          />
+          얼굴이 하나여도 째려보기
+        </label>
+        <p className="mt-1 pl-6 text-xs text-text-muted">
+          혼자 시험해 볼 때 켜세요. 끄면 원래대로, 얼굴이 2개 이상 잡혀야 반응합니다.
+        </p>
       </div>
 
       <div className="mt-6 rounded-2xl border border-border bg-card-bg p-5 text-sm text-text-secondary">
@@ -291,7 +306,7 @@ export default function GlareGame() {
         <p className="mt-1">
           누가 누구인지는 판정하지 않습니다. 얼굴이 2개 이상 잡히면 나 말고 누가 온 것이고,
           그중 화면에서 가장 크게 잡힌 얼굴이 가장 가까이 온 사람입니다. 내 자리는 3초 넘게
-          계속 잡힌 얼굴로 잡습니다.
+          계속 잡힌 얼굴로 잡습니다. 얼굴이 하나뿐일 때 반응할지는 위 설정에서 정합니다.
         </p>
       </div>
     </div>

@@ -189,3 +189,16 @@ export function intruderTrack(s: TrackerState): Track | null {
   }
   return best;
 }
+
+/**
+ * 째려볼 대상.
+ *
+ * 원래 규칙은 얼굴이 1개 이하면 아무 판단도 하지 않는 것이다 — 내가 자리를 비운 사이
+ * 남은 사람을 나로 오인해 째려보느니 가만히 있는 쪽이 낫다. 다만 혼자 시험해 볼 때는
+ * 그 규칙 때문에 아무 일도 안 일어나므로, solo면 나를 대상으로 삼는다.
+ */
+export function targetTrack(s: TrackerState, solo: boolean): Track | null {
+  const other = intruderTrack(s);
+  if (other) return other;
+  return solo ? selfTrack(s) : null;
+}

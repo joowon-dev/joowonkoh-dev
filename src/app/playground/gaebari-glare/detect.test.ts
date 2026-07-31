@@ -6,6 +6,7 @@ import {
   intruderTrack,
   iou,
   trackGaze,
+  targetTrack,
   CENTER_GAZE,
   GAZE_GAIN,
   type Gaze,
@@ -158,6 +159,31 @@ describe("누가 나인가", () => {
     // 상대가 아주 오래 머물러 age가 내 트랙을 앞질러도 sticky여야 한다
     s = hold(s, [ME, OTHER], MIN_SELF_AGE * 3);
     expect(s.selfId).toBe(mine);
+  });
+});
+
+describe("혼자일 때 대상 고르기", () => {
+  it("solo가 꺼져 있으면 나 혼자일 때 대상이 없다", () => {
+    const s = hold(createTracker(), [ME], MIN_SELF_AGE);
+    expect(targetTrack(s, false)).toBeNull();
+  });
+
+  it("solo가 켜져 있으면 나 혼자여도 나를 대상으로 삼는다", () => {
+    const s = hold(createTracker(), [ME], MIN_SELF_AGE);
+    expect(targetTrack(s, true)?.box).toEqual(ME);
+  });
+
+  it("solo여도 나로 확정되기 전에는 대상이 없다", () => {
+    // 아무 얼굴이나 붙잡고 째려보기 시작하면 안 된다
+    const s = hold(createTracker(), [ME], MIN_SELF_AGE - 1);
+    expect(targetTrack(s, true)).toBeNull();
+  });
+
+  it("다른 사람이 오면 solo와 무관하게 그쪽이 대상이다", () => {
+    let s = hold(createTracker(), [ME], MIN_SELF_AGE);
+    s = hold(s, [ME, OTHER], 3);
+    expect(targetTrack(s, true)?.box).toEqual(OTHER);
+    expect(targetTrack(s, false)?.box).toEqual(OTHER);
   });
 });
 

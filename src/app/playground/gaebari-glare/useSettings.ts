@@ -9,11 +9,16 @@ import { useCallback, useSyncExternalStore } from "react";
 export interface Settings {
   /** 임계값 배율. 클수록 멀리서도 반응한다. */
   sensitivity: number;
-  /** 웹캠 화면을 같이 보여줄지. 기본은 끔 — 나오는 건 개바리면 충분하다. */
+  /** 웹캠 화면을 같이 보여줄지. 기본은 끔 — 나오는 건 눈이면 충분하다. */
   showPreview: boolean;
+  /**
+   * 얼굴이 하나뿐일 때도 반응할지. 원래는 1개 이하면 아무 판단도 안 하지만,
+   * 혼자 시험해 볼 때는 그러면 아무 일도 안 일어난다.
+   */
+  soloGlare: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { sensitivity: 1, showPreview: false };
+export const DEFAULT_SETTINGS: Settings = { sensitivity: 1, showPreview: false, soloGlare: true };
 export const SENSITIVITY_RANGE = { min: 0.6, max: 1.6, step: 0.1 } as const;
 
 const KEY = "gaebari-glare:settings";
@@ -63,6 +68,7 @@ function parse(raw: string | null): Settings {
     return {
       sensitivity: clampSensitivity(saved.sensitivity),
       showPreview: saved.showPreview === true,
+      soloGlare: saved.soloGlare !== false,
     };
   } catch {
     // 저장값이 깨졌으면 기본값으로 간다. 되살릴 가치가 있는 데이터가 아니다.
