@@ -15,6 +15,12 @@ export const projects: Project[] = [
     href: "/playground/doodle-dance",
   },
   {
+    title: "WebSwing",
+    description: "열려 있는 창 사이를 거미줄로 날아다니는 맥 데스크톱 펫 🕸",
+    tags: ["macOS", "Swift", "SpriteKit"],
+    href: "/playground/webswing",
+  },
+  {
     title: "구슬 폭포 추첨기",
     description: "양동이를 가장 먼저 채운 사람이 당첨 🫧",
     tags: ["Game", "Canvas", "Physics"],
@@ -25,6 +31,13 @@ export const projects: Project[] = [
     description: "코인을 쏟아붓고 먼저 떨어진 사람이 당첨 🪙",
     tags: ["Game", "Canvas", "Physics"],
     href: "/playground/coin-pusher",
+  },
+  {
+    title: "부장님 째려보기",
+    description: "다른 사람이 다가오면 대신 째려봐 줍니다 👀",
+    tags: ["Web", "MediaPipe", "Camera"],
+    href: "/playground/gaebari-glare",
+    hidden: true,
   },
   {
     title: "종이비행기 날리기",

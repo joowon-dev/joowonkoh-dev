@@ -11,6 +11,7 @@ import { createScheduler, type EventType, type Scheduler } from "./events";
 import { FIXED_DT, winnerOf } from "./physics";
 import { createGame, type Game } from "./setup";
 import { FALL_ANIM_SECONDS, NEUTRAL_INTERVAL, simulate, type FallingCoin } from "./loop";
+import { DEFAULT_SKIN, skinOf, type SkinId } from "./skins";
 
 type Phase = "intro" | "setup" | "playing" | "result";
 
@@ -33,6 +34,7 @@ export default function CoinPusherGame() {
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [raw, setRaw] = useState("");
+  const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
   const [seed, setSeed] = useState(0);
   const [winner, setWinner] = useState<string | null>(null);
   const [remaining, setRemaining] = useState(0);
@@ -40,7 +42,11 @@ export default function CoinPusherGame() {
   const [banner, setBanner] = useState<string | null>(null);
   const [speed, setSpeed] = useState(1);
 
-  const begin = useCallback((names: string[], rawText: string) => {
+  // 스킨은 배너 문구에도 쓰인다. onStep은 매 스텝 도는 콜백이라 스킨이 바뀔 때마다
+  // 새로 만들지 않도록 ref로 읽는다.
+  const skinRef = useRef<SkinId>(DEFAULT_SKIN);
+
+  const begin = useCallback((names: string[], rawText: string, nextSkin: SkinId) => {
     // 시드는 매 게임마다 새로 뽑는다. 이후 모든 난수는 이 시드에서 파생된다.
     const nextSeed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
     const game = createGame(names, nextSeed);
@@ -50,8 +56,10 @@ export default function CoinPusherGame() {
     shakeRef.current = 0;
     nextNeutralAtRef.current = NEUTRAL_INTERVAL;
     wonAtRef.current = null;
+    skinRef.current = nextSkin;
 
     setRaw(rawText);
+    setSkin(nextSkin);
     setSeed(nextSeed);
     setWinner(null);
     setRemaining(names.length);
@@ -68,7 +76,7 @@ export default function CoinPusherGame() {
 
     const wasScrambled = game.scrambled;
     const fired = simulate(game, scheduler, fallingRef.current, nextNeutralAtRef, dt);
-    if (!wasScrambled && game.scrambled) setBanner("코인을 뒤섞는다!");
+    if (!wasScrambled && game.scrambled) setBanner(skinOf(skinRef.current).scrambleLabel);
     else if (fired) setBanner(EVENT_LABEL[fired]);
     else if (scheduler.active === null) setBanner(null);
 
@@ -140,7 +148,12 @@ export default function CoinPusherGame() {
       <div className="fixed inset-0 z-40 overflow-y-auto bg-bg">
         <div className="flex min-h-full items-center justify-center px-[max(1rem,env(safe-area-inset-left))] py-[max(1.5rem,env(safe-area-inset-top))]">
           <div className="animate-fade-in-up w-full max-w-lg">
-            <SetupPanel initialRaw={raw} onStart={begin} onBack={() => setPhase("intro")} />
+            <SetupPanel
+              initialRaw={raw}
+              initialSkin={skin}
+              onStart={begin}
+              onBack={() => setPhase("intro")}
+            />
           </div>
         </div>
       </div>
@@ -151,7 +164,13 @@ export default function CoinPusherGame() {
   // 캔버스가 화면을 다 덮고 HUD와 버튼은 그 위에 얹는다.
   return (
     <div className="fixed inset-0 z-40 overflow-hidden bg-bg">
-      <Stage gameRef={gameRef} fallingRef={fallingRef} shakeRef={shakeRef} handleRef={stageRef} />
+      <Stage
+        gameRef={gameRef}
+        fallingRef={fallingRef}
+        shakeRef={shakeRef}
+        handleRef={stageRef}
+        skin={skin}
+      />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex items-center gap-3 rounded-full border border-border bg-card-bg/85 px-4 py-1.5 text-xs text-text-secondary shadow-ambient backdrop-blur">
@@ -176,9 +195,9 @@ export default function CoinPusherGame() {
       {showOverlay && (
         <WinnerOverlay
           name={winner}
-          subtitle="가장 먼저 떨어졌습니다 🪙"
+          subtitle={skinOf(skin).winnerSubtitle}
           seed={seed}
-          onRestart={() => begin(gameRef.current?.names ?? [], raw)}
+          onRestart={() => begin(gameRef.current?.names ?? [], raw, skin)}
           onEdit={() => setPhase("setup")}
         />
       )}

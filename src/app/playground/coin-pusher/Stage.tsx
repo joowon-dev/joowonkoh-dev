@@ -4,6 +4,7 @@ import { useCallback, useEffect, useImperativeHandle, useRef, type RefObject } f
 import { computeCamera, drawScene, readPalette, type Palette } from "./render";
 import type { FallingCoin } from "./loop";
 import type { Game } from "./setup";
+import type { SkinId } from "./skins";
 
 export interface StageHandle {
   /** 현재 게임 상태를 캔버스에 한 번 그린다 */
@@ -16,10 +17,19 @@ interface StageProps {
   /** 진행 중인 흔들림 세기(화면 픽셀). 0이면 흔들지 않는다. */
   shakeRef: RefObject<number>;
   handleRef: RefObject<StageHandle | null>;
+  /** 판 위에 무엇을 그릴지. 물리와는 무관한 겉모습 설정이다. */
+  skin: SkinId;
   className?: string;
 }
 
-export default function Stage({ gameRef, fallingRef, shakeRef, handleRef, className }: StageProps) {
+export default function Stage({
+  gameRef,
+  fallingRef,
+  shakeRef,
+  handleRef,
+  skin,
+  className,
+}: StageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const paletteRef = useRef<Palette | null>(null);
 
@@ -45,8 +55,8 @@ export default function Stage({ gameRef, fallingRef, shakeRef, handleRef, classN
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     const cam = computeCamera({ w, h }, game.world.board);
-    drawScene(ctx, game, cam, paletteRef.current, fallingRef.current, shakeRef.current);
-  }, [gameRef, fallingRef, shakeRef]);
+    drawScene(ctx, game, cam, paletteRef.current, fallingRef.current, shakeRef.current, skin);
+  }, [gameRef, fallingRef, shakeRef, skin]);
 
   useImperativeHandle(handleRef, () => ({ draw }), [draw]);
 

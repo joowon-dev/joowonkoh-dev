@@ -51,3 +51,7 @@ yarn-error.log*
 # gsc-inspect (서비스 계정 키 + 결과 스냅샷)
 scripts/.gsc-key.json
 scripts/.gsc-results/
+
+# mediapipe wasm 런타임 (빌드 때 node_modules에서 복사 — scripts/copy-mediapipe.mjs)
+public/mediapipe/*.wasm
+public/mediapipe/*_internal.js

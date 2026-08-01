@@ -2,6 +2,7 @@ import {
   NEUTRAL_RADII,
   PUSHER_BACK_Y,
   centerX,
+  createCoin,
   halfWidthAt,
   type Board,
   type Coin,
@@ -9,6 +10,8 @@ import {
 import type { Game } from "./setup";
 import { BURST_RADIUS, BURST_SECONDS } from "./events";
 import { FALL_ANIM_SECONDS, type FallingCoin } from "./loop";
+import { characterThickness, drawCharacter, speciesFor, winksOf } from "./character";
+import type { SkinId } from "./skins";
 
 /** 화면상 y축을 이 비율로 압축해 비스듬한 시점을 만든다 */
 export const PERSPECTIVE_SCALE = 0.72;
@@ -187,34 +190,54 @@ function tracePanel(
   ctx.closePath();
 }
 
-function drawCoin(
+/**
+ * 판 위의 물체 하나. 코인이든 캐릭터든 바닥 그림자와 화면 좌표 계산은 같고,
+ * 그 위에 무엇을 얹는지만 스킨이 결정한다.
+ */
+function drawPiece(
   ctx: CanvasRenderingContext2D,
   coin: Coin,
   cam: Camera,
   palette: Palette,
   names: string[],
-  elapsed: number,
   yOffset: number,
   alpha: number,
+  skin: SkinId,
 ): void {
   const { sx, sy } = projectPoint(coin.x, coin.y, cam);
   const y = sy + yOffset;
   const rx = coin.radius * cam.scale;
   const ry = rx * PERSPECTIVE_SCALE;
-  const thickness = coinThickness(coin.radius) * cam.scale;
-  const [top, side] = coinColors(coin, palette);
+  const thickness =
+    (skin === "character" ? characterThickness(coin.radius) : coinThickness(coin.radius)) *
+    cam.scale;
 
   ctx.save();
   ctx.globalAlpha = alpha;
 
-  // 바닥 그림자 — 코인이 공중에 떠 있을수록 작고 옅어진다
+  // 바닥 그림자 — 물체가 공중에 떠 있을수록 작고 옅어진다
   const lift = Math.min(1, Math.max(0, -yOffset / (ENTRY_HEIGHT * cam.scale)));
   ctx.fillStyle = `rgba(0,0,0,${0.18 * (1 - lift * 0.75)})`;
   ctx.beginPath();
-  // 낙하 연출(yOffset > 0)에서는 그림자도 코인을 따라 내려간다
+  // 낙하 연출(yOffset > 0)에서는 그림자도 물체를 따라 내려간다
   const shadowY = sy + thickness + 2 + Math.max(0, yOffset);
   ctx.ellipse(sx, shadowY, rx * (0.95 - lift * 0.35), ry * (0.8 - lift * 0.3), 0, 0, Math.PI * 2);
   ctx.fill();
+
+  if (skin === "character") {
+    const name = coin.ownerIndex >= 0 ? (names[coin.ownerIndex] ?? "") : undefined;
+    drawCharacter(
+      ctx,
+      { sx, sy: y, rx, ry, thickness },
+      speciesFor(coin, palette.player),
+      winksOf(coin.id),
+      name,
+    );
+    ctx.restore();
+    return;
+  }
+
+  const [top, side] = coinColors(coin, palette);
 
   // 옆면
   ctx.fillStyle = side;
@@ -265,6 +288,57 @@ function drawCoin(
   ctx.restore();
 }
 
+/** 스킨 미리보기에 세울 표본. 가장 작은 것과 가장 큰 것, 참가자 하나를 보여준다. */
+const SAMPLE_RADII = [11, 17, 25] as const;
+/** 미리보기 배율 상한. 카드가 넓어도 표본이 실물보다 커지면 판 위 크기감이 어긋나 보인다. */
+const SAMPLE_MAX_SCALE = 1.5;
+
+/**
+ * 설정 화면의 스킨 카드에 표본을 그린다. 게임과 같은 그리기 코드를 쓰므로 미리보기와
+ * 실제 판 위 모습이 어긋날 수 없다.
+ */
+export function drawSkinSample(
+  ctx: CanvasRenderingContext2D,
+  vp: Viewport,
+  palette: Palette,
+  skin: SkinId,
+  name: string,
+): void {
+  const items: Coin[] = [
+    // id는 표정(winksOf)을 정하므로 표본 중 하나는 눈을 감도록 번호를 준다
+    ...SAMPLE_RADII.map((r, i) => createCoin({ id: i + 1, x: 0, y: 0, radius: r })),
+    createCoin({ id: 99, x: 0, y: 0, kind: "player", ownerIndex: 0 }),
+  ];
+  const gap = 7;
+  const worldW = items.reduce((sum, c) => sum + c.radius * 2, 0) + gap * (items.length - 1);
+  const maxR = Math.max(...items.map((c) => c.radius));
+  // 반지름 1당 필요한 세로 길이. 위로는 고양이 귀(ry*1.62), 아래로는 몸 두께와 그림자가
+  // 삐져나온다. 세로를 맞추지 않으면 큰 캐릭터의 아래쪽이 잘린다.
+  const HEIGHT_PER_RADIUS = PERSPECTIVE_SCALE * 1.62 + PERSPECTIVE_SCALE + 0.42;
+  const scale = Math.max(
+    0.01,
+    Math.min(
+      SAMPLE_MAX_SCALE,
+      (vp.w - 16) / worldW,
+      (vp.h - 6) / (maxR * HEIGHT_PER_RADIUS),
+    ),
+  );
+  const cam: Camera = {
+    scale,
+    offsetX: (vp.w - worldW * scale) / 2,
+    // 가장 큰 표본의 두께와 그림자가 바닥에 닿도록 아래에서부터 잡는다
+    offsetY: vp.h - maxR * scale * (PERSPECTIVE_SCALE + 0.42) - 4,
+  };
+
+  let x = 0;
+  for (const coin of items) {
+    x += coin.radius;
+    coin.x = x;
+    x += coin.radius + gap;
+    drawPiece(ctx, coin, cam, palette, [name], 0, 1, skin);
+  }
+}
+
 export function drawScene(
   ctx: CanvasRenderingContext2D,
   game: Game,
@@ -272,6 +346,7 @@ export function drawScene(
   palette: Palette,
   falling: FallingCoin[],
   shake = 0,
+  skin: SkinId = "coin",
 ): void {
   const { board, elapsed } = game.world;
 
@@ -333,7 +408,7 @@ export function drawScene(
   ctx.closePath();
   ctx.fill();
 
-  // 코인 — 뒤쪽부터 그려야 앞쪽 코인이 위로 겹친다
+  // 뒤쪽부터 그려야 앞쪽 것이 위로 겹친다
   const sorted = [...game.world.coins].sort((a, b) => a.y - b.y);
   for (const coin of sorted) {
     // 투입 직후 위에서 떨어져 내리는 연출
@@ -342,7 +417,7 @@ export function drawScene(
       age < ENTRY_SECONDS
         ? -((1 - age / ENTRY_SECONDS) ** 2) * ENTRY_HEIGHT * cam.scale
         : 0;
-    drawCoin(ctx, coin, cam, palette, game.names, elapsed, dropOffset, 1);
+    drawPiece(ctx, coin, cam, palette, game.names, dropOffset, 1, skin);
   }
 
   // 낙하선 — 판 앞 가장자리
@@ -376,11 +451,11 @@ export function drawScene(
     }
   }
 
-  // 판 밖으로 떨어지는 코인 — 물리에서 분리된 순수 연출
+  // 판 밖으로 떨어지는 것 — 물리에서 분리된 순수 연출
   for (const f of falling) {
     const drop = 260 * f.t * f.t * cam.scale;
     const alpha = Math.max(0, 1 - f.t / FALL_ANIM_SECONDS);
-    drawCoin(ctx, f.coin, cam, palette, game.names, elapsed, drop, alpha);
+    drawPiece(ctx, f.coin, cam, palette, game.names, drop, alpha, skin);
   }
 
   ctx.restore();
