@@ -21,8 +21,8 @@ export const projects: Project[] = [
     href: "/playground/coin-pusher",
   },
   {
-    title: "개바리 째려보기",
-    description: "다른 사람이 다가오면 개바리가 대신 째려봅니다 🐕",
+    title: "부장님 째려보기",
+    description: "다른 사람이 다가오면 대신 째려봐 줍니다 👀",
     tags: ["Web", "MediaPipe", "Camera"],
     href: "/playground/gaebari-glare",
     hidden: true,

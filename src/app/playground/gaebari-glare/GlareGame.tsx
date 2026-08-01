@@ -180,9 +180,9 @@ export default function GlareGame() {
   return (
     <div className="mx-auto max-w-2xl px-5 py-10">
       <header className="text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">개바리 째려보기</h1>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">부장님 째려보기</h1>
         <p className="mt-2 text-sm text-text-secondary">
-          내 얼굴 말고 다른 얼굴이 웹캠에 잡히면 개바리가 그쪽을 째려봅니다.
+          내 얼굴 말고 다른 얼굴이 웹캠에 잡히면 눈이 그쪽을 째려봅니다.
         </p>
       </header>
 
@@ -259,7 +259,7 @@ export default function GlareGame() {
             disabled={phase === "starting"}
             className="w-full rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white spring-transition hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
           >
-            {phase === "starting" ? "카메라 여는 중…" : "개바리 켜기"}
+            {phase === "starting" ? "카메라 여는 중…" : "째려보기 켜기"}
           </button>
         ) : (
           <button

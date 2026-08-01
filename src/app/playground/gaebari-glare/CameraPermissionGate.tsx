@@ -17,7 +17,7 @@ export function CameraPermissionGate({
         </h3>
         <p className="mt-2 text-sm text-text-secondary">
           {denied
-            ? "개바리는 웹캠에 잡힌 얼굴 개수만 셉니다. 브라우저 설정에서 카메라를 허용한 뒤 다시 시도해 주세요."
+            ? "웹캠에 잡힌 얼굴 개수만 셉니다. 브라우저 설정에서 카메라를 허용한 뒤 다시 시도해 주세요."
             : "이 브라우저는 카메라 입력을 지원하지 않아요. 다른 브라우저에서 열어 주세요."}
         </p>
         {denied && (
