@@ -11,6 +11,8 @@ export type Phase = "ready" | "waiting" | "pushing" | "breathing" | "done";
 export const PUSH_MS = 5000;
 /** 심호흡 한 번의 길이 */
 export const BREATHE_MS = 3000;
+/** tick의 최대 진전. 화면이 잠겼다 깼을 때 rAF가 분 단위의 dt를 한 번에 전달해도 단계를 건너뛰지 않는다. 자리 비운 시간은 elapsedMs에 안 센다. */
+export const MAX_TICK_MS = 100;
 
 export interface Session {
   phase: Phase;
@@ -61,11 +63,14 @@ function startBreathe(s: Session, praise: boolean): Session {
 /**
  * 시간이 흐른다.
  *
- * 남은 시간을 넘겨 받은 dt는 버린다(이월하지 않는다). rAF의 dt는 16ms 수준이라
- * 실제로는 오차가 눈에 안 보이고, 이월을 안 하는 덕분에 dt를 어떻게 쪼개 넣어도
- * 결과가 같아진다 — 테스트가 훨씬 단순해진다.
+ * 한 번의 tick은 MAX_TICK_MS를 넘지 않으므로, 한 호출이 최대 한 단계 경계를 넘는다.
+ * 남은 시간 내에서 overshoot하면 버린다(이월하지 않는다).
  */
 function tick(s: Session, dt: number): Session {
+  // 화면 잠금이나 앱 백그라운드에서 돌아올 때 rAF가 분 단위 dt를 전달할 수 있다.
+  // 클램핑으로 단계를 건너뛰지 않는다. 자리 비운 시간은 elapsedMs에 안 센다.
+  dt = Math.min(dt, MAX_TICK_MS);
+
   // ready·done에서는 시간이 흐르지 않는다. 시작 전이고, 이미 끝났다.
   if (s.phase === "ready" || s.phase === "done") return s;
 
