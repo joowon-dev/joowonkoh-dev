@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   BREATHE_MS,
   PUSH_MS,
+  TEMPO_NOTE_MS,
   MAX_TICK_MS,
   createSession,
+  label,
   secondsLeft,
   step,
   type Session,
@@ -132,5 +134,87 @@ describe("클램핑", () => {
   it("자리를 비운 시간은 총 시간에 안 들어간다", () => {
     const s = step(pushing(), { type: "tick", dt: 600000 });
     expect(s.elapsedMs).toBe(MAX_TICK_MS);
+  });
+});
+
+describe("칭찬", () => {
+  it("5초를 채우면 칭찬이 붙는다", () => {
+    const s = run(pushing(), PUSH_MS);
+    expect(s.praise).toBe(true);
+    expect(label(s)).toBe("잘했어요, 심호흡하세요");
+  });
+
+  it("일찍 떼면 칭찬도 지적도 없다", () => {
+    const s = feed(run(pushing(), 1000), { type: "release" });
+    expect(s.praise).toBe(false);
+    expect(label(s)).toBe("심호흡하세요");
+  });
+
+  it("칭찬은 다음 힘주기로 넘어가지 않는다", () => {
+    const s = feed(
+      run(run(pushing(), PUSH_MS), BREATHE_MS),
+      { type: "press" },
+    );
+    expect(s.praise).toBe(false);
+  });
+});
+
+describe("템포 알림", () => {
+  it("심호흡 중에 누르면 받아준다 — 무시하지 않는다", () => {
+    const s = feed(pushing(), { type: "release" }, { type: "press" });
+    expect(s.phase).toBe("pushing");
+    expect(s.remainingMs).toBe(PUSH_MS);
+    expect(s.pushCount).toBe(2);
+  });
+
+  it("템포가 빨랐다고 알려준다", () => {
+    const s = feed(pushing(), { type: "release" }, { type: "press" });
+    expect(label(s)).toBe("템포가 빨랐어요");
+  });
+
+  it("1.5초 뒤에는 평소 문구로 돌아온다", () => {
+    const s = run(
+      feed(
+        pushing(),
+        { type: "release" },
+        { type: "press" },
+      ),
+      TEMPO_NOTE_MS,
+    );
+    expect(s.phase).toBe("pushing");
+    expect(label(s)).toBe("조금만 더 힘내보세요");
+  });
+
+  it("1.5초가 되기 전에는 아직 보인다", () => {
+    const s = run(
+      feed(
+        pushing(),
+        { type: "release" },
+        { type: "press" },
+      ),
+      TEMPO_NOTE_MS - 100,
+    );
+    expect(label(s)).toBe("템포가 빨랐어요");
+  });
+
+  it("제 타이밍에 누르면 알림이 없다", () => {
+    const s = feed(
+      run(
+        feed(pushing(), { type: "release" }),
+        BREATHE_MS,
+      ),
+      { type: "press" },
+    );
+    expect(label(s)).toBe("조금만 더 힘내보세요");
+  });
+});
+
+describe("문구", () => {
+  it("시작 전과 끝난 뒤에는 지시가 없다", () => {
+    expect(label(createSession())).toBe("");
+  });
+
+  it("힘주기를 기다린다", () => {
+    expect(label(step(createSession(), { type: "start" }))).toBe("배를 꾹 눌러보세요");
   });
 });

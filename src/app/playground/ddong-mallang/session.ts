@@ -13,6 +13,14 @@ export const PUSH_MS = 5000;
 export const BREATHE_MS = 3000;
 /** tick의 최대 진전. 화면이 잠겼다 깼을 때 rAF가 분 단위의 dt를 한 번에 전달해도 단계를 건너뛰지 않는다. 자리 비운 시간은 elapsedMs에 안 센다. */
 export const MAX_TICK_MS = 100;
+/**
+ * "템포가 빨랐어요"가 떠 있는 시간.
+ *
+ * 심호흡 중에 누른 것을 무시하지 않는 이유: 배가 눌렸는데 화면이 반응을 안 하면
+ * 고장으로 읽힌다. 힘이 들어오는 타이밍은 사용자 몸이 정하는 것이지 화면이 정할
+ * 일이 아니다. 그래서 받아주고, 템포만 알려준다.
+ */
+export const TEMPO_NOTE_MS = 1500;
 
 export interface Session {
   phase: Phase;
@@ -52,8 +60,15 @@ export function secondsLeft(s: Session): number {
   return Math.ceil(s.remainingMs / 1000);
 }
 
-function startPush(s: Session): Session {
-  return { ...s, phase: "pushing", remainingMs: PUSH_MS, praise: false, pushCount: s.pushCount + 1 };
+function startPush(s: Session, tempoNoteMs = 0): Session {
+  return {
+    ...s,
+    phase: "pushing",
+    remainingMs: PUSH_MS,
+    praise: false,
+    tempoNoteMs,
+    pushCount: s.pushCount + 1,
+  };
 }
 
 function startBreathe(s: Session, praise: boolean): Session {
@@ -75,14 +90,15 @@ function tick(s: Session, dt: number): Session {
   if (s.phase === "ready" || s.phase === "done") return s;
 
   const elapsedMs = s.elapsedMs + dt;
+  const tempoNoteMs = Math.max(0, s.tempoNoteMs - dt);
 
-  if (s.phase === "waiting") return { ...s, elapsedMs };
+  if (s.phase === "waiting") return { ...s, elapsedMs, tempoNoteMs };
 
   const remainingMs = s.remainingMs - dt;
-  if (remainingMs > 0) return { ...s, elapsedMs, remainingMs };
+  if (remainingMs > 0) return { ...s, elapsedMs, remainingMs, tempoNoteMs };
 
-  if (s.phase === "pushing") return startBreathe({ ...s, elapsedMs }, true);
-  return { ...s, phase: "waiting", elapsedMs, remainingMs: 0, praise: false };
+  if (s.phase === "pushing") return startBreathe({ ...s, elapsedMs, tempoNoteMs }, true);
+  return { ...s, phase: "waiting", elapsedMs, tempoNoteMs, remainingMs: 0, praise: false };
 }
 
 export function step(s: Session, e: SessionEvent): Session {
@@ -92,6 +108,8 @@ export function step(s: Session, e: SessionEvent): Session {
 
     case "press":
       if (s.phase === "waiting") return startPush(s);
+      // 심호흡 중에 눌러도 받아준다. 다만 템포가 빨랐다고 알려준다.
+      if (s.phase === "breathing") return startPush(s, TEMPO_NOTE_MS);
       return s;
 
     case "release":
@@ -105,5 +123,24 @@ export function step(s: Session, e: SessionEvent): Session {
 
     case "tick":
       return tick(s, e.dt);
+  }
+}
+
+/**
+ * 화면에 띄울 지시 문구.
+ *
+ * 문구를 컴포넌트에 흩지 않고 여기 모은다 — 어떤 상태에서 무슨 말이 나오는지가
+ * 이 앱의 핵심 동작이라 테스트로 고정해 둘 값이다.
+ */
+export function label(s: Session): string {
+  switch (s.phase) {
+    case "waiting":
+      return "배를 꾹 눌러보세요";
+    case "pushing":
+      return s.tempoNoteMs > 0 ? "템포가 빨랐어요" : "조금만 더 힘내보세요";
+    case "breathing":
+      return s.praise ? "잘했어요, 심호흡하세요" : "심호흡하세요";
+    default:
+      return "";
   }
 }
