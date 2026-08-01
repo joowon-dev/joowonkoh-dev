@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import CopyCommand from "./CopyCommand";
 
 const DESCRIPTION =
   "실제로 열려 있는 창의 모서리에 거미줄을 걸고 날아다니는 맥 데스크톱 펫. 평소엔 알아서 놀고, 단축키를 누르면 직접 조종할 수 있습니다.";
@@ -38,8 +37,8 @@ const STEPS: { title: string; body: string }[] = [
     body: "꼭 옮겨야 하는 건 아니지만, 다운로드 폴더에 두면 나중에 실수로 지우기 쉽습니다.",
   },
   {
-    title: "처음 한 번은 우클릭 → 열기",
-    body: "그냥 더블클릭하면 macOS가 막습니다. 우클릭(또는 control-클릭) 후 '열기'를 고르고, 뜨는 창에서 다시 '열기'를 누르세요. 두 번째부터는 그냥 실행됩니다.",
+    title: "더블클릭해서 실행한다",
+    body: "애플 공증을 받은 앱이라 경고 없이 그냥 열립니다.",
   },
   {
     title: "메뉴 막대에서 🕸 를 찾는다",
@@ -97,7 +96,7 @@ export default function WebSwingPage() {
             WebSwing.zip 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
-            173KB · macOS 13 이상 · Apple Silicon &amp; Intel
+            177KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-accent-soft px-4 py-2 text-xs font-medium text-accent">
@@ -155,18 +154,6 @@ export default function WebSwingPage() {
         ))}
       </ol>
 
-      <div className="mt-5 rounded-2xl border border-border bg-card-bg p-5 shadow-ambient">
-        <h3 className="font-display text-sm font-semibold text-text-primary">
-          &ldquo;손상되었기 때문에 열 수 없습니다&rdquo; 가 뜬다면
-        </h3>
-        <p className="mt-2 text-xs leading-relaxed text-text-secondary">
-          앱이 망가진 게 아니라, 애플 개발자 인증서로 서명하지 않아서 나오는 문구입니다
-          (인증서는 연 $99입니다). 우클릭 → 열기로도 안 되면 터미널에 아래를 붙여넣고
-          다시 실행해 보세요. 다운로드한 파일에 붙는 격리 표시를 떼는 명령입니다.
-        </p>
-        <CopyCommand command="xattr -dr com.apple.quarantine /Applications/WebSwing.app" />
-      </div>
-
       <SectionHeading>조작</SectionHeading>
       <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card-bg shadow-ambient">
         {CONTROLS.map((control, index) => (
@@ -186,6 +173,13 @@ export default function WebSwingPage() {
         ))}
       </div>
 
+      <SectionHeading>서명과 공증</SectionHeading>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        Developer ID로 서명하고 애플 공증(notarization)까지 받았습니다. 공증
+        티켓이 앱 안에 붙어 있어서 인터넷이 끊긴 상태에서도 경고 없이 열립니다.
+        받은 파일이 중간에 변조되지 않았다는 것도 macOS가 확인해 줍니다.
+      </p>
+
       <SectionHeading>권한은 필요 없습니다</SectionHeading>
       <p className="mt-3 text-sm leading-relaxed text-text-secondary">
         화면 기록도, 손쉬운 사용도 요청하지 않습니다. 창의{" "}
@@ -202,7 +196,6 @@ export default function WebSwingPage() {
       <SectionHeading>알려진 한계</SectionHeading>
       <ul className="mt-4 space-y-2 text-sm leading-relaxed text-text-secondary">
         <li>· 메인 디스플레이에서만 동작합니다. 외장 모니터는 아직입니다.</li>
-        <li>· 서명이 ad-hoc이라 첫 실행에 위 과정이 한 번 필요합니다.</li>
         <li>
           · 전체 화면 앱 위에서는 창 정보를 읽을 수 없어 히어로가 화면 바닥에서 놉니다.
         </li>
