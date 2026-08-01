@@ -9,6 +9,12 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "낙서 댄스",
+    description: "커서를 움직이면 종이 위 낙서가 따라 춤춘다 💃",
+    tags: ["Interactive", "Canvas", "Animation"],
+    href: "/playground/doodle-dance",
+  },
+  {
     title: "WebSwing",
     description: "열려 있는 창 사이를 거미줄로 날아다니는 맥 데스크톱 펫 🕸",
     tags: ["macOS", "Swift", "SpriteKit"],
