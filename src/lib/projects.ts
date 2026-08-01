@@ -9,6 +9,12 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "똥 말랑",
+    description: "고양이 배를 꾹 누르면 힘주기, 떼면 심호흡 🐱",
+    tags: ["Interactive", "SVG", "Mobile"],
+    href: "/playground/ddong-mallang",
+  },
+  {
     title: "낙서 댄스",
     description: "커서를 움직이면 종이 위 낙서가 따라 춤춘다 💃",
     tags: ["Interactive", "Canvas", "Animation"],
