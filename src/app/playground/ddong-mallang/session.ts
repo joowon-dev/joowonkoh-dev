@@ -116,14 +116,20 @@ export function step(s: Session, e: SessionEvent): Session {
       return s.phase === "pushing" ? startBreathe(s, false) : s;
 
     case "finish":
-      return s;
+      // ready에서는 끝낼 게 없다. 시작도 안 했다.
+      return s.phase === "ready" ? s : { ...s, phase: "done", remainingMs: 0, tempoNoteMs: 0 };
 
     case "restart":
-      return s;
+      return s.phase === "done" ? createSession() : s;
 
     case "tick":
       return tick(s, e.dt);
   }
+}
+
+/** "다 쌌어요"를 보일지. 시작 전과 끝난 뒤에는 없다. */
+export function canFinish(s: Session): boolean {
+  return s.phase !== "ready" && s.phase !== "done";
 }
 
 /**

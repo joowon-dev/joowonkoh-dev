@@ -8,6 +8,7 @@ import {
   label,
   secondsLeft,
   step,
+  canFinish,
   type Session,
   type SessionEvent,
 } from "./session";
@@ -216,5 +217,72 @@ describe("문구", () => {
 
   it("힘주기를 기다린다", () => {
     expect(label(step(createSession(), { type: "start" }))).toBe("배를 꾹 눌러보세요");
+  });
+});
+
+describe("마무리", () => {
+  it("힘주는 중에도 끝낼 수 있다", () => {
+    expect(step(pushing(), { type: "finish" }).phase).toBe("done");
+  });
+
+  it("심호흡 중에도 끝낼 수 있다", () => {
+    const s = feed(pushing(), { type: "release" }, { type: "finish" });
+    expect(s.phase).toBe("done");
+  });
+
+  it("시작도 안 했으면 끝낼 수 없다", () => {
+    expect(step(createSession(), { type: "finish" }).phase).toBe("ready");
+    expect(canFinish(createSession())).toBe(false);
+  });
+
+  it("시작한 뒤에는 끝낼 수 있다", () => {
+    expect(canFinish(step(createSession(), { type: "start" }))).toBe(true);
+  });
+
+  it("끝난 화면에서는 종료 버튼이 없다", () => {
+    expect(canFinish(step(pushing(), { type: "finish" }))).toBe(false);
+  });
+
+  it("총 걸린 시간을 집계한다", () => {
+    const s = feed(
+      run(
+        feed(
+          run(
+            feed(createSession(), { type: "start" }),
+            2000
+          ),
+          { type: "press" }
+        ),
+        PUSH_MS
+      ),
+      { type: "finish" }
+    );
+    expect(s.elapsedMs).toBe(2000 + PUSH_MS);
+  });
+
+  it("힘준 횟수를 집계한다 — 채운 것과 일찍 뗀 것을 함께 센다", () => {
+    let s = feed(createSession(), { type: "start" });
+    s = feed(s, { type: "press" });
+    s = run(s, PUSH_MS);
+    s = run(s, BREATHE_MS);
+    s = feed(s, { type: "press" });
+    s = feed(s, { type: "release" });
+    s = run(s, BREATHE_MS);
+    s = feed(s, { type: "press" });
+    s = feed(s, { type: "finish" });
+    expect(s.pushCount).toBe(3);
+  });
+
+  it("끝난 뒤에는 눌러도 시간이 안 흐른다", () => {
+    const done = step(pushing(), { type: "finish" });
+    let after = feed(done, { type: "press" });
+    after = run(after, 5000);
+    expect(after.phase).toBe("done");
+    expect(after.elapsedMs).toBe(done.elapsedMs);
+  });
+
+  it("다시 하면 처음으로 돌아간다", () => {
+    const s = feed(pushing(), { type: "finish" }, { type: "restart" });
+    expect(s).toEqual(createSession());
   });
 });
