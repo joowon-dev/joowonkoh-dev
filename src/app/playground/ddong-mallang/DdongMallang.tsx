@@ -34,6 +34,10 @@ export default function DdongMallang() {
   const { isSupported, isFullscreen, enter, exit } = useFullscreen(rootRef);
   const [session, setSession] = useState<Session>(createSession);
 
+  // 힘주는 도중 다른 손가락이 스치며 떼졌을 때 오작동하지 않도록, 힘주기를
+  // 시작한 포인터의 id를 기억해 둔다. 그 id가 아닌 release는 무시한다.
+  const activePointerId = useRef<number | null>(null);
+
   // 진동은 렌더가 아니라 전이에서 울려야 한다. 이전 값을 ref로 들고 비교한다.
   const prevSecond = useRef(0);
   const prevPhase = useRef<Session["phase"]>("ready");
@@ -66,8 +70,16 @@ export default function DdongMallang() {
     return () => cancelAnimationFrame(raf);
   }, [running]);
 
-  const press = useCallback(() => setSession((s) => step(s, { type: "press" })), []);
-  const release = useCallback(() => setSession((s) => step(s, { type: "release" })), []);
+  const press = useCallback((e: React.PointerEvent) => {
+    activePointerId.current = e.pointerId;
+    setSession((s) => step(s, { type: "press" }));
+  }, []);
+
+  const release = useCallback((e: React.PointerEvent) => {
+    if (e.pointerId !== activePointerId.current) return;
+    activePointerId.current = null;
+    setSession((s) => step(s, { type: "release" }));
+  }, []);
 
   const start = useCallback(() => {
     setSession((s) => step(s, { type: "start" }));
@@ -87,7 +99,11 @@ export default function DdongMallang() {
   return (
     <div
       ref={rootRef}
-      className="flex min-h-[100dvh] w-full flex-col items-center justify-between overflow-hidden bg-[#fdf6ef] select-none"
+      // 사이트 레이아웃(헤더 + <main> 여백) 안에 갇히면 100dvh를 더한 높이가
+      // 실제 뷰포트보다 커져서 아래쪽 버튼이 화면 밖으로 밀린다. 전체화면
+      // API가 없는 iOS Safari에서도 화면을 그대로 덮도록 fixed로 뷰포트를
+      // 뜯어낸다. z-40은 marble-drop과 같은 값 — 헤더(z-40)보다 위에 온다.
+      className="fixed inset-0 z-40 flex flex-col items-center justify-between overflow-hidden bg-[#fdf6ef] select-none"
       style={{ touchAction: "none" }}
       onContextMenu={(e) => e.preventDefault()}
     >
