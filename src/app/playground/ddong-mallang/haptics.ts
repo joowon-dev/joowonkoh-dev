@@ -20,8 +20,7 @@ export function buzz(pattern: number | number[]): boolean {
   const vibrate = (navigator as Vibrator).vibrate;
   if (typeof vibrate !== "function") return false;
   try {
-    vibrate.call(navigator, pattern);
-    return true;
+    return vibrate.call(navigator, pattern);
   } catch {
     // 사용자 설정이나 브라우저 정책으로 막힌 경우. 앱은 그대로 돌아간다.
     return false;

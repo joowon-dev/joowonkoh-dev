@@ -47,4 +47,11 @@ describe("buzz", () => {
     });
     expect(buzz(BUZZ_TICK)).toBe(false);
   });
+
+  it("요청이 거부되면 false다", () => {
+    const vibrate = vi.fn(() => false);
+    stubNavigator(vibrate);
+    expect(buzz(BUZZ_TICK)).toBe(false);
+    expect(vibrate).toHaveBeenCalledWith(BUZZ_TICK);
+  });
 });
