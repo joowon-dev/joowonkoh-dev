@@ -34,8 +34,9 @@ export default function DdongMallang() {
   const { isSupported, isFullscreen, enter, exit } = useFullscreen(rootRef);
   const [session, setSession] = useState<Session>(createSession);
 
-  // 힘주는 도중 다른 손가락이 스치며 떼졌을 때 오작동하지 않도록, 힘주기를
-  // 시작한 포인터의 id를 기억해 둔다. 그 id가 아닌 release는 무시한다.
+  // 힘주는 도중 다른 손가락이 스치며 떼졌을 때 오작동하지 않도록, 맨 처음
+  // 누른 포인터의 id만 기억해 둔다. 이미 추적 중일 때 들어오는 press는
+  // (다른 손가락이므로) 무시하고, release도 그 id가 아니면 무시한다.
   const activePointerId = useRef<number | null>(null);
 
   // 진동은 렌더가 아니라 전이에서 울려야 한다. 이전 값을 ref로 들고 비교한다.
@@ -71,6 +72,7 @@ export default function DdongMallang() {
   }, [running]);
 
   const press = useCallback((e: React.PointerEvent) => {
+    if (activePointerId.current !== null) return; // 이미 다른 손가락이 누르고 있다
     activePointerId.current = e.pointerId;
     setSession((s) => step(s, { type: "press" }));
   }, []);
