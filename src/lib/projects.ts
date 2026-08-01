@@ -9,6 +9,12 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "WebSwing",
+    description: "열려 있는 창 사이를 거미줄로 날아다니는 맥 데스크톱 펫 🕸",
+    tags: ["macOS", "Swift", "SpriteKit"],
+    href: "/playground/webswing",
+  },
+  {
     title: "구슬 폭포 추첨기",
     description: "양동이를 가장 먼저 채운 사람이 당첨 🫧",
     tags: ["Game", "Canvas", "Physics"],
