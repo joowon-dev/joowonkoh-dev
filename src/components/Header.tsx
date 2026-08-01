@@ -7,10 +7,14 @@ import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/blog", label: "Blog" },
-  { href: "/portfolio", label: "Portfolio" },
+  // 메뉴에서는 감추지만 /portfolio 페이지 자체는 살아 있다.
+  // 현재 섹션 이름을 찾는 데는 계속 쓰이므로 목록에서 지우지 않고 표시만 끈다.
+  { href: "/portfolio", label: "Portfolio", hidden: true },
   { href: "/playground", label: "Playground" },
   { href: "/about", label: "About" },
 ];
+
+const VISIBLE_NAV_ITEMS = NAV_ITEMS.filter((i) => !i.hidden);
 
 function getCurrentLabel(pathname: string) {
   const item = NAV_ITEMS.find((i) => pathname.startsWith(i.href));
@@ -45,7 +49,7 @@ export default function Header() {
 
             {/* Desktop nav */}
             <div className="hidden gap-6 sm:flex">
-              {NAV_ITEMS.map((item) => (
+              {VISIBLE_NAV_ITEMS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -102,7 +106,7 @@ export default function Header() {
               </button>
             </div>
             <nav className="mt-8 flex flex-col gap-6">
-              {[{ href: "/", label: "Home" }, ...NAV_ITEMS].map((item) => (
+              {[{ href: "/", label: "Home" }, ...VISIBLE_NAV_ITEMS].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}

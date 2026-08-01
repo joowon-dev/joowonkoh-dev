@@ -1,0 +1,130 @@
+---
+title: 'cmux 터미널 내 취향대로 꾸미기 — 따라 하는 설정 가이드'
+description: >-
+  AI 코딩 에이전트를 병렬로 돌리는 macOS 터미널 cmux를 내 취향대로 꾸미는 법. 설정 파일 두 개의 역할을 나눠서 이해하고,
+  폰트·테마·투명도·사이드바·워크스페이스 색까지 복붙으로 따라 할 수 있게 정리했다.
+date: '2026-05-02'
+tags:
+  - cmux
+  - 터미널
+  - 개발환경
+---
+
+## cmux를 꾸미기 전에 알아야 할 것 하나
+
+cmux는 Claude Code 같은 AI 코딩 에이전트를 **여러 개 병렬로 돌리려고 만든 macOS 터미널**이다. 세로 탭, 알림, 워크스페이스 분리가 기본이라 에이전트 여러 개를 굴릴 때 편하다. 그런데 막상 꾸미려고 설정을 열면 헷갈린다. "테마를 어디서 바꾸지?"
+
+핵심은 이거 하나다. **cmux의 외관은 파일 두 개로 나뉘어 있다.** 하나는 터미널 화면 자체(폰트·색·테마), 다른 하나는 cmux 앱의 UI(사이드바·탭바·배율)다. 이걸 구분 못 하면 엉뚱한 파일만 뒤지게 된다.
+
+<DataTableCard
+  title="설정 파일은 둘로 나뉜다"
+  headers={["꾸미고 싶은 것", "건드릴 파일"]}
+  rows={[
+    ["터미널 폰트·색·테마·투명도", "~/.config/ghostty/config"],
+    ["사이드바·탭바·UI 배율·워크스페이스 색", "~/.config/cmux/cmux.json"],
+  ]}
+/>
+
+터미널 렌더링을 [Ghostty](https://ghostty.org) 엔진으로 하기 때문이다. 그래서 Ghostty를 이미 쓰고 있었다면 **그 설정이 그대로 따라온다.** 처음이라면 파일부터 만들어야 한다.
+
+```bash
+mkdir -p ~/.config/ghostty && touch ~/.config/ghostty/config
+```
+
+> 참고로 Ghostty config는 `~/Library/Application Support/com.mitchellh.ghostty/config` 경로에서도 읽는다. 둘 중 있는 걸 쓰면 된다.
+
+## 1단계 — 터미널 화면 꾸미기 (Ghostty config)
+
+`~/.config/ghostty/config`를 열고 이렇게 채운다. 값은 취향대로 바꾸면 된다.
+
+```
+font-family = SF Mono
+font-size = 13
+theme = One Dark
+split-divider-color = #3e4451
+
+# 배경 투명 + 블러 (원하면)
+background-opacity = 0.95
+background-blur = 20
+```
+
+- **theme** — Ghostty에 내장된 테마 이름을 그대로 쓴다. `Dracula`, `Nord`, `Catppuccin Mocha` 같은 것들. 터미널에서 `ghostty +list-themes`로 목록을 볼 수 있다.
+- **background-opacity** — `1`이 불투명, 낮출수록 뒤가 비친다. `0.9~0.95`가 과하지 않고 보기 좋다.
+- **background-blur** — 투명하게 한 배경을 흐리게. 숫자가 클수록 강하다.
+- **split-divider-color** — 화면을 분할했을 때 경계선 색.
+
+## 2단계 — cmux 앱 UI 꾸미기 (cmux.json)
+
+이제 터미널 화면 바깥, cmux 앱 자체의 껍데기다. `~/.config/cmux/cmux.json`을 연다.
+
+```json
+{
+  "app": {
+    "appearance": "dark",
+    "globalFontMagnification": 100
+  },
+  "sidebarAppearance": {
+    "matchTerminalBackground": false,
+    "tintColor": "#000000",
+    "tintOpacity": 0.03
+  },
+  "sidebar-font-size": 14,
+  "surface-tab-bar-font-size": 11
+}
+```
+
+- **app.appearance** — `system` / `light` / `dark`. 시스템 따라가게 두거나 고정한다.
+- **globalFontMagnification** — cmux UI 전체 배율(%). 글씨가 작게 느껴지면 `110`, `120`으로 올린다. 터미널 폰트가 아니라 **앱 UI** 크기다.
+- **sidebarAppearance.tintColor / tintOpacity** — 사이드바에 얹는 색조와 그 진하기(0~1). 은은하게 톤을 주고 싶을 때.
+- **sidebar-font-size / surface-tab-bar-font-size** — 사이드바와 탭바 글씨 크기.
+
+## 3단계 — 병렬 작업이면 워크스페이스에 색을 줘라
+
+cmux를 쓰는 진짜 이유가 에이전트 병렬 실행이라면, 이 설정이 제일 쓸모 있다. **워크스페이스마다 색을 달리 줘서** 지금 어느 작업을 보고 있는지 한눈에 구분하는 것이다. 탭이 여러 개일 때 색 하나로 길을 잃지 않는다.
+
+```json
+{
+  "workspaceColors": {
+    "indicatorStyle": "leftRail",
+    "colors": {
+      "Blue": "#1565C0",
+      "Red": "#C0392B",
+      "Custom": "#00F5D4"
+    }
+  }
+}
+```
+
+- **indicatorStyle** — 색을 어떻게 표시할지. `leftRail`(왼쪽 띠), `solidFill`(전체 채움), `border`, `wash` 등이 있다. 은은한 걸 원하면 `leftRail`, 확실한 구분을 원하면 `solidFill`.
+- **colors** — 이름과 HEX 색을 원하는 만큼 정의해두고 워크스페이스에 배정한다.
+
+여러 에이전트를 동시에 돌릴 때 [git worktree로 작업을 격리하는 방식](/blog/2026042302-git-worktree-parallel)과 궁합이 좋다. worktree로 물리적으로 나누고, cmux 색으로 시각적으로 나누는 셈이다.
+
+## 4단계 — 재시작 없이 바로 적용
+
+파일을 저장했으면 cmux를 껐다 켤 필요 없다. 둘 중 하나면 즉시 반영된다.
+
+<FlowStepsCard
+  title="설정 적용하기"
+  steps={[
+    { num: "1", label: "config 저장", desc: "ghostty/config 또는 cmux.json 편집 후 저장" },
+    { num: "2", label: "reload", desc: "⌘⇧, 단축키 또는 터미널에서 cmux reload-config" },
+    { num: "3", label: "확인", desc: "바뀐 테마·색·배율이 바로 화면에 반영됨" },
+  ]}
+/>
+
+`background-opacity` 같은 값도 저장 후 reload 한 번이면 실시간으로 바뀌니, 값을 조금씩 바꿔가며 취향을 맞춰보기 좋다.
+
+## 내가 추천하는 최소 세팅 순서
+
+전부 다 만질 필요는 없다. 처음이라면 이 순서로 세 가지만 건드려도 충분히 "내 것"이 된다.
+
+1. **Ghostty에서 `theme =` 하나 고르기** — 전체 분위기의 8할이 여기서 정해진다
+2. **cmux.json에서 `globalFontMagnification`로 UI 크기 맞추기** — 눈이 편해야 오래 쓴다
+3. **워크스페이스 색 배정** — 병렬로 돌린다면 이게 실사용에서 제일 값을 한다
+
+터미널 화면은 Ghostty, 앱 껍데기는 cmux.json. 이 두 갈래만 기억하면 나머지는 값만 바꿔 끼우면 된다.
+
+---
+
+참고: [cmux 공식 설정 문서](https://cmux.com/docs/configuration), [cmux 저장소](https://github.com/manaflow-ai/cmux)

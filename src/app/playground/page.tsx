@@ -1,9 +1,18 @@
-import { projects } from "@/lib/projects";
+import { visibleProjects } from "@/lib/projects";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Playground",
-  description: "사이드 프로젝트 모음",
+  description: "직접 만들어 본 웹 미니게임과 도구 모음.",
+  alternates: { canonical: "https://joowonkoh.com/playground" },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: "Joowon Koh",
+    title: "Playground — Joowon Koh",
+    description: "직접 만들어 본 웹 미니게임과 도구 모음.",
+    url: "https://joowonkoh.com/playground",
+  },
 };
 
 export default function PlaygroundPage() {
@@ -19,12 +28,14 @@ export default function PlaygroundPage() {
         사이드 프로젝트 모음
       </p>
       <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 stagger-children">
-        {projects.map((project) => (
+        {visibleProjects.map((project) => {
+          const isExternal = project.href.startsWith("http");
+          return (
           <a
             key={project.title}
             href={project.href}
-            target="_blank"
-            rel="noopener noreferrer"
+            target={isExternal ? "_blank" : undefined}
+            rel={isExternal ? "noopener noreferrer" : undefined}
             className="group overflow-hidden rounded-2xl border border-border bg-card-bg shadow-ambient spring-transition hover:shadow-ambient-hover hover:scale-[1.02] active:scale-[0.98]"
           >
             <div className="flex h-28 items-center justify-center bg-tag-bg">
@@ -51,7 +62,8 @@ export default function PlaygroundPage() {
               </div>
             </div>
           </a>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
