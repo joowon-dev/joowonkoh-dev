@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWindMic } from "./useWindMic";
 import { usePlanePhysics } from "./usePlanePhysics";
-import { useFullscreen } from "./useFullscreen";
+import { useFullscreen } from "../_shared/useFullscreen";
 import { project, type Viewport } from "./projection";
 import { PlaneCharacter } from "./PlaneCharacter";
 import { Scenery } from "./Scenery";
