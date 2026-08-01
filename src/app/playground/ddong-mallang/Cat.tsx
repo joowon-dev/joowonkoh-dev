@@ -27,14 +27,22 @@ function Eyes({ mood }: { mood: Mood }) {
       </g>
     );
   }
-  // calm·happy — 뜬 눈. happy는 하이라이트가 더 크다.
-  const highlight = mood === "happy" ? 4 : 2.5;
+  if (mood === "happy") {
+    // 웃는 눈 — 축하 화면의 표정이라 차분한 평상시와 명확히 구별되어야 함
+    return (
+      <g stroke="#3b2b26" strokeWidth={5} strokeLinecap="round" fill="none">
+        <path d="M74 98 q10 -8 20 0" />
+        <path d="M126 98 q10 -8 20 0" />
+      </g>
+    );
+  }
+  // calm — 뜬 눈. 동공과 하이라이트가 있다
   return (
     <g fill="#3b2b26">
-      <ellipse cx={84} cy={96} rx={7} ry={mood === "happy" ? 9 : 7} />
-      <ellipse cx={136} cy={96} rx={7} ry={mood === "happy" ? 9 : 7} />
-      <circle cx={86.5} cy={93} r={highlight} fill="#fff" />
-      <circle cx={138.5} cy={93} r={highlight} fill="#fff" />
+      <ellipse cx={84} cy={96} rx={7} ry={7} />
+      <ellipse cx={136} cy={96} rx={7} ry={7} />
+      <circle cx={86.5} cy={93} r={2.5} fill="#fff" />
+      <circle cx={138.5} cy={93} r={2.5} fill="#fff" />
     </g>
   );
 }
@@ -97,9 +105,9 @@ export function Cat({ mood, squish }: { mood: Mood; squish: number }) {
         {/* 얼굴 */}
         <ellipse cx={110} cy={96} rx={58} ry={52} fill="#f9e4d0" />
         <Eyes mood={mood} />
-        {/* 볼 — 힘줄 때만 붉어진다 */}
+        {/* 볼 — 힘줄 때는 진하게, 웃을 때는 흐릿하게 */}
         <motion.g
-          animate={{ opacity: mood === "strain" ? 1 : 0 }}
+          animate={{ opacity: mood === "strain" ? 1 : mood === "happy" ? 0.55 : 0 }}
           transition={{ duration: 0.2 }}
           fill="#f6a6a0"
         >
