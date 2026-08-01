@@ -15,6 +15,14 @@ export const metadata: Metadata = {
     title: "WebSwing — 창 사이를 날아다니는 맥 데스크톱 펫",
     description: DESCRIPTION,
     url: "https://joowonkoh.com/playground/webswing",
+    images: [
+      {
+        url: "https://joowonkoh.com/webswing/screenshot.jpg",
+        width: 1100,
+        height: 915,
+        alt: "WebSwing 히어로가 창 모서리에 거미줄을 걸고 매달려 있는 화면",
+      },
+    ],
   },
 };
 
@@ -67,24 +75,21 @@ export default function WebSwingPage() {
         {DESCRIPTION}
       </p>
 
-      <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card-bg shadow-ambient">
-        <div className="bg-tag-bg px-5 py-8">
-          <Image
-            src="/webswing/hero-frames.png"
-            alt="WebSwing 히어로의 도트 스프라이트 11종 — 대기, 달리기, 공중, 스윙, 발사, 착지"
-            width={1152}
-            height={576}
-            className="mx-auto h-auto w-full max-w-lg"
-            style={{ imageRendering: "pixelated" }}
-            unoptimized
-            priority
-          />
-        </div>
-        <p className="px-5 py-3 text-[11px] leading-relaxed text-text-muted">
-          48×48 도트 스프라이트 11종. 포즈를 관절 각도로 정의해 생성하기 때문에
-          프레임끼리 비율이 어긋나지 않습니다.
-        </p>
-      </div>
+      <figure className="mt-8 overflow-hidden rounded-2xl border border-border bg-card-bg shadow-ambient">
+        <Image
+          src="/webswing/screenshot.webp"
+          alt="밤의 빌딩 숲 배경화면 위에서, 히어로가 창 모서리에 거미줄을 걸고 매달려 있는 실제 실행 화면"
+          width={1100}
+          height={915}
+          className="h-auto w-full"
+          unoptimized
+          priority
+        />
+        <figcaption className="px-5 py-3 text-[11px] leading-relaxed text-text-muted">
+          실제 실행 화면. 거미줄이 붙은 저 지점은 배경 그림이 아니라 그때 열려
+          있던 창의 윗변입니다.
+        </figcaption>
+      </figure>
 
       <a
         href="/downloads/WebSwing.zip"
@@ -171,6 +176,25 @@ export default function WebSwingPage() {
             </span>
           </div>
         ))}
+      </div>
+
+      <SectionHeading>캐릭터</SectionHeading>
+      <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card-bg shadow-ambient">
+        <div className="bg-tag-bg px-5 py-8">
+          <Image
+            src="/webswing/hero-frames.png"
+            alt="WebSwing 히어로의 도트 스프라이트 11종 — 대기, 달리기, 공중, 스윙, 발사, 착지"
+            width={1152}
+            height={576}
+            className="mx-auto h-auto w-full max-w-lg"
+            style={{ imageRendering: "pixelated" }}
+            unoptimized
+          />
+        </div>
+        <p className="px-5 py-3 text-[11px] leading-relaxed text-text-muted">
+          48×48 도트 스프라이트 11종. 포즈를 관절 각도로 정의해 생성하기 때문에
+          프레임끼리 비율이 어긋나지 않습니다.
+        </p>
       </div>
 
       <SectionHeading>서명과 공증</SectionHeading>
