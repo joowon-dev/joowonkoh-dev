@@ -71,6 +71,13 @@ export default function DdongMallang() {
     return () => cancelAnimationFrame(raf);
   }, [running]);
 
+  // 포인터 컨테이너는 ready·done에서 언마운트된다. 그때까지 눌려 있던 손가락의
+  // pointerup은 어디에도 닿지 않으므로, 여기서 소유권을 직접 놓아준다.
+  // 안 그러면 그 id가 영영 남아 이후 모든 누르기가 무시된다.
+  useEffect(() => {
+    if (!running) activePointerId.current = null;
+  }, [running]);
+
   const press = useCallback((e: React.PointerEvent) => {
     if (activePointerId.current !== null) return; // 이미 다른 손가락이 누르고 있다
     activePointerId.current = e.pointerId;
