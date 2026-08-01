@@ -160,7 +160,8 @@ export default function DdongMallang() {
             <p className="mt-2 text-xl font-medium text-[#8a6b5c]">{label(session)}</p>
           </div>
 
-          {/* 고양이 — 화면 전체가 누르는 영역이다. 배만 받으면 손가락이 조금
+          {/* 고양이와 이를 감싼 컨테이너 — 누르는 영역은 화면 중앙의 max-w-sm flex-1 div다.
+              상단 숫자와 아래 버튼 행은 누르지 않는다. 배만 받으면 손가락이 조금
               벗어날 때마다 힘주기가 끊긴다. */}
           <div
             className="flex w-full max-w-sm flex-1 items-center justify-center px-6"
