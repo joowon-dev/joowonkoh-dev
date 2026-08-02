@@ -15,6 +15,12 @@ export const projects: Project[] = [
     href: "/playground/ddong-mallang",
   },
   {
+    title: "타자 농구",
+    description: "타자 속도가 그대로 슛 파워 🏀 가까우면 천천히, 멀면 빠르게",
+    tags: ["Game", "Canvas", "Pixel Art"],
+    href: "/playground/typing-hoop",
+  },
+  {
     title: "낙서 댄스",
     description: "커서를 움직이면 종이 위 낙서가 따라 춤춘다 💃",
     tags: ["Interactive", "Canvas", "Animation"],
