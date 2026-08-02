@@ -22,6 +22,13 @@ export const projects: Project[] = [
     hidden: true,
   },
   {
+    title: "개바리 댄스",
+    description: "타이핑하면 더 빨리 춤추는 맥 데스크톱 펫 🐶",
+    tags: ["macOS", "Swift", "SpriteKit"],
+    href: "/playground/gaebari-dance",
+    hidden: true,
+  },
+  {
     title: "WebSwing",
     description: "열려 있는 창 사이를 거미줄로 날아다니는 맥 데스크톱 펫 🕸",
     tags: ["macOS", "Swift", "SpriteKit"],
