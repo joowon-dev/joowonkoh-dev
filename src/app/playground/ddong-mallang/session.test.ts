@@ -236,7 +236,7 @@ describe("템포 알림", () => {
       ),
       { type: "press" },
     );
-    expect(label(s)).toBe("조금만 힘내주세요");
+    expect(label(s)).toBe("자, 힘줘볼까요");
   });
 });
 
@@ -253,11 +253,15 @@ describe("문구", () => {
     // 각 초의 한가운데를 집어서 경계에 걸리지 않게 한다
     const at = (secondsRemaining: number) =>
       label(run(pushing(), PUSH_MS - secondsRemaining * 1000 + 500));
-    expect(at(5)).toBe("조금만 힘내주세요");
+    expect(at(5)).toBe("자, 힘줘볼까요");
     expect(at(4)).toBe("조금만 힘내주세요");
     expect(at(3)).toBe("더");
     expect(at(2)).toBe("더더");
-    expect(at(1)).toBe("거의 다 왔다");
+    expect(at(1)).toBe("거의 다 왔다!");
+
+    // 다섯 초가 모두 다른 말이어야 한다 — 같은 말이 두 번 뜨면 시간이 안 간다
+    const all = [at(5), at(4), at(3), at(2), at(1)];
+    expect(new Set(all).size).toBe(5);
   });
 
   it("버틸수록 문구가 바뀐다", () => {

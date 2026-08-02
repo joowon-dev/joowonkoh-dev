@@ -124,8 +124,14 @@ export default function DdongMallang() {
       {session.phase === "ready" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 text-center">
           <h1 className="text-4xl font-bold text-[#4a352c]">똥 말랑</h1>
-          <p className="max-w-xs text-base leading-relaxed text-[#8a6b5c]">
-            고양이 배를 꾹 누르면서 힘주고 심호흡하면서 똥 잘싸주는걸 도와드립니다.
+          {/* 줄바꿈을 브라우저에 맡기면 "심호흡하" / "면서"처럼 어절 중간이 끊긴다.
+              break-keep으로 어절을 붙여두고, 의미 단위로 직접 끊는다. */}
+          <p className="text-base leading-relaxed break-keep text-[#8a6b5c]">
+            고양이 배를 꾹 누르면서 힘주고
+            <br />
+            심호흡하면서
+            <br />
+            똥 잘 싸주는 걸 도와드립니다
           </p>
           <div className="w-48">
             <Cat mood="calm" />
