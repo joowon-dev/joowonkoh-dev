@@ -36,7 +36,7 @@ export const projects: Project[] = [
   },
   {
     title: "WebSwing",
-    description: "열려 있는 창 사이를 거미줄로 날아다니는 맥 데스크톱 펫 🕸",
+    description: "창 사이를 날아다니고, 타자를 치면 거미줄을 타고 올라가는 데스크톱 펫 🕸",
     tags: ["macOS", "Swift", "SpriteKit"],
     href: "/playground/webswing",
     hidden: true,
