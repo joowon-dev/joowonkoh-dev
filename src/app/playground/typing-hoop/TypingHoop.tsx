@@ -19,7 +19,7 @@ import {
   summarize,
   type Game,
 } from "./game";
-import type { PlayerPose, Scene } from "./render";
+import type { Scene, ShooterPose } from "./render";
 
 /** 결과를 보여주고 다음 슛으로 넘어가기까지 */
 const RESULT_HOLD_MS = 1700;
@@ -177,14 +177,17 @@ export default function TypingHoop() {
     }
   }
 
-  const pose: PlayerPose =
+  // 던진 뒤에는 팔이 내려온다. 뻗은 자세로 굳혀두면 공이 날아가는 내내
+  // 화면 아래 절반을 두 팔이 차지해서 정작 공을 보기 어렵다.
+  const followThrough =
+    flight && phase !== "typing" ? Math.max(0, 1 - (now - flight.startedAt) / 550) : 0;
+
+  const pose: ShooterPose =
     phase === "typing"
       ? { armLift: progress, holding: true, crouch: Math.max(0, 1 - progress * 1.7) }
-      : phase === "flying"
-        ? { armLift: 1, holding: false, crouch: 0 }
-        : phase === "result"
-          ? { armLift: 0.35, holding: false, crouch: 0 }
-          : { armLift: 0, holding: true, crouch: 0 };
+      : phase === "flying" || phase === "result"
+        ? { armLift: followThrough, holding: false, crouch: 0 }
+        : { armLift: 0, holding: true, crouch: 0 };
 
   const scene: Scene = {
     distanceM: shot.distanceM,

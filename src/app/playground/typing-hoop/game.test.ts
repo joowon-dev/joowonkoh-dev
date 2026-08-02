@@ -4,6 +4,7 @@ import {
   BANDS,
   FIRST_SHOT_M,
   LAST_SHOT_M,
+  MIN_SHOT_MS,
   POWER_AT_FAR,
   POWER_AT_NEAR,
   SHOTS_PER_GAME,
@@ -217,6 +218,18 @@ describe("step", () => {
     const g = step(started(), { type: "type", value: "가", now: T0 });
     const later = step(g, { type: "type", value: "가나", now: T0 + 500 });
     expect(later.shot.startedAt).toBe(T0);
+  });
+
+  it("사람이 낼 수 없는 속도는 최소 시간으로 잘린다", () => {
+    // 붙여넣기로 한 번에 완성하는 경우. 판정은 그대로 실패지만,
+    // 기록에 1ms짜리 말도 안 되는 타수가 남지 않아야 한다
+    const g = started();
+    const after = step(
+      step(g, { type: "type", value: [...g.shot.word][0], now: T0 }),
+      { type: "type", value: g.shot.word, now: T0 + 1 },
+    );
+    expect(after.last!.elapsedMs).toBe(MIN_SHOT_MS);
+    expect(after.last!.outcome).toBe("long");
   });
 
   it("단어를 완성하면 공이 날아간다", () => {

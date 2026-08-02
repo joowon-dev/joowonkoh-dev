@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildFlight, flightAt, RIM_HEIGHT, type Outcome, type Vec3 } from "./flight";
+import { BALL_RADIUS, buildFlight, flightAt, RIM_HEIGHT, type Outcome, type Vec3 } from "./flight";
 import {
   CAM_Y,
+  CAM_Z,
   HORIZON,
   PALETTE,
   SCENE_H,
@@ -86,6 +87,21 @@ function centroid(ops: Op[], color: string): { x: number; y: number; n: number }
   return { x: sx / area, y: sy / area, n: hits.length };
 }
 
+/** 이 색들로 칠해진 사각형 전체를 감싸는 상자 */
+function bounds(
+  ops: Op[],
+  colors: string[],
+): { x0: number; y0: number; x1: number; y1: number } | null {
+  const hits = ops.filter((o) => colors.includes(o.color));
+  if (hits.length === 0) return null;
+  return {
+    x0: Math.min(...hits.map((o) => o.x)),
+    y0: Math.min(...hits.map((o) => o.y)),
+    x1: Math.max(...hits.map((o) => o.x + o.w)),
+    y1: Math.max(...hits.map((o) => o.y + o.h)),
+  };
+}
+
 const ALL: Outcome[] = ["clean", "frontRim", "backRim", "bank", "short", "long"];
 
 describe("project", () => {
@@ -110,8 +126,23 @@ describe("project", () => {
     expect(project({ x: 0, y: 1, z: 5 }).x).toBeCloseTo(SCENE_W / 2, 6);
   });
 
-  it("카메라가 림보다 높다 — 낮으면 골대 구멍이 안 보인다", () => {
-    expect(CAM_Y).toBeGreaterThan(RIM_HEIGHT);
+  it("카메라가 던지는 사람 눈높이에 있다 — 1인칭이라 림보다 낮다", () => {
+    expect(CAM_Y).toBeLessThan(RIM_HEIGHT);
+    expect(CAM_Y).toBeGreaterThan(1.4);
+    // 공 바로 뒤다. 여기서 멀어지면 다시 3인칭이 된다
+    expect(Math.abs(CAM_Z)).toBeLessThan(1);
+  });
+
+  it("올려다보므로 림이 수평선 위에 온다", () => {
+    for (const d of [3.2, 5.5, 8.5]) {
+      expect(project({ x: 0, y: RIM_HEIGHT, z: d }).y).toBeLessThan(HORIZON);
+    }
+  });
+
+  it("가까울수록 림을 더 가파르게 올려다본다", () => {
+    // 이 각도 차이가 링 타원의 납작한 정도로 나타나 거리감을 만든다
+    const angle = (d: number) => Math.atan2(RIM_HEIGHT - CAM_Y, d - CAM_Z);
+    expect(angle(3.2)).toBeGreaterThan(angle(8));
   });
 });
 
@@ -142,11 +173,17 @@ describe("drawScene", () => {
     expect(floor.w).toBe(SCENE_W);
   });
 
-  it("공이 손에 있으면 선수 근처에만 공 색이 있다", () => {
+  it("들고 있는 공은 화면 아래쪽 한가운데, 내 손 안에 있다", () => {
     const c = centroid(draw(scene()), PALETTE.ball)!;
     expect(c).not.toBeNull();
-    // 선수는 화면 아래쪽에 서 있다
-    expect(c.y).toBeGreaterThan(HORIZON + 40);
+    expect(c.y).toBeGreaterThan(SCENE_H * 0.6);
+    expect(Math.abs(c.x - SCENE_W / 2)).toBeLessThan(6);
+  });
+
+  it("손이 화면 아래 가장자리까지 이어진다 — 허공에 뜬 손이 아니다", () => {
+    const skin = draw(scene()).filter((o) => o.color === PALETTE.skin);
+    expect(skin.length).toBeGreaterThan(0);
+    expect(Math.max(...skin.map((o) => o.y + o.h))).toBeGreaterThanOrEqual(SCENE_H);
   });
 
   it("던진 뒤에는 손의 공이 사라진다", () => {
@@ -159,42 +196,57 @@ describe("drawScene", () => {
     expect(thrown).toBeNull();
   });
 
-  it("날아가는 공은 계산된 자리에 그려진다", () => {
+  it("날아가는 공은 계산된 자리에 계산된 크기로 그려진다", () => {
     const f = buildFlight("clean", 5);
     for (const t of [0, f.arcs[0].ms * 0.4, f.arcs[0].ms * 0.85]) {
       const pos = flightAt(f, t).pos;
       const want = project(pos);
-      const got = centroid(
+      const wantR = BALL_RADIUS * want.scale;
+      // 공은 어두운 원 위에 밝은 원을 살짝 어긋나게 얹어 그린다. 그래서 밝은
+      // 부분만 보면 중심이 밀린다 — 두 색을 합친 테두리 상자로 재야 맞다.
+      const box = bounds(
         draw(scene({ ball: pos, pose: { armLift: 1, holding: false, crouch: 0 } })),
-        PALETTE.ball,
+        [PALETTE.ball, PALETTE.ballDark],
       )!;
-      expect(got).not.toBeNull();
-      expect(got.x).toBeCloseTo(want.x, 0);
-      expect(Math.abs(got.y - want.y)).toBeLessThan(3);
+      expect(box).not.toBeNull();
+      expect(Math.abs((box.x0 + box.x1) / 2 - want.x)).toBeLessThan(2);
+      expect(Math.abs((box.y0 + box.y1) / 2 - want.y)).toBeLessThan(2);
+      expect(box.x1 - box.x0).toBeCloseTo(wantR * 2, -0.5);
     }
   });
 
-  it("날아가는 동안 공이 위로 올라갔다 내려온다", () => {
+  it("날아가는 동안 공이 화면에서 솟았다 내려온다", () => {
+    // 1인칭이라 화면상 정점은 실제 궤적의 절반 지점이 아니다. 공이 카메라에서
+    // 멀어지며 작아지는 만큼 빨리 내려오기 때문에, 정점이 훨씬 앞당겨진다.
+    // 그래서 특정 지점을 콕 집지 않고 "가운데 어딘가에서 가장 높다"만 본다.
     const f = buildFlight("clean", 6);
-    const ys = [0.1, 0.5, 1].map((u) => {
-      const pos = flightAt(f, f.arcs[0].ms * u).pos;
-      return centroid(
-        draw(scene({ distanceM: 6, ball: pos, pose: { armLift: 1, holding: false, crouch: 0 } })),
-        PALETTE.ball,
-      )!.y;
-    });
-    // 화면 좌표는 아래로 갈수록 커진다. 올라가면 값이 줄어든다
-    expect(ys[1]).toBeLessThan(ys[0]);
-    expect(ys[2]).toBeGreaterThan(ys[1]);
+    const ys = [0, 0.15, 0.3, 0.5, 0.75, 1].map(
+      (u) =>
+        centroid(
+          draw(
+            scene({
+              distanceM: 6,
+              ball: flightAt(f, f.arcs[0].ms * u).pos,
+              pose: { armLift: 1, holding: false, crouch: 0 },
+            }),
+          ),
+          PALETTE.ball,
+        )!.y,
+    );
+    // 화면 좌표는 아래로 갈수록 커진다. 솟는다는 건 값이 작아진다는 뜻이다
+    const top = Math.min(...ys);
+    expect(top).toBeLessThan(ys[0]);
+    expect(top).toBeLessThan(ys[ys.length - 1]);
   });
 
   it("어떤 슛이든 공이 화면 밖으로 사라지지 않는다", () => {
-    // 카메라 상수를 건드리면 제일 먼저 깨지는 곳이다.
-    // 공이 프레임 밖으로 나가면 플레이어는 결과를 눈으로 못 따라간다.
-    for (const d of [3, 5.5, 8.5]) {
+    // 1인칭에서 제일 깨지기 쉬운 곳이다. 카메라가 공에 붙어 있어서 화각이나
+    // 아치를 조금만 건드려도 던진 공이 곧장 화면 위로 빠져나간다. 실제로
+    // "너무 셌어요"의 아치를 3인칭 때 값 그대로 뒀더니 근거리에서 사라졌다.
+    for (const d of [3, 3.2, 5.5, 8.5]) {
       for (const o of ALL) {
         const f = buildFlight(o, d);
-        for (let t = 0; t <= f.totalMs; t += 40) {
+        for (let t = 0; t <= f.totalMs; t += 20) {
           const p: Vec3 = flightAt(f, t).pos;
           const s = project(p);
           expect(s.x).toBeGreaterThan(0);
@@ -206,11 +258,21 @@ describe("drawScene", () => {
     }
   });
 
-  it("골대는 선수보다 위에, 수평선 근처에 있다", () => {
+  it("들어가는 슛은 림을 지나는 순간이 화면 안에 보인다", () => {
+    for (const d of [3.2, 5.5, 8.5]) {
+      for (const o of ["clean", "frontRim", "backRim", "bank"] as Outcome[]) {
+        const f = buildFlight(o, d);
+        const s = project(flightAt(f, f.swishAtMs!).pos);
+        expect(s.y).toBeGreaterThan(0);
+        expect(s.y).toBeLessThan(SCENE_H);
+      }
+    }
+  });
+
+  it("골대가 수평선 위, 들고 있는 공보다 위에 있다", () => {
     const rim = project({ x: 0, y: RIM_HEIGHT, z: 5 });
-    const feet = floorPoint(0, 0);
-    expect(rim.y).toBeLessThan(feet.y);
-    expect(Math.abs(rim.y - HORIZON)).toBeLessThan(40);
+    expect(rim.y).toBeLessThan(HORIZON);
+    expect(rim.y).toBeLessThan(centroid(draw(scene()), PALETTE.ball)!.y);
   });
 
   it("먼 골대가 가까운 골대보다 작게 그려진다", () => {

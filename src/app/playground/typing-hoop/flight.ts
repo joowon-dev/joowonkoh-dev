@@ -37,8 +37,16 @@ export const BOARD_BOTTOM = 2.9;
 export const BOARD_TOP = 3.95;
 export const BALL_RADIUS = 0.12;
 
-/** 공을 놓는 자리. 던지는 사람 머리 위 약간 앞 */
-export const RELEASE: Vec3 = { x: 0, y: 2.15, z: 0.35 };
+/**
+ * 공을 놓는 자리. 던지는 사람이 팔을 뻗어 머리 위로 올린 지점이다.
+ *
+ * 1인칭이라 카메라(눈높이 1.72m)와 아주 가깝다. 이 값이 곧 화면 아래쪽에
+ * 보이는 내 손의 자리이기도 해서, 렌더러가 같은 점을 공유한다.
+ */
+export const RELEASE: Vec3 = { x: 0, y: 1.85, z: 0.6 };
+
+/** 아직 안 던지고 들고 있을 때의 자리. 타자 진행도에 따라 RELEASE로 올라간다 */
+export const READY: Vec3 = { x: 0, y: 1.35, z: 0.6 };
 
 export function boardZ(distanceM: number): number {
   return distanceM + RIM_RADIUS + BOARD_GAP;
@@ -82,9 +90,15 @@ function riseMs(distanceM: number): number {
   return 820 + distanceM * 55;
 }
 
-/** 골대까지의 거리에 따라 자연스러운 아치 높이 */
+/**
+ * 골대까지의 거리에 따른 아치 높이.
+ *
+ * 3인칭 때보다 낮다. 1인칭에서는 카메라가 공 바로 뒤에 붙어 있어서, 같은 높이를
+ * 올려도 화면에서는 훨씬 크게 치솟는다 — 예전 값(+1.05)으로는 근거리 슛이
+ * 화면 위로 완전히 빠져나가 공을 놓친다.
+ */
 function apexFor(distanceM: number): number {
-  return RIM_HEIGHT + 1.05 + distanceM * 0.07;
+  return RIM_HEIGHT + 0.45 + distanceM * 0.08;
 }
 
 /**
@@ -186,9 +200,12 @@ export function buildFlight(outcome: Outcome, distanceM: number, lateral = 0): F
       );
 
     // 힘이 모자라 링 앞 바닥에 떨어진다. 얼마나 모자랐는지는 궤적에 안 담는다 —
-    // 어차피 0점이고, 화면에는 "짧았어요"만 보이면 된다
+    // 어차피 0점이고, 화면에는 "짧았어요"만 보이면 된다.
+    //
+    // 떨어지는 자리를 링에 바짝 붙였다. 1인칭에서는 발밑 가까운 바닥이 시야
+    // 아래로 벗어나서, 너무 앞에 떨어뜨리면 공이 화면 밖에서 사라진다.
     case "short": {
-      const landZ = Math.max(0.8, hoopZ - 1.1);
+      const landZ = Math.max(0.8, hoopZ - 0.9);
       return assemble(
         [
           { from: RELEASE, to: v(x, BALL_RADIUS, landZ), apex: apex - 0.7, ms: rise },
@@ -203,11 +220,14 @@ export function buildFlight(outcome: Outcome, distanceM: number, lateral = 0): F
       );
     }
 
-    // 너무 세서 백보드 윗부분을 맞고 뒤로 넘어간다
+    // 너무 세서 백보드 윗부분을 맞고 뒤로 넘어간다.
+    // 아치를 조금만 더 준다 — 크게 띄우면 근거리에서 화면 위로 사라져
+    // "어디로 갔는지 모르겠는" 실패가 된다. 넘어갔다는 건 백보드 위쪽을
+    // 때리고 뒤로 튀는 것으로 충분히 읽힌다.
     case "long":
       return assemble(
         [
-          { from: RELEASE, to: v(x, BOARD_TOP - 0.1, bZ), apex: apex + 0.8, ms: rise - 40 },
+          { from: RELEASE, to: v(x, BOARD_TOP - 0.1, bZ), apex: apex + 0.25, ms: rise - 40 },
           {
             from: v(x, BOARD_TOP - 0.1, bZ),
             to: v(x * 1.4, BALL_RADIUS, bZ + 1.4),

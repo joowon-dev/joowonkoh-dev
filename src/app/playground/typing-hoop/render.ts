@@ -5,7 +5,8 @@
  * 그리는 것보다 이쪽이 확실하다 — 확대는 브라우저가 최근접 이웃으로 하므로
  * 계단이 또렷하게 남고, 기기 배율이 얼마든 같은 그림이 나온다.
  *
- * 시점은 3인칭이다. 카메라가 던지는 사람 뒤 위쪽에 고정돼 있고, 골대는
+ * 시점은 1인칭이다. 카메라가 곧 던지는 사람의 눈이라 몸은 안 그리고, 화면
+ * 아래에 자기 손과 공이 걸린다. 골대는 눈높이보다 높아서 올려다보게 되고,
  * 거리에 따라 저 앞에서 작아진다. 원근은 z 하나로만 나눈다.
  */
 
@@ -13,6 +14,8 @@ import {
   BALL_RADIUS,
   BOARD_BOTTOM,
   BOARD_TOP,
+  READY,
+  RELEASE,
   RIM_HEIGHT,
   RIM_RADIUS,
   boardZ,
@@ -23,21 +26,34 @@ import { createRng } from "../_shared/random";
 export const SCENE_W = 240;
 export const SCENE_H = 320;
 
-/** 눈높이가 화면에서 걸리는 줄. 이 위가 벽과 관중석, 아래가 바닥이다 */
-export const HORIZON = 96;
-/** 초점거리(px·m). 클수록 망원처럼 눌린다 */
-export const FOCAL = 330;
 /**
- * 카메라 높이(m)와 던지는 사람으로부터 뒤로 물러난 거리(m).
+ * 눈높이가 화면에서 걸리는 줄. 이 위가 벽과 관중석, 아래가 바닥이다.
  *
- * 높이가 림(3.05m)보다 높아야 한다. 눈높이에 두면 림을 옆에서 보게 되어
- * 골대 구멍이 안 보이고, 공이 들어가는지 튕기는지 구분이 안 된다.
- * 뒤로 물러난 거리는 사람이 화면 아래에 적당히 걸리도록 높이와 같이 맞춘 값이다.
+ * 화면 한가운데(160)가 아니라 아래쪽(200)에 있다. 이게 곧 카메라를 위로
+ * 기울인 것과 같다 — 골대는 눈높이보다 높으니 올려다봐야 한다.
  */
-export const CAM_Y = 3.2;
-export const CAM_Z = -7.2;
+export const HORIZON = 200;
+/**
+ * 초점거리(px·m). 화각으로는 약 70°다.
+ *
+ * 3인칭 때(330, 약 50°)보다 넓혔다. 1인칭은 카메라가 공에 붙어 있어서 좁은
+ * 화각으로는 던진 공이 곧장 화면 위로 사라진다.
+ */
+export const FOCAL = 170;
+/**
+ * 카메라 높이(m)와 던지는 사람 기준 앞뒤 위치(m).
+ *
+ * 던지는 사람의 눈이다. 뒤통수가 아니라 시야를 보여주는 것이므로 사람 몸을
+ * 그리지 않고, 대신 화면 아래에 자기 손과 공이 걸린다.
+ *
+ * 림(3.05m)보다 낮다. 그래서 골대를 아래에서 올려다보게 되는데, 그게 실제로
+ * 슛을 쏘는 사람이 보는 그림이다. 링 타원의 납작한 정도도 이 높이 차이에서
+ * 그대로 나온다.
+ */
+export const CAM_Y = 1.72;
+export const CAM_Z = -0.15;
 /** 이보다 가까운 건 그리지 않는다. 카메라 뒤로 넘어간 점은 좌표가 뒤집힌다 */
-const NEAR_Z = CAM_Z + 0.8;
+const NEAR_Z = CAM_Z + 0.35;
 
 export interface Screen {
   x: number;
@@ -81,6 +97,8 @@ export interface Palette {
   ball: string;
   ballDark: string;
   skin: string;
+  /** 손 테두리. 살색이 마룻바닥과 비슷해서 이게 없으면 손이 코트에 묻힌다 */
+  skinLine: string;
   hair: string;
   jersey: string;
   jerseyDark: string;
@@ -110,7 +128,8 @@ export const PALETTE: Palette = {
   net: "#f2efe6",
   ball: "#d9762e",
   ballDark: "#89441a",
-  skin: "#f0c193",
+  skin: "#f5cfa4",
+  skinLine: "#7a4a2a",
   hair: "#2b2118",
   jersey: "#e8532e",
   jerseyDark: "#b83b1c",
@@ -208,17 +227,16 @@ function fillEllipse(
  * 관중석 점들. 매 프레임 난수를 뽑으면 관중이 발작하듯 깜빡인다.
  * 모듈이 뜰 때 한 번만 만들어 고정한다.
  */
+const CROWD_ROWS = 3;
 const CROWD = (() => {
   const rng = createRng(20260803);
-  const rows = 5;
-  const dots: { x: number; y: number; color: number; w: number }[] = [];
-  for (let r = 0; r < rows; r++) {
-    const y = 44 + r * 9;
+  const dots: { x: number; row: number; color: number; w: number }[] = [];
+  for (let row = 0; row < CROWD_ROWS; row++) {
     for (let x = 2; x < SCENE_W - 2; x += 5) {
       if (rng() < 0.22) continue;
       dots.push({
         x: x + Math.floor(rng() * 2),
-        y,
+        row,
         color: Math.floor(rng() * PALETTE.crowd.length),
         w: rng() < 0.3 ? 4 : 3,
       });
@@ -227,29 +245,44 @@ const CROWD = (() => {
   return dots;
 })();
 
+/**
+ * 체육관 안쪽. 관중석은 수평선 바로 위 얇은 띠뿐이다.
+ *
+ * 올려다보는 시점이라 화면 위쪽 대부분은 천장과 벽이다. 관중을 크게 깔면
+ * 골대 뒤가 알록달록해져서 정작 봐야 할 백보드가 묻힌다.
+ */
 function drawBackground(ctx: CanvasRenderingContext2D): void {
   px(ctx, 0, 0, SCENE_W, HORIZON, PALETTE.wall);
 
-  // 천장 조명 두 줄. 위쪽이 새까맣기만 하면 실내로 안 읽힌다
-  for (const y of [8, 18]) {
-    for (let x = 24; x < SCENE_W - 24; x += 26) {
-      px(ctx, x, y, 14, 3, "#3d4668");
+  // 천장 조명. 위를 올려다보는 시점이라 화면 맨 위에 걸린다
+  for (const y of [9, 25]) {
+    for (let x = 18; x < SCENE_W - 18; x += 30) {
+      px(ctx, x, y, 16, 4, "#4a5578");
+      px(ctx, x + 2, y + 4, 12, 1, "#39426a");
     }
   }
+  // 천장 트러스. 가로선 두 줄만 그으면 뜬금없는 줄로 보여서 사이를 격자로 묶는다
+  px(ctx, 0, 44, SCENE_W, 3, PALETTE.wallTrim);
+  px(ctx, 0, 64, SCENE_W, 2, PALETTE.standRow);
+  for (let x = 6; x < SCENE_W; x += 20) {
+    px(ctx, x, 47, 2, 17, PALETTE.standRow);
+    pixelLine(ctx, x + 2, 62, x + 18, 49, 1, PALETTE.standRow);
+  }
 
-  // 관중석 계단
-  for (let r = 0; r < 6; r++) {
-    px(ctx, 0, 40 + r * 9, SCENE_W, 7, r % 2 === 0 ? PALETTE.standRow : PALETTE.wallTrim);
+  // 관중석 계단 — 수평선 바로 위
+  const standTop = HORIZON - 8 - CROWD_ROWS * 8;
+  for (let r = 0; r < CROWD_ROWS; r++) {
+    px(ctx, 0, standTop + r * 8, SCENE_W, 7, r % 2 === 0 ? PALETTE.standRow : PALETTE.wallTrim);
   }
   for (const d of CROWD) {
-    px(ctx, d.x, d.y, d.w, 4, PALETTE.crowd[d.color]);
+    px(ctx, d.x, standTop + d.row * 8 + 1, d.w, 4, PALETTE.crowd[d.color]);
   }
 
   // 관중석과 코트 사이 광고판
-  px(ctx, 0, HORIZON - 12, SCENE_W, 12, PALETTE.wallTrim);
-  px(ctx, 0, HORIZON - 12, SCENE_W, 1, "#4a5578");
+  px(ctx, 0, HORIZON - 10, SCENE_W, 10, PALETTE.wallTrim);
+  px(ctx, 0, HORIZON - 10, SCENE_W, 1, "#4a5578");
   for (let x = 6; x < SCENE_W; x += 30) {
-    px(ctx, x, HORIZON - 8, 18, 4, "#39426a");
+    px(ctx, x, HORIZON - 7, 18, 4, "#39426a");
   }
 }
 
@@ -384,6 +417,22 @@ function drawHoop(ctx: CanvasRenderingContext2D, hoopZ: number, netSwing: number
     PALETTE.pole,
   );
 
+  // 골대 뒤 어두운 판.
+  //
+  // 먼 슛에서는 골대가 관중석 높이까지 내려와서, 알록달록한 점들 위에 흰
+  // 백보드와 그물이 얹히면 뭐가 뭔지 안 보인다. 골대가 갈 만한 자리에 미리
+  // 어두운 판을 깔아 항상 같은 배경 위에 서게 한다.
+  px(
+    ctx,
+    boardMid.x - 1.15 * s,
+    project({ x: 0, y: BOARD_TOP + 0.2, z: bZ }).y,
+    2.3 * s,
+    (BOARD_TOP + 0.2 - (RIM_HEIGHT - 0.7)) * s,
+    // 위쪽 벽과 같은 색이라 관중석에 난 '골대 자리'처럼 자연스럽게 이어진다.
+    // 더 어두운 색을 쓰면 검은 사각형이 오려붙은 것처럼 튄다.
+    PALETTE.wall,
+  );
+
   // 백보드
   const boardW = 1.8 * s;
   const boardH = (BOARD_TOP - BOARD_BOTTOM) * s;
@@ -406,12 +455,15 @@ function drawHoop(ctx: CanvasRenderingContext2D, hoopZ: number, netSwing: number
   px(ctx, sqX, sqY, t, sqH, PALETTE.boardSquare);
   px(ctx, sqX + sqW - t, sqY, t, sqH, PALETTE.boardSquare);
 
-  // 림. 위에서 내려다보므로 타원이다
+  // 림. 눈높이보다 높이 있으니 아래에서 올려다보는 타원이다.
+  //
+  // 납작한 정도는 올려다보는 각도 그대로다 — 가까우면 많이 올려다봐서 링이
+  // 동그랗게 열리고, 멀수록 눈높이에 가까워져 한 줄로 눕는다. 이 변화 자체가
+  // 거리감을 준다. 완전히 눕지 않게 바닥값만 둔다.
   const rimC = project({ x: 0, y: RIM_HEIGHT, z: hoopZ });
   const rx = RIM_RADIUS * rimC.scale;
-  // 카메라가 림보다 낮으면 안쪽이 안 보인다. 눈높이 차이로 납작한 정도를 정한다
-  const flat = Math.min(0.62, Math.max(0.12, (CAM_Y - RIM_HEIGHT + 1.6) / 4));
-  const ry = Math.max(1.5, rx * flat);
+  const elevation = Math.atan2(RIM_HEIGHT - CAM_Y, hoopZ - CAM_Z);
+  const ry = Math.max(1.5, rx * Math.max(0.14, Math.sin(elevation)));
   const rimT = Math.max(2, 0.08 * rimC.scale);
   // 백보드와 림을 잇는 목. 림보다 먼저 그려야 뒤로 간다
   pixelLine(
@@ -424,9 +476,12 @@ function drawHoop(ctx: CanvasRenderingContext2D, hoopZ: number, netSwing: number
     PALETTE.rimDark,
   );
   // 뒤쪽 반은 어둡게, 앞쪽 반은 밝게. 이 차이가 있어야 납작한 타원이 아니라
-  // 앞으로 튀어나온 링으로 읽힌다
-  pixelArc(ctx, rimC.x, rimC.y, rx, ry, Math.PI, Math.PI * 2, rimT, PALETTE.rimDark);
-  pixelArc(ctx, rimC.x, rimC.y, rx, ry, 0, Math.PI, rimT, PALETTE.rim);
+  // 앞으로 튀어나온 링으로 읽힌다.
+  //
+  // 올려다보는 시점이라 링의 **가까운** 쪽이 화면에서 위(작은 y)에 온다.
+  // 내려다볼 때와 반대다 — 여기를 뒤집으면 링이 뒤로 누운 것처럼 보인다.
+  pixelArc(ctx, rimC.x, rimC.y, rx, ry, 0, Math.PI, rimT, PALETTE.rimDark);
+  pixelArc(ctx, rimC.x, rimC.y, rx, ry, Math.PI, Math.PI * 2, rimT, PALETTE.rim);
 
   // 그물. 공이 지나가면 옆으로 흔들린다
   const netBottom = project({ x: 0, y: RIM_HEIGHT - 0.42, z: hoopZ });
@@ -442,17 +497,28 @@ function drawHoop(ctx: CanvasRenderingContext2D, hoopZ: number, netSwing: number
   pixelEllipse(ctx, netBottom.x, netBottom.y, rx * 0.55, ry * 0.55, 1, PALETTE.net);
 }
 
-/** 공 하나. 크기는 깊이에 따라 줄어든다 */
+/**
+ * 공 하나. 크기는 깊이에 따라 줄어든다.
+ *
+ * 어두운 원을 깔고 그 위에 살짝 왼쪽 위로 옮긴 밝은 원을 얹는다. 그러면
+ * 오른쪽 아래에 초승달 모양 그늘이 남아 구(球)로 읽힌다. 예전처럼 아래에
+ * 사각형 그늘을 붙이면 작을 때는 괜찮아도, 손에 든 큰 공에서는 갈색 막대가
+ * 튀어나온 것처럼 보인다.
+ */
 function drawBall(ctx: CanvasRenderingContext2D, pos: Vec3, spin: number): void {
   const s = project(pos);
   const r = Math.max(2, BALL_RADIUS * s.scale);
-  fillEllipse(ctx, s.x, s.y, r, r, PALETTE.ball);
+  fillEllipse(ctx, s.x, s.y, r, r, PALETTE.ballDark);
+  fillEllipse(ctx, s.x - r * 0.1, s.y - r * 0.12, r * 0.92, r * 0.92, PALETTE.ball);
   // 솔기 두 줄. 돌아가는 게 보여야 날아가는 느낌이 산다
   const off = Math.sin(spin) * r * 0.55;
-  pixelLine(ctx, s.x - r, s.y + off * 0.4, s.x + r, s.y - off * 0.4, 1, PALETTE.ballDark);
-  pixelLine(ctx, s.x + off, s.y - r, s.x + off, s.y + r, 1, PALETTE.ballDark);
-  // 아래쪽 그늘
-  px(ctx, s.x - r * 0.6, s.y + r * 0.55, r * 1.2, Math.max(1, r * 0.3), PALETTE.ballDark);
+  const seam = Math.max(1, r * 0.09);
+  pixelLine(ctx, s.x - r * 0.95, s.y + off * 0.4, s.x + r * 0.95, s.y - off * 0.4, seam, PALETTE.ballDark);
+  pixelLine(ctx, s.x + off, s.y - r * 0.95, s.x + off, s.y + r * 0.95, seam, PALETTE.ballDark);
+  // 왼쪽 위 하이라이트. 작을 때는 안 그린다 — 점 하나가 솔기처럼 보인다
+  if (r >= 8) {
+    fillEllipse(ctx, s.x - r * 0.42, s.y - r * 0.45, r * 0.22, r * 0.18, "#f0a05a");
+  }
 }
 
 /** 바닥에 지는 그림자. 높이 올라갈수록 작고 옅어진다 */
@@ -465,102 +531,98 @@ function drawShadow(ctx: CanvasRenderingContext2D, pos: Vec3): void {
   ctx.globalAlpha = 1;
 }
 
-export interface PlayerPose {
-  /** 0이면 팔이 내려와 있고 1이면 머리 위로 뻗은 상태 */
+export interface ShooterPose {
+  /** 0이면 공을 가슴 앞에 든 상태, 1이면 머리 위로 완전히 뻗은 상태 */
   armLift: number;
   /** 공을 아직 들고 있는가 */
   holding: boolean;
-  /** 무릎을 굽힌 정도 0~1 */
+  /** 무릎을 굽힌 정도 0~1. 1인칭에서는 시야가 살짝 내려앉는 것으로 보인다 */
   crouch: number;
 }
 
+/** 지금 손에 든 공이 있어야 할 3차원 위치. 팔을 올릴수록 RELEASE로 다가간다 */
+export function heldBallAt(armLift: number): Vec3 {
+  const t = Math.min(1, Math.max(0, armLift));
+  return {
+    x: READY.x + (RELEASE.x - READY.x) * t,
+    y: READY.y + (RELEASE.y - READY.y) * t,
+    z: READY.z + (RELEASE.z - READY.z) * t,
+  };
+}
+
 /**
- * 던지는 사람. 뒷모습이다.
+ * 내 손. 1인칭이라 몸 대신 이게 보인다.
  *
- * 카메라와 사람의 상대 위치가 고정이라 화면 크기도 고정이다. 그래서 원근으로
- * 계산하지 않고 픽셀 좌표를 직접 박는다 — 그래야 몸통 도트가 프레임마다
- * 1픽셀씩 떨리지 않는다.
+ * 손 위치를 화면 좌표로 박지 않고 공의 투영 위치에서 끌어낸다. 그래야 손을
+ * 떠나는 순간 공이 튀지 않는다 — 들고 있을 때와 날아가기 시작할 때가
+ * 같은 좌표계를 쓰기 때문이다.
  */
-function drawPlayer(ctx: CanvasRenderingContext2D, pose: PlayerPose): void {
-  const feet = floorPoint(0, 0);
-  const cx = Math.round(feet.x);
-  const dip = Math.round(pose.crouch * 5);
-  const bottom = Math.round(feet.y);
-  const top = bottom - 96 + dip;
-
+function drawHands(ctx: CanvasRenderingContext2D, pose: ShooterPose): void {
+  const held = heldBallAt(pose.armLift);
+  const s = project(held);
+  const r = Math.max(6, BALL_RADIUS * s.scale);
+  const cx = Math.round(s.x);
+  const cy = Math.round(s.y);
   const P = PALETTE;
-  // 발밑 그림자
-  ctx.globalAlpha = 0.3;
-  fillEllipse(ctx, cx, bottom + 1, 20, 5, P.shadow);
-  ctx.globalAlpha = 1;
 
-  // 다리 — 굽히면 짧아진다
-  const legTop = top + 62;
-  px(ctx, cx - 11, legTop, 8, 26 - dip, P.skin);
-  px(ctx, cx + 3, legTop, 8, 26 - dip, P.skin);
-  // 양말과 신발
-  px(ctx, cx - 12, bottom - 9, 10, 4, P.shoe);
-  px(ctx, cx + 2, bottom - 9, 10, 4, P.shoe);
-  px(ctx, cx - 13, bottom - 5, 12, 5, P.shoe);
-  px(ctx, cx + 1, bottom - 5, 12, 5, P.shoe);
+  // 공을 먼저 깔고 손가락을 그 **위에** 얹는다. 손을 공 옆에 나란히 두면
+  // 잡은 게 아니라 받침대에 올려둔 것처럼 보인다. 겹쳐야 쥔 걸로 읽힌다.
+  if (pose.holding) drawBall(ctx, held, 0);
 
-  // 반바지
-  px(ctx, cx - 13, top + 46, 26, 18, P.shorts);
-  px(ctx, cx - 1, top + 52, 2, 12, "#1e2740");
+  // 살색과 마룻바닥 색이 가깝다. 테두리를 안 두르면 손이 코트에 묻혀서
+  // 아무것도 안 든 것처럼 보인다. 그래서 조각마다 한 겹 키워 먼저 깐다.
+  const limb = (x0: number, y0: number, x1: number, y1: number, w: number) => {
+    pixelLine(ctx, x0, y0, x1, y1, w + 2, P.skinLine);
+    pixelLine(ctx, x0, y0, x1, y1, w, P.skin);
+  };
 
-  // 몸통
-  px(ctx, cx - 13, top + 18, 26, 30, P.jersey);
-  px(ctx, cx - 13, top + 18, 5, 30, P.jerseyDark);
-  px(ctx, cx + 8, top + 18, 5, 30, P.jerseyDark);
-  // 등번호 8
-  px(ctx, cx - 4, top + 26, 8, 3, "#ffffff");
-  px(ctx, cx - 4, top + 31, 8, 3, "#ffffff");
-  px(ctx, cx - 4, top + 36, 8, 3, "#ffffff");
-  px(ctx, cx - 4, top + 29, 2, 2, "#ffffff");
-  px(ctx, cx + 2, top + 29, 2, 2, "#ffffff");
-  px(ctx, cx - 4, top + 34, 2, 2, "#ffffff");
-  px(ctx, cx + 2, top + 34, 2, 2, "#ffffff");
+  // 놓고 나면 손이 위로 뻗으며 손가락이 펴진다 (팔로스루)
+  const held0 = pose.holding;
+  const lift = held0 ? 0 : -r * 0.5;
 
-  // 목과 머리. 뒷모습이라 보이는 건 뒤통수와 귀뿐이다.
-  // 네모 한 덩이로 두면 검은 블록이 얹힌 것처럼 보여서 위아래 모서리를 깎는다
-  px(ctx, cx - 4, top + 13, 8, 6, P.skin);
-  px(ctx, cx - 7, top + 1, 14, 14, P.hair);
-  px(ctx, cx - 6, top, 12, 1, P.hair);
-  px(ctx, cx - 8, top + 4, 1, 8, P.hair);
-  px(ctx, cx + 7, top + 4, 1, 8, P.hair);
-  px(ctx, cx - 6, top + 1, 12, 2, "#3f3125");
-  px(ctx, cx - 7, top + 13, 14, 2, "#241b13");
-  // 귀
-  px(ctx, cx - 9, top + 7, 2, 4, P.skin);
-  px(ctx, cx + 7, top + 7, 2, 4, P.skin);
-
-  // 팔. 어깨에서 손까지 한 줄로 긋는다
-  const lift = Math.min(1, Math.max(0, pose.armLift));
-  const shoulderY = top + 21;
-  const handDown = { x: 16, y: top + 48 };
-  const handUp = { x: 11, y: top - 10 };
-  const hx = handDown.x + (handUp.x - handDown.x) * lift;
-  const hy = handDown.y + (handUp.y - handDown.y) * lift;
-  // 팔꿈치를 살짝 바깥으로 빼야 일자 막대로 안 보인다
-  const ex = (handDown.x + hx) / 2 + 3;
-  const ey = (shoulderY + hy) / 2 + (1 - lift) * 4;
   for (const side of [-1, 1]) {
-    pixelLine(ctx, cx + side * 12, shoulderY, cx + side * ex, ey, 5, P.skin);
-    pixelLine(ctx, cx + side * ex, ey, cx + side * hx, hy, 4, P.skin);
-  }
+    // 손목은 공의 아래 바깥, 팔뚝은 거기서 화면 아래 모서리로 빠진다
+    const wx = cx + side * r * 1.0;
+    const wy = cy + r * 0.62 + lift;
+    // 팔뚝은 화면 아래 '바깥쪽 모서리'로 빠져야 한다. 덜 벌리면 손이 올라갈수록
+    // 팔이 화면 한복판을 가로지르는 굵은 대각선 두 개가 된다.
+    limb(wx, wy, cx + side * r * 3.4, SCENE_H + 12, Math.max(3, r * 0.42));
+    // 손바닥 — 공의 아래 바깥 모서리를 받친다
+    limb(wx, wy, wx - side * r * 0.12, wy - r * 0.3, Math.max(4, r * 0.42));
 
-  // 손에 든 공
-  if (pose.holding) {
-    const ballY = hy - 3 + (1 - lift) * 6;
-    fillEllipse(ctx, cx, ballY, 9, 9, P.ball);
-    pixelLine(ctx, cx - 9, ballY, cx + 9, ballY, 1, P.ballDark);
-    pixelLine(ctx, cx, ballY - 9, cx, ballY + 9, 1, P.ballDark);
+    /**
+     * 손가락. 공 가장자리를 따라 짧게 걸친다.
+     *
+     * 손목 한 점에서 공 중심 쪽으로 길게 뻗으면 양손 손가락이 공 위에서
+     * 서로 엇갈려 거미 다리처럼 보인다. 각자 자기 각도에서 안쪽으로 조금만
+     * 들어오는 짧은 마디여야 '쥐고 있다'로 읽힌다.
+     */
+    // 화면 좌표는 y가 아래로 자라므로 각도도 시계 방향이다.
+    // 180°가 왼쪽, 220°가 왼쪽 위, 150°가 왼쪽 아래다.
+    const gripDeg = [150, 185, 220];
+    const fw = Math.max(2, r * 0.17);
+    gripDeg.forEach((deg, i) => {
+      if (held0) {
+        const a = ((side < 0 ? deg : 180 - deg) * Math.PI) / 180;
+        limb(
+          cx + Math.cos(a) * r * 1.05,
+          cy + Math.sin(a) * r * 1.05,
+          cx + Math.cos(a) * r * 0.55,
+          cy + Math.sin(a) * r * 0.55,
+          fw,
+        );
+      } else {
+        // 놓은 뒤에는 나란히 위로 편다
+        const off = (i - 1) * r * 0.3;
+        limb(wx + side * off * 0.4, wy - r * 0.25, wx + side * (r * 0.2) + off, wy - r * 1.15, fw);
+      }
+    });
   }
 }
 
 export interface Scene {
   distanceM: number;
-  pose: PlayerPose;
+  pose: ShooterPose;
   /** 날아가는 공. 손에 있으면 null */
   ball: Vec3 | null;
   /** 공이 림을 지난 뒤 흐른 시간(ms). 아직이면 null */
@@ -573,10 +635,12 @@ export interface Scene {
 
 export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
   ctx.save();
-  if (scene.shake > 0.01) {
-    // 정수로 흔들어야 픽셀이 어긋나지 않는다
-    const a = Math.round(scene.shake * 3);
-    ctx.translate(a % 2 === 0 ? a : -a, Math.round(scene.shake * 2));
+  // 흔들림과 무릎 굽힘을 화면 전체를 밀어서 표현한다. 1인칭에서는 몸이 안
+  // 보이므로 자세가 곧 시야의 움직임이다. 정수로 밀어야 픽셀이 안 어긋난다.
+  const dip = Math.round(scene.pose.crouch * 4);
+  const jolt = Math.round(scene.shake * 3);
+  if (dip !== 0 || jolt !== 0) {
+    ctx.translate(jolt % 2 === 0 ? jolt : -jolt, dip + Math.round(scene.shake * 2));
   }
 
   drawBackground(ctx);
@@ -603,6 +667,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
     drawBall(ctx, scene.ball, scene.spin);
   }
 
-  drawPlayer(ctx, scene.pose);
+  // 내 손은 맨 앞이다. 무엇에도 가리지 않는다
+  drawHands(ctx, scene.pose);
   ctx.restore();
 }

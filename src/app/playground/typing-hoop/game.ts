@@ -239,9 +239,18 @@ export function livePower(shot: Shot, now: number): number | null {
   return powerOf(shot.keystrokes, now - shot.startedAt);
 }
 
+/**
+ * 한 슛에 인정하는 최소 시간.
+ *
+ * 사람 손으로는 자모 대여섯 개를 0.12초에 못 친다. 이 바닥이 없으면 붙여넣기나
+ * 자동 입력이 1ms짜리 기록을 남기고, 결과 화면에 480000타/분 같은 값이 뜬다.
+ * 판정은 어차피 "너무 셌어요"라 게임에는 영향이 없고, 기록만 멀쩡해진다.
+ */
+export const MIN_SHOT_MS = 120;
+
 function finishShot(game: Game, now: number): Game {
   const { shot } = game;
-  const elapsedMs = Math.max(1, now - (shot.startedAt ?? now));
+  const elapsedMs = Math.max(MIN_SHOT_MS, now - (shot.startedAt ?? now));
   const power = powerOf(shot.keystrokes, elapsedMs);
   const outcome = outcomeFor(power - shot.required);
   const points = pointsFor(outcome, shot.distanceM);
