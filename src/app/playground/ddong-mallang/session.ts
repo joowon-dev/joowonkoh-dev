@@ -5,7 +5,7 @@
  * 전이를 전부 단위 테스트로 확인할 수 있다. 이 앱의 로직은 사실상 여기가 전부다.
  */
 
-export type Phase = "ready" | "waiting" | "pushing" | "breathing" | "done";
+export type Phase = "ready" | "waiting" | "pushing" | "extra" | "breathing" | "done";
 
 /** 힘주기 한 번의 길이 */
 export const PUSH_MS = 5000;
@@ -21,6 +21,8 @@ export const MAX_TICK_MS = 100;
  * 일이 아니다. 그래서 받아주고, 템포만 알려준다.
  */
 export const TEMPO_NOTE_MS = 1500;
+/** 누르자마자 주는 최소 세기. 0에서 시작하면 첫 터치가 무반응으로 보인다. */
+export const STRAIN_FLOOR = 0.18;
 
 export interface Session {
   phase: Phase;
@@ -30,10 +32,12 @@ export interface Session {
   elapsedMs: number;
   /** pushing에 진입한 횟수. 5초를 채웠는지는 세지 않는다 */
   pushCount: number;
-  /** 방금 힘주기를 온전히 채웠다 (Task 2에서 사용) */
+  /** 방금 힘주기를 온전히 채웠다 */
   praise: boolean;
-  /** "템포가 빨랐어요"가 남은 시간 (Task 2에서 사용) */
+  /** "템포가 빨랐어요"가 남은 시간 */
   tempoNoteMs: number;
+  /** 버티기(extra)에 들어간 뒤 누른 채로 버틴 시간. 다른 단계에서는 0 */
+  extraMs: number;
 }
 
 export type SessionEvent =
@@ -52,11 +56,19 @@ export function createSession(): Session {
     pushCount: 0,
     praise: false,
     tempoNoteMs: 0,
+    extraMs: 0,
   };
 }
 
-/** 화면에 띄울 남은 초. 올림이라 카운트가 5에서 시작하고 0이 스치지 않는다. */
+/**
+ * 화면에 띄울 숫자.
+ *
+ * 힘주기·심호흡에서는 남은 초다. 올림이라 5에서 시작하고 0이 스치지 않는다.
+ * 버티기에서는 반대로 버틴 초가 1부터 올라간다 — 카운트가 0에 닿는 순간
+ * 숫자가 사라지면 "끝났다"로 읽히는데, 아직 누르고 있으니 끝난 게 아니다.
+ */
 export function secondsLeft(s: Session): number {
+  if (s.phase === "extra") return Math.floor(s.extraMs / 1000) + 1;
   return Math.ceil(s.remainingMs / 1000);
 }
 
@@ -67,6 +79,7 @@ function startPush(s: Session, tempoNoteMs = 0): Session {
     remainingMs: PUSH_MS,
     praise: false,
     tempoNoteMs,
+    extraMs: 0,
     pushCount: s.pushCount + 1,
   };
 }
@@ -94,10 +107,20 @@ function tick(s: Session, dt: number): Session {
 
   if (s.phase === "waiting") return { ...s, elapsedMs, tempoNoteMs };
 
+  // 버티기는 시간이 거꾸로 쌓인다. 저절로 끝나지 않고, 손을 떼야 끝난다.
+  if (s.phase === "extra") {
+    return { ...s, elapsedMs, tempoNoteMs, extraMs: s.extraMs + dt };
+  }
+
   const remainingMs = s.remainingMs - dt;
   if (remainingMs > 0) return { ...s, elapsedMs, remainingMs, tempoNoteMs };
 
-  if (s.phase === "pushing") return startBreathe({ ...s, elapsedMs, tempoNoteMs }, true);
+  // 5초를 다 채웠는데 아직 누르고 있다. 여기서 심호흡으로 밀어버리면 손은 배 위에
+  // 있는데 화면은 "배를 꾹 눌러보세요"를 띄우는 상태가 된다 — 고장으로 읽힌다.
+  // 그래서 버티기로 넘긴다. 계속 누르는 만큼 숫자가 올라간다.
+  if (s.phase === "pushing") {
+    return { ...s, phase: "extra", elapsedMs, tempoNoteMs, remainingMs: 0, extraMs: 0 };
+  }
   return { ...s, phase: "waiting", elapsedMs, tempoNoteMs, remainingMs: 0, praise: false };
 }
 
@@ -113,11 +136,16 @@ export function step(s: Session, e: SessionEvent): Session {
       return s;
 
     case "release":
-      return s.phase === "pushing" ? startBreathe(s, false) : s;
+      if (s.phase === "pushing") return startBreathe(s, false);
+      // 버티기까지 갔으면 5초를 채운 것이다. 칭찬은 여기서 붙는다.
+      if (s.phase === "extra") return startBreathe({ ...s, extraMs: 0 }, true);
+      return s;
 
     case "finish":
       // ready에서는 끝낼 게 없다. 시작도 안 했다.
-      return s.phase === "ready" ? s : { ...s, phase: "done", remainingMs: 0, tempoNoteMs: 0 };
+      return s.phase === "ready"
+        ? s
+        : { ...s, phase: "done", remainingMs: 0, tempoNoteMs: 0, extraMs: 0 };
 
     case "restart":
       return s.phase === "done" ? createSession() : s;
@@ -133,6 +161,26 @@ export function canFinish(s: Session): boolean {
 }
 
 /**
+ * 힘주기 카운트별 문구. 인덱스가 곧 남은 초다(0번은 안 쓴다).
+ *
+ * 같은 말을 5초 내내 띄우면 시간이 안 가는 것처럼 느껴진다. 숫자가 줄수록
+ * 말이 짧고 급해지게 해서 끝이 다가오는 게 문구만으로도 읽히게 한다.
+ */
+const PUSH_LABELS = ["", "거의 다 왔다", "더더", "더", "조금만 힘내주세요", "조금만 힘내주세요"];
+
+/**
+ * 버티기 문구. 인덱스가 버틴 초다(0번은 안 쓴다).
+ *
+ * 5초를 넘겨서까지 누르고 있는 사람에게 계속 "힘내라"고 하는 건 눈치가 없다.
+ * 놀라다가 걱정하는 쪽으로 바뀐다. 마지막 문구는 계속 버티는 동안 유지된다.
+ */
+const EXTRA_LABELS = ["", "더 힘준다고?", "아직도?!", "대단한데요", "이쯤이면 프로", "무리하진 마세요"];
+
+function pick(labels: readonly string[], n: number): string {
+  return labels[Math.min(n, labels.length - 1)] ?? "";
+}
+
+/**
  * 화면에 띄울 지시 문구.
  *
  * 문구를 컴포넌트에 흩지 않고 여기 모은다 — 어떤 상태에서 무슨 말이 나오는지가
@@ -143,10 +191,28 @@ export function label(s: Session): string {
     case "waiting":
       return "배를 꾹 눌러보세요";
     case "pushing":
-      return s.tempoNoteMs > 0 ? "템포가 빨랐어요" : "조금만 더 힘내보세요";
+      return s.tempoNoteMs > 0 ? "템포가 빨랐어요" : pick(PUSH_LABELS, secondsLeft(s));
+    case "extra":
+      return pick(EXTRA_LABELS, secondsLeft(s));
     case "breathing":
       return s.praise ? "잘했어요, 심호흡하세요" : "심호흡하세요";
     default:
       return "";
   }
+}
+
+/**
+ * 힘주는 세기, 0~1.
+ *
+ * 고양이 표정과 배 눌림이 이 값 하나로 굴러간다. 누르는 5초 동안 0에서 1까지
+ * 이어서 올라가므로 표정이 단계적으로 일그러진다 — 눌렀다/안 눌렀다 둘로만
+ * 나누면 5초가 그냥 정지 화면이 된다. 버티기에서는 계속 최대다.
+ */
+export function strainLevel(s: Session): number {
+  if (s.phase === "extra") return 1;
+  if (s.phase !== "pushing") return 0;
+  const progress = Math.min(1, Math.max(0, 1 - s.remainingMs / PUSH_MS));
+  // 바닥값을 준다. 정확히 0에서 시작하면 누른 순간 고양이가 꿈쩍도 안 해서
+  // 터치가 안 먹은 것처럼 느껴진다. 누르자마자 배가 들어가고 거기서부터 자란다.
+  return STRAIN_FLOOR + (1 - STRAIN_FLOOR) * progress;
 }

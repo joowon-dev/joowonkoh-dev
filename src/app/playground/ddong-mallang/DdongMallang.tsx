@@ -10,6 +10,7 @@ import {
   label,
   secondsLeft,
   step,
+  strainLevel,
   type Session,
 } from "./session";
 
@@ -17,6 +18,8 @@ const MOOD: Record<Session["phase"], Mood> = {
   ready: "calm",
   waiting: "calm",
   pushing: "strain",
+  // 5초를 넘겨 버티는 중. 표정은 힘주기 그대로 최대치로 간다.
+  extra: "strain",
   breathing: "breathe",
   done: "happy",
 };
@@ -102,7 +105,9 @@ export default function DdongMallang() {
 
   const restart = useCallback(() => setSession((s) => step(s, { type: "restart" })), []);
 
-  const squish = session.phase === "pushing" ? 1 : 0;
+  // 표정과 배 눌림을 같은 값으로 굴린다. 5초 동안 0에서 1까지 이어서 올라가므로
+  // 배도 표정도 단계적으로 변한다 — 눌렀다/안 눌렀다 둘로만 나누면 5초가 멈춰 보인다.
+  const strain = strainLevel(session);
   const second = secondsLeft(session);
 
   return (
@@ -120,10 +125,10 @@ export default function DdongMallang() {
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 text-center">
           <h1 className="text-4xl font-bold text-[#4a352c]">똥 말랑</h1>
           <p className="max-w-xs text-base leading-relaxed text-[#8a6b5c]">
-            고양이 배를 꾹 누르면 힘주기, 손을 떼면 심호흡입니다. 화면이 리듬을 잡아드립니다.
+            고양이 배를 꾹 누르면서 힘주고 심호흡하면서 똥 잘싸주는걸 도와드립니다.
           </p>
           <div className="w-48">
-            <Cat mood="calm" squish={0} />
+            <Cat mood="calm" />
           </div>
           <button
             type="button"
@@ -136,7 +141,7 @@ export default function DdongMallang() {
       ) : session.phase === "done" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
           <div className="w-48">
-            <Cat mood="happy" squish={0} />
+            <Cat mood="happy" />
           </div>
           <h2 className="text-3xl font-bold text-[#4a352c]">수고하셨어요</h2>
           <p className="text-lg text-[#8a6b5c]">
@@ -170,7 +175,7 @@ export default function DdongMallang() {
             onPointerCancel={release}
             onPointerLeave={release}
           >
-            <Cat mood={MOOD[session.phase]} squish={squish} />
+            <Cat mood={MOOD[session.phase]} strain={strain} />
           </div>
 
           <div className="pb-8">
