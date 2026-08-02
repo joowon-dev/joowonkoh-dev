@@ -5,6 +5,7 @@ import { useFullscreen } from "../_shared/useFullscreen";
 import { Cat, type Mood } from "./Cat";
 import { BUZZ_DONE, BUZZ_PRAISE, BUZZ_TICK, buzz } from "./haptics";
 import {
+  PUSH_MS,
   canFinish,
   createSession,
   label,
@@ -23,6 +24,50 @@ const MOOD: Record<Session["phase"], Mood> = {
   breathing: "breathe",
   done: "happy",
 };
+
+/**
+ * 힘주기 한 번마다 막대 하나. 5초 선을 그어두고 그 선을 넘겼는지로 읽는다.
+ *
+ * 숫자만 나열하면 "3.2초, 5.0초, 1.1초"가 그냥 숫자라 리듬이 안 보인다.
+ * 막대로 세워두면 뒤로 갈수록 짧아지는지 같은 흐름이 한눈에 읽힌다.
+ */
+function TempoRecord({ pushes }: { pushes: number[] }) {
+  if (pushes.length === 0) return null;
+  // 5초를 기준 폭으로 삼되, 더 오래 버틴 게 있으면 그쪽에 맞춘다.
+  const scaleMs = Math.max(PUSH_MS, ...pushes);
+
+  return (
+    <div className="w-full shrink-0 text-left">
+      <p className="mb-2 text-sm font-medium text-[#8a6b5c]">내 템포</p>
+      <div className="relative flex flex-col gap-1.5">
+        {/* 5초 기준선 */}
+        <div
+          aria-hidden
+          className="absolute top-0 bottom-0 w-px bg-[#d8c3b4]"
+          style={{ left: `${(PUSH_MS / scaleMs) * 100}%` }}
+        />
+        {pushes.map((ms, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className="h-3 flex-1 overflow-hidden rounded-full bg-[#efe2d6]">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.max(2, (ms / scaleMs) * 100)}%`,
+                  // 5초를 채운 것과 못 채운 것을 색으로 가른다
+                  background: ms >= PUSH_MS ? "#e08f86" : "#e8c4b8",
+                }}
+              />
+            </div>
+            <span className="w-12 shrink-0 text-right text-xs tabular-nums text-[#8a6b5c]">
+              {(ms / 1000).toFixed(1)}초
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-[#a98d7c]">세로선이 5초입니다</p>
+    </div>
+  );
+}
 
 /** 분:초 */
 function formatDuration(ms: number): string {
@@ -118,7 +163,6 @@ export default function DdongMallang() {
       // API가 없는 iOS Safari에서도 화면을 그대로 덮도록 fixed로 뷰포트를
       // 뜯어낸다. z-40은 marble-drop과 같은 값 — 헤더(z-40)보다 위에 온다.
       className="fixed inset-0 z-40 flex flex-col items-center justify-between overflow-hidden bg-[#fdf6ef] select-none"
-      style={{ touchAction: "none" }}
       onContextMenu={(e) => e.preventDefault()}
     >
       {session.phase === "ready" ? (
@@ -145,18 +189,19 @@ export default function DdongMallang() {
           </button>
         </div>
       ) : session.phase === "done" ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
-          <div className="w-48">
+        <div className="flex min-h-0 w-full max-w-sm flex-1 flex-col items-center justify-center gap-5 overflow-y-auto px-6 py-8 text-center">
+          <div className="w-28 shrink-0">
             <Cat mood="happy" />
           </div>
           <h2 className="text-3xl font-bold text-[#4a352c]">수고하셨어요</h2>
           <p className="text-lg text-[#8a6b5c]">
             {formatDuration(session.elapsedMs)} 동안 {session.pushCount}번 힘주셨어요
           </p>
+          <TempoRecord pushes={session.pushes} />
           <button
             type="button"
             onClick={restart}
-            className="rounded-full bg-[#e08f86] px-10 py-4 text-lg font-semibold text-white active:scale-95"
+            className="shrink-0 rounded-full bg-[#e08f86] px-10 py-4 text-lg font-semibold text-white active:scale-95"
           >
             다시 하기
           </button>
@@ -174,8 +219,14 @@ export default function DdongMallang() {
           {/* 고양이와 이를 감싼 컨테이너 — 누르는 영역은 화면 중앙의 max-w-sm flex-1 div다.
               상단 숫자와 아래 버튼 행은 누르지 않는다. 배만 받으면 손가락이 조금
               벗어날 때마다 힘주기가 끊긴다. */}
+          {/* min-h-0이 없으면 flex 아이템의 자동 최소 높이가 고양이 SVG의 내재
+              높이(약 580px)로 잡혀서, 화면이 그보다 짧으면 아래 버튼이 통째로
+              밀려나 overflow-hidden에 잘린다. 실제로 834px 미만에서 버튼이 사라졌다.
+              touch-action은 여기에만 건다 — 배를 누르는 동안 스크롤을 막으면 되고,
+              루트에 걸면 다른 화면에서 스크롤이 필요할 때 같이 막혀버린다. */}
           <div
-            className="flex w-full max-w-sm flex-1 items-center justify-center px-6"
+            className="flex w-full max-w-sm min-h-0 flex-1 items-center justify-center px-6"
+            style={{ touchAction: "none" }}
             onPointerDown={press}
             onPointerUp={release}
             onPointerCancel={release}
@@ -184,7 +235,9 @@ export default function DdongMallang() {
             <Cat mood={MOOD[session.phase]} strain={strain} />
           </div>
 
-          <div className="pb-8">
+          {/* 홈 인디케이터·제스처 바가 덮는 만큼 더 띄운다. 전체화면에서는 페이지가
+              화면 맨 아래까지 차지해서 32px로는 버튼이 시스템 UI에 가린다. */}
+          <div className="pb-[max(2rem,calc(env(safe-area-inset-bottom)+0.75rem))]">
             {canFinish(session) && (
               <button
                 type="button"
