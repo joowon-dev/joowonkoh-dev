@@ -19,12 +19,14 @@ export const projects: Project[] = [
     description: "커서를 움직이면 종이 위 낙서가 따라 춤춘다 💃",
     tags: ["Interactive", "Canvas", "Animation"],
     href: "/playground/doodle-dance",
+    hidden: true,
   },
   {
     title: "WebSwing",
     description: "열려 있는 창 사이를 거미줄로 날아다니는 맥 데스크톱 펫 🕸",
     tags: ["macOS", "Swift", "SpriteKit"],
     href: "/playground/webswing",
+    hidden: true,
   },
   {
     title: "구슬 폭포 추첨기",
