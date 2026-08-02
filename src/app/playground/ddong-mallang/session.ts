@@ -13,16 +13,18 @@ export const PUSH_MS = 5000;
 export const BREATHE_MS = 3000;
 /** tick의 최대 진전. 화면이 잠겼다 깼을 때 rAF가 분 단위의 dt를 한 번에 전달해도 단계를 건너뛰지 않는다. 자리 비운 시간은 elapsedMs에 안 센다. */
 export const MAX_TICK_MS = 100;
-/**
- * "템포가 빨랐어요"가 떠 있는 시간.
- *
- * 심호흡 중에 누른 것을 무시하지 않는 이유: 배가 눌렸는데 화면이 반응을 안 하면
- * 고장으로 읽힌다. 힘이 들어오는 타이밍은 사용자 몸이 정하는 것이지 화면이 정할
- * 일이 아니다. 그래서 받아주고, 템포만 알려준다.
- */
-export const TEMPO_NOTE_MS = 1500;
+/** 한마디가 떠 있는 시간. 지나면 그 단계의 평소 문구로 돌아간다. */
+export const NOTE_MS = 1500;
 /** 누르자마자 주는 최소 세기. 0에서 시작하면 첫 터치가 무반응으로 보인다. */
 export const STRAIN_FLOOR = 0.18;
+
+/**
+ * 잠깐 떴다 사라지는 한마디.
+ *
+ * 두 개가 동시에 뜰 일이 없어서 슬롯 하나로 둔다 — tempo는 힘주는 중에,
+ * regret은 쉬는 중에만 나온다. 타이머를 종류마다 따로 두면 늘어날수록 엉킨다.
+ */
+export type Note = "none" | "tempo" | "regret";
 
 export interface Session {
   phase: Phase;
@@ -34,10 +36,14 @@ export interface Session {
   pushCount: number;
   /** 방금 힘주기를 온전히 채웠다 */
   praise: boolean;
-  /** "템포가 빨랐어요"가 남은 시간 */
-  tempoNoteMs: number;
+  /** 지금 떠 있는 한마디 */
+  note: Note;
+  /** 그 한마디가 남은 시간. 0이면 안 보인다 */
+  noteMs: number;
   /** 버티기(extra)에 들어간 뒤 누른 채로 버틴 시간. 다른 단계에서는 0 */
   extraMs: number;
+  /** 힘주기 한 번마다 버틴 시간(ms). 끝나고 템포 기록으로 보여준다 */
+  pushes: number[];
 }
 
 export type SessionEvent =
@@ -55,9 +61,18 @@ export function createSession(): Session {
     elapsedMs: 0,
     pushCount: 0,
     praise: false,
-    tempoNoteMs: 0,
+    note: "none",
+    noteMs: 0,
     extraMs: 0,
+    pushes: [],
   };
+}
+
+/** 지금 진행 중인 힘주기가 몇 ms째인지. 누르고 있지 않으면 0 */
+export function currentPushMs(s: Session): number {
+  if (s.phase === "pushing") return PUSH_MS - s.remainingMs;
+  if (s.phase === "extra") return PUSH_MS + s.extraMs;
+  return 0;
 }
 
 /**
@@ -72,20 +87,31 @@ export function secondsLeft(s: Session): number {
   return Math.ceil(s.remainingMs / 1000);
 }
 
-function startPush(s: Session, tempoNoteMs = 0): Session {
-  return {
-    ...s,
-    phase: "pushing",
-    remainingMs: PUSH_MS,
-    praise: false,
-    tempoNoteMs,
-    extraMs: 0,
-    pushCount: s.pushCount + 1,
-  };
+function withNote(s: Session, note: Note): Session {
+  return { ...s, note, noteMs: note === "none" ? 0 : NOTE_MS };
 }
 
-function startBreathe(s: Session, praise: boolean): Session {
-  return { ...s, phase: "breathing", remainingMs: BREATHE_MS, praise };
+function startPush(s: Session, note: Note = "none"): Session {
+  return withNote(
+    {
+      ...s,
+      phase: "pushing",
+      remainingMs: PUSH_MS,
+      praise: false,
+      extraMs: 0,
+      pushCount: s.pushCount + 1,
+    },
+    note,
+  );
+}
+
+/** 방금까지 버틴 힘주기를 기록에 남기고 심호흡으로 넘긴다 */
+function startBreathe(s: Session, praise: boolean, note: Note = "none"): Session {
+  const pushes = [...s.pushes, currentPushMs(s)];
+  return withNote(
+    { ...s, phase: "breathing", remainingMs: BREATHE_MS, extraMs: 0, praise, pushes },
+    note,
+  );
 }
 
 /**
@@ -103,25 +129,25 @@ function tick(s: Session, dt: number): Session {
   if (s.phase === "ready" || s.phase === "done") return s;
 
   const elapsedMs = s.elapsedMs + dt;
-  const tempoNoteMs = Math.max(0, s.tempoNoteMs - dt);
+  const noteMs = Math.max(0, s.noteMs - dt);
 
-  if (s.phase === "waiting") return { ...s, elapsedMs, tempoNoteMs };
+  if (s.phase === "waiting") return { ...s, elapsedMs, noteMs };
 
   // 버티기는 시간이 거꾸로 쌓인다. 저절로 끝나지 않고, 손을 떼야 끝난다.
   if (s.phase === "extra") {
-    return { ...s, elapsedMs, tempoNoteMs, extraMs: s.extraMs + dt };
+    return { ...s, elapsedMs, noteMs, extraMs: s.extraMs + dt };
   }
 
   const remainingMs = s.remainingMs - dt;
-  if (remainingMs > 0) return { ...s, elapsedMs, remainingMs, tempoNoteMs };
+  if (remainingMs > 0) return { ...s, elapsedMs, remainingMs, noteMs };
 
   // 5초를 다 채웠는데 아직 누르고 있다. 여기서 심호흡으로 밀어버리면 손은 배 위에
   // 있는데 화면은 "배를 꾹 눌러보세요"를 띄우는 상태가 된다 — 고장으로 읽힌다.
   // 그래서 버티기로 넘긴다. 계속 누르는 만큼 숫자가 올라간다.
   if (s.phase === "pushing") {
-    return { ...s, phase: "extra", elapsedMs, tempoNoteMs, remainingMs: 0, extraMs: 0 };
+    return { ...s, phase: "extra", elapsedMs, noteMs, remainingMs: 0, extraMs: 0 };
   }
-  return { ...s, phase: "waiting", elapsedMs, tempoNoteMs, remainingMs: 0, praise: false };
+  return { ...s, phase: "waiting", elapsedMs, noteMs, remainingMs: 0, praise: false };
 }
 
 export function step(s: Session, e: SessionEvent): Session {
@@ -132,20 +158,29 @@ export function step(s: Session, e: SessionEvent): Session {
     case "press":
       if (s.phase === "waiting") return startPush(s);
       // 심호흡 중에 눌러도 받아준다. 다만 템포가 빨랐다고 알려준다.
-      if (s.phase === "breathing") return startPush(s, TEMPO_NOTE_MS);
+      if (s.phase === "breathing") return startPush(s, "tempo");
       return s;
 
     case "release":
-      if (s.phase === "pushing") return startBreathe(s, false);
+      // 5초를 못 채우고 뗐다. 실패로 치지는 않지만, 다음엔 끝까지 가보자고 한마디 얹는다.
+      if (s.phase === "pushing") return startBreathe(s, false, "regret");
       // 버티기까지 갔으면 5초를 채운 것이다. 칭찬은 여기서 붙는다.
-      if (s.phase === "extra") return startBreathe({ ...s, extraMs: 0 }, true);
+      if (s.phase === "extra") return startBreathe(s, true);
       return s;
 
     case "finish":
       // ready에서는 끝낼 게 없다. 시작도 안 했다.
-      return s.phase === "ready"
-        ? s
-        : { ...s, phase: "done", remainingMs: 0, tempoNoteMs: 0, extraMs: 0 };
+      // 누른 채로 끝냈다면 그 힘주기도 기록에 남긴다 — 안 그러면 마지막 한 번이 사라진다.
+      if (s.phase === "ready") return s;
+      return {
+        ...s,
+        phase: "done",
+        remainingMs: 0,
+        note: "none",
+        noteMs: 0,
+        extraMs: 0,
+        pushes: currentPushMs(s) > 0 ? [...s.pushes, currentPushMs(s)] : s.pushes,
+      };
 
     case "restart":
       return s.phase === "done" ? createSession() : s;
@@ -191,10 +226,13 @@ export function label(s: Session): string {
     case "waiting":
       return "배를 꾹 눌러보세요";
     case "pushing":
-      return s.tempoNoteMs > 0 ? "템포가 빨랐어요" : pick(PUSH_LABELS, secondsLeft(s));
+      return s.note === "tempo" && s.noteMs > 0
+        ? "템포가 빨랐어요"
+        : pick(PUSH_LABELS, secondsLeft(s));
     case "extra":
       return pick(EXTRA_LABELS, secondsLeft(s));
     case "breathing":
+      if (s.note === "regret" && s.noteMs > 0) return "아쉬워요, 다음엔 끝까지 힘줘 봐요";
       return s.praise ? "잘했어요, 심호흡하세요" : "심호흡하세요";
     default:
       return "";

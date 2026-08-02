@@ -3,7 +3,7 @@ import {
   BREATHE_MS,
   PUSH_MS,
   STRAIN_FLOOR,
-  TEMPO_NOTE_MS,
+  NOTE_MS,
   MAX_TICK_MS,
   createSession,
   label,
@@ -167,10 +167,22 @@ describe("칭찬", () => {
     expect(label(s)).toBe("잘했어요, 심호흡하세요");
   });
 
-  it("일찍 떼면 칭찬도 지적도 없다", () => {
+  it("일찍 떼면 칭찬은 없고 아쉬움 한마디가 붙는다", () => {
     const s = feed(run(pushing(), 1000), { type: "release" });
     expect(s.praise).toBe(false);
+    expect(label(s)).toBe("아쉬워요, 다음엔 끝까지 힘줘 봐요");
+  });
+
+  it("아쉬움 한마디는 1.5초 뒤 사라지고 평소 문구로 돌아온다", () => {
+    const s = run(feed(run(pushing(), 1000), { type: "release" }), NOTE_MS);
+    expect(s.phase).toBe("breathing");
     expect(label(s)).toBe("심호흡하세요");
+  });
+
+  it("채우고 떼면 아쉬움 대신 칭찬이다", () => {
+    const s = feed(run(pushing(), PUSH_MS), { type: "release" });
+    expect(s.note).toBe("none");
+    expect(label(s)).toBe("잘했어요, 심호흡하세요");
   });
 
   it("칭찬은 다음 힘주기로 넘어가지 않는다", () => {
@@ -210,7 +222,7 @@ describe("템포 알림", () => {
         { type: "release" },
         { type: "press" },
       ),
-      TEMPO_NOTE_MS,
+      NOTE_MS,
     );
     expect(s.phase).toBe("pushing");
     expect(label(s)).toBe("조금만 힘내주세요");
@@ -223,7 +235,7 @@ describe("템포 알림", () => {
         { type: "release" },
         { type: "press" },
       ),
-      TEMPO_NOTE_MS - 100,
+      NOTE_MS - 100,
     );
     expect(label(s)).toBe("템포가 빨랐어요");
   });
@@ -284,6 +296,55 @@ describe("버티기 카운트", () => {
 
   it("버틴 만큼 커진다", () => {
     expect(secondsLeft(run(run(pushing(), PUSH_MS), 2500))).toBe(3);
+  });
+});
+
+describe("템포 기록", () => {
+  it("처음에는 비어 있다", () => {
+    expect(createSession().pushes).toEqual([]);
+  });
+
+  it("손을 뗄 때마다 버틴 시간이 쌓인다", () => {
+    const s = feed(run(pushing(), 2000), { type: "release" });
+    expect(s.pushes).toEqual([2000]);
+  });
+
+  it("5초를 채우고 떼면 5초로 남는다", () => {
+    const s = feed(run(pushing(), PUSH_MS), { type: "release" });
+    expect(s.pushes).toEqual([PUSH_MS]);
+  });
+
+  it("버틴 시간까지 더해서 남는다", () => {
+    const s = feed(run(run(pushing(), PUSH_MS), 2000), { type: "release" });
+    expect(s.pushes).toEqual([PUSH_MS + 2000]);
+  });
+
+  it("여러 번 하면 순서대로 쌓인다", () => {
+    let s = feed(createSession(), { type: "start" });
+    s = feed(run(feed(s, { type: "press" }), 1500), { type: "release" });
+    s = run(s, BREATHE_MS);
+    s = feed(run(feed(s, { type: "press" }), 3000), { type: "release" });
+    expect(s.pushes).toEqual([1500, 3000]);
+    expect(s.pushCount).toBe(2);
+  });
+
+  it("누른 채로 끝내도 그 한 번이 사라지지 않는다", () => {
+    const s = feed(run(pushing(), 2500), { type: "finish" });
+    expect(s.phase).toBe("done");
+    expect(s.pushes).toEqual([2500]);
+  });
+
+  it("누르지 않은 채 끝내면 빈 기록이 안 붙는다", () => {
+    const s = feed(
+      run(feed(run(pushing(), 1000), { type: "release" }), BREATHE_MS),
+      { type: "finish" },
+    );
+    expect(s.pushes).toEqual([1000]);
+  });
+
+  it("다시 하면 기록도 지워진다", () => {
+    const s = feed(run(pushing(), 2000), { type: "finish" }, { type: "restart" });
+    expect(s.pushes).toEqual([]);
   });
 });
 
