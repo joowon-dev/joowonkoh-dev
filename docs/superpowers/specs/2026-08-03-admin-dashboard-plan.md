@@ -23,28 +23,43 @@
 검증: `tsc --noEmit` 통과, `vitest` 563개 통과, `next build` 성공,
 `/admin` 4개 라우트 모두 동적 렌더, robots.txt `Disallow: /admin` 확인.
 
+### 완료 — DB 적용 (2026-08-03)
+
+**A. 프로젝트 복구** — `joowonkoh-site`(`gshkmannztzwwkyyltvw`)가 `ACTIVE_HEALTHY`.
+기존 `leaderboard` 테이블도 그대로 살아 있다. `.env.local` 변경 없음.
+
+**B. 마이그레이션 적용** — 테이블 4종 + RLS 정책 6개 생성, 허용목록에
+`joowonkoh0505@gmail.com` 등록.
+
+적용 중 문제를 하나 발견해 마이그레이션을 추가했다
+(`20260803010000_admin_dashboard_revoke_anon.sql`).
+
+> Supabase는 `public` 스키마의 **기본 권한**으로 `anon`과 `authenticated`
+> 양쪽에 ALL을 부여한다. 그래서 새 테이블은 `anon`이 전권을 쥔 상태로 태어나고,
+> 설계에 적었던 `grant select ... to authenticated`는 아무 제한도 하지 못했다.
+> RLS 정책이 없어 행이 새지는 않았지만 방어가 RLS 한 겹뿐인 상태였다.
+> `revoke all ... from anon`으로 테이블 접근 자체를 닫고, 이후 만들어질
+> 테이블에도 붙지 않도록 `alter default privileges`까지 걸었다.
+
+검증 결과 — anon key로 REST 직접 호출 시:
+
+| 테이블 | 응답 |
+| --- | --- |
+| `metrics_daily` | `42501 permission denied` |
+| `admin_users` | `42501 permission denied` |
+| `collection_runs` | `42501 permission denied` |
+| `admin_audit_log` | `42501 permission denied` |
+| `leaderboard` | `[]` (공개 기능이라 그대로 동작) |
+
+Supabase 보안 어드바이저 경고는 1건이며 이번 작업과 무관하다.
+`leaderboard`의 `leaderboard_insert_all` 정책이 `WITH CHECK (true)`라 아무나
+점수를 넣을 수 있다. 공개 랭킹이라 의도된 것일 수 있어 손대지 않았다.
+
 ### 막힌 것 — 사람이 해야 하는 일
 
-코드로 넘어갈 수 없는 지점들이다. 순서대로 해야 다음 단계가 열린다.
+**C. Google OAuth 설정** ← 지금 여기서 막혀 있다
 
-**A. Supabase 프로젝트 결정 (다른 모든 것의 선행 조건)**
-
-`joowonkoh-site`(`gshkmannztzwwkyyltvw`)가 `INACTIVE`다. 둘 중 하나를 고른다.
-
-- 복구 — 대시보드에서 Restore. `.env.local` 그대로. 기존 리더보드 데이터 유지
-- 통합 — 활성 상태인 `joowon-dev`(`tqclbafyqzipxhtzrbyl`)로 옮기고 `.env.local` 교체.
-  리더보드 테이블을 함께 옮겨야 하고, 무료 플랜 정지가 다시 날 여지는 남는다
-
-**B. 마이그레이션 적용**
-
-프로젝트가 살아난 뒤 `supabase/migrations/20260803000000_admin_dashboard.sql`을
-적용하고, 허용목록에 계정을 넣는다.
-
-```sql
-insert into public.admin_users (email) values ('joowonkoh0505@gmail.com');
-```
-
-**C. Google OAuth 설정**
+`/auth/v1/settings` 확인 결과 `google: false`. 대시보드에서만 켤 수 있다.
 
 Supabase 대시보드 → Authentication → Providers → Google 활성화.
 Redirect URL에 아래 둘을 등록한다.
@@ -107,6 +122,11 @@ curl "$SUPABASE_URL/rest/v1/metrics_daily?select=*" \
 **필요한 정보**: 인스타 비즈니스 계정 전환 여부
 
 ## 알려진 리스크
+
+**이메일 가입이 열려 있다.** `/auth/v1/settings`가 `email: true`,
+`disable_signup: false`를 반환한다. 즉 지금도 누구나 이메일로 계정을 만들 수 있다.
+허용목록이 막아 주므로 `/admin/denied`에서 멈추고 지표는 보이지 않지만, 필요 없는
+가입 경로다. Google만 쓸 것이면 대시보드에서 이메일 provider를 끄는 편이 낫다.
 
 **배포 경로 — 확인 결과 문제 없음.** `next.config.ts`가 `output: "standalone"`이므로
 Node 서버로 배포된다. Next 16의 Proxy는 Node.js 런타임에서 돌므로 그대로 동작한다.
