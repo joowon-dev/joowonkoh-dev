@@ -1,5 +1,7 @@
 "use client";
 
+import GameHelp from "../_shared/GameHelp";
+import { GAME_HELP } from "../_shared/helpContent";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFullscreen } from "../_shared/useFullscreen";
 import { Cat, type Mood } from "./Cat";
@@ -165,6 +167,7 @@ export default function DdongMallang() {
       className="fixed inset-0 z-40 flex flex-col items-center justify-between overflow-hidden bg-[#fdf6ef] select-none"
       onContextMenu={(e) => e.preventDefault()}
     >
+      <GameHelp help={GAME_HELP["ddong-mallang"]} />
       {session.phase === "ready" ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 text-center">
           <h1 className="text-4xl font-bold text-[#4a352c]">똥 말랑</h1>

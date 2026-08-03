@@ -50,7 +50,7 @@ export default function SectionPostView({ meta, content, prev, next }: Props) {
             },
           }}
         />
-        <AdSense adSlot="1234567890" />
+        <AdSense />
         <PostNavigation prev={prev} next={next} />
       </article>
     </div>

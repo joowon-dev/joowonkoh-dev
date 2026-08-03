@@ -1,5 +1,7 @@
 "use client";
 
+import GameHelp from "../_shared/GameHelp";
+import { GAME_HELP } from "../_shared/helpContent";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameLoop } from "../_shared/useGameLoop";
@@ -124,6 +126,7 @@ export default function DoodleDance() {
       </p>
 
       <div className="relative mt-8 overflow-hidden rounded-2xl border border-border shadow-ambient">
+        <GameHelp help={GAME_HELP["doodle-dance"]} />
         <canvas
           ref={canvasRef}
           onPointerMove={handleMove}

@@ -1,5 +1,7 @@
 "use client";
 
+import GameHelp from "../_shared/GameHelp";
+import { GAME_HELP } from "../_shared/helpContent";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWindMic } from "./useWindMic";
@@ -143,6 +145,7 @@ export default function PaperPlaneGame() {
       onPointerLeave={onPointerUp}
     >
       <Scenery speed={speed} />
+      <GameHelp help={GAME_HELP["paper-plane"]} />
       <WindEffects wind={wind} active={phase === "flying"} />
 
       {/* 비행기 */}

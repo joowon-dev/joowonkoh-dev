@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import GameHelp from "../_shared/GameHelp";
+import { GAME_HELP } from "../_shared/helpContent";
 import Court from "./Court";
 import PowerMeter, { BAND_COLOR, BAND_TEXT, BandLegend } from "./PowerMeter";
 import { buildFlight, flightAt, type Flight, type Vec3 } from "./flight";
@@ -457,6 +459,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       className="fixed inset-x-0 top-0 z-40 flex h-full flex-col items-center overflow-hidden bg-[#0c1020] select-none"
       style={{ colorScheme: "dark" }}
     >
+      <GameHelp help={GAME_HELP["typing-hoop"]} />
       {children}
     </div>
   );

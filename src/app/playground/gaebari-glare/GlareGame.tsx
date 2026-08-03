@@ -1,5 +1,7 @@
 "use client";
 
+import GameHelp from "../_shared/GameHelp";
+import { GAME_HELP } from "../_shared/helpContent";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FaceDetector } from "@mediapipe/tasks-vision";
 import Eyes, { LEVEL_LABELS } from "./Eyes";
@@ -185,6 +187,8 @@ export default function GlareGame() {
           내 얼굴 말고 다른 얼굴이 웹캠에 잡히면 눈이 그쪽을 째려봅니다.
         </p>
       </header>
+
+      <GameHelp help={GAME_HELP["gaebari-glare"]} className="relative mt-6" />
 
       {/* 전체화면으로 들어가는 것은 이 상자다. 보조 모니터에 이것만 띄워 둔다. */}
       <div

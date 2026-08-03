@@ -1,5 +1,7 @@
 "use client";
 
+import GameHelp from "../_shared/GameHelp";
+import { GAME_HELP } from "../_shared/helpContent";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import WinnerOverlay from "../_shared/WinnerOverlay";
@@ -123,6 +125,7 @@ export default function MarbleDropGame() {
         >
           시작하기
         </button>
+        <GameHelp help={GAME_HELP["marble-drop"]} className="relative mx-auto mt-8 w-fit" />
         <p className="mt-8 text-xs text-text-muted">
           <Link href="/playground" className="underline-offset-4 hover:underline">
             ← 플레이그라운드로
@@ -136,6 +139,7 @@ export default function MarbleDropGame() {
   if (phase === "setup") {
     return (
       <div className="fixed inset-0 z-40 overflow-y-auto bg-bg">
+        <GameHelp help={GAME_HELP["marble-drop"]} />
         <div className="flex min-h-full items-center justify-center px-[max(1rem,env(safe-area-inset-left))] py-[max(1.5rem,env(safe-area-inset-top))]">
           <div className="animate-fade-in-up w-full max-w-lg">
             <SetupPanel initialRaw={raw} onStart={begin} onBack={() => setPhase("intro")} />
