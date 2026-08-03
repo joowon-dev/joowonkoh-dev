@@ -33,7 +33,12 @@ module.exports = {
   generateRobotsTxt: true,
   sitemapSize: 7000,
   outDir: "./public",
-  exclude: noindexPaths,
+  // 어드민은 색인 대상이 아니다. 페이지 metadata의 noindex와 별개로,
+  // 사이트맵과 robots.txt 양쪽에서 주소 자체를 흘리지 않는다.
+  exclude: [...noindexPaths, "/admin", "/admin/*"],
+  robotsTxtOptions: {
+    policies: [{ userAgent: "*", allow: "/", disallow: ["/admin"] }],
+  },
   transform: async (config, url) => {
     const loc = new URL(url, config.siteUrl).pathname;
     const isPost = loc.startsWith("/blog/") && loc.split("/").length === 4;
