@@ -23,6 +23,10 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: URL },
+  // 아직 공개 전이다. 목록에서 감추는 것(projects.ts의 hidden)만으로는
+  // 검색엔진이 주소를 알아내면 그대로 색인한다. 사이트맵 제외는
+  // next-sitemap.config.js 쪽에 같이 걸어 뒀다.
+  robots: { index: false, follow: false },
   openGraph: {
     type: "website",
     locale: "ko_KR",

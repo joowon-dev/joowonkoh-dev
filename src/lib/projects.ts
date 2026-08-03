@@ -19,6 +19,7 @@ export const projects: Project[] = [
     description: "타자 속도가 그대로 슛 파워 🏀 가까우면 천천히, 멀면 빠르게",
     tags: ["Game", "Canvas", "Pixel Art"],
     href: "/playground/typing-hoop",
+    hidden: true,
   },
   {
     title: "낙서 댄스",

@@ -35,7 +35,8 @@ module.exports = {
   outDir: "./public",
   // 어드민은 색인 대상이 아니다. 페이지 metadata의 noindex와 별개로,
   // 사이트맵과 robots.txt 양쪽에서 주소 자체를 흘리지 않는다.
-  exclude: [...noindexPaths, "/admin", "/admin/*"],
+  // 타자 농구는 아직 공개 전이라 같은 취급을 한다.
+  exclude: [...noindexPaths, "/admin", "/admin/*", "/playground/typing-hoop"],
   robotsTxtOptions: {
     policies: [{ userAgent: "*", allow: "/", disallow: ["/admin"] }],
   },
