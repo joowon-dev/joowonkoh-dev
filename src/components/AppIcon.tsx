@@ -1,0 +1,205 @@
+import type { IconName, Project } from "@/lib/projects";
+
+/**
+ * 플레이그라운드 앱 아이콘.
+ *
+ * 이모지를 쓰지 않았다. 이모지는 기기마다 그림이 달라서 아이콘이라기보다
+ * 스티커처럼 보이고, 무엇보다 "그 프로젝트 안에 실제로 뭐가 있는지"를
+ * 못 담는다. 각 그림은 해당 프로젝트가 화면에서 실제로 보여주는 것
+ * (똥 말랑의 고양이, 코인 밀기의 코인더미)을 그대로 줄인 것이다.
+ *
+ * 모두 64×64 좌표계에 그린다. 타일 배경은 프로젝트별 색이라 여기서 안 그리고,
+ * 그림만 투명 배경으로 얹는다.
+ */
+
+/** 똥 말랑 — 힘주는 고양이 얼굴 */
+function Cat() {
+  return (
+    <>
+      <path d="M14 26 L16 12 L28 20 Z" fill="#f7dcc8" stroke="#c98f7c" strokeWidth="2" />
+      <path d="M50 26 L48 12 L36 20 Z" fill="#f7dcc8" stroke="#c98f7c" strokeWidth="2" />
+      <ellipse cx="32" cy="36" rx="20" ry="17" fill="#f7dcc8" stroke="#c98f7c" strokeWidth="2" />
+      {/* 힘주느라 꼭 감은 눈 */}
+      <path
+        d="M20 33 Q24 29 28 33 M36 33 Q40 29 44 33"
+        stroke="#4a352c"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <ellipse cx="19" cy="41" rx="4" ry="2.6" fill="#e08f86" opacity="0.75" />
+      <ellipse cx="45" cy="41" rx="4" ry="2.6" fill="#e08f86" opacity="0.75" />
+      <path d="M30 39 L34 39 L32 42 Z" fill="#e08f86" />
+    </>
+  );
+}
+
+/** 타자 농구 — 백보드와 림, 그리고 공 */
+function Hoop() {
+  return (
+    <>
+      <rect x="14" y="12" width="36" height="24" rx="2" fill="#eef3fa" />
+      <rect x="26" y="20" width="12" height="10" fill="none" stroke="#e8622c" strokeWidth="2.4" />
+      <rect x="22" y="35" width="20" height="3.4" rx="1.7" fill="#f0682c" />
+      <path d="M24 39 L27 47 M32 39 L32 48 M40 39 L37 47" stroke="#f2efe6" strokeWidth="1.8" />
+      <circle cx="32" cy="54" r="7" fill="#d9762e" />
+      <path d="M25 54 H39 M32 47 V61" stroke="#89441a" strokeWidth="1.6" />
+    </>
+  );
+}
+
+/** 낙서 댄스 — 종이 위 낙서 한 줄 */
+function Doodle() {
+  return (
+    <>
+      <rect x="12" y="10" width="40" height="44" rx="3" fill="#fffdf5" stroke="#d8cdb0" strokeWidth="2" />
+      <path
+        d="M20 42 Q24 22 30 34 T40 26 Q45 22 46 36"
+        stroke="#2f2a22"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <circle cx="46" cy="36" r="3" fill="#e8532e" />
+    </>
+  );
+}
+
+/** 개바리 댄스 — 귀 늘어진 강아지 */
+function Dog() {
+  return (
+    <>
+      <ellipse cx="16" cy="34" rx="6.5" ry="12" fill="#b98a5e" />
+      <ellipse cx="48" cy="34" rx="6.5" ry="12" fill="#b98a5e" />
+      <ellipse cx="32" cy="33" rx="18" ry="16" fill="#e8c39a" />
+      <circle cx="25" cy="30" r="3" fill="#3a2b1d" />
+      <circle cx="39" cy="30" r="3" fill="#3a2b1d" />
+      <ellipse cx="32" cy="41" rx="9" ry="7" fill="#f6e0c6" />
+      <ellipse cx="32" cy="38" rx="3.4" ry="2.6" fill="#3a2b1d" />
+      <path d="M32 41 v3" stroke="#3a2b1d" strokeWidth="1.8" strokeLinecap="round" />
+    </>
+  );
+}
+
+/** WebSwing — 거미줄 */
+function Web() {
+  return (
+    <>
+      <g stroke="#9fb4e8" strokeWidth="1.8" fill="none" strokeLinecap="round">
+        <path d="M32 6 V54 M10 12 L54 52 M54 12 L10 52 M6 32 H58" />
+        <path d="M32 16 L45 24 L48 38 L32 46 L16 38 L19 24 Z" />
+        <path d="M32 26 L39 30 L40 38 L32 42 L24 38 L25 30 Z" />
+      </g>
+      <circle cx="32" cy="34" r="3.4" fill="#e8532e" />
+    </>
+  );
+}
+
+/** 구슬 폭포 추첨기 — 양동이에 떨어지는 구슬 */
+function Marble() {
+  return (
+    <>
+      <circle cx="22" cy="15" r="6" fill="#e8532e" />
+      <circle cx="40" cy="22" r="6" fill="#4fa8d8" />
+      <circle cx="29" cy="30" r="6" fill="#f2b134" />
+      <path d="M14 38 H50 L45 58 H19 Z" fill="#cfe0f2" stroke="#7f97b5" strokeWidth="2.2" />
+      <circle cx="26" cy="48" r="5" fill="#7ac74f" />
+      <circle cx="38" cy="49" r="5" fill="#d8618f" />
+    </>
+  );
+}
+
+/** 코인 밀기 추첨기 — 쌓인 코인 */
+function Coin() {
+  return (
+    <>
+      {[42, 33, 24].map((y, i) => (
+        <g key={y}>
+          <ellipse cx="32" cy={y + 5} rx="19" ry="7" fill="#c98a1e" />
+          <ellipse cx="32" cy={y} rx="19" ry="7" fill="#f2c14e" stroke="#c98a1e" strokeWidth="1.6" />
+          {i === 2 && <ellipse cx="32" cy={y} rx="9" ry="3.2" fill="#ffe49a" />}
+        </g>
+      ))}
+    </>
+  );
+}
+
+/** 부장님 째려보기 — 옆을 흘겨보는 눈 */
+function Eye() {
+  return (
+    <>
+      <path
+        d="M6 32 Q32 12 58 32 Q32 52 6 32 Z"
+        fill="#ffffff"
+        stroke="#8a5a55"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+      <circle cx="42" cy="32" r="9" fill="#4a352c" />
+      <circle cx="45" cy="29" r="3" fill="#ffffff" />
+      {/* 치켜뜬 눈썹이 있어야 '째려본다'가 된다 */}
+      <path d="M12 18 Q30 10 50 16" stroke="#8a5a55" strokeWidth="3" strokeLinecap="round" fill="none" />
+    </>
+  );
+}
+
+/** 종이비행기 날리기 — 접힌 종이비행기 */
+function Plane() {
+  return (
+    <>
+      <path d="M8 30 L56 12 L34 52 Z" fill="#ffffff" stroke="#7aa8c4" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M56 12 L28 36 L34 52 Z" fill="#dceefb" stroke="#7aa8c4" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M8 30 L28 36" stroke="#7aa8c4" strokeWidth="2" />
+      <path d="M10 46 Q18 42 24 46" stroke="#9dc7de" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+    </>
+  );
+}
+
+/** joowonkoh.com — 코드 */
+function Code() {
+  return (
+    <>
+      <path
+        d="M24 20 L12 32 L24 44 M40 20 L52 32 L40 44"
+        stroke="#3b3f4a"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <path d="M36 16 L28 48" stroke="#2563eb" strokeWidth="4" strokeLinecap="round" />
+    </>
+  );
+}
+
+const ICONS: Record<IconName, () => React.ReactElement> = {
+  cat: Cat,
+  hoop: Hoop,
+  doodle: Doodle,
+  dog: Dog,
+  web: Web,
+  marble: Marble,
+  coin: Coin,
+  eye: Eye,
+  plane: Plane,
+  code: Code,
+};
+
+/**
+ * 아이콘 타일 하나. 정사각형이고 모서리는 22% 둥글다 —
+ * iOS 홈 화면과 같은 비율이라 '앱'으로 읽힌다.
+ */
+export default function AppIcon({ project }: { project: Project }) {
+  const Glyph = ICONS[project.icon];
+  return (
+    <span
+      aria-hidden
+      className="block aspect-square w-full overflow-hidden rounded-[22%] shadow-ambient ring-1 ring-black/5"
+      style={{ background: `linear-gradient(160deg, ${project.tile[0]}, ${project.tile[1]})` }}
+    >
+      <svg viewBox="0 0 64 64" className="h-full w-full p-[14%]">
+        <Glyph />
+      </svg>
+    </span>
+  );
+}
