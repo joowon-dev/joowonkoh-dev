@@ -33,10 +33,27 @@ module.exports = {
   generateRobotsTxt: true,
   sitemapSize: 7000,
   outDir: "./public",
-  // 어드민은 색인 대상이 아니다. 페이지 metadata의 noindex와 별개로,
-  // 사이트맵과 robots.txt 양쪽에서 주소 자체를 흘리지 않는다.
-  // 타자 농구는 아직 공개 전이라 같은 취급을 한다.
-  exclude: [...noindexPaths, "/admin", "/admin/*", "/playground/typing-hoop"],
+  /**
+   * 내비게이션에서 감춘 페이지는 사이트맵에서도 뺀다.
+   *
+   * 목록에 없는 페이지가 검색 결과로만 잡히면, 들어온 사람이 사이트 안에서
+   * 다시 찾아갈 길이 없다. 각 페이지의 metadata에도 noindex를 걸어 두었고
+   * 여기서는 주소 자체를 흘리지 않는다.
+   *
+   * 이 목록은 src/lib/projects.ts의 hidden 항목과 Header.tsx의 hidden 항목을
+   * 따라간다. 새로 감출 때 여기도 같이 넣어야 한다.
+   */
+  exclude: [
+    ...noindexPaths,
+    "/admin",
+    "/admin/*",
+    "/playground/typing-hoop",
+    "/playground/doodle-dance",
+    "/playground/gaebari-dance",
+    "/playground/gaebari-glare",
+    "/playground/paper-plane",
+    "/playground/webswing",
+  ],
   robotsTxtOptions: {
     policies: [{ userAgent: "*", allow: "/", disallow: ["/admin"] }],
   },

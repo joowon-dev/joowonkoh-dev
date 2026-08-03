@@ -69,10 +69,19 @@ AdSense 승인을 받으려면 최소한의 조건이 있다.
 코드에는 이미 AdSense 컴포넌트가 준비되어 있다.
 
 ```tsx
-<AdSense adSlot="1234567890" />
+<AdSense />
 ```
 
-승인 후 실제 `ca-pub-` ID와 `ad-slot` 값만 넣으면 바로 광고가 나온다.
+ID는 컴포넌트에 넘기지 않고 한곳에 모아 두었다. 퍼블리셔 ID는 `src/lib/adsense.ts`에 고정하고, 광고 단위 ID는 환경변수로 받는다.
+
+```ts
+export const ADSENSE_CLIENT = "ca-pub-…";
+export const ADSENSE_SLOT = process.env.NEXT_PUBLIC_ADSENSE_SLOT || null;
+```
+
+승인 후 `NEXT_PUBLIC_ADSENSE_SLOT`에 광고 단위 ID를 넣으면 그때부터 광고가 붙는다. 값이 없으면 컴포넌트가 아무것도 그리지 않는다.
+
+> 처음에는 `adSlot="1234567890"` 같은 자리표시 값을 컴포넌트에 박아 두었는데, 그게 그대로 배포돼서 글 45편에 동작하지 않는 광고 태그가 실려 나갔다. 자세한 이야기는 [애드센스 심사를 올리기 전에 내 사이트에서 찾아낸 것들](/blog/dev/2026080301)에 적었다.
 
 ### 4단계: 제휴 마케팅 추가
 
