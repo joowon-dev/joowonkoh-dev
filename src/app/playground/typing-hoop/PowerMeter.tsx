@@ -12,6 +12,21 @@ export const BAND_COLOR: Record<Outcome, string> = {
   long: "#39415f",
 };
 
+/**
+ * 어두운 배경 위 글자용 색.
+ *
+ * 게이지 칸 색을 그대로 글자에 쓰면 실패 칸(#39415f)이 배경과 거의 같아서
+ * 숫자가 안 보인다. 칸을 칠할 때와 글자를 쓸 때 필요한 명도가 다르다.
+ */
+export const BAND_TEXT: Record<Outcome, string> = {
+  short: "#a3abcc",
+  frontRim: "#e5a566",
+  clean: "#6fe09a",
+  backRim: "#efb570",
+  bank: "#e8d060",
+  long: "#a3abcc",
+};
+
 export const BAND_NAME: Record<Outcome, string> = {
   short: "짧음",
   frontRim: "앞 링",

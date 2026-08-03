@@ -20,6 +20,7 @@ import {
   requiredPower,
   step,
   strokesPerMinute,
+  spmForPower,
   summarize,
   type Game,
 } from "./game";
@@ -360,6 +361,26 @@ describe("strokesPerMinute", () => {
 
   it("시간이 0이면 0이다", () => {
     expect(strokesPerMinute(8, 0)).toBe(0);
+  });
+});
+
+describe("spmForPower", () => {
+  it("파워를 타속으로 되돌린다 — powerOf의 역이다", () => {
+    for (const power of [0, 15, 40, 73.5, 100, 120]) {
+      const spm = spmForPower(power);
+      // 그 타/분으로 8타짜리 단어를 쳤다면 다시 같은 파워가 나와야 한다
+      expect(powerOf(8, (8 / (spm / 60)) * 1000)).toBeCloseTo(power, 6);
+    }
+  });
+
+  it("멀수록 목표 타/분이 높다", () => {
+    expect(spmForPower(requiredPower(8))).toBeGreaterThan(spmForPower(requiredPower(3.2)));
+  });
+
+  it("실제 거리 범위의 목표가 사람이 칠 수 있는 값이다", () => {
+    // 근거리 목표가 너무 느리거나 원거리 목표가 비현실적이면 게임이 아니다
+    expect(spmForPower(requiredPower(FIRST_SHOT_M))).toBeGreaterThan(120);
+    expect(spmForPower(requiredPower(LAST_SHOT_M))).toBeLessThan(600);
   });
 });
 

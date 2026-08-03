@@ -160,6 +160,21 @@ export function strokesPerMinute(keystrokes: number, elapsedMs: number): number 
   return (keystrokes / elapsedMs) * 60000;
 }
 
+/** 파워 → 타속(타/초). powerFromSpeed의 역함수다 */
+export function speedFromPower(power: number): number {
+  return SPEED_AT_ZERO + (power / 100) * (SPEED_AT_HUNDRED - SPEED_AT_ZERO);
+}
+
+/**
+ * 이 파워를 내려면 분당 몇 타를 쳐야 하는지.
+ *
+ * 파워(0~100)는 이 게임 안에서만 쓰는 눈금이라 감이 안 온다. 타/분은
+ * 타자 연습을 해본 사람이면 바로 아는 단위라, 목표를 이걸로 보여준다.
+ */
+export function spmForPower(power: number): number {
+  return speedFromPower(power) * 60;
+}
+
 /** 거리 → 필요한 파워. 가까운 슛과 먼 슛 사이를 직선으로 잇는다 */
 export function requiredPower(distanceM: number): number {
   const t = (distanceM - FIRST_SHOT_M) / (LAST_SHOT_M - FIRST_SHOT_M);

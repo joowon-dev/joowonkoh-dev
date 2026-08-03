@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Court from "./Court";
-import PowerMeter, { BAND_COLOR, BandLegend } from "./PowerMeter";
+import PowerMeter, { BAND_COLOR, BAND_TEXT, BandLegend } from "./PowerMeter";
 import { buildFlight, flightAt, type Flight, type Vec3 } from "./flight";
 import { isOnTrack, toJamo } from "./hangul";
 import {
@@ -14,8 +14,10 @@ import {
   grade,
   isMade,
   livePower,
+  outcomeFor,
   step,
   strokesPerMinute,
+  spmForPower,
   summarize,
   type Game,
 } from "./game";
@@ -60,6 +62,59 @@ function WordDisplay({ word, typed }: { word: string; typed: string }) {
           </span>
         );
       })}
+    </div>
+  );
+}
+
+/** 화면에 띄울 타수 상한. 붙여넣기 같은 비정상 입력이 네 자리를 만들지 않게 막는다 */
+const SPM_CAP = 999;
+
+/**
+ * 거리와 타수를 크게 보여주는 머리 표시.
+ *
+ * 파워 게이지만 있으면 "지금 어느 칸인지"는 알아도 "얼마나 빨리 치고 있는지"는
+ * 모른다. 타/분은 타자 연습을 해본 사람이면 바로 아는 단위라, 목표와 현재를
+ * 같은 단위로 나란히 두면 다음에 뭘 고칠지가 숫자로 읽힌다. 숫자 색이 곧
+ * 판정이라 초록이면 지금 끝내도 클린샷이라는 뜻이다.
+ *
+ * 현재 값은 "지금 끝내면 나올 속도"다 — 파워 바늘과 같은 양이라 둘이 늘 일치한다.
+ *
+ * 자리는 코트 위쪽이다. 화면 정가운데는 공이 날아가는 길이고 손도 거기까지
+ * 올라와서, 가운데 두면 정작 봐야 할 것들을 가린다. 골대 위는 어느 거리에서도
+ * 비어 있고, 어차피 골대를 보고 있으니 눈이 이미 그쪽에 있다.
+ */
+function SpeedReadout({
+  spm,
+  targetSpm,
+  color,
+  distanceM,
+  threePoint,
+}: {
+  /** 지금 끝내면 나올 타/분. 아직 안 쳤으면 null */
+  spm: number | null;
+  targetSpm: number;
+  color: string;
+  distanceM: number;
+  threePoint: boolean;
+}) {
+  const started = spm !== null;
+  const shown = started ? Math.min(SPM_CAP, Math.round(spm)) : Math.round(targetSpm);
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-2 flex justify-center">
+      <div className="rounded-xl bg-black/50 px-4 py-1.5 text-center">
+        <div className="text-[11px] tabular-nums text-[#cdd4ee]">
+          {distanceM.toFixed(1)}m · {threePoint ? "3점" : "2점"}
+        </div>
+        <div
+          className="text-5xl leading-none font-bold tabular-nums"
+          style={{ color: started ? color : "#8b93b5", textShadow: "0 2px 0 rgba(0,0,0,0.6)" }}
+        >
+          {shown}
+        </div>
+        <div className="mt-0.5 text-[11px] tabular-nums text-[#cdd4ee]">
+          타/분 {started && <span className="text-[#8b93b5]">· 목표 {Math.round(targetSpm)}</span>}
+        </div>
+      </div>
     </div>
   );
 }
@@ -201,6 +256,21 @@ export default function TypingHoop() {
   const needle =
     phase === "typing" ? livePower(shot, now) : last ? last.power : null;
 
+  // 가운데 큰 숫자. 바늘과 같은 양을 단위만 바꿔 보여준다 —
+  // 파워는 이 게임 안에서만 쓰는 눈금이고, 타/분은 누구나 아는 단위다.
+  const targetSpm = spmForPower(shot.required);
+  const liveSpm =
+    phase === "typing"
+      ? shot.startedAt === null
+        ? null
+        : strokesPerMinute(shot.keystrokes, Math.max(1, now - shot.startedAt))
+      : last
+        ? strokesPerMinute(last.keystrokes, last.elapsedMs)
+        : null;
+  // 숫자 색이 곧 판정이다. 초록이면 지금 끝내면 클린샷이라는 뜻이다
+  const spmColor =
+    needle === null ? "#f4e8d2" : BAND_TEXT[outcomeFor(needle - shot.required)];
+
   const summary = summarize(game);
 
   // ── 시작 화면 ─────────────────────────────────────────────────
@@ -269,7 +339,6 @@ export default function TypingHoop() {
         ? 0
         : Math.max(0, now - shot.startedAt)
       : (last?.elapsedMs ?? 0);
-  const shownStrokes = phase === "typing" ? typedJamo : (last?.keystrokes ?? shot.keystrokes);
 
   return (
     <Shell>
@@ -287,10 +356,14 @@ export default function TypingHoop() {
       <div className="relative flex min-h-0 w-full flex-1 justify-center">
         <Court scene={scene} />
 
-        {/* 거리 표시 */}
-        <div className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 rounded-full bg-black/45 px-3 py-1 text-xs tabular-nums text-[#f4e8d2]">
-          {shot.distanceM.toFixed(1)}m {threePoint ? "· 3점" : "· 2점"}
-        </div>
+        {/* 거리와 타수. 골대 위 빈 곳에 둔다 — 코트 가운데에 두면 공과 손을 덮는다 */}
+        <SpeedReadout
+          spm={liveSpm}
+          targetSpm={targetSpm}
+          color={spmColor}
+          distanceM={shot.distanceM}
+          threePoint={threePoint}
+        />
 
         {/* 결과 */}
         {phase === "result" && last && (
@@ -336,13 +409,10 @@ export default function TypingHoop() {
           />
         </div>
 
+        {/* 타/분은 코트 가운데 크게 떠 있다. 여기는 그 숫자를 만든 재료만 둔다 */}
         <div className="mt-2 flex justify-between text-[11px] tabular-nums text-[#6f779a]">
           <span>{elapsed > 0 ? `${(elapsed / 1000).toFixed(2)}초` : "첫 글자부터 잽니다"}</span>
-          <span>
-            {elapsed > 0
-              ? `${Math.round(strokesPerMinute(shownStrokes, elapsed))}타/분`
-              : `${shot.keystrokes}타`}
-          </span>
+          <span>{shot.keystrokes}타</span>
         </div>
       </div>
     </Shell>
