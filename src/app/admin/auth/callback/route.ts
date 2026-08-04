@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
 
+export const runtime = "edge";
+
 /**
  * OAuth 리다이렉트를 받아 코드를 세션으로 바꾼다.
  *
