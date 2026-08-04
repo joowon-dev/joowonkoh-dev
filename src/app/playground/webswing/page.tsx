@@ -216,35 +216,6 @@ function MacPanel() {
         ))}
       </div>
 
-      <SectionHeading>서명과 공증</SectionHeading>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        Developer ID로 서명하고 애플 공증(notarization)까지 받았습니다. 공증
-        티켓이 앱 안에 붙어 있어서 인터넷이 끊긴 상태에서도 경고 없이 열립니다.
-        받은 파일이 중간에 변조되지 않았다는 것도 macOS가 확인해 줍니다.
-      </p>
-
-      <SectionHeading>권한은 필요 없습니다</SectionHeading>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        화면 기록도, 손쉬운 사용도 요청하지 않습니다. 창의{" "}
-        <strong className="text-text-primary">위치와 크기</strong>만 읽는데, 이건
-        권한 없이 읽을 수 있는 값입니다. 창의 <em>제목</em>은 권한이 필요하지만
-        WebSwing은 제목을 아예 쓰지 않습니다. 전역 단축키도 권한이 필요 없는
-        방식으로 등록합니다.
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        타자 모드도 키보드를 엿보지 않습니다. 무슨 키를 눌렀는지 알려주는 API는
-        전부 권한을 요구하는데, WebSwing이 읽는 건{" "}
-        <strong className="text-text-primary">
-          마지막 키 입력이 몇 초 전이었나
-        </strong>{" "}
-        하나뿐입니다. 어떤 키였는지는 묻지도 않고 알 수도 없습니다. 이 값이 0으로
-        되돌아간 횟수를 세면 타자 수가 됩니다.
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        네트워크도 쓰지 않습니다. 저장하는 건 마지막 모드와 돌아다니기 설정
-        둘뿐이고, 지우고 싶으면 앱만 휴지통에 넣으면 끝입니다.
-      </p>
-
       <SectionHeading>알려진 한계</SectionHeading>
       <ul className="mt-4 space-y-2 text-sm leading-relaxed text-text-secondary">
         <li>· 메인 디스플레이에서만 동작합니다. 외장 모니터는 아직입니다.</li>
