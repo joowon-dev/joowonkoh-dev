@@ -128,14 +128,39 @@ curl "$SUPABASE_URL/rest/v1/metrics_daily?select=*" \
 허용목록이 막아 주므로 `/admin/denied`에서 멈추고 지표는 보이지 않지만, 필요 없는
 가입 경로다. Google만 쓸 것이면 대시보드에서 이메일 provider를 끄는 편이 낫다.
 
-**배포 경로 — 확인 결과 문제 없음.** `next.config.ts`가 `output: "standalone"`이므로
-Node 서버로 배포된다. Next 16의 Proxy는 Node.js 런타임에서 돌므로 그대로 동작한다.
+**배포 경로 — Cloudflare Pages다. (2026-08-04 정정)**
 
-다만 `wrangler.toml`과 `npm run pages:build`는 예전 Cloudflare Pages 시도의
-잔재로 보인다. 실제로 돌려 보면 `@cloudflare/next-on-pages`가 설치되지 않고
-peer 의존성 충돌(`@cloudflare/workers-types` 4 vs 5)로 실패한다. 이 어드민 작업과
-무관한 기존 상태다. 쓰지 않는 경로라면 `wrangler.toml`과 `pages:*` 스크립트를
-지우는 편이 낫다. 남겨 두면 다음 사람이 여기가 배포 경로라고 착각한다.
+앞서 `next.config.ts`의 `output: "standalone"`만 보고 Node 서버 배포라고 적었는데
+틀렸다. 실제 CI는 `npx vercel build` 후 `@cloudflare/next-on-pages`로 Cloudflare
+Pages에 올린다. 로컬에서 `pages:build`가 peer 의존성 문제로 실패한 것을 보고
+"안 쓰는 경로"라고 판단한 것이 오진이었다. CI는 프로젝트 `node_modules` 밖에서
+받아 쓰므로 그 충돌을 겪지 않는다.
+
+그 결과 어드민 1단계가 배포를 깨뜨렸다.
+
+```
+The following routes were not configured to run with the Edge Runtime:
+  - /_middleware
+  - /admin, /admin/login, /admin/denied, /admin/auth/callback
+```
+
+next-on-pages는 모든 서버 라우트에 `export const runtime = 'edge'`를 요구한다.
+그런데 Next 16의 Proxy는 **Node.js 런타임 고정이고 `runtime` 설정 자체를 거부한다**
+(설정하면 에러를 던진다). 즉 `proxy.ts`가 존재하는 한 이 조합은 성립하지 않는다.
+
+**대응** — `proxy.ts`와 `lib/supabase/proxy.ts`를 제거하고, 남은 서버 라우트에
+edge 런타임을 선언했다. 설계상 Proxy는 낙관적 체크 전용이고 실제 관문은
+`checkAdmin()`(DAL)과 RLS이므로 **보안 수준은 그대로다**. 잃는 것은 서버 측
+세션 쿠키 자동 갱신 하나인데, 브라우저 클라이언트가 토큰을 갱신하며 쿠키에 쓰므로
+실사용에서는 드물게 재로그인이 필요한 정도로 그친다.
+
+곁가지 이득으로 `/admin/login`과 `/admin/denied`에서 `force-dynamic`을 걷어내
+정적 페이지가 됐다. edge 함수는 `/admin`과 `/admin/auth/callback` 둘만 남는다.
+
+**남은 숙제.** `@cloudflare/next-on-pages`는 유지보수 모드이고 Next 16 지원이
+불확실하다. Cloudflare가 미는 후속은 `@opennextjs/cloudflare`이며, 이쪽은 Node
+런타임을 지원해서 Proxy를 되살릴 수 있다. 지금 당장 급하지는 않지만, 다음에
+서버 기능을 붙일 때 다시 벽에 부딪힐 가능성이 높다.
 
 **통화.** `metrics_daily.value`는 단일 `numeric`이라 통화 단위를 담지 못한다.
 1단계는 AdMob USD 고정으로 간다. 통화가 둘 이상 생기면 `entity`에 통화를 섞지

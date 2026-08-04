@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient";
+import { getSupabase } from "./supabaseClient";
 
 export type ScoreRow = {
   id: string;
@@ -13,7 +13,7 @@ export function sanitizeNickname(raw: string): string {
 }
 
 export async function fetchTopScores(limit = 10): Promise<ScoreRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("leaderboard")
     .select("*")
     .order("distance", { ascending: false })
@@ -28,7 +28,7 @@ export async function submitScore(
 ): Promise<ScoreRow> {
   const clean = sanitizeNickname(nickname);
   const dist = Math.max(0, Math.min(100000, Math.round(distance)));
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("leaderboard")
     .insert({ nickname: clean, distance: dist })
     .select()
