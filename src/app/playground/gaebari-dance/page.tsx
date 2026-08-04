@@ -94,7 +94,7 @@ export default function GaebariDancePage() {
             GaebariDance.zip 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
-            11MB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
+            1.6MB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-accent-soft px-4 py-2 text-xs font-medium text-accent">
@@ -175,7 +175,6 @@ export default function GaebariDancePage() {
         <li>
           · 빨라질 때 동작 폭이 커지지는 않습니다. 대신 몸집이 살짝 부풉니다.
         </li>
-        <li>· 춤 프레임을 그대로 담고 있어서 앱이 11MB입니다.</li>
       </ul>
 
       <p className="mt-12 text-xs leading-relaxed text-text-muted">
