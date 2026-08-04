@@ -9,25 +9,40 @@ type Step = {
   title: string;
   body: React.ReactNode;
   /** 이 단계에서 직접 눌러 받을 것이 있으면 */
-  link?: { href: string; label: string; note: string; external?: boolean };
+  link?: {
+    href: string;
+    label: string;
+    note: string;
+    /** 다른 사이트로 나가는 링크. 새 탭으로 연다. */
+    external?: boolean;
+    /** 버튼 글자. 외부 링크라도 파일이 바로 받아지면 "다운로드"가 맞다. */
+    cta?: string;
+  };
 };
 
 const STEPS: Step[] = [
   {
     title: ".NET 9 데스크톱 런타임을 먼저 깐다",
-    body: "이 빌드는 런타임을 포함하지 않습니다(108KB인 이유). 없으면 실행할 때 아무 일도 안 일어난 것처럼 보입니다. 받는 곳에서 Desktop Runtime 의 x64 를 고르세요 — SDK 나 ASP.NET 쪽이 아닙니다.",
+    body: "이 빌드는 런타임을 포함하지 않습니다(108KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
     link: {
-      href: "https://dotnet.microsoft.com/download/dotnet/9.0",
-      label: ".NET 9 데스크톱 런타임 받는 곳",
-      note: "dotnet.microsoft.com · 마이크로소프트 공식 · 무료",
+      // 목록 페이지가 아니라 설치 파일로 바로 간다. 그 페이지에는 SDK ·
+      // ASP.NET · Desktop 이 아키텍처별로 늘어서 있어서, 필요한 하나를 고르는
+      // 것 자체가 이 단계에서 사람이 가장 많이 틀리는 지점이다.
+      //
+      // aka.ms 별칭은 최신 패치로 마이크로소프트가 리디렉션해 준다. 버전을
+      // 박아 두면 몇 달 뒤 낡은 빌드를 받게 되므로 별칭 쪽이 맞다.
+      href: "https://aka.ms/dotnet/9.0/windowsdesktop-runtime-win-x64.exe",
+      label: ".NET 9 데스크톱 런타임 (x64) 바로 받기",
+      note: "약 60MB · 마이크로소프트 공식 · 무료 · 누르면 바로 다운로드",
       external: true,
+      cta: "다운로드",
     },
   },
   {
     title: "이 파일을 다운받는다",
     body: "위의 런타임을 깔고 나서 받는 편이 낫습니다. 런타임이 없으면 실행해도 아무 반응이 없어서 파일이 깨진 줄로 오해하기 쉽습니다.",
     link: {
-      href: "/downloads/WebSwing-win-x64-preview-8f3a2c.zip",
+      href: "/downloads/WebSwing-win-x64-preview-384287.zip",
       label: "WebSwing (Windows) 내려받기",
       note: "108KB · Windows 10 1809 이상 · 64비트 · 서명 없음",
     },
@@ -48,7 +63,12 @@ const STEPS: Step[] = [
 
 const CONTROLS: { key: string; action: string }[] = [
   { key: "Ctrl+Shift+T", action: "타자 모드 켜기 / 끄기" },
+  { key: "Ctrl+Shift+M", action: "커서 모드 — 포인터 뒤를 따라다님" },
   { key: "Ctrl+Shift+S", action: "게임 모드 전환" },
+  {
+    key: "Ctrl+Shift+H",
+    action: "숨기기 / 다시 부르기 — 눈을 클릭해도 돌아옵니다",
+  },
   { key: "Space / 클릭", action: "커서 방향으로 거미줄 발사 · 떼면 놓기" },
   { key: "A · D", action: "좌우 조종, 스윙에 힘 싣기" },
   { key: "S", action: "줄 감기 — 끝까지 감으면 창턱 위로 올라섬" },
@@ -91,7 +111,7 @@ function StepLink({ link }: { link: NonNullable<Step["link"]> }) {
         </span>
       </span>
       <span className="shrink-0 rounded-full bg-accent-soft px-3 py-1.5 text-[11px] font-medium text-accent">
-        {link.external ? "받으러 가기" : "다운로드"}
+        {link.cta ?? (link.external ? "받으러 가기" : "다운로드")}
       </span>
     </a>
   );
@@ -127,6 +147,14 @@ export default function WindowsPanel() {
       </ol>
 
       <SectionHeading>조작</SectionHeading>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        모드가 하는 일은 맥과 같습니다 — macOS 탭의 설명을 보세요. 단축키만
+        <kbd className="mx-1 rounded bg-tag-bg px-1.5 py-0.5 font-mono text-[11px] text-text-primary">
+          Ctrl+Shift
+        </kbd>
+        조합으로 다릅니다. 펫 모드와 커서 모드에서는 아무 데나 클릭하면 그 자리로
+        거미줄을 쏘고 날아갑니다.
+      </p>
       <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card-bg shadow-ambient">
         {CONTROLS.map((control, index) => (
           <div

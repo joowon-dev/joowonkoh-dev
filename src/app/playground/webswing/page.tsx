@@ -4,7 +4,7 @@ import PlatformTabs from "./PlatformTabs";
 
 const TITLE = "WebSwing — 창 사이를 날아다니는 맥 데스크톱 펫";
 const DESCRIPTION =
-  "실제로 열려 있는 창의 모서리에 거미줄을 걸고 날아다니는 맥 데스크톱 펫. 평소엔 알아서 놀고, 타자를 치면 거미줄을 타고 올라가고, 단축키를 누르면 직접 조종할 수 있습니다.";
+  "실제로 열려 있는 창의 모서리에 거미줄을 걸고 날아다니는 맥 데스크톱 펫. 평소엔 알아서 놀고, 타자를 치면 거미줄을 타고 올라가고, 클릭한 곳으로 날아가고, 필요 없을 땐 눈만 남기고 사라집니다.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -34,7 +34,9 @@ export const metadata: Metadata = {
 
 const MODE_SWITCHES: { key: string; action: string }[] = [
   { key: "⌘⇧T", action: "타자 모드 켜기 / 끄기" },
+  { key: "⌘⇧M", action: "커서 모드 켜기 / 끄기" },
   { key: "⌘⇧S", action: "게임 모드 전환" },
+  { key: "⌘⇧H", action: "숨기기 / 다시 부르기 — 눈을 클릭해도 돌아옵니다" },
 ];
 
 const CONTROLS: { key: string; action: string }[] = [
@@ -85,7 +87,7 @@ function MacPanel() {
             WebSwing.zip 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
-            208KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
+            233KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-accent-soft px-4 py-2 text-xs font-medium text-accent">
@@ -104,14 +106,14 @@ function MacPanel() {
         사라집니다.
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card-bg p-5 shadow-ambient">
           <h3 className="font-display text-sm font-semibold text-text-primary">
             펫 모드 (기본)
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-text-secondary">
             알아서 창 사이를 스윙하고, 창 위를 걸어다니고, 가끔 커서 쪽으로
-            날아옵니다. 클릭은 그대로 통과하기 때문에 작업을 방해하지 않습니다.
+            날아옵니다. 아무 데나 클릭하면 그 자리로 거미줄을 쏘고 날아갑니다.
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-card-bg p-5 shadow-ambient">
@@ -125,6 +127,15 @@ function MacPanel() {
         </div>
         <div className="rounded-2xl border border-border bg-card-bg p-5 shadow-ambient">
           <h3 className="font-display text-sm font-semibold text-text-primary">
+            커서 모드 (⌘⇧M)
+          </h3>
+          <p className="mt-2 text-xs leading-relaxed text-text-secondary">
+            마우스 포인터 뒤를 일정 거리로 따라다닙니다. 클릭하면 포인터를 놓고
+            그 지점으로 거미줄을 쏘고 날아갔다가, 다시 포인터로 돌아옵니다.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card-bg p-5 shadow-ambient">
+          <h3 className="font-display text-sm font-semibold text-text-primary">
             게임 모드 (⌘⇧S)
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-text-secondary">
@@ -133,6 +144,11 @@ function MacPanel() {
           </p>
         </div>
       </div>
+
+      <p className="mt-4 text-xs leading-relaxed text-text-muted">
+        클릭을 가로채지는 않습니다. 누르던 앱은 그 클릭을 그대로 받고, 히어로는
+        어디를 눌렀는지만 알아챕니다.
+      </p>
 
       <SectionHeading>타자 모드</SectionHeading>
       <p className="mt-3 text-sm leading-relaxed text-text-secondary">
@@ -154,6 +170,54 @@ function MacPanel() {
         입니다. 스윙이 어디쯤이었는지에 따라 높이가 달라지면 아무것도 알려주지
         못하니까요.
       </p>
+
+      <SectionHeading>커서 모드</SectionHeading>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        마우스 포인터 뒤를 일정 거리 두고 따라다닙니다. 포인터를 홱 던져도 너무
+        멀리 뒤처지지는 않게 끈을 걸어 뒀습니다 — 한없이 늘어지면 따라다니는 게
+        아니라 길 잃은 것처럼 보이니까요.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        따라다니는 동안은 물리 계산이 아니라 위치를 직접 잡아 줍니다. 힘으로
+        쫓아가게 하면 지나쳤다가 되돌아오고 벽에 튕기는데, 그건 한 번 웃기고 그
+        다음부터는 못 씁니다. 반대로 클릭했을 때의 비행은{" "}
+        <strong className="text-text-primary">
+          펫이나 직접 조종할 때와 완전히 같은 물리
+        </strong>
+        입니다. 스윙은 그게 볼 만한 부분이니까요.
+      </p>
+
+      <SectionHeading>안 보이게 치우기</SectionHeading>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        <kbd className="rounded bg-tag-bg px-1.5 py-0.5 font-mono text-[11px] text-text-primary">
+          ⌘⇧H
+        </kbd>
+        . 화면 맨 아래로 내려가서 눈만 남고 나머지는 투명해집니다. 다시 누르거나{" "}
+        <strong className="text-text-primary">눈을 클릭하면</strong> 원래대로
+        돌아와, 하던 모드를 그대로 이어서 합니다.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        숨기기는 네 번째 모드가 아니라 잠깐 멈춤입니다. 타자 모드였든 게임
+        모드였든 그 모드는 그대로 있고, 다시 부르면 뭐였는지 기억할 필요 없이
+        이어집니다. 회의 화면 공유 직전에 한 번 누르라고 만든 기능입니다.
+      </p>
+
+      <figure className="mt-6 overflow-hidden rounded-2xl border border-border bg-card-bg shadow-ambient">
+        <Image
+          src="/webswing/hidden-eyes.png"
+          alt="화면 아래쪽에 흰 눈 두 개만 남아 있는 모습"
+          width={650}
+          height={410}
+          // 실제 화면에서는 눈 두 개가 이만한 크기다. 원본 배율로 큼직하게
+          // 띄우면 실물보다 훨씬 눈에 띄는 것처럼 보인다.
+          className="mx-auto mt-5 h-auto w-full max-w-[280px] rounded-xl"
+          unoptimized
+        />
+        <figcaption className="px-5 py-3 text-[11px] leading-relaxed text-text-muted">
+          숨긴 상태. 화면 맨 아래에 이만큼만 남습니다 — 클릭해서 다시 부를 수
+          있을 만큼은 보이라고 눈에 검은 테를 둘렀습니다.
+        </figcaption>
+      </figure>
 
       <SectionHeading>설치하기</SectionHeading>
       <ol className="mt-4 space-y-3">
