@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const from = vi.fn();
 vi.mock("./supabaseClient", () => ({
-  supabase: { from: (...a: unknown[]) => from(...a) },
+  getSupabase: () => ({ from: (...a: unknown[]) => from(...a) }),
 }));
 
 import { fetchTopScores, submitScore, sanitizeNickname } from "./leaderboard";
