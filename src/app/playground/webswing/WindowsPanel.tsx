@@ -42,7 +42,11 @@ const STEPS: Step[] = [
     title: "이 파일을 다운받는다",
     body: "위의 런타임을 깔고 나서 받는 편이 낫습니다. 런타임이 없으면 실행해도 아무 반응이 없어서 파일이 깨진 줄로 오해하기 쉽습니다.",
     link: {
-      href: "/downloads/WebSwing-win-x64-preview-65f175.zip",
+      // 주소는 릴리스가 바뀌어도 이대로 둔다. 파일 이름에 빌드 해시를 달면
+      // 새 빌드마다 크롬과 SmartScreen 입장에서 세상에 처음 나온 파일이 되고,
+      // 조금씩 쌓이던 다운로드 평판이 매번 0으로 돌아간다. 경고를 줄이는
+      // 쪽이 캐시를 깨는 쪽보다 중요하다.
+      href: "/downloads/WebSwing-win-x64.zip",
       label: "WebSwing (Windows) 내려받기",
       note: "108KB · Windows 10 1809 이상 · 64비트 · 서명 없음",
     },
