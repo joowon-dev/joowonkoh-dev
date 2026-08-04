@@ -42,7 +42,7 @@ const STEPS: Step[] = [
     title: "이 파일을 다운받는다",
     body: "위의 런타임을 깔고 나서 받는 편이 낫습니다. 런타임이 없으면 실행해도 아무 반응이 없어서 파일이 깨진 줄로 오해하기 쉽습니다.",
     link: {
-      href: "/downloads/WebSwing-win-x64-preview-384287.zip",
+      href: "/downloads/WebSwing-win-x64-preview-65f175.zip",
       label: "WebSwing (Windows) 내려받기",
       note: "108KB · Windows 10 1809 이상 · 64비트 · 서명 없음",
     },
@@ -63,7 +63,6 @@ const STEPS: Step[] = [
 
 const CONTROLS: { key: string; action: string }[] = [
   { key: "Ctrl+Shift+T", action: "타자 모드 켜기 / 끄기" },
-  { key: "Ctrl+Shift+M", action: "커서 모드 — 포인터 뒤를 따라다님" },
   { key: "Ctrl+Shift+S", action: "게임 모드 전환" },
   {
     key: "Ctrl+Shift+H",
@@ -152,8 +151,8 @@ export default function WindowsPanel() {
         <kbd className="mx-1 rounded bg-tag-bg px-1.5 py-0.5 font-mono text-[11px] text-text-primary">
           Ctrl+Shift
         </kbd>
-        조합으로 다릅니다. 펫 모드와 커서 모드에서는 아무 데나 클릭하면 그 자리로
-        거미줄을 쏘고 날아갑니다.
+        조합으로 다릅니다. 펫 모드에서 아무 데나 클릭하면 바로 그 자리에 거미줄을
+        쏘고 타고 올라갑니다.
       </p>
       <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card-bg shadow-ambient">
         {CONTROLS.map((control, index) => (

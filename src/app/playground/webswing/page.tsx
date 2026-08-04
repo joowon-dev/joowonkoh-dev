@@ -4,7 +4,7 @@ import PlatformTabs from "./PlatformTabs";
 
 const TITLE = "WebSwing — 창 사이를 날아다니는 맥 데스크톱 펫";
 const DESCRIPTION =
-  "실제로 열려 있는 창의 모서리에 거미줄을 걸고 날아다니는 맥 데스크톱 펫. 평소엔 알아서 놀고, 타자를 치면 거미줄을 타고 올라가고, 클릭한 곳으로 날아가고, 필요 없을 땐 눈만 남기고 사라집니다.";
+  "실제로 열려 있는 창의 모서리에 거미줄을 걸고 날아다니는 맥 데스크톱 펫. 평소엔 알아서 놀고, 타자를 치면 거미줄을 타고 올라가고, 클릭한 자리에 거미줄을 쏘고, 필요 없을 땐 눈만 남기고 사라집니다.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -34,7 +34,6 @@ export const metadata: Metadata = {
 
 const MODE_SWITCHES: { key: string; action: string }[] = [
   { key: "⌘⇧T", action: "타자 모드 켜기 / 끄기" },
-  { key: "⌘⇧M", action: "커서 모드 켜기 / 끄기" },
   { key: "⌘⇧S", action: "게임 모드 전환" },
   { key: "⌘⇧H", action: "숨기기 / 다시 부르기 — 눈을 클릭해도 돌아옵니다" },
 ];
@@ -87,7 +86,7 @@ function MacPanel() {
             WebSwing.zip 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
-            233KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
+            225KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-accent-soft px-4 py-2 text-xs font-medium text-accent">
@@ -106,14 +105,15 @@ function MacPanel() {
         사라집니다.
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-border bg-card-bg p-5 shadow-ambient">
           <h3 className="font-display text-sm font-semibold text-text-primary">
             펫 모드 (기본)
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-text-secondary">
             알아서 창 사이를 스윙하고, 창 위를 걸어다니고, 가끔 커서 쪽으로
-            날아옵니다. 아무 데나 클릭하면 그 자리로 거미줄을 쏘고 날아갑니다.
+            날아옵니다. 아무 데나 클릭하면 바로 그 자리에 거미줄을 쏘고
+            타고 올라갑니다.
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-card-bg p-5 shadow-ambient">
@@ -123,15 +123,6 @@ function MacPanel() {
           <p className="mt-2 text-xs leading-relaxed text-text-secondary">
             화면 아래에서 기다리다가, 타자를 치면 거미줄을 던지고 올라갑니다.
             멈추면 내려오고, 내려오는 중에 다시 치면 그 자리에서 또 올라갑니다.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-border bg-card-bg p-5 shadow-ambient">
-          <h3 className="font-display text-sm font-semibold text-text-primary">
-            커서 모드 (⌘⇧M)
-          </h3>
-          <p className="mt-2 text-xs leading-relaxed text-text-secondary">
-            마우스 포인터 뒤를 일정 거리로 따라다닙니다. 클릭하면 포인터를 놓고
-            그 지점으로 거미줄을 쏘고 날아갔다가, 다시 포인터로 돌아옵니다.
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-card-bg p-5 shadow-ambient">
@@ -171,20 +162,21 @@ function MacPanel() {
         못하니까요.
       </p>
 
-      <SectionHeading>커서 모드</SectionHeading>
+      <SectionHeading>클릭한 자리로</SectionHeading>
       <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        마우스 포인터 뒤를 일정 거리 두고 따라다닙니다. 포인터를 홱 던져도 너무
-        멀리 뒤처지지는 않게 끈을 걸어 뒀습니다 — 한없이 늘어지면 따라다니는 게
-        아니라 길 잃은 것처럼 보이니까요.
+        펫 모드에서 아무 데나 클릭하면{" "}
+        <strong className="text-text-primary">바로 그 지점에</strong> 거미줄이
+        붙습니다. 창턱이든 아무것도 없는 배경화면이든 상관없습니다. 줄을 감으며
+        그 자리까지 올라간 다음, 도착하면 놓고 하던 일로 돌아갑니다.
       </p>
       <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        따라다니는 동안은 물리 계산이 아니라 위치를 직접 잡아 줍니다. 힘으로
-        쫓아가게 하면 지나쳤다가 되돌아오고 벽에 튕기는데, 그건 한 번 웃기고 그
-        다음부터는 못 씁니다. 반대로 클릭했을 때의 비행은{" "}
-        <strong className="text-text-primary">
-          펫이나 직접 조종할 때와 완전히 같은 물리
-        </strong>
-        입니다. 스윙은 그게 볼 만한 부분이니까요.
+        히어로가 혼자 쏘는 거미줄은 여전히 창의 윗변에만 붙습니다. 걔는 설 자리를
+        찾아가는 중이라 허공에 줄을 걸어 봐야 소용이 없으니까요. 사람이 겨눈
+        클릭만 예외입니다.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        거미줄은 위로만 당깁니다. 그래서 히어로보다 아래를 클릭하면 줄이 나가지
+        않고, 그쪽으로 건너가 떨어지는 걸로 대신합니다.
       </p>
 
       <SectionHeading>안 보이게 치우기</SectionHeading>
