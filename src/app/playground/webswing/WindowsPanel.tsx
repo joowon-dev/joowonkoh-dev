@@ -1,8 +1,10 @@
 "use client";
 
 /**
- * 윈도우 버전 안내. PlatformTabs 가 잠금을 푼 뒤에만 dynamic import 로 불러온다.
- * 잠겨 있는 동안에는 이 파일의 내용도, 아래 다운로드 주소도 페이지에 없다.
+ * 윈도우 버전 안내.
+ *
+ * 한동안 타이핑으로 여는 가림막 뒤에 있었다. 실제 윈도우 PC에서 확인이 끝나
+ * 공개로 돌렸고, 그때 PlatformTabs 의 잠금과 dynamic import 를 함께 걷어냈다.
  */
 
 type Step = {

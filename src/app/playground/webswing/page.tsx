@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import PlatformTabs from "./PlatformTabs";
 
-const TITLE = "WebSwing — 창 사이를 날아다니는 맥 데스크톱 펫";
+const TITLE = "WebSwing — 창 사이를 날아다니는 데스크톱 펫 (맥 · 윈도우)";
 const DESCRIPTION =
-  "실제로 열려 있는 창의 모서리에 거미줄을 걸고 날아다니는 맥 데스크톱 펫. 평소엔 알아서 놀고, 타자를 치면 거미줄을 타고 올라가고, 클릭한 자리에 거미줄을 쏘고, 필요 없을 땐 눈만 남기고 사라집니다.";
+  "실제로 열려 있는 창의 모서리에 거미줄을 걸고 날아다니는 데스크톱 펫. 맥과 윈도우 모두 받을 수 있습니다. 평소엔 알아서 놀고, 타자를 치면 거미줄을 타고 올라가고, 클릭한 자리에 거미줄을 쏘고, 필요 없을 땐 눈만 남기고 사라집니다.";
 
 export const metadata: Metadata = {
   title: TITLE,
