@@ -25,7 +25,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: ".NET 9 데스크톱 런타임을 먼저 깐다",
-    body: "이 빌드는 런타임을 포함하지 않습니다(108KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
+    body: "이 빌드는 런타임을 포함하지 않습니다(113KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
     link: {
       // 목록 페이지가 아니라 설치 파일로 바로 간다. 그 페이지에는 SDK ·
       // ASP.NET · Desktop 이 아키텍처별로 늘어서 있어서, 필요한 하나를 고르는
@@ -50,7 +50,7 @@ const STEPS: Step[] = [
       // 쪽이 캐시를 깨는 쪽보다 중요하다.
       href: "/downloads/WebSwing-win-x64.zip",
       label: "WebSwing (Windows) 내려받기",
-      note: "108KB · Windows 10 1809 이상 · 64비트 · 서명 없음",
+      note: "113KB · Windows 10 1809 이상 · 64비트 · 서명 없음",
     },
   },
   {
@@ -64,6 +64,17 @@ const STEPS: Step[] = [
   {
     title: "알림 영역에서 거미줄 아이콘을 찾는다",
     body: "윈도우 11은 새 아이콘을 기본으로 숨깁니다. 시계 옆 ^ 를 눌러 꺼내서 작업 표시줄에 고정하세요.",
+  },
+];
+
+const TRAY_OPTIONS: { title: string; body: string }[] = [
+  {
+    title: "모니터 여러 대",
+    body: "기본으로 모든 모니터를 하나의 화면처럼 씁니다. 왼쪽 모니터에서 출발해 오른쪽 모니터로 건너갈 수 있습니다. 무겁게 느껴지면 트레이 메뉴의 Use All Monitors를 꺼서 주 모니터만 쓰게 할 수 있고, 껐다 켜면 적용됩니다.",
+  },
+  {
+    title: "돌아다니기",
+    body: "타자 모드에서 바닥에 있을 때 어슬렁거릴지, 내린 자리에 서 있을지를 정합니다.",
   },
 ];
 
@@ -174,6 +185,23 @@ export default function WindowsPanel() {
             <span className="text-xs leading-relaxed text-text-secondary">
               {control.action}
             </span>
+          </div>
+        ))}
+      </div>
+
+      <SectionHeading>트레이 메뉴에서 정할 수 있는 것</SectionHeading>
+      <div className="mt-4 space-y-3">
+        {TRAY_OPTIONS.map((option) => (
+          <div
+            key={option.title}
+            className="rounded-2xl border border-border bg-card-bg p-5 shadow-ambient"
+          >
+            <h3 className="font-display text-sm font-semibold text-text-primary">
+              {option.title}
+            </h3>
+            <p className="mt-2 text-xs leading-relaxed text-text-secondary">
+              {option.body}
+            </p>
           </div>
         ))}
       </div>

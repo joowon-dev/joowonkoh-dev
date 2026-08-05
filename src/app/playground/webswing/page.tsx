@@ -86,7 +86,7 @@ function MacPanel() {
             WebSwing.zip 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
-            225KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
+            226KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-accent-soft px-4 py-2 text-xs font-medium text-accent">
@@ -177,6 +177,10 @@ function MacPanel() {
       <p className="mt-3 text-sm leading-relaxed text-text-secondary">
         거미줄은 위로만 당깁니다. 그래서 히어로보다 아래를 클릭하면 줄이 나가지
         않고, 그쪽으로 건너가 떨어지는 걸로 대신합니다.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        빠르게 여러 번 눌러도 다 받습니다. 같은 자리를 두 번 누르는 더블클릭만
+        한 번으로 세고, 다른 자리를 누르면 그건 새 지시입니다.
       </p>
 
       <SectionHeading>안 보이게 치우기</SectionHeading>
