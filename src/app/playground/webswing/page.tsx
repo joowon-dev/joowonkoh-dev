@@ -86,7 +86,7 @@ function MacPanel() {
             WebSwing.zip 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
-            226KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
+            247KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-accent-soft px-4 py-2 text-xs font-medium text-accent">
@@ -181,6 +181,25 @@ function MacPanel() {
       <p className="mt-3 text-sm leading-relaxed text-text-secondary">
         빠르게 여러 번 눌러도 다 받습니다. 같은 자리를 두 번 누르는 더블클릭만
         한 번으로 세고, 다른 자리를 누르면 그건 새 지시입니다.
+      </p>
+
+      <SectionHeading>크기와 디스플레이</SectionHeading>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        메뉴의 <strong className="text-text-primary">Size</strong>에서 Tiny(0.5×)
+        부터 Large(1.5×)까지 다섯 단계로 고릅니다. 누르면 바로 바뀝니다. 그림만
+        커지는 게 아니라 물리도 같이 커져서, 어느 크기에서도 창턱에 발이 제대로
+        닿습니다.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        모니터가 여러 대면 <strong className="text-text-primary">Display</strong>
+        에서 어느 화면에 살지 정합니다. 이것도 바로 옮겨갑니다. 다만 옮기는 순간
+        하던 동작은 끊깁니다 — 세계가 통째로 바뀌는 거라, 스윙 중이었으면
+        거미줄을 놓고 새 화면에서 다시 시작합니다.
+      </p>
+      <p className="mt-3 text-xs leading-relaxed text-text-muted">
+        맥에서는 화면 <em>사이를</em> 건너다니지는 못하고, 어느 화면에 있을지만
+        고릅니다. 윈도우 버전은 모든 모니터를 하나로 이어 붙여서 건너다닐 수
+        있습니다.
       </p>
 
       <SectionHeading>안 보이게 치우기</SectionHeading>
