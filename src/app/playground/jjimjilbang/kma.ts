@@ -16,6 +16,16 @@
 import { feelsLike } from "./feelsLike";
 import type { Reading } from "./weather";
 
+/**
+ * 체감온도는 여기서 한 번만 반올림한다.
+ *
+ * 화면은 정수로 보여주고 방 판정은 원래 값으로 하면 경계에서 어긋난다.
+ * 실제로 서울이 34.97°일 때 "35°"라고 써 놓고 35° 미만이라 건식사우나로
+ * 갔다 — 판정표에는 35°부터 불가마라고 적혀 있는데도. 보여주는 수와
+ * 판정하는 수를 같게 만들어야 그런 일이 없다.
+ */
+const roundTemp = (value: number) => Math.round(value);
+
 const HOST = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0";
 
 /** 단기예보가 발표되는 시각(KST). 각 발표는 10분쯤 뒤부터 받을 수 있다 */
@@ -135,7 +145,7 @@ export function parseVilageFcst(json: unknown): Reading[] {
     .filter(([, v]) => v.tmp !== undefined && v.reh !== undefined && v.wsd !== undefined)
     .map(([time, v]) => ({
       time,
-      apparent: feelsLike(v.tmp!, v.reh!, v.wsd!),
+      apparent: roundTemp(feelsLike(v.tmp!, v.reh!, v.wsd!)),
       humidity: v.reh!,
     }))
     .sort((a, b) => a.time.localeCompare(b.time));
@@ -159,7 +169,7 @@ export function parseUltraSrtNcst(json: unknown, base: BaseTime): Reading {
 
   return {
     time: toLocalTime(base.baseDate, base.baseTime),
-    apparent: feelsLike(temp, humidity, wind),
+    apparent: roundTemp(feelsLike(temp, humidity, wind)),
     humidity,
   };
 }

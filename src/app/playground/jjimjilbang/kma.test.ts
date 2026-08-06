@@ -94,6 +94,12 @@ describe("parseVilageFcst", () => {
     expect(three.apparent).toBeGreaterThan(31);
   });
 
+  it("체감온도는 정수다 — 화면이 보여주는 수와 방을 정하는 수가 같아야 한다", () => {
+    for (const reading of parseVilageFcst(sample)) {
+      expect(Number.isInteger(reading.apparent)).toBe(true);
+    }
+  });
+
   it("세 값이 다 있지 않은 시각은 버린다", () => {
     const partial = wrap([
       { category: "TMP", fcstDate: "20260806", fcstTime: "1600", fcstValue: "31" },
@@ -124,6 +130,7 @@ describe("parseUltraSrtNcst", () => {
     expect(reading.time).toBe("2026-08-06T14:00");
     expect(reading.humidity).toBe(78);
     expect(reading.apparent).toBeGreaterThan(31);
+    expect(Number.isInteger(reading.apparent)).toBe(true);
   });
 
   it("셋 중 하나라도 빠지면 던진다 — 예보로 물러나야 한다", () => {
