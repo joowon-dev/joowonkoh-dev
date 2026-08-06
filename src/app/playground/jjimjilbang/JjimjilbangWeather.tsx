@@ -109,8 +109,17 @@ export default function JjimjilbangWeather() {
           ← Playground
         </Link>
 
-        {/* 도시 목록. 아이폰 날씨의 도시 전환 자리를 대신한다 */}
-        <nav className={`${styles.strip} -mx-5 mt-3 overflow-x-auto px-5`} aria-label="도시">
+        {/*
+          도시 목록. 아이폰 날씨의 도시 전환 자리를 대신한다.
+
+          py로 안쪽 여백을 준 건 모양 때문이 아니다. overflow-x를 켜면 세로도
+          함께 잘리는 상자가 되어서, 여백이 없으면 알약 버튼의 아래쪽 테두리가
+          깎여 나간다. 바깥 -my로 그만큼 도로 당겨 자리는 그대로 둔다.
+        */}
+        <nav
+          className={`${styles.strip} mt-1.5 -mb-1.5 -mx-5 overflow-x-auto px-5 py-1.5`}
+          aria-label="도시"
+        >
           <ul className="flex gap-1.5">
             {CITIES.map((option) => (
               <li key={option.name}>
@@ -118,10 +127,12 @@ export default function JjimjilbangWeather() {
                   type="button"
                   onClick={() => setCity(option)}
                   aria-pressed={option.name === city.name}
-                  className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap backdrop-blur-md transition-colors ${
+                  /* 사진 위에 얹히는 버튼이라 검은 판을 충분히 깔아야 읽힌다.
+                     밝은 사진에서 bg-black/25는 글자가 배경에 묻혔다. */
+                  className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap shadow-lg shadow-black/25 backdrop-blur-md transition-colors ${
                     option.name === city.name
-                      ? "bg-white text-black"
-                      : "bg-black/25 text-white/80 ring-1 ring-white/15 hover:text-white"
+                      ? "bg-white font-semibold text-black"
+                      : "bg-black/45 text-white ring-1 ring-white/25 hover:bg-black/60"
                   }`}
                 >
                   {option.name}
