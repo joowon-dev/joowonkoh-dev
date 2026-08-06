@@ -79,7 +79,9 @@ export async function fetchWeather(
   url.searchParams.set("current", "apparent_temperature,relative_humidity_2m");
   url.searchParams.set("hourly", "apparent_temperature,relative_humidity_2m");
   url.searchParams.set("timezone", "Asia/Seoul");
-  url.searchParams.set("forecast_days", "1");
+  // 지금부터 24시간을 보여주려면 자정을 넘어가야 한다. 하루만 받으면
+  // 저녁에 들어온 사람에게는 남은 몇 칸만 보인다.
+  url.searchParams.set("forecast_days", "2");
 
   const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(`날씨를 못 가져왔다 (${response.status})`);
@@ -89,4 +91,18 @@ export async function fetchWeather(
 /** "2026-08-06T14:00" → 14 */
 export function hourOf(time: string): number {
   return Number(time.slice(11, 13));
+}
+
+/**
+ * 지금 시각부터 24칸. 첫 칸이 "지금"이 되게 잘라 준다.
+ *
+ * 현지 시각 문자열끼리는 자리 수가 고정돼 있어서 사전순 비교가 곧 시간순
+ * 비교다. Date로 바꾸면 표준 시간대를 한 번 더 다뤄야 하는데,
+ * 응답이 이미 Asia/Seoul 기준이라 그럴 이유가 없다.
+ */
+export function fromNow(weather: Weather, hours = 24): Reading[] {
+  const nowHour = weather.now.time.slice(0, 13);
+  const start = weather.hourly.findIndex((reading) => reading.time.slice(0, 13) >= nowHour);
+  if (start === -1) return weather.hourly.slice(-hours);
+  return weather.hourly.slice(start, start + hours);
 }

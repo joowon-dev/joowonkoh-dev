@@ -16,8 +16,10 @@ export interface Room {
   emoji: string;
   /** 판정 카드 밑에 붙는 한 줄 */
   line: string;
-  /** 배경 그라데이션(위→아래) */
+  /** 사진이 뜨기 전까지 깔리는 배경 그라데이션(위→아래) */
   bg: [string, string];
+  /** 그 방을 실제로 찍은 것처럼 만든 사진 */
+  image: string;
 }
 
 /** 이 위로는 습한 방, 아래는 마른 방 */
@@ -30,6 +32,7 @@ export const ROOMS = {
     emoji: "🔥",
     line: "문 열면 훅 끼치는 그 열기",
     bg: ["#8c2408", "#d2551f"],
+    image: "/playground/jjimjilbang/bulgama.webp",
   },
   hellBath: {
     id: "hellBath",
@@ -37,6 +40,7 @@ export const ROOMS = {
     emoji: "🌋",
     line: "공기가 아니라 국물 속을 걷는다",
     bg: ["#7a1b3a", "#c44a3e"],
+    image: "/playground/jjimjilbang/hellBath.webp",
   },
   drySauna: {
     id: "drySauna",
@@ -44,6 +48,7 @@ export const ROOMS = {
     emoji: "🟠",
     line: "땀은 나는데 끈적이진 않는다",
     bg: ["#9c4a12", "#e0913c"],
+    image: "/playground/jjimjilbang/drySauna.webp",
   },
   wetSauna: {
     id: "wetSauna",
@@ -51,6 +56,7 @@ export const ROOMS = {
     emoji: "💦",
     line: "숨 쉬는 게 곧 반신욕",
     bg: ["#0f4b5e", "#2f93a6"],
+    image: "/playground/jjimjilbang/wetSauna.webp",
   },
   ocher: {
     id: "ocher",
@@ -58,6 +64,7 @@ export const ROOMS = {
     emoji: "🟤",
     line: "제일 오래 누워 있게 되는 온도",
     bg: ["#7d5024", "#d2a260"],
+    image: "/playground/jjimjilbang/ocher.webp",
   },
   salt: {
     id: "salt",
@@ -65,6 +72,7 @@ export const ROOMS = {
     emoji: "🪨",
     line: "따뜻한데 어쩐지 눅눅하다",
     bg: ["#584f6d", "#a498b6"],
+    image: "/playground/jjimjilbang/salt.webp",
   },
   sleep: {
     id: "sleep",
@@ -72,6 +80,7 @@ export const ROOMS = {
     emoji: "❄️",
     line: "얇은 담요 한 장이 필요한 공기",
     bg: ["#2a3a55", "#647da0"],
+    image: "/playground/jjimjilbang/sleep.webp",
   },
   fog: {
     id: "fog",
@@ -79,6 +88,7 @@ export const ROOMS = {
     emoji: "🌫️",
     line: "김 서린 유리창 안쪽 같은 공기",
     bg: ["#3d4d59", "#8ba2ad"],
+    image: "/playground/jjimjilbang/fog.webp",
   },
   ice: {
     id: "ice",
@@ -86,6 +96,7 @@ export const ROOMS = {
     emoji: "🧊",
     line: "들어가자마자 나오고 싶어진다",
     bg: ["#1d3a57", "#5aa6c8"],
+    image: "/playground/jjimjilbang/ice.webp",
   },
 } satisfies Record<string, Room>;
 

@@ -1,0 +1,36 @@
+/*
+ * 도시를 바꾸면 방 사진이 갈아끼워진다. 딱 잘라 바뀌면 화면이 튀어서,
+ * 새 사진만 위에 얹으며 떠오르게 한다. 아래에는 이전 사진이 아니라
+ * 방 색 그라데이션이 깔려 있어서 사진이 늦게 와도 빈 검은 화면이 안 보인다.
+ */
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.photo {
+  animation: backdropFadeIn 700ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo {
+    animation: none;
+  }
+}
+
+/*
+ * 옆으로 미는 줄에서 스크롤바를 감춘다. 유리판 위에 불투명한 흰 막대가
+ * 걸리면 유리처럼 안 보인다. 터치에서는 원래 안 보이고, 마우스에서는
+ * 잘린 칸이 스크롤할 수 있다는 신호 노릇을 한다.
+ */
+.strip {
+  scrollbar-width: none;
+}
+
+.strip::-webkit-scrollbar {
+  display: none;
+}

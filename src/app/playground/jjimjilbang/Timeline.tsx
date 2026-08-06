@@ -1,61 +1,66 @@
+import styles from "./backdrop.module.css";
 import { roomFor } from "./rooms";
 import { hourOf, type Reading } from "./weather";
 
 interface Props {
+  /** 지금 시각부터 차례로. 첫 칸이 "지금"이다 */
   hourly: Reading[];
-  /** 지금 시각. 이 칸에 표시를 남긴다 */
-  nowHour: number;
 }
 
-/** 3시간 간격으로 추린다. 24칸을 다 보여주면 띠가 아니라 표가 된다 */
-const STEP = 3;
-
 /**
- * 오늘 하루가 어떤 방들을 지나가는지. 상태를 갖지 않는다.
+ * 아이폰 날씨 앱의 시간별 예보 카드. 반투명 유리판 위에 시각·그림·온도가
+ * 세로로 쌓이고 옆으로 밀린다.
  *
- * 방이 바뀌는 지점이 눈에 걸리는 게 목적이다 — 낮에 불가마였다가
- * 밤에 황토방이 되는 하루와, 온종일 습식사우나인 하루는 다르게 보여야 한다.
+ * 날씨 아이콘 자리에 그 시각의 방 사진을 조각으로 넣었다. 같은 사진을
+ * 배경에서 쓰고 있어서 새로 받아올 게 없고, 무엇보다 "3시에는 저 방"이
+ * 글자보다 먼저 읽힌다.
  */
-export default function Timeline({ hourly, nowHour }: Props) {
-  const slots = hourly.filter((reading) => hourOf(reading.time) % STEP === 0);
-  if (slots.length === 0) return null;
+export default function Timeline({ hourly }: Props) {
+  if (hourly.length === 0) return null;
 
   return (
-    <div className="mt-10">
-      <h3 className="text-center text-xs font-medium tracking-wide text-white/60">
-        오늘 하루
-      </h3>
-      {/* 좁은 화면에서는 칸을 줄이는 대신 옆으로 밀리게 둔다. 8칸을 390px에
-          우겨넣으면 "습식사우나"가 석 줄이 되어 방 이름이 안 읽힌다. */}
-      <ol className="mt-3 flex gap-1.5 overflow-x-auto pb-1 md:justify-center">
-        {slots.map((reading) => {
-          const hour = hourOf(reading.time);
-          const room = roomFor(reading.apparent, reading.humidity);
-          const isNow = hour <= nowHour && nowHour < hour + STEP;
-          return (
-            <li
-              key={reading.time}
-              aria-current={isNow ? "time" : undefined}
-              className={`flex w-16 shrink-0 flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-white ${
-                isNow ? "bg-white/25 ring-1 ring-white/40" : "bg-black/15"
-              }`}
-            >
-              <span className="text-[10px] tabular-nums text-white/60">
-                {hour}시
-              </span>
-              <span className="text-lg leading-none" aria-hidden>
-                {room.emoji}
-              </span>
-              <span className="text-[10px] leading-tight break-keep text-center text-white/85">
-                {room.name}
-              </span>
-              <span className="text-[10px] tabular-nums text-white/60">
-                {Math.round(reading.apparent)}°
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
+    <section className="rounded-2xl bg-white/12 p-3.5 ring-1 ring-white/20 backdrop-blur-xl">
+      <h2 className="px-1 text-[11px] font-medium tracking-wide text-white/65">
+        시간별 찜질방
+      </h2>
+      <div className="mt-2.5 border-t border-white/15 pt-3">
+        <ol className={`${styles.strip} flex gap-3 overflow-x-auto pb-0.5`}>
+          {hourly.map((reading, index) => {
+            const hour = hourOf(reading.time);
+            const room = roomFor(reading.apparent, reading.humidity);
+            const isNow = index === 0;
+            return (
+              <li
+                key={reading.time}
+                aria-current={isNow ? "time" : undefined}
+                className="flex w-12 shrink-0 flex-col items-center gap-1.5 text-white"
+              >
+                <span
+                  className={`text-[13px] tabular-nums ${
+                    isNow ? "font-semibold" : "font-medium text-white/85"
+                  }`}
+                >
+                  {isNow ? "지금" : `${hour}시`}
+                </span>
+                <span
+                  role="img"
+                  aria-label={room.name}
+                  className="block h-9 w-9 rounded-lg bg-cover bg-center ring-1 ring-white/25"
+                  style={{ backgroundImage: `url(${room.image})` }}
+                />
+                {/* 아이폰 날씨라면 여기 방 이름이 없다. 그래도 남긴 건
+                    이 페이지가 알려주려는 게 온도가 아니라 방이기 때문이다 */}
+                <span className="text-[9px] leading-tight break-keep text-center text-white/70">
+                  {room.name}
+                </span>
+                <span className="text-[15px] font-semibold tabular-nums">
+                  {Math.round(reading.apparent)}°
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </section>
   );
 }

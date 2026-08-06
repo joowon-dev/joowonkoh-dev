@@ -4,45 +4,30 @@ interface Props {
   cityName: string;
   room: Room;
   apparent: number;
-  humidity: number;
+  high: number;
+  low: number;
 }
 
 /**
- * 오늘의 방 한 장. 상태를 갖지 않는다.
+ * 아이폰 날씨 앱의 머리 부분을 그대로 따랐다. 도시 이름, 큰 온도, 상태 한 줄,
+ * 최고·최저 순서다. 상태 자리에 "흐림" 대신 방 이름이 들어간다 —
+ * 이 페이지가 하려는 말이 거기 있기 때문에 굵기도 그 줄에만 준다.
  *
- * 방 이름을 제일 크게 둔다. 이 페이지가 하려는 말이 온도가 아니라
- * "오늘 서울은 습식사우나"라는 한 문장이기 때문이다. 숫자는 그 밑에서
- * 근거 노릇만 한다.
+ * 온도는 아주 얇게 크게 둔다. 뒤에 사진이 깔려 있어서 획이 굵으면
+ * 사진을 가리고, 얇으면 사진 위에 얹힌 유리처럼 보인다.
  */
-export default function VerdictCard({ cityName, room, apparent, humidity }: Props) {
+export default function VerdictCard({ cityName, room, apparent, high, low }: Props) {
   return (
-    <div className="text-center text-white">
-      <p className="text-sm font-medium tracking-wide text-white/70">
-        오늘 {cityName}은
+    <div className="text-center text-white drop-shadow-[0_1px_12px_rgba(0,0,0,0.45)]">
+      <h1 className="text-[2rem] font-normal leading-tight tracking-tight">{cityName}</h1>
+      <p className="mt-1 pl-[0.15em] text-[6rem] font-thin leading-[1.05] tracking-tighter tabular-nums">
+        {Math.round(apparent)}°
       </p>
-      <p className="mt-4 text-6xl leading-none" aria-hidden>
-        {room.emoji}
+      <p className="-mt-2 text-xl font-semibold tracking-tight break-keep">{room.name}</p>
+      <p className="mt-1 text-sm text-white/75 break-keep">{room.line}</p>
+      <p className="mt-1.5 text-sm font-medium tabular-nums text-white/85">
+        최고 {Math.round(high)}° 최저 {Math.round(low)}°
       </p>
-      <h2 className="mt-4 font-display text-4xl font-bold tracking-tight break-keep md:text-5xl">
-        {room.name}
-      </h2>
-      <p className="mt-3 text-base text-white/85 break-keep md:text-lg">
-        {room.line}
-      </p>
-      <dl className="mx-auto mt-8 flex max-w-xs items-stretch justify-center divide-x divide-white/20 rounded-2xl bg-black/15 py-3 text-white/90 backdrop-blur-sm">
-        <div className="flex-1 px-4">
-          <dt className="text-[11px] tracking-wide text-white/60">체감온도</dt>
-          <dd className="mt-1 font-display text-xl font-semibold tabular-nums">
-            {Math.round(apparent)}°
-          </dd>
-        </div>
-        <div className="flex-1 px-4">
-          <dt className="text-[11px] tracking-wide text-white/60">습도</dt>
-          <dd className="mt-1 font-display text-xl font-semibold tabular-nums">
-            {Math.round(humidity)}%
-          </dd>
-        </div>
-      </dl>
     </div>
   );
 }
