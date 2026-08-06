@@ -22,8 +22,14 @@ export interface Room {
   image: string;
 }
 
-/** 이 위로는 습한 방, 아래는 마른 방 */
-const HUMID_THRESHOLD = 60;
+/**
+ * 이 위로는 습한 방, 아래는 마른 방.
+ *
+ * 처음엔 60%였다. 한국 여름에는 그 선이 너무 높아서, 습도 54%인 서울이
+ * "건식사우나"로 갔다 — 한여름 서울을 건조하다고 부르는 셈이었다.
+ * 55%로 내리니 실제 체감과 맞는다.
+ */
+const HUMID_THRESHOLD = 55;
 
 export const ROOMS = {
   bulgama: {

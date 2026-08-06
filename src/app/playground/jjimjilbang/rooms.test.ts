@@ -22,12 +22,18 @@ describe("roomFor", () => {
     expect(roomFor(9.9, 30)).toBe(ROOMS.ice);
   });
 
-  it("습도 60%부터 습한 방으로 갈린다", () => {
-    expect(roomFor(30, 59.9)).toBe(ROOMS.drySauna);
-    expect(roomFor(30, 60)).toBe(ROOMS.wetSauna);
-    expect(roomFor(38, 60)).toBe(ROOMS.hellBath);
-    expect(roomFor(24, 60)).toBe(ROOMS.salt);
-    expect(roomFor(14, 60)).toBe(ROOMS.fog);
+  it("습도 55%부터 습한 방으로 갈린다", () => {
+    expect(roomFor(30, 54.9)).toBe(ROOMS.drySauna);
+    expect(roomFor(30, 55)).toBe(ROOMS.wetSauna);
+    expect(roomFor(38, 55)).toBe(ROOMS.hellBath);
+    expect(roomFor(24, 55)).toBe(ROOMS.salt);
+    expect(roomFor(14, 55)).toBe(ROOMS.fog);
+  });
+
+  it("한여름 서울쯤 되는 습도는 습한 쪽으로 간다", () => {
+    // 기준이 60%이던 시절 습도 54%의 서울이 "건식사우나"로 갔다
+    expect(roomFor(35, 56)).toBe(ROOMS.hellBath);
+    expect(roomFor(32, 56)).toBe(ROOMS.wetSauna);
   });
 
   it("얼음방은 습도를 보지 않는다", () => {

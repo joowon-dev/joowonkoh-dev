@@ -47,11 +47,21 @@ export async function GET(request: Request) {
      * 못 읽는 것은 화면에 똑같이 보이지만 고치는 방법이 전혀 다르다.
      * 실제로 이걸 구분 못 해서 대시보드만 들여다본 시간이 있었다.
      */
+    const bound = cloudflareEnv();
     return NextResponse.json(
       {
         error: "KMA_SERVICE_KEY가 없다",
-        cloudflareContext: cloudflareEnv() ? "있음" : "없음",
+        cloudflareContext: bound ? "있음" : "없음",
         processEnv: process.env.KMA_SERVICE_KEY ? "있음" : "없음",
+        /*
+         * 이름이 틀린 건지 아예 안 넣은 건지 가른다. 이름 자체를 늘어놓으면
+         * 다른 비밀들의 이름까지 공개되므로, 개수와 "KMA가 들어간 이름이
+         * 있는지"만 알린다. 그 둘이면 오타와 부재를 구분하기에 충분하다.
+         */
+        boundCount: bound ? Object.keys(bound).length : 0,
+        hasKmaLikeName: bound
+          ? Object.keys(bound).some((name) => /kma/i.test(name))
+          : false,
       },
       { status: 500 },
     );
