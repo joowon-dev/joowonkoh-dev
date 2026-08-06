@@ -27,6 +27,7 @@ import {
   vilageFcstUrl,
 } from "@/app/playground/jjimjilbang/kma";
 import { toGrid } from "@/app/playground/jjimjilbang/grid";
+import { cloudflareEnv, readEnv } from "@/lib/cloudflareEnv";
 import type { Reading, Weather } from "@/app/playground/jjimjilbang/weather";
 
 /** 실황은 한 시간마다 바뀐다. 그 절반쯤이면 새 발표를 놓치지 않는다 */
@@ -39,9 +40,21 @@ async function getJson(url: string, revalidate: number): Promise<unknown> {
 }
 
 export async function GET(request: Request) {
-  const serviceKey = process.env.KMA_SERVICE_KEY;
+  const serviceKey = readEnv("KMA_SERVICE_KEY", process.env);
   if (!serviceKey) {
-    return NextResponse.json({ error: "KMA_SERVICE_KEY가 없다" }, { status: 500 });
+    /*
+     * 어느 쪽이 비었는지 같이 알려준다. 키를 안 넣은 것과, 넣었는데 우리가
+     * 못 읽는 것은 화면에 똑같이 보이지만 고치는 방법이 전혀 다르다.
+     * 실제로 이걸 구분 못 해서 대시보드만 들여다본 시간이 있었다.
+     */
+    return NextResponse.json(
+      {
+        error: "KMA_SERVICE_KEY가 없다",
+        cloudflareContext: cloudflareEnv() ? "있음" : "없음",
+        processEnv: process.env.KMA_SERVICE_KEY ? "있음" : "없음",
+      },
+      { status: 500 },
+    );
   }
 
   const params = new URL(request.url).searchParams;
