@@ -42,5 +42,39 @@ export function cloudflareEnv(): EnvRecord | undefined {
  * 돌려줘서 원인이 한 겹 멀어진다.
  */
 export function readEnv(name: string, fallback: EnvRecord = {}): string | undefined {
-  return cloudflareEnv()?.[name] || fallback[name] || undefined;
+  const exact = cloudflareEnv()?.[name] || fallback[name];
+  if (exact) return exact;
+
+  /*
+   * 이름이 미묘하게 어긋난 경우를 구제한다.
+   *
+   * 대시보드에 값을 붙여 넣다 보면 이름 끝에 공백이 딸려 들어가거나
+   * 대소문자가 달라지는데, 화면에서는 똑같아 보인다. 실제로 그것 때문에
+   * "변수는 분명히 넣었는데 코드가 못 읽는" 상태로 한참을 보냈다.
+   * 환경변수 이름에서 공백과 대소문자를 구분해서 얻을 게 없다.
+   */
+  return findByLooseName(cloudflareEnv(), name) ?? findByLooseName(fallback, name);
+}
+
+function findByLooseName(source: EnvRecord | undefined, name: string): string | undefined {
+  if (!source) return undefined;
+  const wanted = name.trim().toLowerCase();
+  for (const [key, value] of Object.entries(source)) {
+    if (key.trim().toLowerCase() === wanted && value) return value;
+  }
+  return undefined;
+}
+
+/**
+ * 진단용. 찾는 이름과 비슷한 것들만 돌려준다.
+ *
+ * 묶인 이름을 전부 늘어놓으면 다른 비밀들의 이름까지 공개된다.
+ * 찾는 이름의 일부를 담고 있는 것만 추려서, 오타인지 부재인지 가릴
+ * 만큼만 보여준다.
+ */
+export function similarEnvNames(name: string): string[] {
+  const needle = name.trim().toLowerCase().split("_")[0];
+  return Object.keys(cloudflareEnv() ?? {}).filter((key) =>
+    key.toLowerCase().includes(needle),
+  );
 }
