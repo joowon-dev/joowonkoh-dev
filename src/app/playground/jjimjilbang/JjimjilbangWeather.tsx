@@ -102,11 +102,32 @@ export default function JjimjilbangWeather() {
           paddingBottom: "calc(env(safe-area-inset-bottom) + 2rem)",
         }}
       >
+        {/*
+          아이폰 화면 왼쪽 위의 뒤로 가기. 알약 판을 깔지 않고 갈매기표와
+          글자만 둔다 — iOS 내비게이션 바가 그렇게 생겼고, 판을 깔면
+          아래 도시 칩과 같은 무게로 보여서 둘 중 뭐가 이동인지 흐려진다.
+
+          대신 사진 위에서 읽히도록 그림자를 준다. 손이 닿는 넓이는
+          -m/p로 눌러 둬서, 보이는 것보다 실제로 누를 수 있는 데가 넓다.
+        */}
         <Link
           href="/playground"
-          className="self-start rounded-full bg-black/25 px-3 py-1.5 text-xs font-medium text-white/90 ring-1 ring-white/20 backdrop-blur-md"
+          aria-label="플레이그라운드로 돌아가기"
+          className="-m-2 flex w-fit items-center gap-0.5 p-2 text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] transition-opacity active:opacity-60"
         >
-          ← Playground
+          <svg
+            viewBox="0 0 12 20"
+            className="h-[1.15rem] w-[0.7rem]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M10 2 L2 10 L10 18" />
+          </svg>
+          <span className="text-[17px] leading-none">뒤로</span>
         </Link>
 
         {/*

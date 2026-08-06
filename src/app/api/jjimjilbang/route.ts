@@ -10,6 +10,14 @@
  */
 
 import { NextResponse } from "next/server";
+
+/**
+ * 이 저장소는 @cloudflare/next-on-pages로 배포한다. 그 도구는 정적이 아닌
+ * 라우트가 전부 edge 런타임이기를 요구하고, 하나라도 빠지면 빌드 자체가
+ * 실패한다 — 실행 중에 조용히 느려지는 게 아니라 배포가 안 된다.
+ * admin 쪽 라우트들도 같은 이유로 이 줄을 달고 있다.
+ */
+export const runtime = "edge";
 import {
   latestFcstBase,
   latestNcstBase,
