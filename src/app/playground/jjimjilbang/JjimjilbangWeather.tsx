@@ -103,21 +103,21 @@ export default function JjimjilbangWeather() {
         }}
       >
         {/*
-          아이폰 화면 왼쪽 위의 뒤로 가기. 알약 판을 깔지 않고 갈매기표와
-          글자만 둔다 — iOS 내비게이션 바가 그렇게 생겼고, 판을 깔면
+          아이폰 화면 왼쪽 위의 뒤로 가기. 갈매기표 하나만 둔다 — 판을 깔면
           아래 도시 칩과 같은 무게로 보여서 둘 중 뭐가 이동인지 흐려진다.
 
-          대신 사진 위에서 읽히도록 그림자를 준다. 손이 닿는 넓이는
-          -m/p로 눌러 둬서, 보이는 것보다 실제로 누를 수 있는 데가 넓다.
+          그림이 작아진 만큼 누를 자리는 -m/p로 넓혀 둔다. 보이는 것보다
+          실제로 닿는 데가 넓어야 엄지로 눌린다. 사진 위에 얹히므로
+          그림자로 버틴다.
         */}
         <Link
           href="/playground"
           aria-label="플레이그라운드로 돌아가기"
-          className="-m-2 flex w-fit items-center gap-0.5 p-2 text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] transition-opacity active:opacity-60"
+          className="-m-2.5 flex w-fit p-2.5 text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.7)] transition-opacity active:opacity-60"
         >
           <svg
             viewBox="0 0 12 20"
-            className="h-[1.15rem] w-[0.7rem]"
+            className="h-6 w-[0.9rem]"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.4"
@@ -127,7 +127,6 @@ export default function JjimjilbangWeather() {
           >
             <path d="M10 2 L2 10 L10 18" />
           </svg>
-          <span className="text-[17px] leading-none">뒤로</span>
         </Link>
 
         {/*
@@ -223,8 +222,8 @@ export default function JjimjilbangWeather() {
 /** 아이폰 날씨 아래쪽 격자에 있는 작은 유리 타일 하나 */
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white/12 p-3.5 ring-1 ring-white/20 backdrop-blur-xl">
-      <p className="text-[11px] font-medium tracking-wide text-white/65">{label}</p>
+    <div className="rounded-2xl bg-white/5 p-3.5 ring-1 ring-white/12 backdrop-blur-[2px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
+      <p className="text-[11px] font-medium tracking-wide text-white/70">{label}</p>
       <p className="mt-1.5 font-display text-2xl font-semibold tabular-nums text-white">
         {value}
       </p>

@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { roomFor, ROOMS } from "./rooms";
 
 describe("roomFor", () => {
@@ -43,5 +45,19 @@ describe("roomFor", () => {
 
   it("같은 기온이라도 습도가 방을 가른다", () => {
     expect(roomFor(30, 30)).not.toBe(roomFor(30, 80));
+  });
+});
+
+describe("방 사진", () => {
+  /*
+   * 캐시를 우회하려고 파일 이름을 바꾼 적이 있다. 그때 rooms.ts의 경로를
+   * 같이 안 고치면 화면에는 배경이 통째로 비고, 타입 검사도 린트도
+   * 아무 말을 하지 않는다. 문자열이라서 그렇다.
+   */
+  it("모든 방의 사진 파일이 실제로 있다", () => {
+    for (const room of Object.values(ROOMS)) {
+      const path = join(process.cwd(), "public", room.image);
+      expect(existsSync(path), `${room.name}: ${room.image} 없음`).toBe(true);
+    }
   });
 });

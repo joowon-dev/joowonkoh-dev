@@ -18,9 +18,15 @@ interface Props {
 export default function Timeline({ hourly }: Props) {
   if (hourly.length === 0) return null;
 
+  /*
+   * 유리판을 얇게 만든다. 모바일에서는 이 카드와 아래 타일이 화면의 절반을
+   * 차지해서, 흐림이 세면 방 사진이 거의 안 보인다. 사진이 이 페이지의
+   * 절반이므로 글자가 읽히는 선까지 얇게 간다 — 글자는 자기 그림자로
+   * 버티고, 판은 사진을 가리지 않을 만큼만 깐다.
+   */
   return (
-    <section className="rounded-2xl bg-white/12 p-3.5 ring-1 ring-white/20 backdrop-blur-xl">
-      <h2 className="px-1 text-[11px] font-medium tracking-wide text-white/65">
+    <section className="rounded-2xl bg-white/5 p-3.5 ring-1 ring-white/12 backdrop-blur-[2px]">
+      <h2 className="px-1 text-[11px] font-medium tracking-wide text-white/70 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
         시간별 찜질방
       </h2>
       <div className="mt-2.5 border-t border-white/15 pt-3">
@@ -33,7 +39,7 @@ export default function Timeline({ hourly }: Props) {
               <li
                 key={reading.time}
                 aria-current={isNow ? "time" : undefined}
-                className="flex w-12 shrink-0 flex-col items-center gap-1.5 text-white"
+                className="flex w-12 shrink-0 flex-col items-center gap-1.5 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]"
               >
                 <span
                   className={`text-[13px] tabular-nums ${

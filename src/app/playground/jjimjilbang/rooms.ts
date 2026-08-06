@@ -67,7 +67,13 @@ export const ROOMS = {
      * 사진과 방 이름이 서로 다른 말을 한다.
      */
     bg: ["#6e2c10", "#c06a30"],
-    image: "/playground/jjimjilbang/wetSauna.webp",
+    /*
+     * 파일 이름에 -warm이 붙은 건 캐시 때문이다. 청록이던 사진을 따뜻한
+     * 것으로 바꾸면서 이름을 그대로 뒀더니, 주소가 같아 브라우저가 옛
+     * 사진을 계속 들고 있었다(정적 파일 캐시 4시간). 사진 내용을 바꿀 때는
+     * 이름도 같이 바꿔야 한다.
+     */
+    image: "/playground/jjimjilbang/wetSauna-warm.webp",
   },
   ocher: {
     id: "ocher",
