@@ -172,6 +172,32 @@ function Code() {
   );
 }
 
+/** 오늘의 찜질방 — 김 오르는 양머리 수건 */
+function Sauna() {
+  return (
+    <>
+      <path
+        d="M23 22 Q19 17 23 12 Q27 7 23 3 M41 22 Q45 17 41 12 Q37 7 41 3"
+        stroke="#c9a06a"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* 양머리로 말아 올린 양쪽 귀 */}
+      <circle cx="18" cy="36" r="8" fill="#ffffff" stroke="#c9a06a" strokeWidth="2" />
+      <circle cx="46" cy="36" r="8" fill="#ffffff" stroke="#c9a06a" strokeWidth="2" />
+      <path
+        d="M12 40 Q32 30 52 40 Q52 54 32 54 Q12 54 12 40 Z"
+        fill="#ffffff"
+        stroke="#c9a06a"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M22 46 H42" stroke="#e2c39a" strokeWidth="2.4" strokeLinecap="round" />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -183,6 +209,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   eye: Eye,
   plane: Plane,
   code: Code,
+  sauna: Sauna,
 };
 
 /**

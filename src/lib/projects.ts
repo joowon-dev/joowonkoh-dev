@@ -12,7 +12,8 @@ export type IconName =
   | "coin"
   | "eye"
   | "plane"
-  | "code";
+  | "code"
+  | "sauna";
 
 export interface Project {
   title: string;
@@ -27,6 +28,14 @@ export interface Project {
 }
 
 export const projects: Project[] = [
+  {
+    title: "오늘의 찜질방",
+    description: "오늘 날씨가 찜질방 어느 방인지 알려줍니다 ♨️",
+    tags: ["Web", "Weather API", "Geolocation"],
+    href: "/playground/jjimjilbang",
+    icon: "sauna",
+    tile: ["#f7e6cf", "#e3b881"],
+  },
   {
     title: "똥 말랑",
     description: "고양이 배를 꾹 누르면 힘주기, 떼면 심호흡 🐱",
