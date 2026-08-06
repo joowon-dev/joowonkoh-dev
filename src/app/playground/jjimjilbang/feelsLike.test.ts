@@ -39,26 +39,55 @@ describe("winterFeelsLike", () => {
 });
 
 describe("feelsLike", () => {
-  it("기온 10도 이하에 바람이 1.3m/s 이상이면 겨울 식을 쓴다", () => {
-    expect(feelsLike(0, 50, 5)).toBe(winterFeelsLike(0, 5));
+  /*
+   * 이 검사가 원래 있었어야 했다. 기온을 조금 움직였을 뿐인데 체감온도가
+   * 껑충 뛰면 방이 바뀐다. 실제로 10도 경계에서 0.2도 차이에 2.6도가
+   * 뛰어서 얼음방과 수면실이 갈렸다.
+   */
+  it("기온을 훑어도 체감온도가 튀지 않는다", () => {
+    for (const humidity of [30, 60, 90]) {
+      for (const wind of [0, 1.2, 1.3, 5, 12]) {
+        let previous = feelsLike(-15, humidity, wind);
+        for (let t = -14.9; t <= 40; t += 0.1) {
+          const current = feelsLike(t, humidity, wind);
+          expect(
+            Math.abs(current - previous),
+            `기온 ${t.toFixed(1)}도, 습도 ${humidity}%, 바람 ${wind}m/s에서 튐`,
+          ).toBeLessThan(0.3);
+          previous = current;
+        }
+      }
+    }
   });
 
-  it("추워도 바람이 약하면 기온을 그대로 쓴다", () => {
-    // 바람이 없는데 냉각식을 돌리면 기온보다 높은 체감온도가 나온다
-    expect(feelsLike(0, 50, 1.2)).toBe(0);
+  it("풍속을 훑어도 체감온도가 튀지 않는다", () => {
+    for (const temp of [0, 5, 10, 15]) {
+      let previous = feelsLike(temp, 60, 0);
+      for (let w = 0.1; w <= 20; w += 0.1) {
+        const current = feelsLike(temp, 60, w);
+        expect(Math.abs(current - previous), `기온 ${temp}도, 풍속 ${w.toFixed(1)}에서 튐`).toBeLessThan(0.3);
+        previous = current;
+      }
+    }
   });
 
-  it("기온 20도 이상이면 여름 식을 쓴다", () => {
-    expect(feelsLike(31, 78, 2)).toBe(summerFeelsLike(31, 78));
+  it("양 끝에서는 각각의 기상청 식과 정확히 만난다", () => {
+    expect(feelsLike(10, 60, 5)).toBe(winterFeelsLike(10, 5));
+    expect(feelsLike(25, 60, 2)).toBe(summerFeelsLike(25, 60));
   });
 
-  it("10~20도 사이는 기온을 그대로 쓴다", () => {
-    expect(feelsLike(15, 60, 3)).toBe(15);
-    expect(feelsLike(19.9, 60, 0)).toBe(19.9);
+  it("바람은 시원하게만 만든다 — 기온보다 높아지지 않는다", () => {
+    for (const wind of [0, 0.5, 1, 1.2, 1.3, 3]) {
+      expect(feelsLike(5, 60, wind)).toBeLessThanOrEqual(5);
+      expect(feelsLike(0, 60, wind)).toBeLessThanOrEqual(0);
+    }
   });
 
-  it("경계값에서 어느 쪽 식을 쓰는지 분명하다", () => {
-    expect(feelsLike(10, 50, 1.3)).toBe(winterFeelsLike(10, 1.3));
-    expect(feelsLike(20, 50, 0)).toBe(summerFeelsLike(20, 50));
+  it("추운 날 바람이 세면 더 춥게 느낀다", () => {
+    expect(feelsLike(0, 60, 10)).toBeLessThan(feelsLike(0, 60, 2));
+  });
+
+  it("더운 날 습하면 더 덥게 느낀다", () => {
+    expect(feelsLike(33, 40, 2)).toBeLessThan(feelsLike(33, 80, 2));
   });
 });

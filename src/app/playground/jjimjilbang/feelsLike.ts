@@ -47,18 +47,40 @@ export function winterFeelsLike(tempC: number, windMs: number): number {
   return 13.12 + 0.6215 * tempC - 11.37 * v + 0.3965 * v * tempC;
 }
 
+/** 이 아래는 겨울 식, 위는 여름 식. 사이는 둘을 이어 붙인다 */
+const COLD_EDGE = 10;
+const WARM_EDGE = 20;
+
+/**
+ * 바람은 시원하게만 만든다.
+ *
+ * 냉각식은 바람이 약할 때 기온보다 **높은** 값을 낸다. 기상청이 풍속
+ * 1.3m/s 미만에서 이 식을 안 쓰는 이유다. 문턱을 두는 대신 기온으로
+ * 잘라내면 같은 목적을 이루면서 값이 튀지 않는다 — 문턱은 그 지점에서
+ * 체감온도를 계단처럼 끊어 놓는다.
+ */
+function coldSide(tempC: number, windMs: number): number {
+  return Math.min(tempC, winterFeelsLike(tempC, windMs));
+}
+
 /**
  * 기온·습도·풍속에서 체감온도 하나를 낸다.
  *
- * 기상청은 겨울철 체감온도를 **기온 10°C 이하, 풍속 1.3m/s 이상**일 때만
- * 산출한다. 그 조건을 그대로 지킨다 — 바람이 없는 날까지 냉각식을 돌리면
- * 기온보다 높은 체감온도가 나온다.
+ * 기상청은 여름과 겨울에 서로 다른 식을 쓰고, 그 사이 구간에는 정해 둔
+ * 값이 없다. 처음에는 그 구간에서 기온을 그대로 썼는데 경계에 절벽이
+ * 생겼다 — 기온 10.0°C에서 체감 7.6°C, 10.2°C에서 10.2°C로 **기온이
+ * 조금 오르자 체감이 2.6도 뛰었다.** 그 0.2도 차이로 얼음방과 수면실이
+ * 갈렸다.
  *
- * 여름철 식은 20°C 밑으로 내려가면 실제와 벌어져서 20°C를 경계로 뒀다.
- * 그 사이(10~20°C, 또는 바람 없는 추운 날)는 기온을 그대로 쓴다.
+ * 그래서 10~20°C를 두 식 사이의 이음매로 쓴다. 양 끝에서 각각의 식과
+ * 정확히 만나므로 어디에서도 값이 끊기지 않는다.
  */
 export function feelsLike(tempC: number, humidity: number, windMs: number): number {
-  if (tempC <= 10 && windMs >= 1.3) return winterFeelsLike(tempC, windMs);
-  if (tempC >= 20) return summerFeelsLike(tempC, humidity);
-  return tempC;
+  if (tempC <= COLD_EDGE) return coldSide(tempC, windMs);
+  if (tempC >= WARM_EDGE) return summerFeelsLike(tempC, humidity);
+
+  const towardWarm = (tempC - COLD_EDGE) / (WARM_EDGE - COLD_EDGE);
+  return (
+    coldSide(tempC, windMs) * (1 - towardWarm) + summerFeelsLike(tempC, humidity) * towardWarm
+  );
 }

@@ -55,7 +55,12 @@ export const ROOMS = {
     name: "습식사우나",
     emoji: "💦",
     line: "숨 쉬는 게 곧 반신욕",
-    bg: ["#0f4b5e", "#2f93a6"],
+    /*
+     * 처음엔 청록이었다. 습기를 물로 읽어 파랗게 잡았는데, 28~35도짜리
+     * 더운 방이 화면에서는 제일 시원해 보였다. 색이 온도 순서를 깨면
+     * 사진과 방 이름이 서로 다른 말을 한다.
+     */
+    bg: ["#6e2c10", "#c06a30"],
     image: "/playground/jjimjilbang/wetSauna.webp",
   },
   ocher: {
