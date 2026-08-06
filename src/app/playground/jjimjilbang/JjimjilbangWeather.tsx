@@ -159,8 +159,18 @@ export default function JjimjilbangWeather() {
                 <Detail label="체감온도" value={`${Math.round(weather.now.apparent)}°`} />
                 <Detail label="습도" value={`${Math.round(weather.now.humidity)}%`} />
               </div>
+              {/* 공공누리 제1유형은 출처 표시를 요구한다. 데이터가 보이는
+                  자리 옆에 링크로 둔다 */}
               <p className="pt-1 text-center text-[11px] text-white/45">
-                Open-Meteo · 방 사진은 만들어 낸 것입니다
+                <a
+                  href="https://www.data.go.kr/data/15084084/openapi.do"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-white/30 underline-offset-2 hover:text-white/70"
+                >
+                  기상청 단기예보
+                </a>{" "}
+                · 체감온도는 기상청 식으로 계산 · 방 사진은 만들어 낸 것입니다
               </p>
             </div>
           </>

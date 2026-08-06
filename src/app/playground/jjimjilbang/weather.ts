@@ -1,71 +1,23 @@
 /**
- * Open-Meteo에서 오늘 날씨를 가져온다.
+ * 화면이 쓰는 날씨 모양과, 그걸 받아오는 길.
  *
- * 키가 없고 브라우저에서 바로 부를 수 있어서 서버 라우트를 만들지 않았다.
- * 기상청 단기예보 API는 키 발급과 격자 좌표 변환이 필요해서 쓰지 않는다.
- *
- * 파싱을 fetch에서 떼어 놓았다. 응답 모양이 맞는지 확인하는 쪽은 순수 함수라
- * 그대로 테스트할 수 있고, fetch 쪽에는 감쌀 만한 판단이 남지 않는다.
+ * 예전에는 브라우저가 Open-Meteo를 직접 불렀다. 지금은 기상청을 쓰는데
+ * 인증키가 비밀이라 브라우저에서 부를 수 없어, 우리 서버 라우트를 거친다.
+ * 기상청을 어떻게 읽는지는 kma.ts와 api/jjimjilbang/route.ts에 있고,
+ * 이 파일은 화면과 서버 사이의 약속만 들고 있다.
  */
 
 export interface Reading {
-  /** "2026-08-06T14:00" 같은 현지 시각 */
+  /** "2026-08-06T14:00" 같은 현지(KST) 시각 */
   time: string;
+  /** 체감온도. 기상청 식으로 기온·습도·풍속에서 계산한 값이다 */
   apparent: number;
   humidity: number;
 }
 
 export interface Weather {
   now: Reading;
-  /** 오늘 0시부터 23시까지 */
   hourly: Reading[];
-}
-
-const ENDPOINT = "https://api.open-meteo.com/v1/forecast";
-
-function numbersAt(source: unknown, key: string): number[] {
-  const value = (source as Record<string, unknown>)?.[key];
-  if (!Array.isArray(value) || value.some((v) => typeof v !== "number")) {
-    throw new Error(`날씨 응답에 ${key}가 없다`);
-  }
-  return value as number[];
-}
-
-export function parseForecast(json: unknown): Weather {
-  const root = json as Record<string, unknown> | null;
-  const current = root?.current as Record<string, unknown> | undefined;
-  const hourly = root?.hourly as Record<string, unknown> | undefined;
-
-  if (
-    typeof current?.time !== "string" ||
-    typeof current.apparent_temperature !== "number" ||
-    typeof current.relative_humidity_2m !== "number"
-  ) {
-    throw new Error("날씨 응답에 현재 값이 없다");
-  }
-
-  const times = (hourly?.time ?? []) as unknown[];
-  if (!Array.isArray(times) || times.some((t) => typeof t !== "string")) {
-    throw new Error("날씨 응답에 시간대가 없다");
-  }
-  const apparents = numbersAt(hourly, "apparent_temperature");
-  const humidities = numbersAt(hourly, "relative_humidity_2m");
-  if (apparents.length !== times.length || humidities.length !== times.length) {
-    throw new Error("날씨 응답의 시간대 개수가 맞지 않는다");
-  }
-
-  return {
-    now: {
-      time: current.time,
-      apparent: current.apparent_temperature,
-      humidity: current.relative_humidity_2m,
-    },
-    hourly: (times as string[]).map((time, i) => ({
-      time,
-      apparent: apparents[i],
-      humidity: humidities[i],
-    })),
-  };
 }
 
 export async function fetchWeather(
@@ -73,19 +25,18 @@ export async function fetchWeather(
   lon: number,
   signal?: AbortSignal,
 ): Promise<Weather> {
-  const url = new URL(ENDPOINT);
-  url.searchParams.set("latitude", String(lat));
-  url.searchParams.set("longitude", String(lon));
-  url.searchParams.set("current", "apparent_temperature,relative_humidity_2m");
-  url.searchParams.set("hourly", "apparent_temperature,relative_humidity_2m");
-  url.searchParams.set("timezone", "Asia/Seoul");
-  // 지금부터 24시간을 보여주려면 자정을 넘어가야 한다. 하루만 받으면
-  // 저녁에 들어온 사람에게는 남은 몇 칸만 보인다.
-  url.searchParams.set("forecast_days", "2");
+  const url = new URL("/api/jjimjilbang", window.location.origin);
+  url.searchParams.set("lat", String(lat));
+  url.searchParams.set("lon", String(lon));
 
   const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(`날씨를 못 가져왔다 (${response.status})`);
-  return parseForecast(await response.json());
+
+  const weather = (await response.json()) as Weather;
+  if (!weather?.now || !Array.isArray(weather.hourly)) {
+    throw new Error("날씨 응답 형식이 아니다");
+  }
+  return weather;
 }
 
 /** "2026-08-06T14:00" → 14 */
@@ -98,7 +49,7 @@ export function hourOf(time: string): number {
  *
  * 현지 시각 문자열끼리는 자리 수가 고정돼 있어서 사전순 비교가 곧 시간순
  * 비교다. Date로 바꾸면 표준 시간대를 한 번 더 다뤄야 하는데,
- * 응답이 이미 Asia/Seoul 기준이라 그럴 이유가 없다.
+ * 값이 이미 KST 기준이라 그럴 이유가 없다.
  */
 export function fromNow(weather: Weather, hours = 24): Reading[] {
   const nowHour = weather.now.time.slice(0, 13);
