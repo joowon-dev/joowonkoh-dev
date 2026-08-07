@@ -13,7 +13,8 @@ export type IconName =
   | "eye"
   | "plane"
   | "code"
-  | "sauna";
+  | "sauna"
+  | "horse";
 
 export interface Project {
   title: string;
@@ -78,6 +79,15 @@ export const projects: Project[] = [
     href: "/playground/webswing",
     icon: "web",
     tile: ["#1a2138", "#0d1120"],
+    hidden: true,
+  },
+  {
+    title: "DeskTroy",
+    description: "자리를 비우면 트로이 목마에서 병사가 쏟아져 창을 점령합니다 🐴",
+    tags: ["macOS", "Swift", "SpriteKit"],
+    href: "/playground/desktroy",
+    icon: "horse",
+    tile: ["#f3e2c7", "#d9b184"],
     hidden: true,
   },
   {

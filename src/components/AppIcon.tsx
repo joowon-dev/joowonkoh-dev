@@ -198,6 +198,54 @@ function Sauna() {
   );
 }
 
+/** DeskTroy — 널빤지를 두른 트로이 목마와 창턱에 꽂힌 깃발 */
+function Horse() {
+  return (
+    <>
+      {/* 받침대 */}
+      <rect x="10" y="52" width="44" height="5" rx="2" fill="#8a5a2b" />
+      {/* 뒷다리 · 몸통 · 목 · 머리를 한 덩어리로. 작은 크기에서는 실루엣만 읽힌다 */}
+      <path
+        d="M26 52 L28 38 Q26 26 34 22 L36 12 L42 18 L48 20 Q52 26 48 32 L46 52"
+        fill="none"
+        stroke="#8a5a2b"
+        strokeWidth="2"
+      />
+      <path
+        d="M28 38 Q26 26 34 22 L36 12 L42 18 L48 20 Q52 26 48 32 Q46 44 34 44 Q28 44 28 38 Z"
+        fill="#c08a4e"
+        stroke="#6f4520"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      {/* 널빤지 띠 — 통짜 갈색 덩어리는 진짜 말로 읽힌다 */}
+      <path
+        d="M31 25 Q37 22 42 24 M30 32 Q38 29 46 31 M30 38 Q38 36 46 37"
+        stroke="#6f4520"
+        strokeWidth="1.4"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* 들어올린 앞다리. 목보다 짙어야 목에 달라붙지 않는다 */}
+      <path
+        d="M32 40 L22 34 L18 38"
+        stroke="#8a5a2b"
+        strokeWidth="3.4"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* 뒷다리 */}
+      <path d="M42 43 L44 52 M34 43 L32 52" stroke="#8a5a2b" strokeWidth="3.4" strokeLinecap="round" />
+      {/* 해치 */}
+      <rect x="35" y="31" width="7" height="7" rx="1" fill="#3a2410" />
+      {/* 깃발 */}
+      <path d="M14 52 V30" stroke="#6f4520" strokeWidth="2" strokeLinecap="round" />
+      <path d="M14 31 L24 34 L14 38 Z" fill="#c8402f" />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -210,6 +258,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   plane: Plane,
   code: Code,
   sauna: Sauna,
+  horse: Horse,
 };
 
 /**

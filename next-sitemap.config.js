@@ -53,6 +53,7 @@ module.exports = {
     "/playground/gaebari-glare",
     "/playground/paper-plane",
     "/playground/webswing",
+    "/playground/desktroy",
   ],
   robotsTxtOptions: {
     policies: [{ userAgent: "*", allow: "/", disallow: ["/admin"] }],
