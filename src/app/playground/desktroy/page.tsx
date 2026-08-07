@@ -120,10 +120,6 @@ export default function DeskTroyPage() {
 
       <SectionHeading>무슨 일이 일어나는가</SectionHeading>
       <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        배경화면 위에 투명한 레이어를 한 장 깔고, 그 위에서 벌어집니다. 평소에는
-        트로이 목마가 화면 맨 아래를 아주 느리게 왕복할 뿐입니다.
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
         20초 동안 키보드도 마우스도 건드리지 않으면 해치가 열립니다. 사다리가
         내려오고, 병사들이 그 사다리를 타고 쏟아져 나옵니다.
       </p>
@@ -157,67 +153,6 @@ export default function DeskTroyPage() {
           </p>
         </div>
       </div>
-
-      <p className="mt-4 text-sm leading-relaxed text-text-secondary">
-        창을 가리지 않습니다. 좁은 창이면 좁은 대로 두세 명만 올라가고,{" "}
-        <strong className="text-text-primary">
-          화면 꼭대기에 붙어 설 자리가 없는 창에서는 누워서
-        </strong>{" "}
-        점령합니다.
-      </p>
-
-      <p className="mt-4 text-xs leading-relaxed text-text-muted">
-        병사가 나와 있는 동안 목마는 제자리에 섭니다. 목마가 굴러가면 나오는
-        병사와 돌아오는 병사가 매번 다른 곳을 향하게 되어, 대열이 아니라
-        우왕좌왕으로 보입니다.
-      </p>
-
-      <SectionHeading>창은 진짜 창입니다</SectionHeading>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        병사가 올라서는 자리는 그림이 아니라{" "}
-        <strong className="text-text-primary">
-          지금 실제로 열려 있는 창의 윗변
-        </strong>
-        입니다. 크롬을 옮기면 그 위에 선 병사들도 같이 움직이고, 창을 닫으면 그
-        발판은 사라집니다 — 자리를 잃은 병사는 다시 아래로 내려가 다음 창을
-        기다립니다.
-      </p>
-
-      <SectionHeading>손대는 순간 후퇴</SectionHeading>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        키를 하나 치든 마우스를 움직이든, 전원이 창 위에서 사다리 쪽으로 되돌아가
-        타고 내려온 다음 목마로 달립니다.{" "}
-        <strong className="text-text-primary">
-          마지막으로 내려온 한 명이 사다리를 도로 메고 갑니다.
-        </strong>{" "}
-        깃발도 뽑아 갑니다 — 화면에 아무것도 남기지 않습니다.
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        후퇴가 시작되면 취소되지 않습니다. 입력이 띄엄띄엄한 동안 병사들이 나왔다
-        들어갔다를 반복하는 것이 제일 거슬리기 때문입니다.
-      </p>
-
-      <SectionHeading>권한을 하나도 요구하지 않습니다</SectionHeading>
-      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        접근성도, 화면 기록도, 입력 모니터링도 켜지 않습니다. 설치하고 바로
-        동작합니다. 이게 이 앱의 설계 원칙이고, 이걸 깨는 기능은 아무리 좋아도
-        넣지 않았습니다.
-      </p>
-      <ul className="mt-4 space-y-2 text-sm leading-relaxed text-text-secondary">
-        <li>
-          · 창의 <strong className="text-text-primary">위치와 크기만</strong>{" "}
-          읽습니다. 창 이름은 읽지 않아서 화면 기록 권한이 필요 없습니다.
-        </li>
-        <li>
-          · 키보드를 후킹하지 않습니다. 무엇을 눌렀는지는 알 수 없고,{" "}
-          <strong className="text-text-primary">
-            마지막 입력이 몇 초 전이었는지
-          </strong>
-          만 시스템에 물어봅니다.
-        </li>
-        <li>· 클릭을 가로채지 않습니다. 누르던 앱이 그 클릭을 그대로 받습니다.</li>
-        <li>· 네트워크에 아무것도 보내지 않습니다.</li>
-      </ul>
 
       <SectionHeading>설치하기</SectionHeading>
       <ol className="mt-4 space-y-3">
