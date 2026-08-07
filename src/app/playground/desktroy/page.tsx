@@ -158,6 +158,14 @@ export default function DeskTroyPage() {
         </div>
       </div>
 
+      <p className="mt-4 text-sm leading-relaxed text-text-secondary">
+        창을 가리지 않습니다. 좁은 창이면 좁은 대로 두세 명만 올라가고,{" "}
+        <strong className="text-text-primary">
+          화면 꼭대기에 붙어 설 자리가 없는 창에서는 누워서
+        </strong>{" "}
+        점령합니다.
+      </p>
+
       <p className="mt-4 text-xs leading-relaxed text-text-muted">
         병사가 나와 있는 동안 목마는 제자리에 섭니다. 목마가 굴러가면 나오는
         병사와 돌아오는 병사가 매번 다른 곳을 향하게 되어, 대열이 아니라
@@ -267,8 +275,7 @@ export default function DeskTroyPage() {
           아래에만 늘어섭니다.
         </li>
         <li>
-          · 너무 좁거나 화면 꼭대기에 붙은 창은 후보에서 뺍니다. 병사가 발을
-          디딜 자리도, 머리가 들어갈 자리도 안 나옵니다.
+          · 화면 바닥에 너무 가까운 창은 후보에서 뺍니다. 하단 대열과 겹칩니다.
         </li>
       </ul>
 
