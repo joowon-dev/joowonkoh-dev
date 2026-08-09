@@ -86,7 +86,7 @@ function MacPanel() {
             WebSwing.zip 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
-            247KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
+            299KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-accent-soft px-4 py-2 text-xs font-medium text-accent">

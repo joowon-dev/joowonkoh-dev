@@ -25,7 +25,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: ".NET 9 데스크톱 런타임을 먼저 깐다",
-    body: "이 빌드는 런타임을 포함하지 않습니다(116KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
+    body: "이 빌드는 런타임을 포함하지 않습니다(126KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
     link: {
       // 목록 페이지가 아니라 설치 파일로 바로 간다. 그 페이지에는 SDK ·
       // ASP.NET · Desktop 이 아키텍처별로 늘어서 있어서, 필요한 하나를 고르는
@@ -50,7 +50,7 @@ const STEPS: Step[] = [
       // 쪽이 캐시를 깨는 쪽보다 중요하다.
       href: "/downloads/WebSwing-win-x64.zip",
       label: "WebSwing (Windows) 내려받기",
-      note: "116KB · Windows 10 1809 이상 · 64비트 · 서명 없음",
+      note: "126KB · Windows 10 1809 이상 · 64비트 · 서명 없음",
     },
   },
   {
