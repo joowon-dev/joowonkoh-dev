@@ -5,6 +5,7 @@ import GameHelp from "../_shared/GameHelp";
 import { GAME_HELP } from "../_shared/helpContent";
 import { useFullscreen } from "../_shared/useFullscreen";
 import { idleSway, spillColor, type Rgb } from "./ambience";
+import { fitContain } from "./preview";
 import {
   WebGLUnsupportedError,
   createRenderer,
@@ -13,7 +14,15 @@ import {
 } from "./renderer";
 import { BASE_LOOK, VIEW, clampLook, type Look } from "./seat";
 
-type Phase = "ready" | "starting" | "running" | "denied" | "unsupported" | "failed";
+type Phase =
+  | "ready"
+  | "starting"
+  /** 왜곡 없는 화면으로 «지금 뭐가 걸릴지»를 먼저 보여주는 단계 */
+  | "preview"
+  | "running"
+  | "denied"
+  | "unsupported"
+  | "failed";
 /** 스크린에 무엇을 걸고 있는지 */
 type Mode = "camera" | "photo";
 
@@ -34,7 +43,7 @@ const TOAST_MS = 4000;
  * `play()`가 끝나기를 기다리는 것만으로는 부족하다. 권한은 났는데 프레임이
  * 한 장도 안 오는 경우가 실제로 있다 — 다른 앱이 카메라를 물고 있거나,
  * 신호 없는 가상 카메라이거나, 탭이 뒤로 밀려 스트림이 멈춘 경우다.
- * 그러면 화면은 «상영 준비 중…»에 영영 멈추고 빠져나갈 방법이 없다.
+ * 그러면 화면은 «카메라 여는 중…»에 영영 멈추고 빠져나갈 방법이 없다.
  */
 function waitForFirstFrame(video: HTMLVideoElement, timeoutMs: number): Promise<boolean> {
   if (video.readyState >= video.HAVE_CURRENT_DATA) return Promise.resolve(true);
@@ -66,11 +75,13 @@ export default function ImaxFrontRow() {
 
   const stageRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const previewRef = useRef<HTMLCanvasElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
   const rafRef = useRef<number | null>(null);
+  const previewRafRef = useRef<number | null>(null);
   const fs = useFullscreen(stageRef);
 
   /** 스크린에 걸 그림을 매 프레임 집어오는 함수. 모드가 바뀌면 이것만 갈아끼운다 */
@@ -103,6 +114,8 @@ export default function ImaxFrontRow() {
   const stop = useCallback(() => {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
+    if (previewRafRef.current !== null) cancelAnimationFrame(previewRafRef.current);
+    previewRafRef.current = null;
     rendererRef.current?.dispose();
     rendererRef.current = null;
     releaseCamera();
@@ -188,12 +201,59 @@ export default function ImaxFrontRow() {
     };
   }, []);
 
+  // ── 미리보기 ─────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (phase !== "preview") return;
+    const draw = () => {
+      previewRafRef.current = requestAnimationFrame(draw);
+      const canvas = previewRef.current;
+      const source = sourceRef.current?.();
+      if (!canvas || !source) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+      const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+      const fit = fitContain(source.width, source.height, width, height);
+      if (fit.width === 0) return;
+
+      ctx.save();
+      if (source.mirror) {
+        // 카메라는 거울이어야 한다. 여기서 안 뒤집으면 상영 화면과 좌우가 달라진다
+        ctx.translate(width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(source.element, width - fit.x - fit.width, fit.y, fit.width, fit.height);
+      } else {
+        ctx.drawImage(source.element, fit.x, fit.y, fit.width, fit.height);
+      }
+      ctx.restore();
+    };
+    draw();
+    return () => {
+      if (previewRafRef.current !== null) cancelAnimationFrame(previewRafRef.current);
+      previewRafRef.current = null;
+    };
+  }, [phase]);
+
+  // ── 상영 ─────────────────────────────────────────────────────
+
   /** 렌더러를 세우고 루프를 돈다. 카메라든 사진이든 여기서 만난다 */
   const run = useCallback(() => {
+    if (previewRafRef.current !== null) cancelAnimationFrame(previewRafRef.current);
+    previewRafRef.current = null;
+
     const canvas = canvasRef.current;
     if (!canvas) {
       setPhase("failed");
-      return false;
+      return;
     }
     try {
       rendererRef.current = createRenderer(canvas);
@@ -201,7 +261,7 @@ export default function ImaxFrontRow() {
       stop();
       // WebGL이 없는 것과 우리가 못 만든 것은 사용자가 할 수 있는 일이 다르다
       setPhase(error instanceof WebGLUnsupportedError ? "unsupported" : "failed");
-      return false;
+      return;
     }
     setPhase("running");
 
@@ -237,7 +297,6 @@ export default function ImaxFrontRow() {
       });
     };
     loop();
-    return true;
   }, [sampleSpill, stop]);
 
   const startCamera = useCallback(async () => {
@@ -277,11 +336,12 @@ export default function ImaxFrontRow() {
     releasePhoto();
     sourceRef.current = cameraSource;
     setMode("camera");
-    if (!run()) return;
-  }, [cameraSource, releasePhoto, run, stop]);
+    // 바로 스크린에 걸지 않는다. 무엇이 잡혔는지 먼저 보여준다
+    setPhase((p) => (p === "running" ? p : "preview"));
+  }, [cameraSource, releasePhoto, stop]);
 
   /**
-   * 사진을 스크린에 건다.
+   * 사진을 건다.
    *
    * 상영 중이면 렌더러를 그대로 두고 그림만 갈아끼운다. 껐다 켜면 화면이
    * 한 번 검게 끊기는데, 사진을 바꿔 보는 건 연달아 하는 일이라 그게 거슬린다.
@@ -320,9 +380,10 @@ export default function ImaxFrontRow() {
       setMode("photo");
       setPhotoError(null);
 
-      if (!rendererRef.current) run();
+      // 상영 중이면 그림만 갈아끼우고, 아니면 미리보기로 간다
+      setPhase((p) => (p === "running" ? p : "preview"));
     },
-    [photoSource, releaseCamera, releasePhoto, run],
+    [photoSource, releaseCamera, releasePhoto],
   );
 
   const openPicker = () => fileRef.current?.click();
@@ -410,6 +471,8 @@ export default function ImaxFrontRow() {
     return () => window.removeEventListener("deviceorientation", onOrientation);
   }, [tilting, phase]);
 
+  const onTitle = phase === "ready" || phase === "starting";
+  const previewing = phase === "preview";
   const running = phase === "running";
   const failed = phase === "denied" || phase === "unsupported" || phase === "failed";
   const hasTilt = typeof window !== "undefined" && "DeviceOrientationEvent" in window;
@@ -453,7 +516,12 @@ export default function ImaxFrontRow() {
       />
 
       {/* 그리기용이라 화면에 띄우지 않는다 */}
-      <video ref={videoRef} playsInline muted className="pointer-events-none absolute h-px w-px opacity-0" />
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        className="pointer-events-none absolute h-px w-px opacity-0"
+      />
 
       <input
         ref={fileRef}
@@ -471,15 +539,15 @@ export default function ImaxFrontRow() {
       {/* 도움말은 왼쪽에 둔다. 오른쪽 위는 상영 중 조작 버튼 자리다 */}
       <GameHelp help={GAME_HELP["imax-front-row"]} className="absolute top-3 left-3" />
 
-      {!running && !failed && (
-        // 상영 전 화면. 불 꺼진 상영관에 제목만 떠 있는 상태다
+      {onTitle && (
+        // 불 꺼진 상영관에 제목만 떠 있는 상태다
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-6 text-center">
           <p className="text-[11px] font-medium tracking-[0.45em] text-white/35">FRONT ROW</p>
           {/* 두 줄로 고정한다. 폭에 따라 끊기는 자리가 달라지면 제목이 흔들린다 */}
           <h1 className="mt-4 font-display text-4xl leading-[1.15] font-bold tracking-tight text-white sm:text-6xl">
-            IMAX 1열에서
+            IMAX 1열
             <br />
-            내얼굴 보기
+            체험하기
           </h1>
 
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -488,7 +556,7 @@ export default function ImaxFrontRow() {
               disabled={phase === "starting"}
               className="spring-transition rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-black hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
             >
-              {phase === "starting" ? "상영 준비 중…" : "카메라로 보기"}
+              {phase === "starting" ? "카메라 여는 중…" : "카메라로 보기"}
             </button>
             <button
               onClick={openPicker}
@@ -502,6 +570,54 @@ export default function ImaxFrontRow() {
           <p className="mt-2 text-xs text-white/25">
             카메라도 사진도 이 브라우저 안에서만 처리합니다 · 저장·전송 없음
           </p>
+        </div>
+      )}
+
+      {previewing && (
+        /*
+         * 상영 전 확인 단계.
+         *
+         * 곡면에 얹히고 나면 얼굴이 제대로 잡혔는지, 사진을 맞게 골랐는지
+         * 알아보기 어렵다. 확인은 왜곡 없는 화면에서 끝내고 상영은 그 다음이다.
+         */
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-6 py-14">
+          <div className="relative min-h-0 w-full max-w-3xl flex-1">
+            <canvas ref={previewRef} className="absolute inset-0 h-full w-full" />
+          </div>
+
+          <p className="mt-5 text-xs text-white/40">이 화면이 아이맥스 스크린에 걸립니다</p>
+
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={run}
+              className="spring-transition rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-black hover:scale-[1.03] active:scale-[0.97]"
+            >
+              상영하기
+            </button>
+            <button
+              onClick={openPicker}
+              className="rounded-full border border-white/25 px-5 py-3.5 text-sm font-semibold text-white/70 transition hover:border-white/50 hover:text-white"
+            >
+              {mode === "photo" ? "사진 바꾸기" : "사진으로"}
+            </button>
+            {mode === "photo" && (
+              <button
+                onClick={() => void startCamera()}
+                className="rounded-full border border-white/25 px-5 py-3.5 text-sm font-semibold text-white/70 transition hover:border-white/50 hover:text-white"
+              >
+                카메라로
+              </button>
+            )}
+            <button
+              onClick={() => {
+                stop();
+                setPhase("ready");
+              }}
+              className="rounded-full px-4 py-3.5 text-sm font-semibold text-white/40 transition hover:text-white"
+            >
+              뒤로
+            </button>
+          </div>
         </div>
       )}
 
@@ -568,7 +684,9 @@ export default function ImaxFrontRow() {
 
       {dragging && (
         <div className="pointer-events-none absolute inset-6 z-40 flex items-center justify-center rounded-3xl border-2 border-dashed border-white/40 bg-black/40">
-          <p className="font-display text-lg font-bold text-white">여기에 놓으면 스크린에 걸립니다</p>
+          <p className="font-display text-lg font-bold text-white">
+            여기에 놓으면 스크린에 걸립니다
+          </p>
         </div>
       )}
 
@@ -589,7 +707,7 @@ export default function ImaxFrontRow() {
                 ? "카메라가 필요해요"
                 : phase === "unsupported"
                   ? "이 브라우저로는 못 틀어요"
-                  : "상영을 시작하지 못했어요"}
+                  : "카메라를 열지 못했어요"}
             </h2>
             <p className="mt-2 text-sm text-text-secondary">
               {phase === "denied"

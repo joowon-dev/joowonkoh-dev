@@ -11,7 +11,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const TITLE = "IMAX 1열에서 내얼굴 보기";
+const TITLE = "IMAX 1열 체험하기";
 const DESCRIPTION =
   "내 카메라 화면이나 가지고 있는 사진을 IMAX 스크린에 걸고 1열에서 봅니다. 목이 꺾이는 각도와 곡면 왜곡을 실제 극장 규격으로 계산합니다.";
 const URL = "https://joowonkoh.com/playground/imax-front-row";
