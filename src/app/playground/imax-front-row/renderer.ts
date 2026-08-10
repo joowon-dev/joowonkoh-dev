@@ -1,5 +1,6 @@
 /**
- * 그리는 쪽. React를 모르고, 웹캠 권한도 모른다. 매 프레임 상태를 받아
+ * 그리는 쪽. React를 모르고, 웹캠 권한도 모르고, 스크린에 걸린 그림이
+ * 카메라에서 왔는지 사진 파일에서 왔는지도 모른다. 매 프레임 상태를 받아
  * 캔버스에 한 장을 그리는 일만 한다.
  */
 
@@ -16,8 +17,29 @@ import {
 } from "./seat";
 import { ROOM_FRAGMENT, ROOM_VERTEX, SCREEN_FRAGMENT, SCREEN_VERTEX } from "./shaders";
 
+/**
+ * 스크린에 걸 그림.
+ *
+ * 카메라와 사진을 한 가지로 묶어 둔다. 렌더러가 둘을 구분하기 시작하면
+ * 앞으로 무엇을 걸든 여기가 갈라지는데, 실제로 필요한 정보는 «무엇을
+ * 올릴지, 얼마나 큰지, 바뀌었는지, 뒤집을지» 넷뿐이다.
+ */
+export interface Source {
+  element: HTMLVideoElement | ImageBitmap;
+  width: number;
+  height: number;
+  /**
+   * 픽셀이 바뀔 때마다 달라지는 값. 같으면 텍스처를 다시 올리지 않는다.
+   * 카메라는 재생 위치, 사진은 몇 번째로 고른 사진인지를 넣는다.
+   */
+  revision: number;
+  /** 셀피 반전. 카메라는 거울이어야 하고, 사진은 그대로여야 한다 */
+  mirror: boolean;
+}
+
 export interface FrameState {
-  video: HTMLVideoElement;
+  /** 아직 준비되지 않았으면 null. 스크린만 까맣게 두고 상영관은 그린다 */
+  source: Source | null;
   look: Look;
   /** 초 단위 경과 시간 */
   time: number;
@@ -92,9 +114,9 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
   gl.depthFunc(gl.LEQUAL);
   gl.clearColor(0, 0, 0, 1);
 
-  let lastVideoTime = -1;
+  let lastRevision = Number.NaN;
 
-  const frame = ({ video, look, time, spill }: FrameState) => {
+  const frame = ({ source, look, time, spill }: FrameState) => {
     resizeCanvas(canvas);
     const aspect = canvas.width / canvas.height;
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -124,15 +146,16 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     // ── 스크린 ──
-    // 영상 프레임이 갱신됐을 때만 텍스처를 올린다. 웹캠은 30fps인데 렌더는
-    // 60fps라, 매 프레임 올리면 절반은 같은 그림을 다시 올리는 셈이다
-    if (video.readyState >= video.HAVE_CURRENT_DATA && video.currentTime !== lastVideoTime) {
-      lastVideoTime = video.currentTime;
+    // 그림이 바뀌었을 때만 텍스처를 올린다. 웹캠은 30fps인데 렌더는 60fps라
+    // 매 프레임 올리면 절반은 같은 그림을 다시 올리는 셈이고, 사진은 아예
+    // 한 번만 올리면 된다
+    if (source && source.width > 0 && source.revision !== lastRevision) {
+      lastRevision = source.revision;
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source.element);
     }
 
-    const crop = cropUv(video.videoWidth, video.videoHeight);
+    const crop = cropUv(source?.width ?? 0, source?.height ?? 0, source?.mirror ?? true);
     gl.useProgram(screen.program);
     gl.bindVertexArray(meshVao);
     gl.activeTexture(gl.TEXTURE0);

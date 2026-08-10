@@ -60,6 +60,17 @@ describe("센터 크롭", () => {
     expect(mirrored.scale[1]).toBeCloseTo(plain.scale[1]);
   });
 
+  it("사진은 좌우를 뒤집지 않는다", () => {
+    /*
+     * 카메라는 거울이어야 하지만 사진은 그대로여야 한다. 사진까지 뒤집으면
+     * 그림 속 글자가 죄다 좌우로 뒤집혀 걸린다.
+     */
+    const photo = cropUv(1280, 720, false);
+    const left = apply(photo, 0, 0)[0];
+    const right = apply(photo, 1, 0)[0];
+    expect(left).toBeLessThan(right);
+  });
+
   it("영상이 아직 없을 때 0으로 나누지 않는다", () => {
     const crop = cropUv(0, 0);
     expect(Number.isFinite(crop.scale[0])).toBe(true);
