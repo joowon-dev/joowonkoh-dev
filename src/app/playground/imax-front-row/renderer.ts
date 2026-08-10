@@ -179,6 +179,18 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
      * 노드라 컨텍스트는 애초에 하나뿐이고, 페이지를 떠나면 캔버스와 함께
      * 회수된다. 여기서는 이번 상영이 만든 자원만 반납하면 된다.
      */
+
+    /*
+     * 마지막 프레임은 지운다.
+     *
+     * 그리기를 멈추는 것과 그려둔 것을 치우는 것은 다른 일이다. rAF만 끊으면
+     * 마지막 한 장이 캔버스에 그대로 남아서, «끝내기»를 눌러도 제목 화면이
+     * 정지된 얼굴 위에 겹쳐 뜬다. 백업 저장소 크기를 다시 잡으면 투명하게
+     * 비워지고, 그 밑의 검은 상영관이 드러난다. 다음 상영 때 resizeCanvas가
+     * 제 크기로 되돌린다.
+     */
+    canvas.width = 1;
+    canvas.height = 1;
   };
 
   return { frame, dispose };
