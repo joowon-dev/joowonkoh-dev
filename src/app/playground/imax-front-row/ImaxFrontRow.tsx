@@ -5,7 +5,7 @@ import GameHelp from "../_shared/GameHelp";
 import { GAME_HELP } from "../_shared/helpContent";
 import { useFullscreen } from "../_shared/useFullscreen";
 import { idleSway, spillColor, type Rgb } from "./ambience";
-import { createRenderer, type Renderer } from "./renderer";
+import { WebGLUnsupportedError, createRenderer, type Renderer } from "./renderer";
 import { BASE_LOOK, VIEW, clampLook, type Look } from "./seat";
 
 type Phase = "ready" | "starting" | "running" | "denied" | "unsupported" | "failed";
@@ -16,6 +16,30 @@ const SAMPLE = 8;
 const SAMPLE_EVERY = 6;
 /** 드래그가 시선에 반영되는 속도. 1에 가까울수록 뻣뻣하다 */
 const EASE = 0.12;
+/** 첫 프레임을 이만큼 기다려 본다 */
+const FIRST_FRAME_TIMEOUT = 8000;
+
+/**
+ * 카메라에서 첫 프레임이 올 때까지 기다린다.
+ *
+ * `play()`가 끝나기를 기다리는 것만으로는 부족하다. 권한은 났는데 프레임이
+ * 한 장도 안 오는 경우가 실제로 있다 — 다른 앱이 카메라를 물고 있거나,
+ * 신호 없는 가상 카메라이거나, 탭이 뒤로 밀려 스트림이 멈춘 경우다.
+ * 그러면 화면은 «상영 준비 중…»에 영영 멈추고 빠져나갈 방법이 없다.
+ */
+function waitForFirstFrame(video: HTMLVideoElement, timeoutMs: number): Promise<boolean> {
+  if (video.readyState >= video.HAVE_CURRENT_DATA) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const finish = (ok: boolean) => {
+      clearTimeout(timer);
+      video.removeEventListener("loadeddata", onData);
+      resolve(ok);
+    };
+    const onData = () => finish(true);
+    const timer = setTimeout(() => finish(false), timeoutMs);
+    video.addEventListener("loadeddata", onData);
+  });
+}
 
 export default function ImaxFrontRow() {
   const [phase, setPhase] = useState<Phase>("ready");
@@ -118,13 +142,19 @@ export default function ImaxFrontRow() {
       return;
     }
     video.srcObject = stream;
-    await video.play().catch(() => {});
+    void video.play().catch(() => {});
+    if (!(await waitForFirstFrame(video, FIRST_FRAME_TIMEOUT))) {
+      stop();
+      setPhase("failed");
+      return;
+    }
 
     try {
       rendererRef.current = createRenderer(canvas);
-    } catch {
+    } catch (error) {
       stop();
-      setPhase("unsupported");
+      // WebGL이 없는 것과 우리가 못 만든 것은 사용자가 할 수 있는 일이 다르다
+      setPhase(error instanceof WebGLUnsupportedError ? "unsupported" : "failed");
       return;
     }
     setPhase("running");
@@ -348,7 +378,7 @@ export default function ImaxFrontRow() {
                 ? "스크린에 걸 그림이 웹캠뿐입니다. 브라우저 설정에서 카메라를 허용한 뒤 다시 시도해 주세요."
                 : phase === "unsupported"
                   ? "카메라 또는 WebGL을 쓸 수 없는 브라우저입니다. 다른 브라우저에서 열어 주세요."
-                  : "잠시 뒤 다시 시도해 주세요."}
+                  : "카메라는 열렸는데 화면이 오지 않았어요. 다른 앱이 카메라를 쓰고 있지 않은지 확인한 뒤 다시 시도해 주세요."}
             </p>
             <button
               onClick={() => {

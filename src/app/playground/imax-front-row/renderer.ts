@@ -32,6 +32,20 @@ export interface Renderer {
 
 const SCREEN_CENTER = screenPoint(0.5, 0.5);
 
+/**
+ * 이 브라우저에 WebGL2가 아예 없을 때만 던진다.
+ *
+ * 셰이더가 안 만들어지는 것과 구분하려고 따로 뒀다. 둘을 뭉뚱그리면
+ * 우리 쪽 실수까지 «지원하지 않는 브라우저»로 안내하게 되는데, 그러면
+ * 다시 시도할 방법이 없는 막다른 화면이 된다. 실제로 그렇게 막혔던 적이 있다.
+ */
+export class WebGLUnsupportedError extends Error {
+  constructor() {
+    super("WebGL2를 쓸 수 없습니다");
+    this.name = "WebGLUnsupportedError";
+  }
+}
+
 export function createRenderer(canvas: HTMLCanvasElement): Renderer {
   const gl = canvas.getContext("webgl2", {
     alpha: false,
@@ -40,7 +54,7 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     powerPreference: "default",
     desynchronized: true,
   });
-  if (!gl) throw new Error("WebGL2를 쓸 수 없습니다");
+  if (!gl) throw new WebGLUnsupportedError();
 
   const room: Program = link(gl, ROOM_VERTEX, ROOM_FRAGMENT);
   const screen: Program = link(gl, SCREEN_VERTEX, SCREEN_FRAGMENT);
@@ -153,8 +167,18 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     gl.deleteVertexArray(meshVao);
     gl.deleteProgram(room.program);
     gl.deleteProgram(screen.program);
-    // 탭을 여러 번 오가면 컨텍스트가 쌓여 브라우저 한도에 걸린다
-    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    /*
+     * 컨텍스트 자체는 건드리지 않는다.
+     *
+     * 여기서 WEBGL_lose_context로 컨텍스트를 죽였더니, «끝내기» 뒤에 다시
+     * «상영 시작»을 누르면 지원하지 않는 브라우저라고 떴다. 한 캔버스는
+     * 컨텍스트를 하나만 갖고, 잃은 컨텍스트는 getContext를 다시 불러도
+     * 그대로 돌아온다. 죽은 컨텍스트 위에서 셰이더를 만들려니 실패했던 것이다.
+     *
+     * 쌓일 걱정을 해서 넣었던 줄인데 전제가 틀렸다. 캔버스가 늘 같은 DOM
+     * 노드라 컨텍스트는 애초에 하나뿐이고, 페이지를 떠나면 캔버스와 함께
+     * 회수된다. 여기서는 이번 상영이 만든 자원만 반납하면 된다.
+     */
   };
 
   return { frame, dispose };
