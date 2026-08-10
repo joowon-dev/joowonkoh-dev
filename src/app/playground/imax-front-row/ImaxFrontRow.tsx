@@ -266,12 +266,12 @@ export default function ImaxFrontRow() {
         // 상영 전 화면. 불 꺼진 상영관에 제목만 떠 있는 상태다
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-6 text-center">
           <p className="text-[11px] font-medium tracking-[0.45em] text-white/35">FRONT ROW</p>
-          <h1 className="mt-4 font-display text-5xl font-bold tracking-tight text-white sm:text-7xl">
-            IMAX 1열
+          {/* 두 줄로 고정한다. 폭에 따라 끊기는 자리가 달라지면 제목이 흔들린다 */}
+          <h1 className="mt-4 font-display text-4xl leading-[1.15] font-bold tracking-tight text-white sm:text-6xl">
+            IMAX 1열에서
+            <br />
+            내얼굴 보기
           </h1>
-          <p className="mt-5 max-w-xs text-sm leading-relaxed text-white/45 sm:max-w-sm">
-            내 웹캠 화면을 22미터 스크린에 걸고, 목이 꺾이는 1열에서 올려다봅니다.
-          </p>
           <button
             onClick={() => void start()}
             disabled={phase === "starting"}
