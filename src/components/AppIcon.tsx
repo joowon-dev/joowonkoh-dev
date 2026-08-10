@@ -246,6 +246,41 @@ function Horse() {
   );
 }
 
+/** 아이맥스 1열 — 1열에서 올려다본 곡면 스크린과 그 위에 걸린 얼굴 */
+function Imax() {
+  return (
+    <>
+      {/*
+        아래가 넓고 위가 좁은 사다리꼴. 위아래 모서리가 활처럼 휘어 있다.
+        페이지가 실제로 만들어내는 화면이 딱 이 모양이라 그대로 옮겼다.
+      */}
+      <path d="M5 53 Q32 61 59 53 L47 15 Q32 10 17 15 Z" fill="#5b6d92" />
+      {/*
+        얼굴은 스크린보다 작게 둔다. 꽉 채우면 스크린 테두리와 얼굴 윤곽이
+        하나로 붙어서, 극장이 아니라 유령 한 마리로 읽힌다.
+      */}
+      <ellipse cx="32" cy="35" rx="13.5" ry="16" fill="#f3d3ae" />
+      {/* 멀어서 작아진 눈 */}
+      <ellipse cx="27" cy="29" rx="2.4" ry="1.6" fill="#2b3145" />
+      <ellipse cx="37" cy="29" rx="2.4" ry="1.6" fill="#2b3145" />
+      {/* 코앞이라 거대해진 입 */}
+      <ellipse cx="32" cy="42" rx="7" ry="4.6" fill="#8c3b3b" />
+      {/* 스크린을 두르는 검은 마스킹 */}
+      <path
+        d="M5 53 Q32 61 59 53 L47 15 Q32 10 17 15 Z"
+        fill="none"
+        stroke="#161a26"
+        strokeWidth="3"
+      />
+      {/* 1열이라 앞에 뒤통수가 없다. 아래에 보이는 건 무대 앞턱과 스피커다 */}
+      <path d="M2 61 Q32 54 62 61 L62 64 L2 64 Z" fill="#0d1018" />
+      {/* EXIT 등. 스크린 밖 옆벽에 있다 */}
+      <circle cx="4" cy="48" r="1.8" fill="#3ad17f" />
+      <circle cx="60" cy="48" r="1.8" fill="#3ad17f" />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -259,6 +294,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   code: Code,
   sauna: Sauna,
   horse: Horse,
+  imax: Imax,
 };
 
 /**
