@@ -10,8 +10,6 @@
     "postbuild": "next-sitemap",
     "start": "next start",
     "lint": "eslint",
-    "pages:build": "npx @cloudflare/next-on-pages",
-    "pages:dev": "npx wrangler pages dev .vercel/output/static --compatibility-date=2024-01-01",
     "test": "vitest run",
     "test:watch": "vitest"
   },
