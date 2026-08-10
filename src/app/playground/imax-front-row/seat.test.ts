@@ -121,11 +121,22 @@ describe("투영", () => {
     expect(bottom![1]).toBeLessThan(top![1]);
   });
 
-  it("스크린 전체 높이가 세로 화면 안에 들어온다", () => {
+  it("스크린이 위아래로 프레임을 넘친다", () => {
+    /*
+     * 스크린 전체가 프레임 안에 들어오면 1열이 아니다. 그건 큰 화면을 멀리서
+     * 보는 그림이고, 1열의 정체는 «한눈에 안 들어온다»는 것이다. 화각을
+     * 넓히다 보면 다 보이게 되는데, 그 순간 이 페이지의 이유가 사라진다.
+     */
     const bottom = toNdc(transformPoint(vp, screenPoint(0.5, 0)))!;
     const top = toNdc(transformPoint(vp, screenPoint(0.5, 1)))!;
-    expect(bottom[1]).toBeGreaterThan(-1);
-    expect(top[1]).toBeLessThan(1);
+    expect(bottom[1]).toBeLessThan(-1);
+    expect(top[1]).toBeGreaterThan(1);
+  });
+
+  it("화면 한복판은 늘 스크린이다", () => {
+    // 넘치게 만들다가 조준이 어긋나면 정면에 벽이 걸린다
+    const middle = [0.5, 0.35, 0.65].map((v) => toNdc(transformPoint(vp, screenPoint(0.5, v)))!);
+    expect(middle.some((p) => Math.abs(p[1]) < 0.5)).toBe(true);
   });
 
   it("카메라 뒤에 있는 점은 좌표를 내지 않는다", () => {
