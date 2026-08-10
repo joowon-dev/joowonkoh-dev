@@ -14,7 +14,8 @@ export type IconName =
   | "plane"
   | "code"
   | "sauna"
-  | "horse";
+  | "horse"
+  | "imax";
 
 export interface Project {
   title: string;
@@ -114,6 +115,14 @@ export const projects: Project[] = [
     icon: "eye",
     tile: ["#fff1f0", "#ffd5d2"],
     hidden: true,
+  },
+  {
+    title: "아이맥스 1열",
+    description: "내 얼굴이 22미터 스크린에 걸린다, 목 꺾이는 1열에서 🎞️",
+    tags: ["Web", "WebGL", "Camera"],
+    href: "/playground/imax-front-row",
+    icon: "imax",
+    tile: ["#1b2033", "#080a12"],
   },
   {
     title: "종이비행기 날리기",
