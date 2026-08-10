@@ -57,6 +57,20 @@ describe("스크린 기하", () => {
     expect(screenPoint(0.5, 1)[2]).toBeGreaterThan(screenPoint(0.5, 0)[2]);
   });
 
+  it("곡률 중심에 앉으면 스크린 어느 지점이든 거리가 같다", () => {
+    /*
+     * IMAX가 스크린을 휘는 이유가 이것이다. 반경 R짜리 원통은 곡률 중심에
+     * 앉은 사람에게 모든 지점이 R만큼 떨어져 보인다. 그래서 SCREEN.radius는
+     * 임의로 고른 «휜 정도»가 아니라 기준 좌석까지의 거리다.
+     */
+    const center: [number, number, number] = [0, SCREEN.bottom, SCREEN.radius];
+    for (let u = 0; u <= 1; u += 0.1) {
+      const p = screenPoint(u, 0);
+      const d = Math.hypot(p[0] - center[0], p[1] - center[1], p[2] - center[2]);
+      expect(d).toBeCloseTo(SCREEN.radius, 6);
+    }
+  });
+
   it("호 길이가 규격 폭과 맞는다", () => {
     let length = 0;
     let prev = screenPoint(0, 0);

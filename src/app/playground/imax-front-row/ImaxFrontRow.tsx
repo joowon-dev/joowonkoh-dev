@@ -175,11 +175,10 @@ export default function ImaxFrontRow() {
     drag.y = e.clientY;
 
     // 끄는 방향과 반대로 돈다. 화면을 손으로 밀어 옮기는 감각이다
-    const next = clampLook({
+    targetRef.current = clampLook({
       yaw: targetRef.current.yaw - dx,
       pitch: targetRef.current.pitch + dy,
     });
-    targetRef.current = next;
     setTurned(true);
   };
 
@@ -231,136 +230,138 @@ export default function ImaxFrontRow() {
   }, [tilting, phase]);
 
   const running = phase === "running";
+  const failed = phase === "denied" || phase === "unsupported" || phase === "failed";
   const hasTilt = typeof window !== "undefined" && "DeviceOrientationEvent" in window;
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-10">
-      <header className="text-center">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">아이맥스 1열</h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          내 웹캠 화면을 22미터 아이맥스 스크린에 걸고, 1열에서 올려다봅니다.
-        </p>
-      </header>
-
-      <GameHelp help={GAME_HELP["imax-front-row"]} className="relative mt-6" />
-
-      <div
-        ref={stageRef}
-        className={`group relative overflow-hidden bg-black ${
-          fs.isFullscreen ? "" : "mt-8 rounded-3xl"
+    /*
+     * 사이트 레이아웃 안에 갇히면 이 페이지가 성립하지 않는다. 상영관은 시야를
+     * 다 먹어야 하는데, 본문 폭에 맞춘 상자 안에 들어가는 순간 그냥 «작은 화면에
+     * 담긴 큰 화면»이 된다. 타자 농구·구슬 폭포와 같은 z-40으로 헤더 위에 올린다.
+     */
+    <div
+      ref={stageRef}
+      className="fixed inset-0 z-40 overflow-hidden bg-black select-none"
+      style={{ colorScheme: "dark" }}
+    >
+      <canvas
+        ref={canvasRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onDoubleClick={recenter}
+        className={`absolute inset-0 h-full w-full touch-none ${
+          running ? "cursor-grab active:cursor-grabbing" : ""
         }`}
-      >
-        <canvas
-          ref={canvasRef}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
-          onDoubleClick={recenter}
-          className={`block w-full touch-none ${
-            fs.isFullscreen ? "h-screen" : "aspect-[3/2]"
-          } ${running ? "cursor-grab active:cursor-grabbing" : ""}`}
-        />
+      />
 
-        {/* 그리기용이라 화면에 띄우지 않는다. 전체화면 요소 안에 둬야 프레임이 계속 온다 */}
-        <video ref={videoRef} playsInline muted className="pointer-events-none absolute h-px w-px opacity-0" />
+      {/* 그리기용이라 화면에 띄우지 않는다 */}
+      <video ref={videoRef} playsInline muted className="pointer-events-none absolute h-px w-px opacity-0" />
 
-        {running && (
-          <>
-            <p className="pointer-events-none absolute inset-x-0 bottom-0 px-4 py-2 text-center text-xs text-white/30">
-              끌어서 고개 돌리기 · 브라우저 밖으로 나가지 않습니다
-            </p>
-            <div className="absolute right-3 top-3 flex gap-2">
-              {turned && (
-                <button
-                  onClick={recenter}
-                  className="rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/20 hover:text-white"
-                >
-                  정면으로
-                </button>
-              )}
-              {hasTilt && (
-                <button
-                  onClick={toggleTilt}
-                  aria-pressed={tilting}
-                  className={`rounded-full px-3 py-1.5 text-xs transition hover:bg-white/20 hover:text-white ${
-                    tilting ? "bg-white/25 text-white" : "bg-white/10 text-white/50 opacity-40 group-hover:opacity-100"
-                  }`}
-                >
-                  기울여 보기
-                </button>
-              )}
-              {fs.isSupported && (
-                <button
-                  onClick={fs.toggle}
-                  aria-label={fs.isFullscreen ? "전체화면 끝내기" : "전체화면으로 보기"}
-                  className="rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/50 opacity-40 transition hover:bg-white/20 hover:text-white hover:opacity-100 focus-visible:opacity-100 group-hover:opacity-100"
-                >
-                  {fs.isFullscreen ? "나가기" : "전체화면"}
-                </button>
-              )}
-            </div>
-          </>
-        )}
+      {/* 도움말은 왼쪽에 둔다. 오른쪽 위는 상영 중 조작 버튼 자리다 */}
+      <GameHelp help={GAME_HELP["imax-front-row"]} className="absolute top-3 left-3" />
 
-        {(phase === "denied" || phase === "unsupported" || phase === "failed") && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 p-6">
-            <div className="animate-fade-in-up max-w-xs rounded-2xl bg-card-bg p-6 text-center shadow-ambient">
-              <div className="text-3xl">{phase === "denied" ? "📷" : "🎞️"}</div>
-              <h2 className="mt-3 font-display text-lg font-bold">
-                {phase === "denied"
-                  ? "카메라가 필요해요"
-                  : phase === "unsupported"
-                    ? "이 브라우저로는 못 틀어요"
-                    : "상영을 시작하지 못했어요"}
-              </h2>
-              <p className="mt-2 text-sm text-text-secondary">
-                {phase === "denied"
-                  ? "스크린에 걸 그림이 웹캠뿐입니다. 브라우저 설정에서 카메라를 허용한 뒤 다시 시도해 주세요."
-                  : phase === "unsupported"
-                    ? "카메라 또는 WebGL을 쓸 수 없는 브라우저입니다. 다른 브라우저에서 열어 주세요."
-                    : "잠시 뒤 다시 시도해 주세요."}
-              </p>
-              {phase !== "unsupported" && (
-                <button
-                  onClick={() => {
-                    setPhase("ready");
-                    void start();
-                  }}
-                  className="spring-transition mt-5 w-full rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  다시 시도
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-6 text-center">
-        {!running ? (
+      {!running && !failed && (
+        // 상영 전 화면. 불 꺼진 상영관에 제목만 떠 있는 상태다
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-6 text-center">
+          <p className="text-[11px] font-medium tracking-[0.45em] text-white/35">FRONT ROW</p>
+          <h1 className="mt-4 font-display text-5xl font-bold tracking-tight text-white sm:text-7xl">
+            IMAX 1열
+          </h1>
+          <p className="mt-5 max-w-xs text-sm leading-relaxed text-white/45 sm:max-w-sm">
+            내 웹캠 화면을 22미터 스크린에 걸고, 목이 꺾이는 1열에서 올려다봅니다.
+          </p>
           <button
             onClick={() => void start()}
             disabled={phase === "starting"}
-            className="spring-transition rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+            className="spring-transition mt-9 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-black hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50"
           >
             {phase === "starting" ? "상영 준비 중…" : "상영 시작"}
           </button>
-        ) : (
-          <button
-            onClick={() => {
-              stop();
-              setPhase("ready");
-            }}
-            className="rounded-full border border-border px-6 py-3 text-sm font-semibold text-text-secondary transition hover:text-text-primary"
-          >
-            상영 끝내기
-          </button>
-        )}
-        <p className="mt-3 text-xs text-text-secondary">
-          영상은 이 브라우저 안에서만 처리합니다. 어디로도 보내지 않고 저장하지 않습니다.
-        </p>
-      </div>
+          <p className="mt-6 text-xs text-white/25">
+            영상은 이 브라우저 안에서만 처리합니다 · 저장·전송 없음
+          </p>
+        </div>
+      )}
+
+      {running && (
+        <>
+          <p className="pointer-events-none absolute inset-x-0 bottom-0 px-4 py-3 text-center text-xs text-white/25">
+            끌어서 고개 돌리기 · 브라우저 밖으로 나가지 않습니다
+          </p>
+          <div className="absolute top-3 right-3 z-30 flex gap-2">
+            {turned && (
+              <button
+                onClick={recenter}
+                className="rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/20 hover:text-white"
+              >
+                정면으로
+              </button>
+            )}
+            {hasTilt && (
+              <button
+                onClick={toggleTilt}
+                aria-pressed={tilting}
+                className={`rounded-full px-3 py-1.5 text-xs transition hover:bg-white/20 hover:text-white ${
+                  tilting ? "bg-white/25 text-white" : "bg-white/10 text-white/45"
+                }`}
+              >
+                기울여 보기
+              </button>
+            )}
+            {fs.isSupported && (
+              <button
+                onClick={fs.toggle}
+                className="rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/45 transition hover:bg-white/20 hover:text-white"
+              >
+                {fs.isFullscreen ? "창으로" : "전체화면"}
+              </button>
+            )}
+            <button
+              onClick={() => {
+                stop();
+                setPhase("ready");
+                void fs.exit();
+              }}
+              className="rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/45 transition hover:bg-white/20 hover:text-white"
+            >
+              끝내기
+            </button>
+          </div>
+        </>
+      )}
+
+      {failed && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center p-6">
+          <div className="animate-fade-in-up max-w-xs rounded-2xl bg-card-bg p-6 text-center shadow-ambient">
+            <div className="text-3xl">{phase === "denied" ? "📷" : "🎞️"}</div>
+            <h2 className="mt-3 font-display text-lg font-bold">
+              {phase === "denied"
+                ? "카메라가 필요해요"
+                : phase === "unsupported"
+                  ? "이 브라우저로는 못 틀어요"
+                  : "상영을 시작하지 못했어요"}
+            </h2>
+            <p className="mt-2 text-sm text-text-secondary">
+              {phase === "denied"
+                ? "스크린에 걸 그림이 웹캠뿐입니다. 브라우저 설정에서 카메라를 허용한 뒤 다시 시도해 주세요."
+                : phase === "unsupported"
+                  ? "카메라 또는 WebGL을 쓸 수 없는 브라우저입니다. 다른 브라우저에서 열어 주세요."
+                  : "잠시 뒤 다시 시도해 주세요."}
+            </p>
+            <button
+              onClick={() => {
+                setPhase("ready");
+                if (phase !== "unsupported") void start();
+              }}
+              className="spring-transition mt-5 w-full rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {phase === "unsupported" ? "돌아가기" : "다시 시도"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

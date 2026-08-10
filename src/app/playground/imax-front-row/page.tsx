@@ -1,5 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import ImaxFrontRow from "./ImaxFrontRow";
+
+/**
+ * 화면을 통째로 덮는 페이지다. 노치나 둥근 모서리 안쪽까지 상영관이
+ * 이어지도록 이 라우트에만 viewport-fit=cover를 건다.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 const TITLE = "아이맥스 1열";
 const DESCRIPTION =
