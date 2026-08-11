@@ -148,8 +148,8 @@ export default function DeskTroyPage() {
             3. 다 차면 다음 창으로
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-text-secondary">
-            또 다른 선봉장이 사다리를 메고 나갑니다. 갈 창이 없는 병사들은 화면
-            맨 아래에 한 줄로 늘어섭니다.
+            또 다른 선봉장이 사다리를 메고 나갑니다. 창을 하나도 남김없이
+            뺏고 나면, 그 자리에서 다 같이 춤을 춥니다.
           </p>
         </div>
       </div>
