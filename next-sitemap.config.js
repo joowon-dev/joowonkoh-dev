@@ -53,6 +53,7 @@ module.exports = {
     "/playground/gaebari-glare",
     "/playground/paper-plane",
     "/playground/webswing",
+    "/playground/sneaky-baseball",
     "/playground/desktroy",
   ],
   robotsTxtOptions: {
