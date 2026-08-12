@@ -281,6 +281,29 @@ function Imax() {
   );
 }
 
+/** 몰래 야구 — 검은 공에 실밥 두 줄. 앱 아이콘과 같은 그림이다. */
+function Baseball() {
+  return (
+    <>
+      <circle cx="32" cy="32" r="21" fill="#101013" />
+      <path
+        d="M17 17 A22 22 0 0 1 17 47"
+        fill="none"
+        stroke="#f6f6f2"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M47 17 A22 22 0 0 0 47 47"
+        fill="none"
+        stroke="#f6f6f2"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -295,6 +318,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   sauna: Sauna,
   horse: Horse,
   imax: Imax,
+  baseball: Baseball,
 };
 
 /**
