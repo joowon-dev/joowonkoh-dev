@@ -25,8 +25,8 @@ export const metadata: Metadata = {
       {
         url: "https://joowonkoh.com/sneaky-baseball/screenshot.jpg",
         width: 1600,
-        height: 629,
-        alt: "친 공이 대시보드 화면 위로 포물선을 그리며 날아가는 모습",
+        height: 648,
+        alt: "친 공이 코드 편집기 화면 위로 포물선을 그리며 날아가는 모습",
       },
     ],
   },
@@ -142,9 +142,9 @@ export default function SneakyBaseballPage() {
       <div className="mt-10 overflow-hidden rounded-2xl border border-border shadow-ambient">
         <Image
           src="/sneaky-baseball/screenshot.png"
-          alt="친 공이 대시보드 화면 위로 포물선을 그리며 날아가는 모습"
+          alt="친 공이 코드 편집기 화면 위로 포물선을 그리며 날아가는 모습"
           width={1600}
-          height={629}
+          height={648}
           className="w-full"
           priority
         />
