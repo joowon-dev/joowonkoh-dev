@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import SectionList from "@/components/SectionList";
 import { getAllPostsBySection, getPopularTagsBySection } from "@/lib/mdx";
@@ -11,5 +12,10 @@ export const metadata: Metadata = {
 export default function LifeSectionPage() {
   const posts = getAllPostsBySection("life");
   const tags = getPopularTagsBySection("life");
-  return <SectionList section="life" posts={posts} tags={tags} />;
+  // SectionList가 useSearchParams로 ?tag=를 읽는다. 경계가 없으면 빌드가 막힌다.
+  return (
+    <Suspense fallback={null}>
+      <SectionList section="life" posts={posts} tags={tags} />
+    </Suspense>
+  );
 }

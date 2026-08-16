@@ -99,6 +99,28 @@ export default function MoneyTickPage() {
       </section>
 
       <section className="mt-14">
+        <h2 className="mb-4 font-display text-xl font-bold tracking-tight md:text-2xl">
+          왜 만들었나
+        </h2>
+        <p className="max-w-[58ch] text-sm leading-[1.85] break-keep text-text-secondary">
+          연봉은 1년에 한 번 정해지고 월급은 한 달에 한 번 들어옵니다. 그래서
+          내가 지금 무슨 값에 시간을 팔고 있는지는 평소에 잘 안 보입니다. 그
+          숫자를 초 단위로 흐르게 만들면 감각이 좀 달라지지 않을까 싶어서 만든
+          앱입니다. 회의가 길어질 때 화면을 보면 그 회의의 가격이 보입니다.
+        </p>
+        <p className="mt-3 max-w-[58ch] text-sm leading-[1.85] break-keep text-text-secondary">
+          비교 레이스를 넣은 것도 같은 이유입니다. 혼자 올라가는 숫자는 크기를
+          가늠하기 어렵지만, 옆에 다른 줄이 같이 달리면 바로 감이 옵니다. 다만
+          여기에 추측한 금액을 쓰면 재미가 아니라 거짓말이 되기 때문에, 공표된
+          법정 급여만 씁니다. 근거는 아래 질문에 적어 두었습니다.
+        </p>
+        <p className="mt-3 max-w-[58ch] text-sm leading-[1.85] break-keep text-text-secondary">
+          넣은 연봉은 기기 안에만 있습니다. 서버로 보내지 않고, 계정도 만들지
+          않습니다. 연봉은 남에게 보내고 싶은 정보가 아니니까요.
+        </p>
+      </section>
+
+      <section className="mt-14">
         <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-text-muted">
           자주 묻는 질문
         </h2>
