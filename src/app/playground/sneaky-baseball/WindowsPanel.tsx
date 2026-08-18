@@ -26,7 +26,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: ".NET 9 데스크톱 런타임을 먼저 깐다",
-    body: "이 빌드는 런타임을 포함하지 않습니다(611KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
+    body: "이 빌드는 런타임을 포함하지 않습니다(630KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
     link: {
       // WebSwing 페이지와 같은 이유로 목록이 아니라 설치 파일로 바로 보낸다.
       // aka.ms 별칭은 마이크로소프트가 최신 패치로 리디렉션해 준다.
@@ -64,8 +64,8 @@ const STEPS: Step[] = [
 ];
 
 const CONTROLS: { key: string; action: string }[] = [
-  { key: "Alt 누르고 있기", action: "누르고 있는 동안만 투수가 던집니다. 떼면 바로 멈춥니다" },
-  { key: "Alt + Space", action: "스윙" },
+  { key: "Alt+Shift 누르고 있기", action: "누르고 있는 동안만 투수가 던집니다. 떼면 바로 멈춥니다" },
+  { key: "Alt+Shift + Space", action: "스윙" },
   { key: "Ctrl+Shift+B", action: "숨기기 / 다시 부르기" },
 ];
 

@@ -33,8 +33,8 @@ export const metadata: Metadata = {
 };
 
 const CONTROLS: { key: string; action: string }[] = [
-  { key: "⌥ 누르고 있기", action: "누르고 있는 동안만 투수가 던집니다. 떼면 바로 멈춥니다" },
-  { key: "⌥ + Space", action: "스윙" },
+  { key: "⌥⇧ 누르고 있기", action: "누르고 있는 동안만 투수가 던집니다. 떼면 바로 멈춥니다" },
+  { key: "⌥⇧ + Space", action: "스윙" },
   { key: "⌘⇧B", action: "숨기기 / 다시 부르기" },
 ];
 
