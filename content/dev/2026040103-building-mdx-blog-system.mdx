@@ -95,7 +95,7 @@ export function getAllPosts() {
   options={{
     mdxOptions: {
       rehypePlugins: [
-        [rehypePrettyCode, { theme: "github-dark-default" }],
+        [rehypePrettyCode, { theme: "github-light" }],
       ],
     },
   }}
@@ -124,6 +124,18 @@ const filtered = selectedTag
 ```
 
 API route를 만들 필요 없이, 서버/클라이언트 컴포넌트 패턴으로 깔끔하게 해결했다.
+
+## 직접 겪은 일: 파일명으로 주소를 만들면 나중에 발목을 잡는다
+
+여기서 정한 규칙 하나가 몇 달 뒤에 비용으로 돌아왔다.
+
+파일명 앞의 숫자를 잘라 주소로 쓰기로 했다. `2026040103-building-mdx-blog-system.mdx`면 주소는 `/blog/2026040103`이 되는 식이다. 짧고 안 겹쳐서 좋아 보였다.
+
+문제는 나중에 글을 dev와 life 두 갈래로 나누면서 생겼다. 주소가 `/blog/<번호>`에서 `/blog/dev/<번호>`로 바뀌었고, **예전 주소로 색인돼 있던 페이지들이 한꺼번에 404가 됐다.** 서치 콘솔에서 404 열한 개를 확인하고 나서야 알았다.
+
+되돌리는 방법은 옛 주소를 새 주소로 잇는 것뿐이었다. 지금 `next.config.ts`가 77줄인데 그중 상당 부분이 이 리디렉션을 만드는 코드다. 손으로 적지 않고 `content/` 폴더를 읽어서 만들게 했다 — 어느 글이 dev고 어느 글이 life인지는 폴더가 알고 있으니까.
+
+교훈은 이거다. **주소 규칙은 콘텐츠 구조가 바뀌지 않는다는 가정 위에 세워진다.** 그 가정은 대체로 틀린다.
 
 ## 글 추가하는 법
 

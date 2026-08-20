@@ -45,9 +45,10 @@ CSS 프레임워크는 Tailwind CSS를 선택했다. v4부터는 별도의 `tail
 @import "tailwindcss";
 
 @theme inline {
-  --color-bg: #0a0a0a;
-  --color-card-bg: #111111;
-  --color-text-primary: #ededed;
+  --color-bg: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text-primary: #23272f;
+  --color-accent: #2563eb;
   --font-sans: "Pretendard", system-ui, sans-serif;
 }
 ```
@@ -68,6 +69,18 @@ CSS 프레임워크는 Tailwind CSS를 선택했다. v4부터는 별도의 `tail
 블로그 글은 MDX로 작성한다. 마크다운의 편리함에 React 컴포넌트를 삽입할 수 있는 확장성을 더했다. `next-mdx-remote`를 사용해서 `content/blog/` 디렉토리의 MDX 파일을 빌드 타임에 파싱한다.
 
 코드 하이라이팅은 `rehype-pretty-code` + `shiki`를 사용한다. VS Code와 동일한 문법 강조를 웹에서도 볼 수 있다.
+
+## 직접 겪은 일: Cloudflare를 고른 대가는 나중에 청구됐다
+
+호스팅을 Cloudflare로 정한 이유는 위에 적은 대로다. 그런데 이 선택에는 그때 계산하지 않은 항목이 있었다.
+
+Cloudflare에서 동적으로 도는 코드는 edge 런타임에서 돈다. 거기엔 `fs`가 없다. 파일을 읽어야 하는 코드는 빌드 시점에 미리 다 돌려놔야 한다는 뜻이다.
+
+이 제약이 실제로 걸린 건 한참 뒤였다. 지금 이 사이트에서 `export const runtime = "edge"`를 붙여 둔 곳이 네 군데인데, 붙이는 걸 빠뜨리면 **로컬 빌드는 통과하고 배포된 사이트만 깨진다.** 로컬에는 Node가 있으니 당연히 통과한다.
+
+빌드 스크립트도 평범하지 않다. `npx @cloudflare/next-on-pages`로 한 번 변환한 뒤 `.vercel/output/static`을 올린다. Vercel용 출력 폴더를 Cloudflare에 올리는 모양새라 처음 보면 어리둥절하다.
+
+**«무료에 빠르다»는 비교표에 나오는 항목이고, «파일을 못 읽는다»는 안 나온다.** 스택을 고를 때 비교하기 어려운 건 대체로 후자 쪽이다.
 
 ## 정리
 

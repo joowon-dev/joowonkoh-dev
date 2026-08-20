@@ -108,7 +108,7 @@ export default async function Page({ params }) {
         options={{
           mdxOptions: {
             remarkPlugins: [remarkGfm],
-            rehypePlugins: [[rehypePrettyCode, { theme: "github-dark" }]],
+            rehypePlugins: [[rehypePrettyCode, { theme: "github-light" }]],
           },
         }}
       />
@@ -221,6 +221,18 @@ src/
 ```
 
 콘텐츠를 `content/`에 분리해두면 빌드 도구나 컴포넌트 코드와 섞이지 않는다. 글이 늘어나도 리포 구조가 깔끔하다.
+
+## 직접 겪은 일: 일곱 번째 함정은 Suspense였다
+
+여섯 개를 적어놨는데, 나중에 제일 크게 데인 건 목록에 없던 일곱 번째였다.
+
+목록 페이지에서 `?tag=`를 읽으려고 `useSearchParams`를 넣었다. App Router에서 이걸 쓰면 해당 컴포넌트가 Suspense 경계 안으로 들어간다. 그때 `fallback`을 `null`로 뒀는데, 그러면 **서버가 내보내는 HTML에 글 목록이 통째로 빠진다.**
+
+로컬에서는 안 보였다. `next start`로 열면 화면에 글이 멀쩡히 나온다. 브라우저가 붙고 나서 채워지기 때문이다. 배포한 뒤 실제 HTML을 재보고서야 알았다 — 목록 페이지가 머리말과 꼬리말만 남은 19단어짜리가 되어 있었다.
+
+고치려고 서버 쪽에서 `searchParams`를 받았더니 이번엔 라우트가 정적에서 동적으로 바뀌었다. 목록을 만드는 함수가 `fs`로 파일을 읽는데, 이 사이트가 올라가는 Cloudflare의 동적 라우트는 `fs`가 없는 곳에서 돈다. 함정 하나를 피하려다 다른 함정으로 걸어 들어간 것이다.
+
+결국 페이지는 정적으로 두고, 태그는 브라우저가 붙은 뒤에 주소창에서 읽게 했다. **App Router에서 «화면에 보인다»와 «HTML에 있다»는 다른 이야기다.** 이 둘을 구분하지 않으면 로컬에서는 영원히 안 보인다.
 
 ## 정리
 
