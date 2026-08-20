@@ -62,12 +62,6 @@ export default function MealMatePage() {
         먹을 곳을 고를 때 빠르게 꺼내 보세요.
       </p>
 
-      <div className="mt-6">
-        <span className="inline-block rounded-full border border-border bg-card-bg px-4 py-2 text-sm font-medium text-text-secondary shadow-ambient">
-          App Store 출시 준비 중
-        </span>
-      </div>
-
       <section className="mt-14">
         <h2 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.15em] text-text-muted">
           Features
@@ -133,9 +127,13 @@ export default function MealMatePage() {
         <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-text-muted">
           문의 및 지원
         </h2>
-        <p className="max-w-[55ch] text-sm leading-[1.8] text-text-secondary">
-          앱 사용 중 문제가 있거나 기능 제안, 문의 사항이 있다면 아래 이메일로
-          연락 주세요. 가능한 한 빠르게 답장드리겠습니다.
+        <p className="max-w-[58ch] text-sm leading-[1.8] break-keep text-text-secondary">
+          출시 상태를 먼저 밝혀 둡니다. 아직 App Store에 올라가지 않았고, 심사
+          준비 중입니다. 올라가면 이 페이지에 내려받는 곳을 답니다.
+        </p>
+        <p className="mt-3 max-w-[58ch] text-sm leading-[1.8] break-keep text-text-secondary">
+          그 전이라도 기능 제안이나 문의는 아래 이메일로 보내 주세요. 관련 문서도
+          아래에 함께 두었습니다. 가능한 한 빠르게 답장드리겠습니다.
         </p>
         <div className="mt-4 flex flex-wrap gap-5">
           <a

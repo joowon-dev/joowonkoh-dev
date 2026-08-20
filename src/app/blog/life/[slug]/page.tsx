@@ -5,6 +5,7 @@ import ArticleJsonLd from "@/components/ArticleJsonLd";
 import {
   getAllPostsBySection,
   getPostBySlugFromSection,
+  getRelatedPosts,
 } from "@/lib/mdx";
 
 interface Props {
@@ -73,6 +74,7 @@ export default async function LifePostPage({ params }: Props) {
         content={post!.content}
         prev={prev}
         next={next}
+        related={getRelatedPosts(post!.meta)}
       />
     </>
   );

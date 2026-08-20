@@ -3,6 +3,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import mdxComponents from "@/components/MDXComponents";
 import AdSense from "@/components/AdSense";
 import PostNavigation from "@/components/PostNavigation";
+import RelatedPosts from "@/components/RelatedPosts";
 import TableOfContents from "@/components/TableOfContents";
 import type { PostMeta } from "@/lib/mdx";
 
@@ -11,9 +12,17 @@ interface Props {
   content: string;
   prev: PostMeta | null;
   next: PostMeta | null;
+  /** 태그가 겹치는 글. 없으면 빈 배열 */
+  related: PostMeta[];
 }
 
-export default function SectionPostView({ meta, content, prev, next }: Props) {
+export default function SectionPostView({
+  meta,
+  content,
+  prev,
+  next,
+  related,
+}: Props) {
   return (
     <div className="relative flex gap-0">
       <aside className="hidden xl:block w-0">
@@ -41,10 +50,12 @@ export default function SectionPostView({ meta, content, prev, next }: Props) {
           </span>
         </header>
 
-        <MDXRemote
-          source={content}
-          components={mdxComponents}
-          options={{
+        {/* data-mdx-body: 목차가 여기 안의 제목만 읽는다 (TableOfContents 참고) */}
+        <div data-mdx-body>
+          <MDXRemote
+            source={content}
+            components={mdxComponents}
+            options={{
             // next-mdx-remote 6부터 기본으로 켜지는 blockJS가 MDX 안의 JS 표현식을
             // 전부 제거한다. 그러면 <DataTableCard rows={[...]} />에서 rows가 사라져
             // 컴포넌트는 호출되는데 props만 비어 있는 상태가 된다. 에러도 안 나고
@@ -53,13 +64,15 @@ export default function SectionPostView({ meta, content, prev, next }: Props) {
             // 이 옵션은 남의 MDX를 렌더할 때를 위한 것이다. 여기서 읽는 건 내가 쓴
             // content/ 폴더뿐이라 끈다. 위험한 호출을 막는 blockDangerousJS는
             // 기본값 그대로 켜 둔다.
-            blockJS: false,
-            mdxOptions: {
-              rehypePlugins: [[rehypePrettyCode, { theme: "github-light" }]],
-            },
-          }}
-        />
+              blockJS: false,
+              mdxOptions: {
+                rehypePlugins: [[rehypePrettyCode, { theme: "github-light" }]],
+              },
+            }}
+          />
+        </div>
         <AdSense />
+        <RelatedPosts posts={related} />
         <PostNavigation prev={prev} next={next} />
       </article>
     </div>
