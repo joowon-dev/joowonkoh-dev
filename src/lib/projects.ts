@@ -15,7 +15,8 @@ export type IconName =
   | "code"
   | "sauna"
   | "horse"
-  | "imax";
+  | "imax"
+  | "baseball";
 
 export interface Project {
   title: string;
@@ -90,6 +91,15 @@ export const projects: Project[] = [
     href: "/playground/webswing",
     icon: "web",
     tile: ["#1a2138", "#0d1120"],
+    hidden: true,
+  },
+  {
+    title: "몰래 야구",
+    description: "일하는 화면 위로 공이 날아갑니다. 담장을 넘기면 홈런 ⚾",
+    tags: ["macOS", "Windows", "Canvas"],
+    href: "/playground/sneaky-baseball",
+    icon: "baseball",
+    tile: ["#f6f6f2", "#dcdcd4"],
     hidden: true,
   },
   {
