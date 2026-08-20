@@ -13,7 +13,11 @@ export default function TableOfContents({ content }: { content: string }) {
   const [headings, setHeadings] = useState<TocItem[]>([]);
 
   useEffect(() => {
-    const els = Array.from(document.querySelectorAll("article h2, article h3"));
+    // 글 본문 안의 제목만 목차로 삼는다. article 전체를 훑으면 본문 뒤에 붙는
+    // «같이 읽으면 좋은 글» 같은 딸린 영역의 제목까지 목차에 끼어든다.
+    const els = Array.from(
+      document.querySelectorAll("[data-mdx-body] h2, [data-mdx-body] h3"),
+    );
     const items: TocItem[] = els.map((el, idx) => {
       const base = el.textContent?.replace(/\s+/g, "-").replace(/[^\w가-힣-]/g, "").toLowerCase() ?? "";
       const id = `${base}-${idx}`;

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import GameHelp from "../_shared/GameHelp";
+import GameNotes from "../_shared/GameNotes";
 import { GAME_HELP } from "../_shared/helpContent";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFullscreen } from "../_shared/useFullscreen";
@@ -156,6 +158,8 @@ export default function DdongMallang() {
   // 배도 표정도 단계적으로 변한다 — 눌렀다/안 눌렀다 둘로만 나누면 5초가 멈춰 보인다.
   const strain = strainLevel(session);
   const second = secondsLeft(session);
+  /** 시작 전 화면. 스크롤·선택·도움말 처리가 여기서만 다르다 */
+  const isReady = session.phase === "ready";
 
   return (
     <div
@@ -164,33 +168,60 @@ export default function DdongMallang() {
       // 실제 뷰포트보다 커져서 아래쪽 버튼이 화면 밖으로 밀린다. 전체화면
       // API가 없는 iOS Safari에서도 화면을 그대로 덮도록 fixed로 뷰포트를
       // 뜯어낸다. z-40은 marble-drop과 같은 값 — 헤더(z-40)보다 위에 온다.
-      className="fixed inset-0 z-40 flex flex-col items-center justify-between overflow-hidden bg-[#fdf6ef] select-none"
-      onContextMenu={(e) => e.preventDefault()}
+      //
+      // 시작 전에만 세로 스크롤을 연다. 첫 화면은 그대로 뷰포트를 채우고,
+      // 그 아래에 설명을 붙여 두어 내려서 읽을 수 있게 한다. 시작하고 나면
+      // 화면을 잠근다 — 배를 누르는 동안 페이지가 딸려 움직이면 안 된다.
+      // select-none도 같은 이유라 시작 전에는 걸지 않는다(글을 긁을 수 있어야 한다).
+      className={`fixed inset-0 z-40 flex flex-col items-center bg-[#fdf6ef] ${
+        isReady
+          ? "overflow-y-auto"
+          : "justify-between overflow-hidden select-none"
+      }`}
+      onContextMenu={(e) => {
+        if (!isReady) e.preventDefault();
+      }}
     >
-      <GameHelp help={GAME_HELP["ddong-mallang"]} />
-      {session.phase === "ready" ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 text-center">
-          <h1 className="text-4xl font-bold text-[#4a352c]">똥 말랑</h1>
-          {/* 줄바꿈을 브라우저에 맡기면 "심호흡하" / "면서"처럼 어절 중간이 끊긴다.
-              break-keep으로 어절을 붙여두고, 의미 단위로 직접 끊는다. */}
-          <p className="text-base leading-relaxed break-keep text-[#8a6b5c]">
-            고양이 배를 꾹 누르면서 힘주고
-            <br />
-            심호흡하면서
-            <br />
-            똥 잘 싸주는 걸 도와드립니다
-          </p>
-          <div className="w-48">
-            <Cat mood="calm" />
+      {!isReady && <GameHelp help={GAME_HELP["ddong-mallang"]} />}
+      {isReady ? (
+        <>
+          <div className="flex min-h-dvh w-full shrink-0 flex-col items-center justify-center gap-8 px-6 text-center">
+            <h1 className="text-4xl font-bold text-[#4a352c]">똥 말랑</h1>
+            {/* 줄바꿈을 브라우저에 맡기면 "심호흡하" / "면서"처럼 어절 중간이 끊긴다.
+                break-keep으로 어절을 붙여두고, 의미 단위로 직접 끊는다. */}
+            <p className="text-base leading-relaxed break-keep text-[#8a6b5c]">
+              고양이 배를 꾹 누르면서 힘주고
+              <br />
+              심호흡하면서
+              <br />
+              똥 잘 싸주는 걸 도와드립니다
+            </p>
+            <div className="w-48">
+              <Cat mood="calm" />
+            </div>
+            <button
+              type="button"
+              onClick={start}
+              className="rounded-full bg-[#e08f86] px-10 py-4 text-lg font-semibold text-white active:scale-95"
+            >
+              시작하기
+            </button>
+            <span aria-hidden className="text-2xl text-[#c9a894]">
+              ↓
+            </span>
           </div>
-          <button
-            type="button"
-            onClick={start}
-            className="rounded-full bg-[#e08f86] px-10 py-4 text-lg font-semibold text-white active:scale-95"
-          >
-            시작하기
-          </button>
-        </div>
+
+          <GameNotes
+            help={GAME_HELP["ddong-mallang"]}
+            variant="warm"
+            className="px-6 pb-16"
+          />
+          <p className="pb-10 text-xs text-[#b08d7a]">
+            <Link href="/playground" className="underline-offset-4 hover:underline">
+              ← 플레이그라운드로
+            </Link>
+          </p>
+        </>
       ) : session.phase === "done" ? (
         <div className="flex min-h-0 w-full max-w-sm flex-1 flex-col items-center justify-center gap-5 overflow-y-auto px-6 py-8 text-center">
           <div className="w-28 shrink-0">

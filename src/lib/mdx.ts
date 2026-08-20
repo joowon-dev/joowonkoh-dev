@@ -79,6 +79,33 @@ export function getPostBySlugFromSection(section: Section, slug: string) {
   };
 }
 
+/**
+ * 같은 주제를 다룬 다른 글.
+ *
+ * 이전/다음 글은 날짜순이라 주제가 이어지지 않는다 — 터미널 글 다음에
+ * 맛집 후기가 붙는 식이다. 여기서는 태그가 겹치는 정도로 고른다.
+ *
+ * 겹치는 태그가 하나도 없으면 아예 내보내지 않는다. 자리를 채우려고
+ * 최근 글을 끼워 넣으면 «관련 글»이라는 이름이 거짓말이 된다.
+ */
+export function getRelatedPosts(
+  post: PostMeta,
+  limit = 3,
+): PostMeta[] {
+  const tags = new Set(post.tags);
+  if (tags.size === 0) return [];
+
+  return getAllPostsBySection(post.section)
+    .filter((p) => p.slug !== post.slug && !p.noindex)
+    .map((p) => ({ post: p, shared: p.tags.filter((t) => tags.has(t)).length }))
+    .filter((entry) => entry.shared > 0)
+    // 많이 겹치는 순, 같으면 최신 순. 매번 같은 목록이 나와야 하므로
+    // 무작위를 섞지 않는다.
+    .sort((a, b) => b.shared - a.shared || (a.post.date > b.post.date ? -1 : 1))
+    .slice(0, limit)
+    .map((entry) => entry.post);
+}
+
 export function getAllTagsBySection(section: Section): string[] {
   const posts = getAllPostsBySection(section);
   const tagSet = new Set<string>();

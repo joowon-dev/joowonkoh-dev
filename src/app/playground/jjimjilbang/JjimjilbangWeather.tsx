@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import styles from "./backdrop.module.css";
+import GameHelp from "../_shared/GameHelp";
+import { GAME_HELP } from "../_shared/helpContent";
 import Timeline from "./Timeline";
 import VerdictCard from "./VerdictCard";
 import { CITIES, DEFAULT_CITY, nearestCity, type City } from "./cities";
@@ -128,6 +130,15 @@ export default function JjimjilbangWeather() {
             <path d="M10 2 L2 10 L10 18" />
           </svg>
         </Link>
+
+        {/*
+          도움말. 뒤로 가기와 같은 줄이 아니라 오른쪽 위에 따로 띄운다 —
+          이동과 설명이 나란히 있으면 둘 중 무엇이 «나가는 것»인지 흐려진다.
+        */}
+        <GameHelp
+          help={GAME_HELP.jjimjilbang}
+          className="absolute right-4 z-50 top-[calc(env(safe-area-inset-top)+0.75rem)]"
+        />
 
         {/*
           도시 목록. 아이폰 날씨의 도시 전환 자리를 대신한다.
