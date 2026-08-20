@@ -48,6 +48,17 @@ const components: MDXComponents = {
       {...props}
     />
   ),
+  img: (props) => (
+    // next/image를 쓰지 않는다. 글 안의 사진은 크기가 제각각이고 MDX에서 넘어오는
+    // props에는 width/height가 없다. 여기서는 브라우저에 맡기는 편이 안전하다.
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    <img
+      className="my-8 w-full rounded-2xl border border-border"
+      loading="lazy"
+      decoding="async"
+      {...props}
+    />
+  ),
   blockquote: (props) => (
     <blockquote
       className="my-6 border-l-2 border-accent/30 pl-5 text-text-muted italic"
