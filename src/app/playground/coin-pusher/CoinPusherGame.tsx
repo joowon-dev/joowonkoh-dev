@@ -1,6 +1,7 @@
 "use client";
 
 import GameHelp from "../_shared/GameHelp";
+import GameNotes from "../_shared/GameNotes";
 import { GAME_HELP } from "../_shared/helpContent";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
@@ -135,8 +136,13 @@ export default function CoinPusherGame() {
         >
           시작하기
         </button>
-        <GameHelp help={GAME_HELP["coin-pusher"]} className="relative mx-auto mt-8 w-fit" />
-        <p className="mt-8 text-xs text-text-muted">
+        {/*
+          시작 전 화면은 사이트 본문 안에 그대로 들어가 있다. 여기서는 접힌
+          도움말 대신 펼친 본문을 쓴다 — 누르지 않아도 읽히도록.
+          접힌 «?» 알약은 게임이 화면을 덮는 setup·playing에서만 쓴다.
+        */}
+        <GameNotes help={GAME_HELP["coin-pusher"]} className="mt-14" />
+        <p className="mt-10 text-xs text-text-muted">
           <Link href="/playground" className="underline-offset-4 hover:underline">
             ← 플레이그라운드로
           </Link>
