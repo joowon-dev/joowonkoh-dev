@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import PostItem from "@/components/PostItem";
 import TagFilter from "@/components/TagFilter";
 import Pagination from "@/components/Pagination";
@@ -30,18 +30,33 @@ export default function SectionList({
   posts: PostMeta[];
   tags: string[];
 }) {
-  /**
-   * 태그는 주소에 남는다. 홈에서 "주제로 찾기"를 눌러 들어오거나, 걸러 놓은
-   * 화면을 그대로 공유해도 같은 목록이 나와야 한다. 목록에 없는 태그가
-   * 들어오면 무시하고 전체를 보여준다.
-   */
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const tagFromUrl = searchParams.get("tag");
-  const selectedTag = tagFromUrl && tags.includes(tagFromUrl) ? tagFromUrl : null;
-
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+
+  /*
+   * 주소에 걸린 태그는 붙은 다음에 읽는다.
+   *
+   * useSearchParams로 읽으면 이 컴포넌트가 Suspense 경계 안으로 들어가고,
+   * 서버가 내보내는 HTML에서 글 목록이 통째로 빠진다. 배포하고 나서야 알았다 —
+   * /blog/dev가 머리말과 꼬리말만 남은 19단어짜리 페이지가 되어 있었다.
+   *
+   * 서버(page.tsx)에서 searchParams로 받는 방법도 안 된다. 받는 순간 라우트가
+   * 동적이 되는데, 목록을 만드는 함수가 fs로 content/를 읽어서 Cloudflare
+   * edge에서는 돌지 않는다.
+   *
+   * 그래서 첫 화면은 전체 목록을 그대로 내보내고 태그는 나중에 건다. 걸러진
+   * 목록이 잠깐 전체로 보였다 좁혀지는데, 목록 페이지에서는 그쪽이 맞는 방향의
+   * 손해다 — 빈 화면보다 전체 목록이 낫다.
+   */
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("tag");
+    // 주소창은 리액트 밖의 상태고, window는 그릴 때가 아니라 붙은 뒤에만 있다.
+    // useState 초기값으로 넣으면 서버에서도 실행돼 하이드레이션이 어긋난다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (fromUrl && tags.includes(fromUrl)) setSelectedTag(fromUrl);
+  }, [tags]);
 
   const filtered = selectedTag
     ? posts.filter((p) => p.tags.includes(selectedTag))
@@ -55,6 +70,7 @@ export default function SectionList({
   );
 
   const handleTagChange = (tag: string | null) => {
+    setSelectedTag(tag);
     setPage(1);
     // scroll: false — 태그만 바꿨는데 화면이 맨 위로 튀면 고르던 자리를 잃는다
     router.replace(tag ? `${pathname}?tag=${encodeURIComponent(tag)}` : pathname, {
