@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { LangPref } from "./i18n";
 import { LANGS, type Strings } from "./i18n";
 import { DURATIONS, SIZES } from "./encode";
@@ -58,6 +59,79 @@ export function clampToRange(raw: string, min: number, max: number): number {
   const n = Number(raw);
   if (Number.isNaN(n)) return min;
   return Math.min(max, Math.max(min, n));
+}
+
+/**
+ * 타이핑 도중에 이 값을 부모(settings)로 올려도 되는지 결정한다.
+ *
+ * clampToRange를 타이핑 중 onChange에 바로 쓰면 다른 문제가 생긴다 — 100을
+ * 110으로 고치려고 필드를 전체 선택한 뒤 "1"만 친 순간, min이 10이라면
+ * clampToRange("1", 10, 2000)이 즉시 10을 돌려주고 입력창이 10으로 다시
+ * 그려진다. 커서가 튀고 사용자가 이어서 치는 숫자는 엉뚱한 자리에 붙는다.
+ * 그래서 "파싱되고 이미 범위 안에 있는 값"일 때만 올린다 — 그 외에는 null을
+ * 반환해 부모를 건드리지 않고, 사용자가 마저 입력하게 놔둔다.
+ */
+export function parseIfInRange(raw: string, min: number, max: number): number | null {
+  if (raw === "") return null;
+  const n = Number(raw);
+  if (Number.isNaN(n)) return null;
+  if (n < min || n > max) return null;
+  return n;
+}
+
+/**
+ * 숫자 입력 하나. 화면에 보이는 글자는 settings가 아니라 이 컴포넌트만의
+ * 임시 버퍼(text)다 — 그래서 "100"을 지우고 "1"만 친 상태처럼 아직 범위
+ * 밖인 문자열도 화면에는 그대로 남는다.
+ *
+ * - onChange: 버퍼는 항상 갱신한다. 부모에는 파싱되고 범위 안일 때만 올린다.
+ * - onBlur: 그 순간의 버퍼를 clampToRange로 확정한다 — 비어 있거나 범위
+ *   밖으로 포커스를 떠나면 그제서야 유효한 값으로 정착한다.
+ * - value(prop)가 바깥에서 바뀌면(예: 부모가 settings를 리셋) 버퍼도 따라간다.
+ */
+function NumberField({
+  id,
+  min,
+  max,
+  value,
+  onChange,
+  disabled,
+}: {
+  id: string;
+  min: number;
+  max: number;
+  value: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}) {
+  const [text, setText] = useState(String(value));
+
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
+
+  return (
+    <input
+      id={id}
+      type="number"
+      min={min}
+      max={max}
+      disabled={disabled}
+      value={text}
+      onChange={(e) => {
+        const raw = e.target.value;
+        setText(raw);
+        const n = parseIfInRange(raw, min, max);
+        if (n !== null) onChange(n);
+      }}
+      onBlur={() => {
+        const clamped = clampToRange(text, min, max);
+        setText(String(clamped));
+        onChange(clamped);
+      }}
+      className={`${numberInputClass} disabled:cursor-not-allowed disabled:opacity-40`}
+    />
+  );
 }
 
 /** 라디오 버튼 묶음. 코드가 반복되는 사람/카메라/거리비/이상치/영상 길이 다섯 군데서 쓴다. */
@@ -201,14 +275,12 @@ export default function SetupPanel({ settings, onChange, strings }: SetupPanelPr
         <label htmlFor="accuracyLimitM" className={labelClass}>
           {strings.accuracyLimit}
         </label>
-        <input
+        <NumberField
           id="accuracyLimitM"
-          type="number"
           min={0}
           max={5000}
           value={settings.accuracyLimitM}
-          onChange={(e) => onChange({ accuracyLimitM: clampToRange(e.target.value, 0, 5000) })}
-          className={numberInputClass}
+          onChange={(v) => onChange({ accuracyLimitM: v })}
         />
 
         <span className={`${labelClass} mb-0`}>{strings.outlierFilter}</span>
@@ -270,27 +342,23 @@ export default function SetupPanel({ settings, onChange, strings }: SetupPanelPr
         <label htmlFor="meetRadiusM" className={labelClass}>
           {strings.meetRadius}
         </label>
-        <input
+        <NumberField
           id="meetRadiusM"
-          type="number"
           min={10}
           max={2000}
           value={settings.meetRadiusM}
-          onChange={(e) => onChange({ meetRadiusM: clampToRange(e.target.value, 10, 2000) })}
-          className={numberInputClass}
+          onChange={(v) => onChange({ meetRadiusM: v })}
         />
 
         <label htmlFor="meetMinMinutes" className={labelClass}>
           {strings.meetMinDuration}
         </label>
-        <input
+        <NumberField
           id="meetMinMinutes"
-          type="number"
           min={1}
           max={240}
           value={settings.meetMinMinutes}
-          onChange={(e) => onChange({ meetMinMinutes: clampToRange(e.target.value, 1, 240) })}
-          className={numberInputClass}
+          onChange={(v) => onChange({ meetMinMinutes: v })}
         />
       </fieldset>
 
@@ -373,15 +441,13 @@ export default function SetupPanel({ settings, onChange, strings }: SetupPanelPr
         <label htmlFor="hideHomeRadiusM" className={labelClass}>
           {strings.hideHomeRadius}
         </label>
-        <input
+        <NumberField
           id="hideHomeRadiusM"
-          type="number"
           min={50}
           max={5000}
           disabled={!settings.hideHome}
           value={settings.hideHomeRadiusM}
-          onChange={(e) => onChange({ hideHomeRadiusM: clampToRange(e.target.value, 50, 5000) })}
-          className={`${numberInputClass} disabled:cursor-not-allowed disabled:opacity-40`}
+          onChange={(v) => onChange({ hideHomeRadiusM: v })}
         />
       </fieldset>
     </div>
