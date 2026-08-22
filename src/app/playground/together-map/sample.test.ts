@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_MEET_MIN_MS, DEFAULT_MEET_RADIUS_M, GRID_MS, MAX_GAP_MS, findMeetings, resample } from "./meet";
 import { haversineMeters } from "./geo";
+import { tailSegments } from "./render";
 import { parseTimeline, type RawPoint } from "./parse";
 import {
   SAMPLE_BUSAN_RANGE,
   SAMPLE_JEJU_RANGE,
   SAMPLE_NAMES,
   SAMPLE_START,
+  SAMPLE_DENSE_DAY,
   buildSampleTimeline,
 } from "./sample";
 
@@ -239,5 +241,44 @@ describe("가상 여행이 검출기를 제대로 돌린다", () => {
       (m) => m.end > SAMPLE_BUSAN_RANGE.from && m.start < SAMPLE_BUSAN_RANGE.to,
     );
     expect(during.length).toBeGreaterThan(0);
+  });
+});
+
+describe("촘촘하게 기록된 하루(2026-03-29)", () => {
+  const DAY = 86_400_000;
+
+  function dayPoints(who: "a" | "b") {
+    const all = parseTimeline(buildSampleTimeline(who, "android"));
+    return all.filter((p) => p.t >= SAMPLE_DENSE_DAY && p.t < SAMPLE_DENSE_DAY + DAY);
+  }
+
+  it("그날은 다른 날보다 훨씬 촘촘하다", () => {
+    const all = parseTimeline(buildSampleTimeline("a", "android"));
+    const dense = dayPoints("a").length;
+    const average = all.length / 90;
+    // 이 하루가 «촘촘하다»고 부를 만하려면 평균의 몇 배는 돼야 한다.
+    expect(dense).toBeGreaterThan(average * 5);
+  });
+
+  it("끊기지 않는 긴 한 줄이 나온다 — 이게 없으면 지도에 선이 안 그려진다", () => {
+    // 점이 많아도 서로 MAX_GAP_MS보다 멀면 조각조각 나서 선이 되지 않는다.
+    // 이 하루를 넣은 이유가 바로 «선으로 읽히는 궤적»이므로 그것을 직접 검증한다.
+    const pts = dayPoints("a");
+    const segs = tailSegments(pts, SAMPLE_DENSE_DAY + DAY, Number.POSITIVE_INFINITY, MAX_GAP_MS);
+    const longest = Math.max(...segs.map((s) => s.length));
+    expect(longest).toBeGreaterThan(100);
+  });
+
+  it("두 사람이 같은 코스를 걷는다 — 그날은 만난다", () => {
+    const a = dayPoints("a");
+    const b = dayPoints("b");
+    expect(a.length).toBeGreaterThan(0);
+    expect(b.length).toBeGreaterThan(0);
+
+    // 같은 시각대의 두 사람이 걷는 내내 붙어 있어야 한다.
+    const mid = SAMPLE_DENSE_DAY + 12 * 3_600_000;
+    const near = (pts: typeof a) =>
+      pts.reduce((best, p) => (Math.abs(p.t - mid) < Math.abs(best.t - mid) ? p : best));
+    expect(haversineMeters(near(a), near(b))).toBeLessThan(200);
   });
 });

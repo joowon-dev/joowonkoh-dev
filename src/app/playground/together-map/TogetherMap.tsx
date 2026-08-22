@@ -90,6 +90,9 @@ interface LatestState {
   summary: Summary | null;
   settings: Settings;
   strings: Strings;
+  lang: Lang;
+  /** 여정 전체가 담기는 시야. 마무리에서 여기까지 물러난다. */
+  wholeView: View | null;
   homeSpots: { lat: number; lon: number; radiusM: number }[] | null;
 }
 
@@ -319,6 +322,8 @@ export default function TogetherMap() {
       summary,
       settings,
       strings,
+      lang,
+      wholeView: fixedView,
       homeSpots,
     };
   });
@@ -357,14 +362,35 @@ export default function TogetherMap() {
         ? paceMsPerFrame(state.range, state.settings.durationSec, FPS)
         : 0;
 
+      const totalSpan = state.range ? Math.max(1, state.range.to - state.range.from) : 1;
+      const ratio = state.range ? (nowRef.current - state.range.from) / totalSpan : 0;
+      const opacity =
+        state.settings.showSummary && state.summary
+          ? summaryOpacity(ratio, state.settings.durationSec)
+          : 0;
+
       // 카메라. fixed는 useEffect에서 이미 고정해 뒀으니 여기서는 건드리지 않는다.
       if (state.settings.camera !== "fixed") {
-        const target = dynamicTarget(state, nowRef.current, size, pace);
-        if (target) {
-          viewRef.current = cameraSeededRef.current
-            ? stepCamera(viewRef.current, target, DAMPING[state.settings.camera])
-            : target;
+        if (opacity > 0 && state.wholeView) {
+          // 마무리가 뜨기 시작하면 여정 전체가 담기는 시야로 물러난다. 카드가
+          // 말하는 수치는 기간 전체인데 화면은 마지막 몇 시간만 비추고 있으면
+          // 둘이 서로 다른 이야기를 한다.
+          //
+          // 여기서만 damping 대신 카드가 짙어지는 정도(opacity)를 그대로 쓴다.
+          // 고정 damping으로 두면 재생이 끝나 프레임이 멈추는 순간 카메라도
+          // 가던 길에 얼어붙는다 — 실제로 그렇게 해 봤더니 마지막 화면이 오산
+          // 상공에 멈춰서, 정작 보여 주려던 궤적이 화면 위로 잘려 나갔다.
+          // opacity는 끝에서 반드시 1이 되므로 이 방식은 목표에 정확히 닿는다.
+          viewRef.current = stepCamera(viewRef.current, state.wholeView, opacity);
           cameraSeededRef.current = true;
+        } else {
+          const target = dynamicTarget(state, nowRef.current, size, pace);
+          if (target) {
+            viewRef.current = cameraSeededRef.current
+              ? stepCamera(viewRef.current, target, DAMPING[state.settings.camera])
+              : target;
+            cameraSeededRef.current = true;
+          }
         }
       }
 
@@ -372,13 +398,6 @@ export default function TogetherMap() {
         const img = cache.get(ref);
         return img ? [{ image: img, x: ref.screenX, y: ref.screenY, size: ref.size }] : [];
       });
-
-      const totalSpan = state.range ? Math.max(1, state.range.to - state.range.from) : 1;
-      const ratio = state.range ? (nowRef.current - state.range.from) / totalSpan : 0;
-      const opacity =
-        state.settings.showSummary && state.summary
-          ? summaryOpacity(ratio, state.settings.durationSec)
-          : 0;
 
       const tracks: [Track, Track] = [
         {
@@ -403,11 +422,15 @@ export default function TogetherMap() {
         now: nowRef.current,
         tiles,
         meetCount: state.meetings.filter((m) => m.start <= nowRef.current).length,
-        title: state.settings.videoTitle || state.strings.title,
+        // 기본 제목을 얹지 않는다. 화면 위쪽은 날짜와 시각만 남기고, 제목은
+        // 사용자가 «영상 제목»에 직접 적었을 때만 나온다.
+        title: state.settings.videoTitle,
         hide: state.homeSpots,
         strings: state.strings,
         summary: opacity > 0 && state.summary ? { data: state.summary, opacity } : null,
         paceMsPerFrame: pace,
+        lang: state.lang,
+        progress: ratio,
       };
 
       if (canvas.width !== size.w || canvas.height !== size.h) {

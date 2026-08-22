@@ -66,6 +66,28 @@ export const SAMPLE_JEJU_RANGE = {
   to: START + 63 * DAY,
 };
 
+/**
+ * 촘촘하게 기록된 하루 — 2026-03-29.
+ *
+ * 나머지 날들은 출퇴근과 머묾 위주라 하루치 «걸은 길»이 지도에서 짧은 토막으로만
+ * 남는다(전체 시야에서 제일 긴 조각이 13px 남짓이었다). 실제 구글 기록에는 산책처럼
+ * 1분 간격으로 촘촘히 찍히는 날이 섞여 있고, 그런 날이 하루는 있어야 궤적이 «선»으로
+ * 읽히는지 눈으로 확인할 수 있다.
+ */
+export const SAMPLE_DENSE_DAY = Date.parse("2026-03-29T00:00:00+09:00");
+
+/** 그날 둘이 함께 걷는 코스 — 성수에서 서울숲을 돌아 한강을 따라 돌아온다. */
+const DENSE_WALK: LatLon[] = [
+  { lat: 37.5445, lon: 127.0557 }, // 성수역
+  { lat: 37.5471, lon: 127.0472 }, // 서울숲 북측
+  { lat: 37.5443, lon: 127.0374 }, // 서울숲
+  { lat: 37.5387, lon: 127.0403 }, // 뚝섬 한강공원
+  { lat: 37.5321, lon: 127.0466 }, // 청담대교 남단
+  { lat: 37.5296, lon: 127.0562 }, // 뚝섬유원지
+  { lat: 37.5378, lon: 127.0605 }, // 성수 카페거리
+  { lat: 37.5445, lon: 127.0557 }, // 성수역으로 돌아온다
+];
+
 /** 구글이 실제로 적는 세그먼트 세 종류. */
 type StayEvent = { type: "visit"; at: LatLon; from: number; to: number };
 type PathEvent = { type: "path"; points: { t: number; at: LatLon }[] };
@@ -126,6 +148,38 @@ function commute(rng: Rng, day: number, from: LatLon, to: LatLon, startT: number
   return day % 2 === 0 ? pathTravel(rng, from, to, startT, endT) : activityTravel(rng, from, to, startT, endT);
 }
 
+/**
+ * 코스를 따라 일정한 간격으로 촘촘히 찍는다. 걸어 다닐 때의 기록 모양이다 —
+ * 흔들림도 25m가 아니라 8m로 준다(걷는 동안은 GPS가 훨씬 안정적이다).
+ */
+function densePath(
+  rng: Rng,
+  route: LatLon[],
+  startT: number,
+  endT: number,
+  stepMs: number,
+): PathEvent {
+  const legs = route.length - 1;
+  const points: { t: number; at: LatLon }[] = [];
+  const total = endT - startT;
+
+  for (let leg = 0; leg < legs; leg += 1) {
+    const legStart = startT + (total * leg) / legs;
+    const legEnd = startT + (total * (leg + 1)) / legs;
+    const steps = Math.max(1, Math.round((legEnd - legStart) / stepMs));
+    for (let i = 0; i < steps; i += 1) {
+      const f = i / steps;
+      points.push({
+        t: legStart + (legEnd - legStart) * f,
+        at: jitter(rng, lerpLatLon(route[leg], route[leg + 1], f), 8),
+      });
+    }
+  }
+  points.push({ t: endT, at: jitter(rng, route[legs], 8) });
+
+  return { type: "path", points };
+}
+
 /** GPS가 순간적으로 멀리 튀었다가 돌아오는 촘촘한 경로 — 필터가 걸러야 할 대상. */
 function spike(rng: Rng, near: LatLon, t: number): PathEvent {
   return {
@@ -148,6 +202,22 @@ function buildEvents(who: "a" | "b", seed: number): Event[] {
     const dayStart = START + day * DAY;
     const inBusan = dayStart >= SAMPLE_BUSAN_RANGE.from && dayStart < SAMPLE_BUSAN_RANGE.to;
     const inJeju = dayStart >= SAMPLE_JEJU_RANGE.from && dayStart < SAMPLE_JEJU_RANGE.to;
+
+    // 촘촘하게 기록된 하루 — 둘이 같은 코스를 함께 걷는다.
+    if (dayStart === SAMPLE_DENSE_DAY) {
+      const walkStart = dayStart + 10 * HOUR + 40 * MIN;
+      const cafeStart = dayStart + 14 * HOUR;
+      const backStart = dayStart + 15 * HOUR + 30 * MIN;
+
+      out.push(visit(rng, home, dayStart + 8 * HOUR, dayStart + 10 * HOUR));
+      out.push(commute(rng, day, home, DENSE_WALK[0], dayStart + 10 * HOUR, walkStart));
+      out.push(densePath(rng, DENSE_WALK, walkStart, cafeStart, MIN));
+      out.push(visit(rng, DENSE_WALK[DENSE_WALK.length - 1], cafeStart, backStart));
+      out.push(densePath(rng, [...DENSE_WALK].reverse(), backStart, dayStart + 17 * HOUR, MIN));
+      out.push(commute(rng, day, DENSE_WALK[0], home, dayStart + 17 * HOUR, dayStart + 18 * HOUR));
+      out.push(visit(rng, home, dayStart + 18 * HOUR, dayStart + 23 * HOUR));
+      continue;
+    }
 
     // 제주에는 지호만 간다. 수아는 그동안 평소대로 서울에 있는다.
     if (inJeju && who === "a") {

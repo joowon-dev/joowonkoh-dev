@@ -152,10 +152,41 @@ export interface FrameState {
    * 자세한 이유는 TAIL_FRAMES 위 주석 참조.
    */
   paceMsPerFrame: number;
+  /** 날짜를 보는 사람의 언어·시간대로 적기 위한 로캘 코드. */
+  lang: string;
+  /** 기간 전체에서 지금 어디쯤인가(0~1). 진행 막대에 쓴다. */
+  progress: number;
 }
 
 const FONT_STACK =
   'system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif';
+
+/**
+ * 타임스탬프를 «보는 사람의 시각»으로 적는다.
+ *
+ * toISOString()을 쓰면 안 된다 — 그건 UTC라 한국에서는 오전 9시 이전의 순간이
+ * 하루 전날로 찍힌다. 만남 목록(MeetList)은 이미 현지 시각으로 보여 주고 있어서,
+ * 같은 만남이 카드와 목록에서 다른 날짜로 나오게 된다. 카드는 사람들이 캡처해
+ * 공유하는 프레임이라 그 어긋남이 그대로 남는다.
+ */
+export function formatDate(t: number, lang: string): string {
+  return new Intl.DateTimeFormat(lang, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(t));
+}
+
+/** 날짜에 시:분까지 붙여 «지금 흐르고 있는 시각»을 보여 준다. */
+export function formatDateTime(t: number, lang: string): string {
+  return new Intl.DateTimeFormat(lang, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(t));
+}
 
 /**
  * `now` 시각의 위치를 구한다.
@@ -221,16 +252,43 @@ export function currentPosition(
  * 웹폰트 이름을 적으면 조용히 기본 폰트로 떨어져서 미리보기와 결과물이 달라진다.
  */
 function drawChrome(ctx: CanvasRenderingContext2D, state: FrameState): void {
-  const { size, tracks, strings } = state;
+  const { size, tracks } = state;
   const pad = size.w * 0.04;
 
   ctx.textBaseline = "alphabetic";
 
-  // 상단 제목
+  // 상단 — 지금 재생 중인 날짜와 시각.
+  //
+  // 이게 없으면 화면이 멈춘 것처럼 보인다. 점이 크게 움직이지 않는 구간에서는
+  // 사람이 «시간이 흐르고 있다»고 읽을 단서가 아무것도 없기 때문이다.
+  const stampSize = Math.round(size.w / 26);
+  ctx.font = `700 ${stampSize}px ${FONT_STACK}`;
   ctx.fillStyle = "#1a1a1a";
-  ctx.font = `700 ${Math.round(size.w / 24)}px ${FONT_STACK}`;
   ctx.textAlign = "left";
-  ctx.fillText(state.title, pad, pad + size.w / 24);
+  let topY = pad + stampSize;
+  ctx.fillText(formatDateTime(state.now, state.lang), pad, topY);
+
+  // 사용자가 직접 넣은 제목이 있을 때만 그 아래에 적는다. 기본 제목을 항상
+  // 얹으면 화면 위쪽이 «날짜와 시각»만 남기를 바라는 기본 구성과 어긋난다.
+  if (state.title) {
+    const titleSize = Math.round(size.w / 34);
+    topY += titleSize * 1.4;
+    ctx.font = `600 ${titleSize}px ${FONT_STACK}`;
+    ctx.fillStyle = "#5b6270";
+    ctx.fillText(state.title, pad, topY);
+  }
+
+  // 그리고 진행 막대. 날짜는 계단처럼 툭툭 바뀌므로, 매 프레임 조금씩 자라는
+  // 것이 하나는 있어야 «흐르는» 느낌이 난다.
+  const barY = topY + stampSize * 0.7;
+  const barW = size.w - pad * 2;
+  const barH = Math.max(2, size.w / 300);
+  const progress = Math.max(0, Math.min(1, state.progress));
+
+  ctx.fillStyle = "rgba(26, 26, 26, 0.12)";
+  ctx.fillRect(pad, barY, barW, barH);
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillRect(pad, barY, barW * progress, barH);
 
   // 하단 왼쪽 — 두 사람 이름과 색 점
   const nameFontSize = Math.round(size.w / 40);
@@ -252,16 +310,6 @@ function drawChrome(ctx: CanvasRenderingContext2D, state: FrameState): void {
     ny -= nameFontSize * 1.4;
   }
 
-  // 하단 오른쪽 — 만남 카운터
-  const countText = strings.meetingsFound.replace(
-    "{n}",
-    String(state.meetCount),
-  );
-  ctx.textAlign = "right";
-  ctx.fillStyle = "#1a1a1a";
-  ctx.font = `600 ${nameFontSize}px ${FONT_STACK}`;
-  ctx.fillText(countText, size.w - pad, size.h - pad);
-
   // 우하단 구석 — 타일 저작권 표기. 지도를 깔았으면 반드시 있어야 한다.
   ctx.font = `${Math.round(size.w / 70)}px ${FONT_STACK}`;
   ctx.fillStyle = "rgba(26, 26, 26, 0.65)";
@@ -270,7 +318,11 @@ function drawChrome(ctx: CanvasRenderingContext2D, state: FrameState): void {
 }
 
 /**
- * 마무리 카드. 화면을 반투명 흰색으로 덮고 요약 수치를 큰 글씨로 쌓는다.
+ * 마무리 카드.
+ *
+ * 지도를 완전히 덮지 않는다. 이 화면의 주인공은 «둘이 함께 지나온 길»이고 수치는
+ * 그 위에 얹히는 것이다. 옅은 흰 막만 깔아 길이 비쳐 보이게 한 뒤, 가운데
+ * 카드에 두 사람 이름과 요약을 쌓는다.
  *
  * favourite와 farthest는 null일 수 있다 — 계산이 안 된 것과 실제로 0/없음인 것을
  * 구분할 수 없으므로 「0km」나 「-」를 적지 않고 그 줄 자체를 건너뛴다.
@@ -281,74 +333,125 @@ function drawSummaryCard(
   summary: Summary,
   opacity: number,
 ): void {
-  const { size, strings } = state;
+  const { size, strings, tracks } = state;
 
-  // opacity: 1은 「완전히 덮는다」는 계약이다(FrameState.summary 문서 참조).
-  // 여기서 따로 0.94를 곱하면 opacity=1에서도 지도가 6% 비쳐 보여 계약을 어긴다.
   ctx.globalAlpha = opacity;
-  ctx.fillStyle = "#ffffff";
+
+  // 1. 길이 비쳐 보이는 옅은 막. 진하게 깔면 «전체 경로를 보여준다»는 목적이
+  //    막 뒤에서 지워진다 — 글자가 읽힐 만큼만 덮는다.
+  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
   ctx.fillRect(0, 0, size.w, size.h);
 
-  const pad = size.w * 0.08;
-  const lineGap = size.w / 14;
-  let y = size.h * 0.34;
-
-  ctx.textAlign = "left";
-  ctx.fillStyle = "#1a1a1a";
-
-  ctx.font = `700 ${Math.round(size.w / 16)}px ${FONT_STACK}`;
-  ctx.fillText(
-    summary.meetCount > 0
-      ? strings.meetingsFound.replace("{n}", String(summary.meetCount))
-      : strings.noMeetings,
-    pad,
-    y,
-  );
-  y += lineGap;
-
-  ctx.font = `500 ${Math.round(size.w / 26)}px ${FONT_STACK}`;
-
+  // 2. 본문 줄들을 먼저 정해야 카드 높이를 잴 수 있다.
+  const rows: string[] = [];
   if (summary.totalTogetherMs > 0) {
     const hours = summary.totalTogetherMs / 3_600_000;
     // 문자열 자체가 구분자(": ")를 이미 품고 있다(meetingsFound와 같은 관례) —
     // 여기서 또 ": "를 붙이면 두 번 찍힌다. {n}은 값만 채운다.
-    ctx.fillText(
-      strings.totalTogether.replace(
-        "{n}",
-        `${hours.toFixed(1)}${strings.hoursUnit}`,
-      ),
-      pad,
-      y,
+    rows.push(
+      strings.totalTogether.replace("{n}", `${hours.toFixed(1)}${strings.hoursUnit}`),
     );
-    y += lineGap;
   }
-
   if (summary.favourite) {
     // 좌표를 그대로 찍지 않는다. 지도 위 집 주변 가리기(6.5)는 지도에만 적용되고
     // 이 카드는 건드리지 않는다 — 두 사람이 가장 자주 만난 곳은 대개 둘 중 한쪽
     // 집이라, 좌표를 4자리(≈11m 오차)까지 적으면 지도에서 가린 집 주소를 카드가
     // 그대로 흘린다. 카드는 스크린샷으로 공유되는 프레임이라 더 위험하다.
     // 좌표 대신 몇 번 만났는지(count)를 보여준다 — 그게 실제로 궁금한 값이다.
-    ctx.fillText(
-      strings.favouriteSpot.replace("{n}", String(summary.favourite.count)),
-      pad,
-      y,
-    );
-    y += lineGap;
+    rows.push(strings.favouriteSpot.replace("{n}", String(summary.favourite.count)));
   }
-
   if (summary.farthest) {
     const km = (summary.farthest.meters / 1000).toFixed(1);
-    const date = new Date(summary.farthest.at).toISOString().slice(0, 10);
-    ctx.fillText(
-      strings.farthestApart.replace(
-        "{n}",
-        `${km}${strings.kmUnit} (${date})`,
-      ),
-      pad,
-      y,
+    const date = formatDate(summary.farthest.at, state.lang);
+    rows.push(
+      strings.farthestApart.replace("{n}", `${km}${strings.kmUnit} (${date})`),
     );
-    y += lineGap;
+  }
+
+  const nameSize = Math.round(size.w / 28);
+  const headlineSize = Math.round(size.w / 15);
+  const rowSize = Math.round(size.w / 27);
+  const rowGap = rowSize * 1.75;
+  const inset = size.w * 0.07;
+
+  const cardW = size.w * 0.86;
+  const cardX = (size.w - cardW) / 2;
+  const cardH =
+    inset * 2 + nameSize * 1.6 + headlineSize * 1.5 + rows.length * rowGap;
+  // 카드는 아래쪽에 앉힌다. 한가운데 두면 궤적이 제일 촘촘한 생활권 위를 그대로
+  // 덮어서, 정작 «함께 걸은 길»이 카드 뒤에 숨는다.
+  const cardY = size.h - cardH - size.h * 0.1;
+
+  // 3. 카드 바탕.
+  ctx.beginPath();
+  ctx.roundRect(cardX, cardY, cardW, cardH, size.w * 0.045);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+  ctx.fill();
+  ctx.lineWidth = Math.max(1, size.w / 540);
+  ctx.strokeStyle = "rgba(26, 26, 26, 0.10)";
+  ctx.stroke();
+
+  let y = cardY + inset + nameSize;
+
+  // 4. 두 사람 — 각자의 색 점과 이름, 사이에 하트. 이 영상이 «둘»의 것이라는 걸
+  //    수치보다 먼저 보여 준다.
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `600 ${nameSize}px ${FONT_STACK}`;
+  const heart = " ♥ ";
+  const dotR = nameSize * 0.3;
+  const gap = dotR * 1.6;
+  const [ta, tb] = tracks;
+  const wA = ctx.measureText(ta.name).width;
+  const wB = ctx.measureText(tb.name).width;
+  const wHeart = ctx.measureText(heart).width;
+  const total = dotR * 2 + gap + wA + wHeart + dotR * 2 + gap + wB;
+
+  let x = (size.w - total) / 2;
+  ctx.textAlign = "left";
+
+  ctx.beginPath();
+  ctx.arc(x + dotR, y - nameSize * 0.32, dotR, 0, Math.PI * 2);
+  ctx.fillStyle = ta.color;
+  ctx.fill();
+  x += dotR * 2 + gap;
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillText(ta.name, x, y);
+  x += wA;
+
+  ctx.fillStyle = "#e0447c";
+  ctx.fillText(heart, x, y);
+  x += wHeart;
+
+  ctx.beginPath();
+  ctx.arc(x + dotR, y - nameSize * 0.32, dotR, 0, Math.PI * 2);
+  ctx.fillStyle = tb.color;
+  ctx.fill();
+  x += dotR * 2 + gap;
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillText(tb.name, x, y);
+
+  y += nameSize * 0.6 + headlineSize;
+
+  // 5. 큰 한 줄 — 만난 횟수.
+  ctx.textAlign = "center";
+  ctx.font = `700 ${headlineSize}px ${FONT_STACK}`;
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillText(
+    summary.meetCount > 0
+      ? strings.meetingsFound.replace("{n}", String(summary.meetCount))
+      : strings.noMeetings,
+    size.w / 2,
+    y,
+  );
+
+  y += headlineSize * 0.5;
+
+  // 6. 나머지 수치들.
+  ctx.font = `500 ${rowSize}px ${FONT_STACK}`;
+  ctx.fillStyle = "#4a5160";
+  for (const row of rows) {
+    y += rowGap;
+    ctx.fillText(row, size.w / 2, y);
   }
 
   ctx.globalAlpha = 1;
@@ -393,9 +496,22 @@ export function drawFrame(
     //    실제로 가지 않은 직선이 생긴다.
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.lineWidth = size.w / 270;
+    // 궤적은 이 영상의 주인공이다. 지도 타일 위에서 가늘면 도로선과 섞여 버려서,
+    // 두 사람의 «걸은 길»이 배경의 일부처럼 읽힌다. 확실히 더 굵게 긋는다.
+    // 마무리에서는 영상에 나왔던 길 «전체»를 다시 펼친다. 꼬리 길이를 그대로 두면
+    // 마지막 몇 시간만 남아서, 요약 수치가 가리키는 여정이 정작 화면에 없다.
+    const finale = state.summary !== null;
+    const tailMs = finale ? Number.POSITIVE_INFINITY : tailMsFor(state.paceMsPerFrame);
 
-    const tailMs = tailMsFor(state.paceMsPerFrame);
+    // 마무리는 오히려 «가늘게» 긋는다.
+    //
+    // 직관과 반대라 이유를 적어 둔다. 마무리는 여정 전체가 담기도록 시야가 크게
+    // 물러나 있는데, 그러면 하루하루의 이동은 화면에서 아주 짧아진다. 샘플에서
+    // 재 보니 시야는 줌 7.2로 벌어지고 제일 긴 조각도 12.6px뿐이었다 — 재생 때
+    // 굵기(9.4px)로 그으면 선이 아니라 뭉친 점 158개가 된다. 가늘게 그어야
+    // 그 조각들이 «지나온 길»의 모양으로 읽힌다.
+    ctx.lineWidth = finale ? Math.max(1.5, size.w / 400) : size.w / 150;
+
     for (const track of tracks) {
       const segments = tailSegments(track.points, now, tailMs, MAX_GAP_MS);
       ctx.strokeStyle = track.color;
@@ -404,7 +520,9 @@ export function drawFrame(
         // 오래된 쪽이 옅어지도록 두 점씩 끊어 그린다. 한 번에 그리면
         // 조각 전체가 같은 투명도라 «지나온 흔적»으로 안 읽힌다.
         for (let i = 1; i < seg.length; i += 1) {
-          ctx.globalAlpha = 0.15 + 0.85 * (i / seg.length);
+          // 재생 중에는 오래된 쪽이 옅어져야 «지나온 흔적»으로 읽힌다. 마무리에서는
+          // 전체 여정을 한 장으로 보여주는 것이므로 고르게 진하게 긋는다.
+          ctx.globalAlpha = finale ? 0.9 : 0.28 + 0.72 * (i / seg.length);
           const from = viewToScreen(seg[i - 1], view, size);
           const to = viewToScreen(seg[i], view, size);
           ctx.beginPath();
@@ -417,21 +535,33 @@ export function drawFrame(
     ctx.globalAlpha = 1;
 
     // 5. 현재 위치. 흰 테두리를 둘러야 어느 색 지도 위에서도 보인다.
-    for (const track of tracks) {
+    //
+    // 마무리에서는 그리지 않는다. 그때는 «지금 어디»가 아니라 «지나온 전부»를
+    // 보여주는 화면이고, 물러난 시야에서 이 점(약 17px)은 궤적 조각(약 12px)보다
+    // 커서 정작 보여주려는 길을 덮어 버린다.
+    for (const track of finale ? [] : tracks) {
       const head = currentPosition(track.points, now);
       if (!head) continue;
       const s = viewToScreen(head, view, size);
-      const r = size.w / 90;
+      const r = size.w / 62;
 
-      // 기록이 비는 동안은 «마지막으로 알던 자리»다. 속을 비우고 옅게 그려서
+      // 흰 후광을 먼저 깐다. 지도 타일에는 초록 공원도 회색 도로도 있어서,
+      // 점만 찍으면 배경색에 따라 있는 듯 없는 듯 묻힌다 — 특히 영상이
+      // 시작하자마자 «두 사람이 어디 있는지»부터 눈에 들어와야 한다.
+      ctx.globalAlpha = head.stale ? 0.8 : 1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r * 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.fill();
+
+      // 기록이 비는 동안은 «마지막으로 알던 자리»다. 속을 비워 그려서
       // 지금 확실히 아는 위치와 구분한다 — 채워진 점과 똑같이 그리면
       // 모르는 것을 안다고 말하는 셈이다.
-      ctx.globalAlpha = head.stale ? 0.55 : 1;
       ctx.beginPath();
       ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
       ctx.fillStyle = head.stale ? "#ffffff" : track.color;
       ctx.fill();
-      ctx.lineWidth = r * 0.35;
+      ctx.lineWidth = r * 0.4;
       ctx.strokeStyle = head.stale ? track.color : "#ffffff";
       ctx.stroke();
     }

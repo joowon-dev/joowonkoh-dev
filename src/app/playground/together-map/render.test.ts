@@ -4,6 +4,7 @@ import type { RawPoint } from "./parse";
 import {
   blurRadiusScreen,
   currentPosition,
+  formatDate,
   meetingPulse,
   pulseMsFor,
   tailMsFor,
@@ -296,5 +297,22 @@ describe("blurRadiusScreen", () => {
     expect(radiusHigh).toBeGreaterThan(radiusEq);
     // 위도 차이가 클수록 cos 차이도 크므로, 테스트는 충분히 다른 픽셀 값을 확인한다
     expect(Math.abs(radiusEq - radiusHigh)).toBeGreaterThan(5);
+  });
+});
+
+describe("formatDate", () => {
+  it("UTC가 아니라 보는 사람의 시간대로 적는다", () => {
+    // 한국(UTC+9) 기준 2026-03-02 오전 8시. toISOString()으로 적으면
+    // UTC로는 아직 3월 1일이라 «하루 전날»이 찍힌다. 만남 목록은 현지 시각으로
+    // 보여 주므로, 그렇게 두면 같은 순간이 카드와 목록에서 다른 날짜가 된다.
+    const t = new Date(2026, 2, 2, 8, 0, 0).getTime();
+    const shown = formatDate(t, "ko");
+    const localDay = new Date(t).getDate();
+    expect(shown).toContain(String(localDay));
+  });
+
+  it("로캘에 따라 표기가 달라진다", () => {
+    const t = Date.parse("2026-05-02T12:00:00Z");
+    expect(formatDate(t, "ko")).not.toBe(formatDate(t, "en"));
   });
 });
