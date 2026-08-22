@@ -32,6 +32,15 @@ export const DEFAULT_MEET_RADIUS_M = 100;
 export const DEFAULT_MEET_MIN_MS = 15 * 60_000;
 
 /**
+ * 방문 구간이 «있었다»고 믿어 주는 최대 길이. 손상되거나 손으로 잘못 고친
+ * 내보내기 파일은 until에 시작 시각으로부터 며칠 뒤를 적어 넣을 수 있다.
+ * 그걸 그대로 믿고 그 시간 내내 그 자리에 있었다고 칠하면, 그 사이를 지나간
+ * 다른 사람과 있지도 않은 만남이 만들어진다 — 이 24시간을 넘는 구간은
+ * 다시 «모르는 구간»으로 돌려보낸다. 만남을 놓치는 것이 지어내는 것보다 낫다.
+ */
+export const MAX_STAY_MS = 24 * 60 * 60_000;
+
+/**
  * 점 목록을 고른 간격의 격자에 올린다.
  * 아는 구간은 보간해서 채우고, 모르는 구간은 null로 비운다.
  */
@@ -66,9 +75,14 @@ export function resample(
 
     // 머문 구간 안이면 그 자리다. 구글이 «여기 있었다»고 적어 둔 시간이라
     // 추측이 아니라 기록이다. 구멍 검사에 걸리기 전에 먼저 확인한다.
-    if (prev.until !== undefined && t >= prev.t && t <= prev.until) {
-      out[i] = { lat: prev.lat, lon: prev.lon };
-      continue;
+    //
+    // 다만 until을 무한정 믿지는 않는다 — MAX_STAY_MS로 잘라 낸다.
+    if (prev.until !== undefined) {
+      const stayEnd = Math.min(prev.until, prev.t + MAX_STAY_MS);
+      if (t >= prev.t && t <= stayEnd) {
+        out[i] = { lat: prev.lat, lon: prev.lon };
+        continue;
+      }
     }
 
     if (t < prev.t || next === undefined) continue; // 기록 범위 밖

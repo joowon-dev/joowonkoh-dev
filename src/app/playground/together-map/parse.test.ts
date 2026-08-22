@@ -143,7 +143,9 @@ describe("parseTimeline — until (방문 구간 끝 시각)", () => {
     expect(points[0].until).toBe(Date.parse("2026-01-01T11:00:00.000+09:00"));
   });
 
-  it("endTime이 없으면 until은 undefined다", () => {
+  it("endTime이 없으면 until 키 자체가 없다", () => {
+    // toBeUndefined()는 «키가 없음»과 «until: undefined로 명시됨»을 구분하지 못한다.
+    // 브리프가 요구한 것은 부재(absence)이므로 in 연산자로 키 존재 여부를 직접 확인한다.
     const data = {
       semanticSegments: [
         {
@@ -153,10 +155,10 @@ describe("parseTimeline — until (방문 구간 끝 시각)", () => {
       ],
     };
     const points = parseTimeline(data);
-    expect(points[0].until).toBeUndefined();
+    expect("until" in points[0]).toBe(false);
   });
 
-  it("endTime이 startTime과 같으면 until은 붙지 않는다 — 없는 것과 «길이 0»은 다르다", () => {
+  it("endTime이 startTime과 같으면 until 키가 붙지 않는다 — 없는 것과 «길이 0»은 다르다", () => {
     const data = {
       semanticSegments: [
         {
@@ -167,10 +169,26 @@ describe("parseTimeline — until (방문 구간 끝 시각)", () => {
       ],
     };
     const points = parseTimeline(data);
-    expect(points[0].until).toBeUndefined();
+    expect("until" in points[0]).toBe(false);
   });
 
-  it("activity와 timelinePath에서 나온 점에는 until이 없다", () => {
+  it("endTime이 startTime보다 앞서면 until 키가 붙지 않는다 — 손상된 순서를 «길이 0»과 같이 취급한다", () => {
+    // 구현은 end > start로만 담는다. end < start(시계열이 뒤집힌 손상 데이터)를
+    // 방문 길이로 오인해 음수 구간을 만들면 안 된다는 것을 여기서 못박는다.
+    const data = {
+      semanticSegments: [
+        {
+          startTime: "2026-01-01T09:00:00.000+09:00",
+          endTime: "2026-01-01T08:00:00.000+09:00",
+          visit: { topCandidate: { placeLocation: { latLng: "37.5665°, 126.9780°" } } },
+        },
+      ],
+    };
+    const points = parseTimeline(data);
+    expect("until" in points[0]).toBe(false);
+  });
+
+  it("activity와 timelinePath에서 나온 점에는 until 키가 없다", () => {
     const data = {
       semanticSegments: [
         {
@@ -189,7 +207,7 @@ describe("parseTimeline — until (방문 구간 끝 시각)", () => {
       ],
     };
     const points = parseTimeline(data);
-    expect(points.every((p) => p.until === undefined)).toBe(true);
+    expect(points.every((p) => !("until" in p))).toBe(true);
   });
 
   it("아이폰 모양에서도 똑같이 until이 붙는다", () => {

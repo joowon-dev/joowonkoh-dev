@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_MEET_MIN_MS, DEFAULT_MEET_RADIUS_M, GRID_MS, MAX_GAP_MS, findMeetings, overlapRange, resample } from "./meet";
+import { DEFAULT_MEET_MIN_MS, DEFAULT_MEET_RADIUS_M, GRID_MS, MAX_GAP_MS, MAX_STAY_MS, findMeetings, overlapRange, resample } from "./meet";
 import type { RawPoint } from "./parse";
 
 const T0 = Date.parse("2026-01-01T00:00:00Z");
@@ -54,6 +54,43 @@ describe("resample", () => {
     const grid = resample([], T0, T0 + 10 * MIN, 5 * MIN, 30 * MIN);
     expect(grid.every((g) => g === null)).toBe(true);
   });
+
+  it("머문 구간이 끝나면 그 뒤는 다시 null이다", () => {
+    // until은 «여기까지는 안다»는 뜻이지 «영원히 안다»는 뜻이 아니다.
+    // until 이후에는 다음 점이 없으니 다시 «모르는 구간»으로 돌아가야 한다.
+    const points: RawPoint[] = [{ t: T0, until: T0 + 60 * MIN, lat: 37.5, lon: 127.0, kind: "visit" }];
+    const grid = resample(points, T0, T0 + 120 * MIN, 30 * MIN, MAX_GAP_MS);
+    expect(grid[0]).not.toBeNull(); // 0분 — 방문 시작
+    expect(grid[1]).not.toBeNull(); // 30분 — 방문 중
+    expect(grid[2]).not.toBeNull(); // 60분 — until과 정확히 같다, 경계는 포함
+    expect(grid[3]).toBeNull(); // 90분 — until을 지났다, 다음 점도 없다
+    expect(grid[4]).toBeNull(); // 120분
+  });
+
+  it("체류가 24시간을 넘으면 그 너머는 다시 모른다 — 손상된 until의 폭주를 막는다", () => {
+    // until이 시작으로부터 사흘 뒤를 가리켜도(손상되거나 손으로 잘못 고친 값일 수 있다),
+    // MAX_STAY_MS를 넘는 부분은 믿지 않고 다시 null로 돌려보낸다.
+    const points: RawPoint[] = [
+      { t: T0, until: T0 + 3 * 24 * 60 * MIN, lat: 37.5, lon: 127.0, kind: "visit" },
+    ];
+    const grid = resample(points, T0, T0 + 26 * 60 * MIN, 60 * MIN, MAX_GAP_MS);
+    expect(MAX_STAY_MS).toBe(24 * 60 * MIN);
+    expect(grid[24]).not.toBeNull(); // 정확히 24시간 — 경계는 포함
+    expect(grid[25]).toBeNull(); // 25시간 — 24시간 클램프를 넘었다
+    expect(grid[26]).toBeNull(); // 26시간
+  });
+
+  it("머문 뒤에 새 기록이 오면 오래된 until보다 새 기록이 우선한다", () => {
+    // A는 0분에 방문(until=100분)을 적었지만 실제로는 60분에 다른 곳으로
+    // 이동한 기록이 새로 있다. until이 아직 안 끝났다고 해서 60분 지점을
+    // 방문 좌표로 채우면 안 된다 — 더 최신 기록이 이긴다.
+    const points: RawPoint[] = [
+      { t: T0, until: T0 + 100 * MIN, lat: 37.5, lon: 127.0, kind: "visit" },
+      { t: T0 + 60 * MIN, lat: 37.6, lon: 127.0, kind: "path" },
+    ];
+    const grid = resample(points, T0, T0 + 60 * MIN, 10 * MIN, MAX_GAP_MS);
+    expect(grid[6]?.lat).toBeCloseTo(37.6, 6);
+  });
 });
 
 describe("overlapRange", () => {
@@ -71,6 +108,14 @@ describe("overlapRange", () => {
 
   it("한쪽이 비면 null", () => {
     expect(overlapRange([], [p(0, 37, 127)])).toBeNull();
+  });
+
+  it("머문 구간의 until이 겹치는 기간의 끝을 정한다", () => {
+    // 점이 하나뿐이라도 until까지는 위치를 안다. 지금까지의 테스트는 모두
+    // 여러 점짜리 배열이라 knownEnd의 until 분기를 직접 거치지 않는다.
+    const a: RawPoint[] = [{ t: T0, until: T0 + 40 * MIN, lat: 37.5, lon: 127.0, kind: "visit" }];
+    const b: RawPoint[] = [{ t: T0, until: T0 + 40 * MIN, lat: 37.5, lon: 127.0, kind: "visit" }];
+    expect(overlapRange(a, b)).toEqual({ from: T0, to: T0 + 40 * MIN });
   });
 });
 
@@ -210,6 +255,27 @@ describe("findMeetings", () => {
     // 고치면서 실수로 구멍 규칙을 헐겁게 만들지 않았는지 다시 확인한다.
     const a = [p(0, 37.5665, 126.978), p(120, 37.5665, 126.978)];
     const b = [p(0, 35.1796, 129.0756), p(120, 35.1796, 129.0756)];
+    expect(findMeetings(a, b, OPTS)).toHaveLength(0);
+  });
+
+  it("손상된 until이 사흘을 가리켜도 24시간 너머에서 없는 만남을 만들지 않는다", () => {
+    // 이 테스트가 지키는 것: A는 방문 기록 하나뿐이고, until이 시작으로부터
+    // 사흘 뒤를 가리킨다 — 손상되었거나 손으로 잘못 고친 내보내기 파일일
+    // 수 있다. B는 하루 종일 멀리 있다가, A의 방문이 (진짜로는) 끝났을
+    // 30시간째에 A의 좌표 근처를 40분 지나간다.
+    // MAX_STAY_MS 클램프가 없으면 A는 사흘 내내 그 자리에 있었던 것으로
+    // 취급되고, B가 지나간 40분이 «만남»으로 잡힌다 — 데이터 결함이 있지도
+    // 않은 만남을 만드는 것이다. 클램프가 있으면 24시간을 넘긴 A의 위치는
+    // 다시 «모른다»가 되어 그 40분은 만남으로 세지 않는다.
+    const corruptUntil = T0 + 3 * 24 * 60 * MIN;
+    const a: RawPoint[] = [{ t: T0, until: corruptUntil, lat: 37.5445, lon: 127.0557, kind: "visit" }];
+
+    const b: RawPoint[] = [
+      p(0, 40.0, 130.0), // 멀리서 시작
+      ...stay(30 * 60, 30 * 60 + 40, 37.5445, 127.0557), // 30시간째 — A의 좌표 근처를 40분 지나간다
+      p(3 * 24 * 60, 40.0, 130.0), // 사흘째 끝 — overlapRange가 손상된 until까지 걸치도록
+    ];
+
     expect(findMeetings(a, b, OPTS)).toHaveLength(0);
   });
 
