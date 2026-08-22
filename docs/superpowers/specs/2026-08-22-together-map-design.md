@@ -35,6 +35,7 @@ src/app/playground/together-map/
   geo.ts      .test  거리 · 보간 · 웹 메르카토르 투영
   filter.ts   .test  정확도 · 이상치 필터
   meet.ts     .test  만난 순간 검출
+  summary.ts  .test  마무리 통계 (횟수 · 함께한 시간 · 단골 자리 · 최장거리)
   camera.ts   .test  프레이밍 · 카메라 모드
   tiles.ts           타일 URL · 로딩 · 캐시
   render.ts   .test  캔버스 한 프레임 (순수)
