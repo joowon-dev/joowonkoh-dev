@@ -44,6 +44,12 @@ export function boundsOf(points: LatLon[]): Bounds | null {
     if (p.lon < minLon) minLon = p.lon;
     if (p.lon > maxLon) maxLon = p.lon;
   }
+
+  // 주의: 자오선을 넘어가는 경로(예: 도쿄-호놀룰루)는 처리하지 않는다.
+  // 이 경우 경도를 단순 min/max로만 구하면 약 298° 폭의 상자가 되어
+  // 실제는 약 61.5°인 올바른 범위보다 훨씬 크게 줌 아웃되고 중심이 밀린다.
+  // 한반도 중심 도구에서는 이 제약을 수용할 수 있다.
+
   return { minLat, maxLat, minLon, maxLon };
 }
 
@@ -89,6 +95,7 @@ export function fitView(b: Bounds, w: number, h: number, paddingPx: number): Vie
 
 /** 현재 시야를 목표 쪽으로 한 걸음 당긴다. damping이 1이면 한 번에 붙는다. */
 export function stepCamera(current: View, target: View, damping: number): View {
+  if (damping === 1) return target;
   const f = Math.max(0, Math.min(1, damping));
   return {
     centerLat: current.centerLat + (target.centerLat - current.centerLat) * f,

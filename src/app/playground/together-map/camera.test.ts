@@ -65,6 +65,14 @@ describe("fitView", () => {
     const landscape = fitView(box, 1920, 1080, 40);
     expect(portrait.zoom).toBeLessThanOrEqual(landscape.zoom);
   });
+
+  it("중심 위도는 메르카토르 평면 기준이다 — 순진한 평균과 다르다", () => {
+    // 위도 35~37의 순진한 평균은 36.000°이지만,
+    // 메르카토르 평면의 가운데는 약 36.00634°다.
+    // 이 테스트는 위도 간격이 비선형임을 검증한다.
+    const view = fitView({ minLat: 35, maxLat: 37, minLon: 126, maxLon: 128 }, 1080, 1080, 40);
+    expect(view.centerLat).toBeCloseTo(36.00634, 3);
+  });
 });
 
 describe("stepCamera", () => {
