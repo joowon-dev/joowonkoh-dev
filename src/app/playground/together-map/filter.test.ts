@@ -56,9 +56,33 @@ describe("이상치 필터 (보수적)", () => {
     expect(filterPoints(points, OFF)).toHaveLength(3);
   });
 
-  it("첫 점과 끝 점은 앞뒤가 없으므로 그대로 둔다", () => {
+  it("점 3개 미만이면 이상치 필터 없이 정확도 필터 결과를 그대로 반환한다", () => {
     const points = [p(0, 37.5, 127.0), p(1, 37.5, 127.0)];
     expect(filterPoints(points, ON)).toHaveLength(2);
+  });
+
+  it("마지막 점이 튄 것이어도 버리지 않는다 — 앞에서만 속도를 본다", () => {
+    // 정상적인 서울 근처 점 3개, 마지막이 도쿄로 튄다
+    const points = [
+      p(0, 37.5, 127.0),
+      p(5, 37.5, 127.01),
+      p(10, 37.5, 127.02),
+      p(11, 35.68, 139.65), // 1분 만에 도쿄로 — 마지막이므로 통과
+    ];
+    const kept = filterPoints(points, ON);
+    expect(kept).toHaveLength(4);
+  });
+
+  it("첫 점이 튄 것이어도 버리지 않는다 — 뒤에서만 속도를 본다", () => {
+    // 첫 점이 도쿄, 그 다음부터 정상적인 서울
+    const points = [
+      p(0, 35.68, 139.65), // 첫 점이므로 통과
+      p(1, 37.5, 127.0),
+      p(6, 37.5, 127.01),
+      p(11, 37.5, 127.02),
+    ];
+    const kept = filterPoints(points, ON);
+    expect(kept).toHaveLength(4);
   });
 
   it("같은 시각의 점이 있어도 0으로 나누지 않는다", () => {

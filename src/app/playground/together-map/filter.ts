@@ -41,6 +41,11 @@ export function filterPoints(points: RawPoint[], opts: FilterOptions): RawPoint[
   // 한쪽만 보면 안 된다. 실제로 비행기를 탔다면 «직전 점에서 여기까지»가 빠른 게
   // 정상이고, 그 뒤로는 계속 그 자리에 있다. 튄 점은 갔다가 곧바로 돌아온다 —
   // 앞뒤가 둘 다 비현실적인 것은 그 경우뿐이다.
+  //
+  // 첫 점과 끝 점은 검사하지 않는다. 이것은 의도한 설계다. 비용: 튄 끝점이
+  // 만남 감지기에 도달해서 실제가 아닌 만남을 시작할 수 있다. 이 도구가
+  // 반드시 피해야 할 실패이므로, 미래의 독자가 이 구멍이 실수가 아니라
+  // 의도적임을 알아야 한다.
   return accurate.filter((p, i) => {
     if (i === 0 || i === accurate.length - 1) return true;
     const fromPrev = kmh(accurate[i - 1], p);
