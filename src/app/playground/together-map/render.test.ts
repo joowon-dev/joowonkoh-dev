@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { View } from "./camera";
 import type { RawPoint } from "./parse";
-import { blurRadiusScreen, meetingPulse, tailSegments, viewToScreen } from "./render";
+import { blurRadiusScreen, currentPosition, meetingPulse, tailSegments, viewToScreen } from "./render";
 
 const VIEW: View = { centerLat: 37.5, centerLon: 127.0, zoom: 12 };
 const SIZE = { w: 1080, h: 1080 };
@@ -10,6 +10,10 @@ const MIN = 60_000;
 
 function p(minute: number, lat: number, lon: number): RawPoint {
   return { t: T0 + minute * MIN, lat, lon, kind: "path" };
+}
+
+function visit(minute: number, untilMinute: number, lat: number, lon: number): RawPoint {
+  return { t: T0 + minute * MIN, until: T0 + untilMinute * MIN, lat, lon, kind: "visit" };
 }
 
 describe("viewToScreen", () => {
@@ -112,6 +116,66 @@ describe("meetingPulse", () => {
       expect(v).toBeGreaterThanOrEqual(0);
       expect(v).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe("currentPosition", () => {
+  it("머문 구간(until) 안이면 그 점 자체를 준다", () => {
+    // 방문 기록: 0분부터 30분까지 머묾. 15분 시점은 사이지만 다음 점이 없다 —
+    // until 처리가 없다면 «다음 점 없음»으로 오인해 null이 나온다.
+    const points = [visit(0, 30, 37.1, 127.1)];
+    const pos = currentPosition(points, T0 + 15 * MIN);
+    expect(pos).toEqual({ lat: 37.1, lon: 127.1 });
+  });
+
+  it("머문 구간의 끝 경계(until)에서도 여전히 그 점이다", () => {
+    const points = [visit(0, 30, 37.1, 127.1)];
+    const pos = currentPosition(points, T0 + 30 * MIN);
+    expect(pos).toEqual({ lat: 37.1, lon: 127.1 });
+  });
+
+  it("머문 구간 밖(until 이후)이고 다음 점까지 간격이 멀면 null", () => {
+    // until은 10분까지. 다음 점은 50분 — 방문 시작(0분)부터 재면 50분 간격으로
+    // MAX_GAP_MS(30분)를 넘는다. 45분 시점은 모르는 구간이어야 한다.
+    const points = [visit(0, 10, 37.1, 127.1), p(50, 38.2, 128.2)];
+    const pos = currentPosition(points, T0 + 45 * MIN);
+    expect(pos).toBeNull();
+  });
+
+  it("두 점 사이 간격이 MAX_GAP_MS를 넘으면 null — 있지 않은 이동을 그리지 않는다", () => {
+    const points = [p(0, 37, 127), p(40, 38, 128)]; // 40분 간격 > 30분
+    const pos = currentPosition(points, T0 + 20 * MIN);
+    expect(pos).toBeNull();
+  });
+
+  it("간격이 정확히 MAX_GAP_MS면 끊지 않고 보간한다", () => {
+    const points = [p(0, 37, 127), p(30, 38, 128)]; // 정확히 30분
+    const pos = currentPosition(points, T0 + 15 * MIN);
+    expect(pos).toEqual({ lat: 37.5, lon: 127.5 });
+  });
+
+  it("첫 기록보다 이전이면 null", () => {
+    const points = [p(10, 37, 127), p(20, 38, 128)];
+    const pos = currentPosition(points, T0);
+    expect(pos).toBeNull();
+  });
+
+  it("마지막 기록 이후이면 null", () => {
+    const points = [p(0, 37, 127), p(10, 38, 128)];
+    const pos = currentPosition(points, T0 + 20 * MIN);
+    expect(pos).toBeNull();
+  });
+
+  it("평범한 두 점 사이는 시간 비율로 보간한다", () => {
+    const points = [p(0, 37, 127), p(10, 39, 129)];
+    const pos = currentPosition(points, T0 + 4 * MIN); // f = 0.4
+    expect(pos).not.toBeNull();
+    expect(pos!.lat).toBeCloseTo(37.8, 6);
+    expect(pos!.lon).toBeCloseTo(127.8, 6);
+  });
+
+  it("점이 하나도 없으면 null", () => {
+    expect(currentPosition([], T0)).toBeNull();
   });
 });
 
