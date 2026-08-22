@@ -134,11 +134,19 @@ describe("currentPosition", () => {
     expect(pos).toEqual({ lat: 37.1, lon: 127.1 });
   });
 
-  it("머문 구간 밖(until 이후)이고 다음 점까지 간격이 멀면 null", () => {
-    // until은 10분까지. 다음 점은 50분 — 방문 시작(0분)부터 재면 50분 간격으로
-    // MAX_GAP_MS(30분)를 넘는다. 45분 시점은 모르는 구간이어야 한다.
-    const points = [visit(0, 10, 37.1, 127.1), p(50, 38.2, 128.2)];
-    const pos = currentPosition(points, T0 + 45 * MIN);
+  it("머문 구간 밖에서 다음 점까지 간격은 머문 «시작»부터 잰다", () => {
+    // 방문은 0~10분 머묾. 다음 점은 35분. 20분 시점(머문 구간 밖, 다음 점 이전)에서
+    // 간격을 어디서부터 잴지에 따라 답이 갈린다:
+    //   - 머문 시작(0분)부터 재면: 35 - 0 = 35분 > MAX_GAP_MS(30분) → 구멍 → null
+    //   - 머문 끝(10분)부터 재면: 35 - 10 = 25분 <= 30분 → 안 끊기고 보간됨
+    // resample()이 prev.t(구간의 시작)로 간격을 재는 것과 같은 규칙을 따르기로
+    // 했다 — 방문 한 점은 시작 시각 하나로 존재하는 기록이고, "몇 시에 그 자리를
+    // 벗어났는지"는 모르므로 머문 끝을 기준으로 재는 것은 모르는 것을 안다고 치는
+    // 셈이다. 그래서 이 시나리오는 null이어야 한다. 끝(10분)을 기준으로 재는
+    // 구현으로 바뀌면 이 테스트는 실패해야 한다 — 두 관례가 실제로 갈리는
+    // 지점에서 검증하기 위해 일부러 이 숫자들을 골랐다.
+    const points = [visit(0, 10, 37.1, 127.1), p(35, 38.2, 128.2)];
+    const pos = currentPosition(points, T0 + 20 * MIN);
     expect(pos).toBeNull();
   });
 
@@ -176,6 +184,28 @@ describe("currentPosition", () => {
 
   it("점이 하나도 없으면 null", () => {
     expect(currentPosition([], T0)).toBeNull();
+  });
+
+  it("until이 MAX_STAY_MS(24시간)를 넘게 적혀 있어도 24시간에서 잘린다", () => {
+    // until을 48시간 뒤로 적어 둔 손상된/조작된 기록. 뒤에 다음 점이 없으므로
+    // 클램프가 없다면 30시간 시점에도 여전히 그 자리에 있다고 답한다.
+    // Math.min(cur.until, cur.t + MAX_STAY_MS)를 plain cur.until로 바꾸면
+    // 이 테스트가 실패해야 한다.
+    const points = [visit(0, 48 * 60, 37.1, 127.1)];
+    const pos = currentPosition(points, T0 + 30 * 60 * MIN);
+    expect(pos).toBeNull();
+  });
+
+  it("now가 점의 시각과 정확히 같으면 그 점을 준다 — 앞의 구멍과 무관하게", () => {
+    // now가 두 번째 점의 시각과 정확히 일치한다. 첫 점과 이 점 사이는 50분 간격
+    // (MAX_GAP_MS=30분보다 큼)이지만, «지금 있는 자리»를 찾을 때는 그 간격이
+    // 상관없다 — 이 점 자체가 바로 지금 시각의 기록이기 때문이다.
+    // points[i].t > now를 >= now로 바꾸면(경계 하나 밀림), idx가 앞 점(0분)에
+    // 머무르고 그 앞 점을 기준으로 간격을 재 50분짜리 구멍에 걸려 null이 나온다 —
+    // 이 테스트는 그 실수를 잡는다.
+    const points = [p(0, 37, 127), p(50, 38, 128), p(55, 38.1, 128.1)];
+    const pos = currentPosition(points, T0 + 50 * MIN);
+    expect(pos).toEqual({ lat: 38, lon: 128 });
   });
 });
 

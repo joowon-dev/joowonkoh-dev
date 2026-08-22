@@ -47,13 +47,15 @@ export interface Strings {
   showSummary: string;
   meetingsFound: string; // "함께한 순간: {n}" — 숫자를 값으로 두어 개수와 무관하게 읽히게 한다
   noMeetings: string;
-  totalTogether: string;
-  favouriteSpot: string;
-  farthestApart: string;
+  totalTogether: string; // "함께 있었던 시간: {n}" — {n}은 이미 단위까지 붙은 값 문자열
+  favouriteSpot: string; // "가장 자주 만난 곳: {n}번" — {n}은 만난 횟수(숫자)
+  farthestApart: string; // "가장 멀리 떨어져 있던 순간: {n}" — {n}은 "거리 (날짜)"
   parseFailed: string;
   rendering: string;
   webmFallback: string; // mp4를 못 만들 때 알리는 문구
   attribution: string;
+  hoursUnit: string; // 숫자 뒤에 붙는 "시간" 단위. 라틴 약어(h)를 그대로 쓰지 않는다
+  kmUnit: string; // 숫자 뒤에 붙는 "km" 단위
 }
 
 export type Lang =
@@ -156,14 +158,16 @@ const DICT: Record<Lang, Strings> = {
     showSummary: "요약 보기",
     meetingsFound: "함께한 순간: {n}",
     noMeetings: "겹치는 순간을 찾지 못했어요",
-    totalTogether: "함께 있었던 시간",
-    favouriteSpot: "가장 자주 만난 곳",
-    farthestApart: "가장 멀리 떨어져 있던 순간",
+    totalTogether: "함께 있었던 시간: {n}",
+    favouriteSpot: "가장 자주 만난 곳: {n}번",
+    farthestApart: "가장 멀리 떨어져 있던 순간: {n}",
     parseFailed: "파일을 읽지 못했어요. Timeline.json이 맞는지 확인해 주세요",
     rendering: "영상을 만드는 중이에요",
     webmFallback:
       "이 브라우저에서는 mp4를 만들 수 없어서 webm으로 대신 내려받아요",
     attribution: "지도 데이터 제공",
+    hoursUnit: "시간",
+    kmUnit: "km",
   },
   en: {
     title: "The Path We Walked Together",
@@ -212,14 +216,16 @@ const DICT: Record<Lang, Strings> = {
     showSummary: "Show summary",
     meetingsFound: "Moments together: {n}",
     noMeetings: "No overlapping moments found",
-    totalTogether: "Time spent together",
-    favouriteSpot: "Most frequent meeting spot",
-    farthestApart: "Farthest apart at any point",
+    totalTogether: "Time spent together: {n}",
+    favouriteSpot: "Most frequent meeting spot: {n} times",
+    farthestApart: "Farthest apart at any point: {n}",
     parseFailed: "Couldn't read that file. Please check it's a Timeline.json",
     rendering: "Rendering your video",
     webmFallback:
       "This browser can't produce mp4, so we're downloading a webm instead",
     attribution: "Map data by",
+    hoursUnit: "h",
+    kmUnit: "km",
   },
   ja: {
     title: "ふたりで歩いた道",
@@ -268,15 +274,17 @@ const DICT: Record<Lang, Strings> = {
     showSummary: "サマリーを見る",
     meetingsFound: "一緒にいた瞬間: {n}",
     noMeetings: "重なる瞬間は見つかりませんでした",
-    totalTogether: "一緒にいた時間",
-    favouriteSpot: "いちばんよく会った場所",
-    farthestApart: "いちばん離れていた瞬間",
+    totalTogether: "一緒にいた時間: {n}",
+    favouriteSpot: "いちばんよく会った場所: {n}回",
+    farthestApart: "いちばん離れていた瞬間: {n}",
     parseFailed:
       "ファイルを読み込めませんでした。Timeline.jsonかどうか確認してください",
     rendering: "動画を作成しています",
     webmFallback:
       "このブラウザではmp4を作れないため、代わりにwebmでダウンロードします",
     attribution: "地図データ提供",
+    hoursUnit: "時間",
+    kmUnit: "km",
   },
   "zh-Hans": {
     title: "我们一起走过的路",
@@ -325,13 +333,15 @@ const DICT: Record<Lang, Strings> = {
     showSummary: "查看摘要",
     meetingsFound: "共同的瞬间：{n}",
     noMeetings: "没有找到重叠的瞬间",
-    totalTogether: "一起度过的时间",
-    favouriteSpot: "最常相遇的地方",
-    farthestApart: "相距最远的瞬间",
+    totalTogether: "一起度过的时间：{n}",
+    favouriteSpot: "最常相遇的地方：{n}次",
+    farthestApart: "相距最远的瞬间：{n}",
     parseFailed: "无法读取该文件，请确认它是 Timeline.json",
     rendering: "正在生成视频",
     webmFallback: "此浏览器无法生成 mp4，已改为下载 webm 格式",
     attribution: "地图数据来源",
+    hoursUnit: "小时",
+    kmUnit: "公里",
   },
   "zh-Hant": {
     title: "我們一起走過的路",
@@ -380,13 +390,15 @@ const DICT: Record<Lang, Strings> = {
     showSummary: "查看摘要",
     meetingsFound: "共同的瞬間：{n}",
     noMeetings: "沒有找到重疊的瞬間",
-    totalTogether: "一起度過的時間",
-    favouriteSpot: "最常相遇的地方",
-    farthestApart: "相距最遠的瞬間",
+    totalTogether: "一起度過的時間：{n}",
+    favouriteSpot: "最常相遇的地方：{n}次",
+    farthestApart: "相距最遠的瞬間：{n}",
     parseFailed: "無法讀取該檔案，請確認它是 Timeline.json",
     rendering: "正在產生影片",
     webmFallback: "這個瀏覽器無法產生 mp4，已改為下載 webm 格式",
     attribution: "地圖資料來源",
+    hoursUnit: "小時",
+    kmUnit: "公里",
   },
   es: {
     title: "El camino que recorrimos juntos",
@@ -435,15 +447,17 @@ const DICT: Record<Lang, Strings> = {
     showSummary: "Ver resumen",
     meetingsFound: "Momentos juntos: {n}",
     noMeetings: "No se encontraron momentos en común",
-    totalTogether: "Tiempo pasado juntos",
-    favouriteSpot: "Lugar donde más se encontraron",
-    farthestApart: "El momento en que estuvieron más lejos",
+    totalTogether: "Tiempo pasado juntos: {n}",
+    favouriteSpot: "Lugar donde más se encontraron: {n} veces",
+    farthestApart: "El momento en que estuvieron más lejos: {n}",
     parseFailed:
       "No se pudo leer ese archivo. Comprueba que sea un Timeline.json",
     rendering: "Generando tu video",
     webmFallback:
       "Este navegador no puede generar mp4, así que descargaremos un webm en su lugar",
     attribution: "Datos del mapa por",
+    hoursUnit: "h",
+    kmUnit: "km",
   },
   fr: {
     title: "Le chemin parcouru ensemble",
@@ -492,15 +506,17 @@ const DICT: Record<Lang, Strings> = {
     showSummary: "Voir le résumé",
     meetingsFound: "Moments ensemble : {n}",
     noMeetings: "Aucun moment commun trouvé",
-    totalTogether: "Temps passé ensemble",
-    favouriteSpot: "Lieu de rencontre le plus fréquent",
-    farthestApart: "Moment où vous étiez le plus éloignés",
+    totalTogether: "Temps passé ensemble : {n}",
+    favouriteSpot: "Lieu de rencontre le plus fréquent : {n} fois",
+    farthestApart: "Moment où vous étiez le plus éloignés : {n}",
     parseFailed:
       "Impossible de lire ce fichier. Vérifiez qu'il s'agit bien d'un Timeline.json",
     rendering: "Création de votre vidéo en cours",
     webmFallback:
       "Ce navigateur ne peut pas produire de mp4, un fichier webm sera téléchargé à la place",
     attribution: "Données cartographiques par",
+    hoursUnit: "h",
+    kmUnit: "km",
   },
   de: {
     title: "Der Weg, den wir gemeinsam gegangen sind",
@@ -549,15 +565,17 @@ const DICT: Record<Lang, Strings> = {
     showSummary: "Zusammenfassung ansehen",
     meetingsFound: "Gemeinsame Momente: {n}",
     noMeetings: "Keine gemeinsamen Momente gefunden",
-    totalTogether: "Gemeinsam verbrachte Zeit",
-    favouriteSpot: "Häufigster Treffpunkt",
-    farthestApart: "Der Moment mit der größten Entfernung",
+    totalTogether: "Gemeinsam verbrachte Zeit: {n}",
+    favouriteSpot: "Häufigster Treffpunkt: {n} Mal",
+    farthestApart: "Der Moment mit der größten Entfernung: {n}",
     parseFailed:
       "Diese Datei konnte nicht gelesen werden. Bitte prüft, ob es sich um eine Timeline.json handelt",
     rendering: "Video wird erstellt",
     webmFallback:
       "Dieser Browser kann kein mp4 erzeugen, daher wird stattdessen ein webm heruntergeladen",
     attribution: "Kartendaten von",
+    hoursUnit: "Std.",
+    kmUnit: "km",
   },
   pt: {
     title: "O caminho que percorremos juntos",
@@ -606,14 +624,16 @@ const DICT: Record<Lang, Strings> = {
     showSummary: "Ver resumo",
     meetingsFound: "Momentos juntos: {n}",
     noMeetings: "Nenhum momento em comum encontrado",
-    totalTogether: "Tempo passado juntos",
-    favouriteSpot: "Local de encontro mais frequente",
-    farthestApart: "O momento em que estiveram mais distantes",
+    totalTogether: "Tempo passado juntos: {n}",
+    favouriteSpot: "Local de encontro mais frequente: {n} vezes",
+    farthestApart: "O momento em que estiveram mais distantes: {n}",
     parseFailed:
       "Não foi possível ler esse arquivo. Verifique se é um Timeline.json",
     rendering: "Gerando seu vídeo",
     webmFallback:
       "Este navegador não consegue gerar mp4, então vamos baixar um webm no lugar",
     attribution: "Dados do mapa por",
+    hoursUnit: "h",
+    kmUnit: "km",
   },
 };
