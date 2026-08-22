@@ -56,6 +56,15 @@ export interface Strings {
   attribution: string;
   hoursUnit: string; // 숫자 뒤에 붙는 "시간" 단위. 라틴 약어(h)를 그대로 쓰지 않는다
   kmUnit: string; // 숫자 뒤에 붙는 "km" 단위
+  minutesUnit: string; // 숫자 뒤에 붙는 "분" 단위. 만남은 대개 1시간이 안 돼 이게 더 자주 쓰인다
+  metersUnit: string; // 숫자 뒤에 붙는 "m" 단위. 1km 미만 거리에 쓴다
+  noMeetingsReasonHeading: string; // "왜 없을까요" — 0건 화면의 이유 목록 위 소제목
+  noMeetingsReasonDateRange: string; // 이유 1: 두 사람의 기록 기간이 안 겹쳤을 수 있음
+  noMeetingsReasonRadius: string; // 이유 2: 판정 거리가 너무 좁았을 수 있음
+  noMeetingsReasonAccuracy: string; // 이유 3: 정확도 필터가 기록을 너무 많이 걸렀을 수 있음
+  noMeetingsReasonGenuine: string; // 이유 4: 정말 만나지 않았을 수도 있음
+  showMoreMeetings: string; // "{n}건 더 보기" — n은 접힌 나머지 건수
+  showLessMeetings: string; // 펼친 목록을 다시 접는 버튼
 }
 
 export type Lang =
@@ -168,6 +177,15 @@ const DICT: Record<Lang, Strings> = {
     attribution: "지도 데이터 제공",
     hoursUnit: "시간",
     kmUnit: "km",
+    minutesUnit: "분",
+    metersUnit: "m",
+    noMeetingsReasonHeading: "왜 없을까요",
+    noMeetingsReasonDateRange: "두 사람의 기록 기간이 겹치지 않았을 수 있어요",
+    noMeetingsReasonRadius: "가까이 있었다고 볼 거리가 너무 좁았을 수 있어요",
+    noMeetingsReasonAccuracy: "정확도 필터가 기록을 너무 많이 걸러냈을 수 있어요",
+    noMeetingsReasonGenuine: "정말로 가까이 있지 않았을 수도 있어요",
+    showMoreMeetings: "{n}건 더 보기",
+    showLessMeetings: "접기",
   },
   en: {
     title: "The Path We Walked Together",
@@ -226,6 +244,15 @@ const DICT: Record<Lang, Strings> = {
     attribution: "Map data by",
     hoursUnit: "h",
     kmUnit: "km",
+    minutesUnit: "min",
+    metersUnit: "m",
+    noMeetingsReasonHeading: "Possible reasons",
+    noMeetingsReasonDateRange: "Their two date ranges may not overlap",
+    noMeetingsReasonRadius: "The distance counted as \"near\" may be too strict",
+    noMeetingsReasonAccuracy: "The accuracy filter may have discarded too much",
+    noMeetingsReasonGenuine: "You genuinely may not have been near each other",
+    showMoreMeetings: "Show {n} more",
+    showLessMeetings: "Show less",
   },
   ja: {
     title: "ふたりで歩いた道",
@@ -285,6 +312,15 @@ const DICT: Record<Lang, Strings> = {
     attribution: "地図データ提供",
     hoursUnit: "時間",
     kmUnit: "km",
+    minutesUnit: "分",
+    metersUnit: "m",
+    noMeetingsReasonHeading: "考えられる理由",
+    noMeetingsReasonDateRange: "ふたりの記録期間が重なっていないかもしれません",
+    noMeetingsReasonRadius: "「近くにいた」とみなす距離が狭すぎたかもしれません",
+    noMeetingsReasonAccuracy: "精度フィルターが記録を削りすぎたかもしれません",
+    noMeetingsReasonGenuine: "本当に近くにいなかった可能性もあります",
+    showMoreMeetings: "あと{n}件を表示",
+    showLessMeetings: "閉じる",
   },
   "zh-Hans": {
     title: "我们一起走过的路",
@@ -342,6 +378,15 @@ const DICT: Record<Lang, Strings> = {
     attribution: "地图数据来源",
     hoursUnit: "小时",
     kmUnit: "公里",
+    minutesUnit: "分钟",
+    metersUnit: "m",
+    noMeetingsReasonHeading: "可能的原因",
+    noMeetingsReasonDateRange: "两人的记录时间段可能没有重叠",
+    noMeetingsReasonRadius: "判定为“靠近”的距离可能设置得太窄",
+    noMeetingsReasonAccuracy: "精度过滤可能过滤掉了太多记录",
+    noMeetingsReasonGenuine: "也可能你们确实没有靠近过",
+    showMoreMeetings: "再显示 {n} 条",
+    showLessMeetings: "收起",
   },
   "zh-Hant": {
     title: "我們一起走過的路",
@@ -399,6 +444,15 @@ const DICT: Record<Lang, Strings> = {
     attribution: "地圖資料來源",
     hoursUnit: "小時",
     kmUnit: "公里",
+    minutesUnit: "分鐘",
+    metersUnit: "m",
+    noMeetingsReasonHeading: "可能的原因",
+    noMeetingsReasonDateRange: "兩人的記錄時間段可能沒有重疊",
+    noMeetingsReasonRadius: "判定為「靠近」的距離可能設得太窄",
+    noMeetingsReasonAccuracy: "精確度過濾可能濾掉了太多記錄",
+    noMeetingsReasonGenuine: "也可能你們確實沒有靠近過",
+    showMoreMeetings: "再顯示 {n} 筆",
+    showLessMeetings: "收合",
   },
   es: {
     title: "El camino que recorrimos juntos",
@@ -458,6 +512,15 @@ const DICT: Record<Lang, Strings> = {
     attribution: "Datos del mapa por",
     hoursUnit: "h",
     kmUnit: "km",
+    minutesUnit: "min",
+    metersUnit: "m",
+    noMeetingsReasonHeading: "Posibles razones",
+    noMeetingsReasonDateRange: "Puede que los dos rangos de fechas no se superpongan",
+    noMeetingsReasonRadius: "La distancia considerada \"cerca\" puede ser demasiado estricta",
+    noMeetingsReasonAccuracy: "El filtro de precisión puede haber descartado demasiados puntos",
+    noMeetingsReasonGenuine: "Puede que de verdad no hayan estado cerca",
+    showMoreMeetings: "Mostrar {n} más",
+    showLessMeetings: "Mostrar menos",
   },
   fr: {
     title: "Le chemin parcouru ensemble",
@@ -517,6 +580,15 @@ const DICT: Record<Lang, Strings> = {
     attribution: "Données cartographiques par",
     hoursUnit: "h",
     kmUnit: "km",
+    minutesUnit: "min",
+    metersUnit: "m",
+    noMeetingsReasonHeading: "Raisons possibles",
+    noMeetingsReasonDateRange: "Les deux périodes enregistrées ne se chevauchent peut-être pas",
+    noMeetingsReasonRadius: "La distance considérée comme « proche » était peut-être trop stricte",
+    noMeetingsReasonAccuracy: "Le filtre de précision a peut-être écarté trop de points",
+    noMeetingsReasonGenuine: "Vous n'étiez peut-être vraiment pas proches",
+    showMoreMeetings: "Afficher {n} de plus",
+    showLessMeetings: "Réduire",
   },
   de: {
     title: "Der Weg, den wir gemeinsam gegangen sind",
@@ -576,6 +648,15 @@ const DICT: Record<Lang, Strings> = {
     attribution: "Kartendaten von",
     hoursUnit: "Std.",
     kmUnit: "km",
+    minutesUnit: "Min.",
+    metersUnit: "m",
+    noMeetingsReasonHeading: "Mögliche Gründe",
+    noMeetingsReasonDateRange: "Die beiden Aufzeichnungszeiträume überschneiden sich vielleicht nicht",
+    noMeetingsReasonRadius: "Die als „nah“ geltende Entfernung war vielleicht zu streng",
+    noMeetingsReasonAccuracy: "Der Genauigkeitsfilter hat vielleicht zu viele Punkte verworfen",
+    noMeetingsReasonGenuine: "Ihr wart vielleicht wirklich nicht nah beieinander",
+    showMoreMeetings: "{n} weitere anzeigen",
+    showLessMeetings: "Weniger anzeigen",
   },
   pt: {
     title: "O caminho que percorremos juntos",
@@ -635,5 +716,14 @@ const DICT: Record<Lang, Strings> = {
     attribution: "Dados do mapa por",
     hoursUnit: "h",
     kmUnit: "km",
+    minutesUnit: "min",
+    metersUnit: "m",
+    noMeetingsReasonHeading: "Possíveis motivos",
+    noMeetingsReasonDateRange: "Os dois períodos registrados podem não ter se sobreposto",
+    noMeetingsReasonRadius: "A distância considerada \"perto\" pode ter sido rígida demais",
+    noMeetingsReasonAccuracy: "O filtro de precisão pode ter descartado registros demais",
+    noMeetingsReasonGenuine: "Vocês podem realmente não ter estado perto",
+    showMoreMeetings: "Mostrar mais {n}",
+    showLessMeetings: "Mostrar menos",
   },
 };
