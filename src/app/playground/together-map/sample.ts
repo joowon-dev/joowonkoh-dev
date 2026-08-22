@@ -32,6 +32,12 @@ const DAY = 86_400_000;
 const HOUR = 3_600_000;
 const MIN = 60_000;
 
+/**
+ * KST 자정 기준 시작 시각. 테스트가 «이 epoch ms가 하루 중 몇 시인지»를
+ * 스스로 계산해야 할 때(예: 야간 무기록 구간과 낮 시간대 구멍을 구분할 때) 쓴다.
+ */
+export const SAMPLE_START = START;
+
 /** 샘플이 다루는 기간(일). */
 const DAYS = 90;
 
