@@ -1,0 +1,79 @@
+import { describe, expect, it } from "vitest";
+import { DEFAULT_ACCURACY_LIMIT_M, filterPoints } from "./filter";
+import type { RawPoint } from "./parse";
+
+const T0 = Date.parse("2026-01-01T00:00:00Z");
+const MIN = 60_000;
+
+function p(minute: number, lat: number, lon: number, accuracy?: number): RawPoint {
+  return { t: T0 + minute * MIN, lat, lon, accuracy, kind: "path" };
+}
+
+const OFF = { accuracyLimitM: DEFAULT_ACCURACY_LIMIT_M, outlier: "off" } as const;
+const ON = { accuracyLimitM: DEFAULT_ACCURACY_LIMIT_M, outlier: "conservative" } as const;
+
+describe("정확도 필터", () => {
+  it("한계를 넘는 점을 버린다", () => {
+    const points = [p(0, 37.5, 127.0, 10), p(1, 37.5, 127.0, 500)];
+    expect(filterPoints(points, OFF)).toHaveLength(1);
+  });
+
+  it("경계값은 남긴다", () => {
+    const points = [p(0, 37.5, 127.0, DEFAULT_ACCURACY_LIMIT_M)];
+    expect(filterPoints(points, OFF)).toHaveLength(1);
+  });
+
+  it("accuracy가 없는 점은 버리지 않는다 — 옛 형식엔 이 값이 아예 없다", () => {
+    const points = [p(0, 37.5, 127.0), p(1, 37.5, 127.0)];
+    expect(filterPoints(points, OFF)).toHaveLength(2);
+  });
+
+  it("한계를 0으로 두면 accuracy 있는 점은 다 버리고 없는 점은 남는다", () => {
+    const points = [p(0, 37.5, 127.0, 5), p(1, 37.5, 127.0)];
+    const kept = filterPoints(points, { accuracyLimitM: 0, outlier: "off" });
+    expect(kept).toHaveLength(1);
+    expect(kept[0].accuracy).toBeUndefined();
+  });
+});
+
+describe("이상치 필터 (보수적)", () => {
+  it("혼자 튄 점 하나를 버린다", () => {
+    // 1분 만에 서울에서 도쿄로 갔다가 돌아온다 — GPS가 튄 것이다
+    const points = [p(0, 37.5, 127.0), p(1, 35.68, 139.65), p(2, 37.5, 127.0)];
+    const kept = filterPoints(points, ON);
+    expect(kept).toHaveLength(2);
+    expect(kept.every((q) => q.lon < 130)).toBe(true);
+  });
+
+  it("연속으로 빠르면 남긴다 — 실제 비행일 수 있다", () => {
+    // 서울에서 도쿄로 가서 그대로 머문다
+    const points = [p(0, 37.5, 127.0), p(60, 35.68, 139.65), p(120, 35.68, 139.65)];
+    expect(filterPoints(points, ON)).toHaveLength(3);
+  });
+
+  it("끄면 튄 점도 남는다", () => {
+    const points = [p(0, 37.5, 127.0), p(1, 35.68, 139.65), p(2, 37.5, 127.0)];
+    expect(filterPoints(points, OFF)).toHaveLength(3);
+  });
+
+  it("첫 점과 끝 점은 앞뒤가 없으므로 그대로 둔다", () => {
+    const points = [p(0, 37.5, 127.0), p(1, 37.5, 127.0)];
+    expect(filterPoints(points, ON)).toHaveLength(2);
+  });
+
+  it("같은 시각의 점이 있어도 0으로 나누지 않는다", () => {
+    const points = [p(0, 37.5, 127.0), p(0, 37.6, 127.1), p(1, 37.5, 127.0)];
+    expect(() => filterPoints(points, ON)).not.toThrow();
+  });
+
+  it("정상적인 도보 이동은 전부 남는다", () => {
+    const points = Array.from({ length: 10 }, (_, i) => p(i, 37.5 + i * 0.0005, 127.0));
+    expect(filterPoints(points, ON)).toHaveLength(10);
+  });
+});
+
+describe("빈 입력", () => {
+  it("빈 배열은 빈 배열", () => {
+    expect(filterPoints([], ON)).toEqual([]);
+  });
+});
