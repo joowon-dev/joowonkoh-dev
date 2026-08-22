@@ -4,7 +4,20 @@ import type { Meeting } from "./meet";
 // 목록에 처음부터 다 펼치면 만남이 많은 사용자는 스크롤이 끝없이 길어진다.
 // 10건까지만 보여주고 나머지는 <details>로 접는다 — GameHelp.tsx와 같은 방식으로,
 // useState 없이 브라우저 기본 토글만으로 접고 편다.
-const VISIBLE_ROWS = 10;
+export const VISIBLE_ROWS = 10;
+
+/**
+ * 접을 기준선에서 목록을 둘로 나눈다.
+ *
+ * 컴포넌트 자체는 이 프로젝트에서 렌더 테스트를 하지 않으므로, "몇 건까지
+ * 보여줄지"라는 결정 자체를 순수 함수로 뽑아내 여기서 테스트한다.
+ */
+export function splitMeetings(
+  meetings: Meeting[],
+  visibleCount: number,
+): { visible: Meeting[]; hidden: Meeting[] } {
+  return { visible: meetings.slice(0, visibleCount), hidden: meetings.slice(visibleCount) };
+}
 
 /** 만남 지속시간을 "1시간 30분" 형태로 만든다. 순수 함수라 따로 테스트한다. */
 export function formatMeetDuration(ms: number, strings: Strings): string {
@@ -42,9 +55,16 @@ function timeLabel(ts: number, lang: Lang): string {
 }
 
 function MeetingRow({ meeting, lang, strings }: { meeting: Meeting; lang: Lang; strings: Strings }) {
+  const startDate = dateLabel(meeting.start, lang);
+  const endDate = dateLabel(meeting.end, lang);
+  // 자정을 넘긴 만남은 시작일 하나만 보여주면 "23:50–00:15"처럼 시간이
+  // 거꾸로 가는 것처럼 읽힌다. 종료일이 다를 때만 날짜를 하나 더 붙인다 —
+  // 대다수인 하루 안 만남에는 줄이 늘어나지 않는다.
+  const dateText = endDate === startDate ? startDate : `${startDate} – ${endDate}`;
+
   return (
     <li className="flex flex-col gap-1 rounded-2xl border border-border bg-card-bg p-3 text-sm">
-      <span className="font-semibold text-text-primary">{dateLabel(meeting.start, lang)}</span>
+      <span className="font-semibold text-text-primary">{dateText}</span>
       <span className="text-text-secondary">
         {timeLabel(meeting.start, lang)} – {timeLabel(meeting.end, lang)}
       </span>
@@ -79,8 +99,7 @@ export default function MeetList({ meetings, lang, strings }: MeetListProps) {
     );
   }
 
-  const visible = meetings.slice(0, VISIBLE_ROWS);
-  const rest = meetings.slice(VISIBLE_ROWS);
+  const { visible, hidden: rest } = splitMeetings(meetings, VISIBLE_ROWS);
 
   return (
     <div className="mt-6">

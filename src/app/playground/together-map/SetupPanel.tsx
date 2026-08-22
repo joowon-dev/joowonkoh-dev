@@ -42,6 +42,24 @@ const numberInputClass =
   "mt-1.5 w-full rounded-2xl border border-border bg-card-bg px-3 py-2 text-sm text-text-primary outline-none spring-transition focus:border-accent";
 const checkboxRowClass = "mt-3 flex items-center gap-2 text-sm text-text-primary";
 
+/**
+ * 숫자 입력을 min~max로 눌러 담는다.
+ *
+ * <input type="number">의 min/max는 화살표 버튼과 폼 제출 검증에만 관여하고,
+ * 타이핑 중에는 아무 값이나 그대로 들어온다. 특히 지우는 중에는 빈 문자열이
+ * Number("") === 0 이 되어 선언한 최소값 아래로 그대로 settings에 박힌다.
+ * 만남 판정 거리가 0이 되면 항상 0건이 나오고, 집 반경이 0이 되면 프라이버시
+ * 원이 사라지는데 체크박스는 여전히 켜진 것처럼 보인다 — 둘 다 조용히
+ * 위험하다. 빈 문자열은 0이 아니라 "다시 입력하는 중"으로 보고 최소값으로
+ * 떨어뜨려, 사용자가 마저 타이핑하는 동안에도 도구가 정상 범위를 유지하게 한다.
+ */
+export function clampToRange(raw: string, min: number, max: number): number {
+  if (raw === "") return min;
+  const n = Number(raw);
+  if (Number.isNaN(n)) return min;
+  return Math.min(max, Math.max(min, n));
+}
+
 /** 라디오 버튼 묶음. 코드가 반복되는 사람/카메라/거리비/이상치/영상 길이 다섯 군데서 쓴다. */
 function RadioGroup<T extends string | number>({
   name,
@@ -189,7 +207,7 @@ export default function SetupPanel({ settings, onChange, strings }: SetupPanelPr
           min={0}
           max={5000}
           value={settings.accuracyLimitM}
-          onChange={(e) => onChange({ accuracyLimitM: Number(e.target.value) })}
+          onChange={(e) => onChange({ accuracyLimitM: clampToRange(e.target.value, 0, 5000) })}
           className={numberInputClass}
         />
 
@@ -258,7 +276,7 @@ export default function SetupPanel({ settings, onChange, strings }: SetupPanelPr
           min={10}
           max={2000}
           value={settings.meetRadiusM}
-          onChange={(e) => onChange({ meetRadiusM: Number(e.target.value) })}
+          onChange={(e) => onChange({ meetRadiusM: clampToRange(e.target.value, 10, 2000) })}
           className={numberInputClass}
         />
 
@@ -271,7 +289,7 @@ export default function SetupPanel({ settings, onChange, strings }: SetupPanelPr
           min={1}
           max={240}
           value={settings.meetMinMinutes}
-          onChange={(e) => onChange({ meetMinMinutes: Number(e.target.value) })}
+          onChange={(e) => onChange({ meetMinMinutes: clampToRange(e.target.value, 1, 240) })}
           className={numberInputClass}
         />
       </fieldset>
@@ -362,7 +380,7 @@ export default function SetupPanel({ settings, onChange, strings }: SetupPanelPr
           max={5000}
           disabled={!settings.hideHome}
           value={settings.hideHomeRadiusM}
-          onChange={(e) => onChange({ hideHomeRadiusM: Number(e.target.value) })}
+          onChange={(e) => onChange({ hideHomeRadiusM: clampToRange(e.target.value, 50, 5000) })}
           className={`${numberInputClass} disabled:cursor-not-allowed disabled:opacity-40`}
         />
       </fieldset>
