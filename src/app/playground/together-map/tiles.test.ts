@@ -68,6 +68,15 @@ describe("visibleTiles", () => {
     }
   });
 
+  it("극지방 바깥 타일을 주지 않는다 — 낮은 위도에서도 y가 범위 안에 든다", () => {
+    const tiles = visibleTiles({ centerLat: -85.05, centerLon: 0, zoom: 12 }, SIZE);
+    for (const t of tiles) {
+      const max = 2 ** t.z;
+      expect(t.y).toBeGreaterThanOrEqual(0);
+      expect(t.y).toBeLessThan(max);
+    }
+  });
+
   it("날짜변경선을 넘어가도 x가 범위 안에 든다 — 경도 180도 근처", () => {
     const tiles = visibleTiles({ centerLat: 37.5, centerLon: 180, zoom: 12 }, SIZE);
     for (const t of tiles) {
