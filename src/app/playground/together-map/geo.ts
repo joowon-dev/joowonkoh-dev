@@ -38,6 +38,8 @@ export function projectMercator(p: LatLon): { x: number; y: number } {
   const y = 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
   return {
     x: (p.lon + 180) / 360,
+    // ±85.05°에서는 공식이 해석적으로 정확히 0 또는 1이지만, 부동소수점 반올림이
+    // 약간 벗어나게 한다(≈ -6e-12). [0,1] 범위로 고정한다.
     y: Math.max(0, Math.min(1, y)),
   };
 }
