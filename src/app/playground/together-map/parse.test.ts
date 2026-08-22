@@ -255,4 +255,38 @@ describe("parseTimeline — 오류", () => {
       expect((e as Error).message).toContain("2개를 버리고");
     }
   });
+
+  it("activity 좌표가 읽을 수 없으면 그 점들도 센다", () => {
+    const bad_activity = {
+      semanticSegments: [
+        {
+          startTime: "2026-01-01T09:00:00Z",
+          endTime: "2026-01-01T10:00:00Z",
+          activity: {
+            start: { latLng: "쓰레기" },
+            end: { latLng: "또쓰레기" },
+          },
+        },
+        {
+          startTime: "2026-01-01T11:00:00Z",
+          endTime: "2026-01-01T12:00:00Z",
+          activity: {
+            start: { latLng: "쓰레기2" },
+            end: { latLng: "또쓰레기2" },
+          },
+        },
+        {
+          startTime: "2026-01-01T13:00:00Z",
+          endTime: "2026-01-01T14:00:00Z",
+          visit: { topCandidate: { placeLocation: { latLng: "37.5°, 127.0°" } } },
+        },
+      ],
+    };
+    expect(() => parseTimeline(bad_activity)).toThrow(TimelineParseError);
+    try {
+      parseTimeline(bad_activity);
+    } catch (e) {
+      expect((e as Error).message).toContain("4개를 버리고");
+    }
+  });
 });

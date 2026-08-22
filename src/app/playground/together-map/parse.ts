@@ -110,13 +110,20 @@ function parseSegments(segments: unknown[]): { points: RawPoint[]; skipped: numb
     } else if (seg.visit && start !== undefined) {
       // 방문 데이터가 있었지만 좌표를 읽을 수 없다.
       skipped += 1;
+    } else if (seg.visit && start === undefined) {
+      // 방문 데이터가 있었지만 세그먼트 시작 시각을 읽을 수 없어서 버린다.
+      skipped += 1;
     }
 
     // 경로 — 촘촘한 부스러기 점들. 개수를 센다.
     let pathCount = 0;
     if (Array.isArray(seg.timelinePath) && start !== undefined) {
       for (const step of seg.timelinePath) {
-        if (!isRecord(step)) continue;
+        if (!isRecord(step)) {
+          // 경로 스텝이 객체가 아니어서 버린다.
+          skipped += 1;
+          continue;
+        }
         const at = parseLatLngString(step.point);
         if (!at) {
           // 경로 점이 있었지만 좌표를 읽을 수 없다.
@@ -128,7 +135,11 @@ function parseSegments(segments: unknown[]): { points: RawPoint[]; skipped: numb
         const abs = parseTime(step.time);
         const offset = num(step.durationMinutesOffsetFromStartTime);
         const t = abs ?? (offset === undefined ? undefined : start + offset * 60_000);
-        if (t === undefined) continue;
+        if (t === undefined) {
+          // 경로 점의 시각을 읽을 수 없어서 버린다.
+          skipped += 1;
+          continue;
+        }
 
         out.push({ t, ...at, kind: "path" });
         pathCount += 1;
@@ -139,8 +150,18 @@ function parseSegments(segments: unknown[]): { points: RawPoint[]; skipped: numb
     if (pathCount === 0 && isRecord(seg.activity)) {
       const from = activityLatLon(seg.activity.start);
       const to = activityLatLon(seg.activity.end);
-      if (from && start !== undefined) out.push({ t: start, ...from, kind: "path" });
-      if (to && end !== undefined) out.push({ t: end, ...to, kind: "path" });
+      if (from && start !== undefined) {
+        out.push({ t: start, ...from, kind: "path" });
+      } else if (seg.activity.start && (from === null || start === undefined)) {
+        // 출발점 데이터가 있었지만 좌표를 읽을 수 없거나 시간을 읽을 수 없어서 버린다.
+        skipped += 1;
+      }
+      if (to && end !== undefined) {
+        out.push({ t: end, ...to, kind: "path" });
+      } else if (seg.activity.end && (to === null || end === undefined)) {
+        // 도착점 데이터가 있었지만 좌표를 읽을 수 없거나 시간을 읽을 수 없어서 버린다.
+        skipped += 1;
+      }
     }
   }
 
