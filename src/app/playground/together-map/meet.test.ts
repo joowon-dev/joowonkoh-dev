@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GRID_MS, findMeetings, overlapRange, resample } from "./meet";
+import { DEFAULT_MEET_MIN_MS, DEFAULT_MEET_RADIUS_M, GRID_MS, MAX_GAP_MS, findMeetings, overlapRange, resample } from "./meet";
 import type { RawPoint } from "./parse";
 
 const T0 = Date.parse("2026-01-01T00:00:00Z");
@@ -98,10 +98,13 @@ describe("findMeetings", () => {
   });
 
   it("구멍 너머로 가짜 만남을 만들지 않는다", () => {
-    // A는 계속 서울에 있다. B는 서울에 잠깐 있다가 기록이 끊기고 부산에서 나타난다.
-    // B의 두 점을 직선으로 이으면 그 선이 A를 오래 스쳐서 없던 만남이 생긴다.
-    const a = stay(0, 300, 36.5, 127.5);
-    const b = [p(0, 37.5665, 126.978), p(300, 35.1796, 129.0756)];
+    // B는 300분 동안 70m만 이동한다. A는 B의 시작점에 있다.
+    // 기록 구멍이 없고 직선 보간하면, A와 B는 300분 동안 70m 안에 있어서
+    // 15분보다 훨씬 긴 거짓 만남이 생긴다.
+    // 구멍 체크가 켜면 (현재 코드) 300분 차이가 30분 제한을 넘어서 구간이 전부 null이 되고,
+    // 만남이 없다.
+    const a = stay(0, 300, 37.0, 127.0);
+    const b = [p(0, 37.0, 127.0), p(300, 36.9995, 127.0005)];
     expect(findMeetings(a, b, OPTS)).toHaveLength(0);
   });
 
@@ -112,12 +115,14 @@ describe("findMeetings", () => {
   });
 
   it("대표 위치는 중앙값이라 끝에 붙은 이동에 끌려가지 않는다", () => {
-    // 대부분 37.5에 있다가 마지막에 살짝 움직인다
+    // 처음 50분간 37.5, 마지막 10분간 37.8에서 떨어져 있다.
+    // 중앙값은 37.5 (13개 중 앞 11개)이지만, 평균은 37.538이 되어 끌려간다.
     const a = stay(0, 60, 37.5, 127.0);
-    const b = [...stay(0, 55, 37.5, 127.0), p(60, 37.5008, 127.0)];
+    const b = [...stay(0, 50, 37.5, 127.0), ...stay(55, 60, 37.8, 127.0)];
     const meets = findMeetings(a, b, OPTS);
     expect(meets).toHaveLength(1);
     expect(meets[0].lat).toBeCloseTo(37.5, 4);
+    expect(meets[0].lon).toBeCloseTo(127.0, 4);
   });
 
   it("시작과 끝 시각이 실제 구간과 맞는다", () => {
@@ -137,5 +142,54 @@ describe("findMeetings", () => {
 
   it("격자 간격은 5분이다", () => {
     expect(GRID_MS).toBe(5 * MIN);
+  });
+
+  it("상수들이 맞다", () => {
+    expect(MAX_GAP_MS).toBe(30 * MIN);
+    expect(DEFAULT_MEET_RADIUS_M).toBe(100);
+    expect(DEFAULT_MEET_MIN_MS).toBe(15 * MIN);
+  });
+
+  it("null 셀은 만남을 끊는다", () => {
+    // A와 B가 0-30분에 함께 있고, 30-60분 사이 B가 기록 없다.
+    // 그 다음 95-125분에 다시 함께 있다.
+    // 결과: 두 개의 별개 만남, 하나의 만남 아님.
+    const a = stay(0, 125, 37.5, 127.0);
+    const b = [...stay(0, 30, 37.5, 127.0), ...stay(95, 125, 37.5, 127.0)];
+    const meets = findMeetings(a, b, OPTS);
+    expect(meets).toHaveLength(2);
+  });
+
+  it("최소 지속시간 경계: 정확히 15분이면 포함된다", () => {
+    // 정확히 15분 만남 (3개 격자 셀 × 5분 = 15분).
+    // 이 테스트는 close(i)로 변경하면 duration이 20분이 되어도 포함되지만,
+    // 다른 테스트와 함께 close(i-1) 변경을 감지한다.
+    const a = stay(0, 15, 37.5, 127.0);
+    const b = stay(0, 15, 37.5, 127.0);
+    const meets = findMeetings(a, b, OPTS);
+    expect(meets).toHaveLength(1);
+    expect(meets[0].start).toBe(T0);
+    expect(meets[0].end).toBe(T0 + 15 * MIN);
+  });
+
+  it("최소 지속시간 경계: 10분은 15분 미만이므로 제외된다", () => {
+    // 10분 만남은 minDurationMs (15분) 미만이라 제외.
+    // 하지만 close(i)로 변경하면 duration이 15분이 되어 포함된다.
+    // 이 테스트는 close(i-1) 변경을 감지한다.
+    const a = stay(0, 10, 37.5, 127.0);
+    const b = stay(0, 10, 37.5, 127.0);
+    const meets = findMeetings(a, b, OPTS);
+    expect(meets).toHaveLength(0);
+  });
+
+  it("최소 거리가 0이 아닌 경우도 기록된다", () => {
+    // 두 사람이 약 80m 떨어져 있고 radiusM=100 안에 있으므로 만남.
+    // minDistance는 0이 아니고 radiusM보다 작아야 함.
+    const a = stay(0, 60, 37.5, 127.0);
+    const b = stay(0, 60, 37.50072, 127.0);  // 약 80m 거리
+    const meets = findMeetings(a, b, OPTS);
+    expect(meets).toHaveLength(1);
+    expect(meets[0].minDistance).toBeGreaterThan(50);
+    expect(meets[0].minDistance).toBeLessThan(100);
   });
 });
