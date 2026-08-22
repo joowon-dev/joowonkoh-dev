@@ -304,6 +304,31 @@ function Baseball() {
   );
 }
 
+/** 같이 걸은 지도 — 두 사람의 경로가 만나 겹치는 지점 */
+function Together() {
+  return (
+    <>
+      {/* 두 사람의 경로. 각자 다른 곳에서 출발해 가운데서 겹친다. 배경은 타일 그러데이션이 대신한다 */}
+      <path
+        d="M12 18 Q22 20 28 32 T34 46"
+        stroke="#e8532e"
+        strokeWidth="3.4"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M52 14 Q40 22 34 32 T30 48"
+        stroke="#3b6fd8"
+        strokeWidth="3.4"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* 만난 지점을 표시하는 점 */}
+      <circle cx="31" cy="32" r="5.4" fill="#ffffff" stroke="#2b3145" strokeWidth="2" />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -319,6 +344,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   horse: Horse,
   imax: Imax,
   baseball: Baseball,
+  together: Together,
 };
 
 /**

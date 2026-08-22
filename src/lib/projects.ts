@@ -16,7 +16,8 @@ export type IconName =
   | "sauna"
   | "horse"
   | "imax"
-  | "baseball";
+  | "baseball"
+  | "together";
 
 export interface Project {
   title: string;
@@ -167,6 +168,16 @@ export const projects: Project[] = [
     icon: "code",
     tile: ["#f6f6f8", "#e0e0e6"],
     hidden: true,
+  },
+  {
+    title: "같이 걸은 지도",
+    description: "두 사람의 위치기록을 겹쳐서 만난 순간을 찾아 줍니다 🗺️",
+    tags: ["Web", "Canvas", "Privacy"],
+    href: "/playground/together-map",
+    icon: "together",
+    tile: ["#eef4ff", "#c7d8f5"],
+    blurb:
+      "구글 타임라인을 내려받아 두 사람 것을 한 지도에 겹쳐 재생합니다. 안드로이드·아이폰·옛 방식, 세 형식을 모두 읽습니다. 방문 기록은 «14시부터 16시까지 여기 있었다»를 좌표 하나로 적어서, 시작 시각만 읽으면 그 두 시간이 «모르는 구간»이 됩니다 — 종료 시각까지 아는 시간으로 붙여 둡니다. 5분 간격으로 거리를 재서 100m 안에 15분 이상 있었으면 «만남»입니다. 기록이 30분 넘게 비면 잇지 않습니다 — 이으면 서울에서 부산까지 직선이 그어지고 그 선이 상대를 스쳐 없던 만남이 생깁니다. 파일은 이 기기를 벗어나지 않습니다.",
   },
 ];
 
