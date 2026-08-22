@@ -281,4 +281,23 @@ describe("촘촘하게 기록된 하루(2026-03-29)", () => {
       pts.reduce((best, p) => (Math.abs(p.t - mid) < Math.abs(best.t - mid) ? p : best));
     expect(haversineMeters(near(a), near(b))).toBeLessThan(200);
   });
+
+  it("걷는 동안 한강을 건너지 않는다 — 성수동 안에 머문다", () => {
+    // 점과 점 사이는 직선으로 이어진다. 코스에 강 건너 지점이 하나라도 섞이면
+    // 두 사람이 물 위를 가로질러 걷는 그림이 된다(실제로 그랬다).
+    // 성수 일대에서 한강은 위도 37.538 아래쪽에 있다.
+    const HAN_NORTH_OF = 37.538;
+    const walkFrom = SAMPLE_DENSE_DAY + 10 * 3_600_000 + 40 * 60_000;
+    const walkTo = SAMPLE_DENSE_DAY + 17 * 3_600_000;
+
+    for (const who of ["a", "b"] as const) {
+      const walking = dayPoints(who).filter((p) => p.t >= walkFrom && p.t <= walkTo);
+      expect(walking.length).toBeGreaterThan(50);
+      for (const p of walking) {
+        expect(p.lat).toBeGreaterThan(HAN_NORTH_OF);
+        expect(p.lon).toBeGreaterThan(127.03);
+        expect(p.lon).toBeLessThan(127.06);
+      }
+    }
+  });
 });
