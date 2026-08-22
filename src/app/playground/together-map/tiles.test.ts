@@ -51,6 +51,31 @@ describe("visibleTiles", () => {
     const keys = new Set(tiles.map((t) => `${t.z}/${t.x}/${t.y}`));
     expect(keys.size).toBe(tiles.length);
   });
+
+  it("소수 줌은 반올림하는 방향이 정확하다 — 12.7은 13으로, 12.2는 12로", () => {
+    const tilesUp = visibleTiles({ ...VIEW, zoom: 12.7 }, SIZE);
+    const tilesDown = visibleTiles({ ...VIEW, zoom: 12.2 }, SIZE);
+    expect(tilesUp[0]?.z).toBe(13);
+    expect(tilesDown[0]?.z).toBe(12);
+  });
+
+  it("극지방 바깥 타일을 주지 않는다 — 높은 위도에서도 y가 범위 안에 든다", () => {
+    const tiles = visibleTiles({ centerLat: 85, centerLon: 0, zoom: 12 }, SIZE);
+    for (const t of tiles) {
+      const max = 2 ** t.z;
+      expect(t.y).toBeGreaterThanOrEqual(0);
+      expect(t.y).toBeLessThan(max);
+    }
+  });
+
+  it("날짜변경선을 넘어가도 x가 범위 안에 든다 — 경도 180도 근처", () => {
+    const tiles = visibleTiles({ centerLat: 37.5, centerLon: 180, zoom: 12 }, SIZE);
+    for (const t of tiles) {
+      const max = 2 ** t.z;
+      expect(t.x).toBeGreaterThanOrEqual(0);
+      expect(t.x).toBeLessThan(max);
+    }
+  });
 });
 
 describe("저작권 표기", () => {
