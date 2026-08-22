@@ -45,7 +45,7 @@ export interface Strings {
   hideHome: string;
   hideHomeRadius: string;
   showSummary: string;
-  meetingsFound: string; // "만남 {n}건"
+  meetingsFound: string; // "함께한 순간: {n}" — 숫자를 값으로 두어 개수와 무관하게 읽히게 한다
   noMeetings: string;
   totalTogether: string;
   favouriteSpot: string;
@@ -154,7 +154,7 @@ const DICT: Record<Lang, Strings> = {
     hideHome: "집 근처는 숨기기",
     hideHomeRadius: "집으로 볼 반경",
     showSummary: "요약 보기",
-    meetingsFound: "만남 {n}건",
+    meetingsFound: "함께한 순간: {n}",
     noMeetings: "겹치는 순간을 찾지 못했어요",
     totalTogether: "함께 있었던 시간",
     favouriteSpot: "가장 자주 만난 곳",
@@ -210,7 +210,7 @@ const DICT: Record<Lang, Strings> = {
     hideHome: "Hide the area around home",
     hideHomeRadius: "Radius treated as home",
     showSummary: "Show summary",
-    meetingsFound: "{n} moments together",
+    meetingsFound: "Moments together: {n}",
     noMeetings: "No overlapping moments found",
     totalTogether: "Time spent together",
     favouriteSpot: "Most frequent meeting spot",
@@ -266,7 +266,7 @@ const DICT: Record<Lang, Strings> = {
     hideHome: "自宅の周辺を隠す",
     hideHomeRadius: "自宅とみなす半径",
     showSummary: "サマリーを見る",
-    meetingsFound: "出会った瞬間 {n}件",
+    meetingsFound: "一緒にいた瞬間: {n}",
     noMeetings: "重なる瞬間は見つかりませんでした",
     totalTogether: "一緒にいた時間",
     favouriteSpot: "いちばんよく会った場所",
@@ -323,7 +323,7 @@ const DICT: Record<Lang, Strings> = {
     hideHome: "隐藏家附近的区域",
     hideHomeRadius: "视为家的半径",
     showSummary: "查看摘要",
-    meetingsFound: "共 {n} 次相遇",
+    meetingsFound: "共同的瞬间：{n}",
     noMeetings: "没有找到重叠的瞬间",
     totalTogether: "一起度过的时间",
     favouriteSpot: "最常相遇的地方",
@@ -378,7 +378,7 @@ const DICT: Record<Lang, Strings> = {
     hideHome: "隱藏住家附近的區域",
     hideHomeRadius: "視為住家的半徑",
     showSummary: "查看摘要",
-    meetingsFound: "共 {n} 次相遇",
+    meetingsFound: "共同的瞬間：{n}",
     noMeetings: "沒有找到重疊的瞬間",
     totalTogether: "一起度過的時間",
     favouriteSpot: "最常相遇的地方",
@@ -433,7 +433,7 @@ const DICT: Record<Lang, Strings> = {
     hideHome: "Ocultar la zona alrededor de casa",
     hideHomeRadius: "Radio considerado como casa",
     showSummary: "Ver resumen",
-    meetingsFound: "{n} momentos juntos",
+    meetingsFound: "Momentos juntos: {n}",
     noMeetings: "No se encontraron momentos en común",
     totalTogether: "Tiempo pasado juntos",
     favouriteSpot: "Lugar donde más se encontraron",
@@ -490,7 +490,7 @@ const DICT: Record<Lang, Strings> = {
     hideHome: "Masquer la zone autour du domicile",
     hideHomeRadius: "Rayon considéré comme le domicile",
     showSummary: "Voir le résumé",
-    meetingsFound: "{n} moments partagés",
+    meetingsFound: "Moments ensemble : {n}",
     noMeetings: "Aucun moment commun trouvé",
     totalTogether: "Temps passé ensemble",
     favouriteSpot: "Lieu de rencontre le plus fréquent",
@@ -547,7 +547,7 @@ const DICT: Record<Lang, Strings> = {
     hideHome: "Bereich um zu Hause ausblenden",
     hideHomeRadius: "Radius, der als Zuhause gilt",
     showSummary: "Zusammenfassung ansehen",
-    meetingsFound: "{n} gemeinsame Momente",
+    meetingsFound: "Gemeinsame Momente: {n}",
     noMeetings: "Keine gemeinsamen Momente gefunden",
     totalTogether: "Gemeinsam verbrachte Zeit",
     favouriteSpot: "Häufigster Treffpunkt",
@@ -604,7 +604,7 @@ const DICT: Record<Lang, Strings> = {
     hideHome: "Ocultar a área ao redor de casa",
     hideHomeRadius: "Raio considerado como casa",
     showSummary: "Ver resumo",
-    meetingsFound: "{n} momentos juntos",
+    meetingsFound: "Momentos juntos: {n}",
     noMeetings: "Nenhum momento em comum encontrado",
     totalTogether: "Tempo passado juntos",
     favouriteSpot: "Local de encontro mais frequente",
