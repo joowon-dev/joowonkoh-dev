@@ -51,7 +51,10 @@ export interface Strings {
   favouriteSpot: string; // "가장 자주 만난 곳: {n}번" — {n}은 만난 횟수(숫자)
   farthestApart: string; // "가장 멀리 떨어져 있던 순간: {n}" — {n}은 "거리 (날짜)"
   parseFailed: string;
+  readingFile: string; // 파일을 읽는 동안(파싱 전)에만 쓴다 — rendering(영상 만드는 중)과 구분한다
   rendering: string;
+  exportFailed: string; // "{n}" — 영상 만들기가 실패했을 때, 원인(err.message)을 값으로 채운다
+  startOver: string; // 완성 화면에서 설정으로 되돌아가는 버튼. preview("미리 보기")와는 다른 문구다
   webmFallback: string; // mp4를 못 만들 때 알리는 문구
   attribution: string;
   hoursUnit: string; // 숫자 뒤에 붙는 "시간" 단위. 라틴 약어(h)를 그대로 쓰지 않는다
@@ -171,7 +174,10 @@ const DICT: Record<Lang, Strings> = {
     favouriteSpot: "가장 자주 만난 곳: {n}번",
     farthestApart: "가장 멀리 떨어져 있던 순간: {n}",
     parseFailed: "파일을 읽지 못했어요. Timeline.json이 맞는지 확인해 주세요",
+    readingFile: "파일을 읽는 중이에요",
     rendering: "영상을 만드는 중이에요",
+    exportFailed: "영상을 만들지 못했어요: {n}",
+    startOver: "다시 만들기",
     webmFallback:
       "이 브라우저에서는 mp4를 만들 수 없어서 webm으로 대신 내려받아요",
     attribution: "지도 데이터 제공",
@@ -238,7 +244,10 @@ const DICT: Record<Lang, Strings> = {
     favouriteSpot: "Most frequent meeting spot: {n} times",
     farthestApart: "Farthest apart at any point: {n}",
     parseFailed: "Couldn't read that file. Please check it's a Timeline.json",
+    readingFile: "Reading your file",
     rendering: "Rendering your video",
+    exportFailed: "Couldn't create the video: {n}",
+    startOver: "Start over",
     webmFallback:
       "This browser can't produce mp4, so we're downloading a webm instead",
     attribution: "Map data by",
@@ -306,7 +315,10 @@ const DICT: Record<Lang, Strings> = {
     farthestApart: "いちばん離れていた瞬間: {n}",
     parseFailed:
       "ファイルを読み込めませんでした。Timeline.jsonかどうか確認してください",
+    readingFile: "ファイルを読み込んでいます",
     rendering: "動画を作成しています",
+    exportFailed: "動画を作成できませんでした: {n}",
+    startOver: "最初からやり直す",
     webmFallback:
       "このブラウザではmp4を作れないため、代わりにwebmでダウンロードします",
     attribution: "地図データ提供",
@@ -373,7 +385,10 @@ const DICT: Record<Lang, Strings> = {
     favouriteSpot: "最常相遇的地方：{n}次",
     farthestApart: "相距最远的瞬间：{n}",
     parseFailed: "无法读取该文件，请确认它是 Timeline.json",
+    readingFile: "正在读取文件",
     rendering: "正在生成视频",
+    exportFailed: "视频生成失败：{n}",
+    startOver: "重新开始",
     webmFallback: "此浏览器无法生成 mp4，已改为下载 webm 格式",
     attribution: "地图数据来源",
     hoursUnit: "小时",
@@ -439,7 +454,10 @@ const DICT: Record<Lang, Strings> = {
     favouriteSpot: "最常相遇的地方：{n}次",
     farthestApart: "相距最遠的瞬間：{n}",
     parseFailed: "無法讀取該檔案，請確認它是 Timeline.json",
+    readingFile: "正在讀取檔案",
     rendering: "正在產生影片",
+    exportFailed: "影片產生失敗：{n}",
+    startOver: "重新開始",
     webmFallback: "這個瀏覽器無法產生 mp4，已改為下載 webm 格式",
     attribution: "地圖資料來源",
     hoursUnit: "小時",
@@ -506,7 +524,10 @@ const DICT: Record<Lang, Strings> = {
     farthestApart: "El momento en que estuvieron más lejos: {n}",
     parseFailed:
       "No se pudo leer ese archivo. Comprueba que sea un Timeline.json",
+    readingFile: "Leyendo tu archivo",
     rendering: "Generando tu video",
+    exportFailed: "No se pudo crear el video: {n}",
+    startOver: "Empezar de nuevo",
     webmFallback:
       "Este navegador no puede generar mp4, así que descargaremos un webm en su lugar",
     attribution: "Datos del mapa por",
@@ -574,7 +595,10 @@ const DICT: Record<Lang, Strings> = {
     farthestApart: "Moment où vous étiez le plus éloignés : {n}",
     parseFailed:
       "Impossible de lire ce fichier. Vérifiez qu'il s'agit bien d'un Timeline.json",
+    readingFile: "Lecture de votre fichier",
     rendering: "Création de votre vidéo en cours",
+    exportFailed: "Impossible de créer la vidéo : {n}",
+    startOver: "Recommencer",
     webmFallback:
       "Ce navigateur ne peut pas produire de mp4, un fichier webm sera téléchargé à la place",
     attribution: "Données cartographiques par",
@@ -642,7 +666,10 @@ const DICT: Record<Lang, Strings> = {
     farthestApart: "Der Moment mit der größten Entfernung: {n}",
     parseFailed:
       "Diese Datei konnte nicht gelesen werden. Bitte prüft, ob es sich um eine Timeline.json handelt",
+    readingFile: "Datei wird gelesen",
     rendering: "Video wird erstellt",
+    exportFailed: "Video konnte nicht erstellt werden: {n}",
+    startOver: "Neu beginnen",
     webmFallback:
       "Dieser Browser kann kein mp4 erzeugen, daher wird stattdessen ein webm heruntergeladen",
     attribution: "Kartendaten von",
@@ -710,7 +737,10 @@ const DICT: Record<Lang, Strings> = {
     farthestApart: "O momento em que estiveram mais distantes: {n}",
     parseFailed:
       "Não foi possível ler esse arquivo. Verifique se é um Timeline.json",
+    readingFile: "Lendo seu arquivo",
     rendering: "Gerando seu vídeo",
+    exportFailed: "Não foi possível criar o vídeo: {n}",
+    startOver: "Começar de novo",
     webmFallback:
       "Este navegador não consegue gerar mp4, então vamos baixar um webm no lugar",
     attribution: "Dados do mapa por",

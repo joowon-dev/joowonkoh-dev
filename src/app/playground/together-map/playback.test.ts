@@ -42,6 +42,14 @@ describe("shouldKeepWaitingForTiles", () => {
   it("대기 중이어도 최대 시간을 넘기면 포기한다", () => {
     expect(shouldKeepWaitingForTiles(4, 3_001, 3_000)).toBe(false);
   });
+
+  // elapsedMs가 maxWaitMs와 정확히 같은 경계. `<`를 `<=`로 바꾸는 돌연변이는
+  // 여기서 true를 돌려주고(한 번 더 기다리고), 원본은 false를 돌려준다 — 최대
+  // 시간을 "넘겨야" 포기하는 게 아니라 "도달하면" 포기해야 실제로 3초를 넘기지
+  // 않는다.
+  it("경과 시간이 최대 시간과 정확히 같으면 포기한다", () => {
+    expect(shouldKeepWaitingForTiles(4, 3_000, 3_000)).toBe(false);
+  });
 });
 
 describe("summaryOpacity", () => {
@@ -64,6 +72,24 @@ describe("summaryOpacity", () => {
   it("영상 길이가 카드 몫(3초)보다 짧으면 시작하자마자 완전히 덮는다", () => {
     expect(summaryOpacity(0.01, 2)).toBe(1);
     expect(summaryOpacity(0, 2)).toBe(0);
+  });
+
+  // durationSec이 카드 몫(3초)과 정확히 같은 경계. `<=`를 `<`로 바꾸는 돌연변이는
+  // durationSec === 3일 때 방어 분기를 건너뛰고 정상 램프 계산으로 빠지는데,
+  // 그 경우 startRatio = 1 - 3/3 = 0이라 나눗셈 자체는 안 깨지지만 "3초짜리
+  // 영상은 시작하자마자 완전히 덮는다"는 계약과는 다른 값(ratio 그대로)을
+  // 돌려준다.
+  it("영상 길이가 카드 몫과 정확히 같으면 시작하자마자 완전히 덮는다", () => {
+    expect(summaryOpacity(0.01, 3)).toBe(1);
+    expect(summaryOpacity(0, 3)).toBe(0);
+  });
+
+  // ratio가 1을 넘는 입력(재생 루프가 클램프하기 전에 부르거나, 부동소수점
+  // 오차로 아주 살짝 넘긴 경우)에도 Math.min(1, …) 클램프가 없으면 opacity가
+  // 1을 넘는다 — drawSummaryCard의 globalAlpha 계약(1 = 완전히 덮는다)을 넘어서는
+  // 값은 캔버스 API가 조용히 잘라내긴 하지만, 그 잘림에 기대면 안 된다.
+  it("진행률이 1을 넘어도 1로 잘린다", () => {
+    expect(summaryOpacity(1.5, durationSec)).toBe(1);
   });
 });
 

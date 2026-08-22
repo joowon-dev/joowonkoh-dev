@@ -105,13 +105,16 @@ export default function TogetherMap() {
   const strings = useMemo(() => t(lang), [lang]);
 
   const [exportProgress, setExportProgress] = useState(0);
+  // readError는 pick 단계에서만 보인다 — 녹화 실패를 거기 밀어 넣으면 사용자가
+  // setup으로 돌아온 뒤 아무 설명도 못 본다. 그래서 따로 둔다.
+  const [exportError, setExportError] = useState<string | null>(null);
   const [videoResult, setVideoResult] = useState<VideoResult | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [canShareFile, setCanShareFile] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const tileCacheRef = useRef<TileCache | null>(null);
-  const tileDirtyRef = useRef(true);
+  const needsDrawRef = useRef(true);
   const viewRef = useRef<View>({ centerLat: 0, centerLon: 0, zoom: 2 });
   const nowRef = useRef(0);
   const playStateRef = useRef<{ playing: boolean; startPerf: number }>({
@@ -174,26 +177,61 @@ export default function TogetherMap() {
   // 동의 전에는 타일을 한 장도 요청하지 않는다 — TileCache는 여기서만 만든다.
   // 1번 함정.
   function handleConsent() {
-    tileDirtyRef.current = true;
+    needsDrawRef.current = true;
     tileCacheRef.current = new TileCache(() => {
       // onLoad는 타일마다 한 번씩, 배치 없이 불린다. 여기서 setState를 하면
       // 타일 서른 장에 서른 번 리렌더가 일어난다. ref 플래그만 세우고,
       // 실제로 다시 그리는 것은 rAF 루프가 이 플래그를 읽고 처리한다. 2번 함정.
-      tileDirtyRef.current = true;
+      needsDrawRef.current = true;
     });
     setStage("setup");
   }
 
-  // 파싱 → 필터 → 검출. 설정이 바뀔 때마다 다시 계산된다.
+  // 파싱 → 필터 → 검출. 필터링이 실제로 쓰는 설정 값들이 바뀔 때만 다시 계산한다.
+  //
+  // 의존성을 settings 객체 전체로 두면, 이름이나 제목 하나 타이핑할 때마다(그때마다
+  // setSettings가 객체를 새로 만든다) 수백 MB짜리 트랙에 filterPoints부터
+  // findMeetings까지 전부 다시 돈다 — 키 입력마다 눈에 보이는 멈춤이 생긴다.
+  // 여기서 쓰는 값만 정확히 나열한다.
   const filteredA = useMemo(() => {
     if (!pointsA) return null;
-    return applyFilters(pointsA, settings);
-  }, [pointsA, settings]);
+    return applyFilters(pointsA, {
+      useRawData: settings.useRawData,
+      accuracyLimitM: settings.accuracyLimitM,
+      outlier: settings.outlier,
+      exactDates: settings.exactDates,
+      startDate: settings.startDate,
+      endDate: settings.endDate,
+    });
+  }, [
+    pointsA,
+    settings.useRawData,
+    settings.accuracyLimitM,
+    settings.outlier,
+    settings.exactDates,
+    settings.startDate,
+    settings.endDate,
+  ]);
 
   const filteredB = useMemo(() => {
     if (!pointsB) return null;
-    return applyFilters(pointsB, settings);
-  }, [pointsB, settings]);
+    return applyFilters(pointsB, {
+      useRawData: settings.useRawData,
+      accuracyLimitM: settings.accuracyLimitM,
+      outlier: settings.outlier,
+      exactDates: settings.exactDates,
+      startDate: settings.startDate,
+      endDate: settings.endDate,
+    });
+  }, [
+    pointsB,
+    settings.useRawData,
+    settings.accuracyLimitM,
+    settings.outlier,
+    settings.exactDates,
+    settings.startDate,
+    settings.endDate,
+  ]);
 
   const range = useMemo(() => {
     if (!filteredA || !filteredB) return null;
@@ -243,7 +281,16 @@ export default function TogetherMap() {
   }, [fixedView, settings.camera]);
 
   // 매 렌더 뒤 최신 값을 ref에 채워 둔다. rAF 루프는 이것만 읽는다.
+  //
+  // needsDrawRef를 여기서도 세운다 — 이 ref는 "타일이 도착했다"만이 아니라
+  // "다시 그려야 할 무언가가 바뀌었다"는 뜻이다(그래서 tileDirtyRef가 아니라
+  // needsDrawRef라는 이름이다). 이걸 빼먹으면 setup 단계에서 크기·카메라·색·
+  // 이름·제목·필터·언어를 바꿔도 캔버스가 안 움직인다 — 재생 중이 아니고 마침
+  // 타일도 다 받아 둔 상태라면(정적인 대다수의 경우) 다시 그릴 이유가 하나도
+  // 안 남기 때문이다. 타일이 계속 들어오는 동안에는 tileDirtyRef 쪽 신호에
+  // 우연히 가려져서 "가끔은 되는" 것처럼 보였던 문제라, 렌더마다 무조건 세운다.
   useEffect(() => {
+    needsDrawRef.current = true;
     latestRef.current = {
       filteredA,
       filteredB,
@@ -268,8 +315,8 @@ export default function TogetherMap() {
       const cache = tileCacheRef.current;
       if (!state || !canvas || !cache || !state.filteredA || !state.filteredB) return;
 
-      let needsDraw = tileDirtyRef.current;
-      tileDirtyRef.current = false;
+      let needsDraw = needsDrawRef.current;
+      needsDrawRef.current = false;
 
       if (playStateRef.current.playing && state.range) {
         const elapsedSec = (performance.now() - playStateRef.current.startPerf) / 1000;
@@ -367,6 +414,7 @@ export default function TogetherMap() {
     const controller = new AbortController();
     abortRef.current = controller;
     setExportProgress(0);
+    setExportError(null);
     setStage("recording");
 
     // 타일이 아직 오는 중이면 최대 3초 기다린다 — 안 그러면 앞부분이 빈 지도로
@@ -403,7 +451,9 @@ export default function TogetherMap() {
       const isAbort = err instanceof DOMException && err.name === "AbortError";
       if (!isAbort) {
         const detail = err instanceof Error ? err.message : String(err);
-        setReadError(detail);
+        // readError가 아니라 exportError에 담는다 — readError는 pick 화면에서만
+        // 그려지므로, 여기 넣으면 setup으로 돌아온 사용자에게 아무것도 안 보인다.
+        setExportError(strings.exportFailed.replace("{n}", detail));
       }
       setStage("setup");
     } finally {
@@ -415,6 +465,15 @@ export default function TogetherMap() {
   function cancelExport() {
     abortRef.current?.abort();
   }
+
+  // 녹화 도중 컴포넌트가 언마운트되면(예: 다른 페이지로 이동) 취소해 둔다.
+  // 안 그러면 MediaRecorder와 captureStream이 떨어져 나간 캔버스를 향해
+  // durationSec이 끝날 때까지 계속 돈다.
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   // 만든 영상의 objectURL. 다시 만들 때마다 이전 것을 반드시 해제한다 —
   // 안 그러면 다시 만들 때마다 메모리가 쌓인다. 4번 함정.
@@ -510,6 +569,12 @@ export default function TogetherMap() {
             </div>
           )}
 
+          {stage === "setup" && exportError && (
+            <p className="mt-3 whitespace-pre-wrap rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {exportError}
+            </p>
+          )}
+
           {stage === "playing" && (
             <p className="mt-3 text-xs text-text-muted">{strings.preview}…</p>
           )}
@@ -563,7 +628,7 @@ export default function TogetherMap() {
                   onClick={resetToSetup}
                   className="rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary spring-transition hover:border-accent/40"
                 >
-                  {strings.preview}
+                  {strings.startOver}
                 </button>
               </div>
             </div>
@@ -584,8 +649,25 @@ export default function TogetherMap() {
   );
 }
 
-/** useRawData면 필터를 건너뛰고, 아니면 정확도·이상치 필터를 적용한 뒤 날짜 범위로 자른다. */
-function applyFilters(points: RawPoint[], settings: Settings): RawPoint[] {
+interface FilterSettings {
+  useRawData: boolean;
+  accuracyLimitM: number;
+  outlier: "conservative" | "off";
+  exactDates: boolean;
+  startDate: string;
+  endDate: string;
+}
+
+/**
+ * useRawData면 필터를 건너뛰고, 아니면 정확도·이상치 필터를 적용한 뒤 날짜 범위로 자른다.
+ *
+ * 인자를 Settings 전체가 아니라 필터링이 실제로 쓰는 여섯 필드만 받는 좁은
+ * 타입으로 제한한다. 그래야 이 함수를 부르는 useMemo의 의존성 배열이 정확히
+ * 이 필드들만 나열하고 있다는 것을, exhaustive-deps 린트가 이 함수 시그니처를
+ * 보고 그대로 검증해 준다 — settings 전체를 받으면 린트가 "settings를 통째로
+ * 넣으라"고 요구해서, 다시 객체 전체를 의존성에 넣는 원래 버그로 되돌아간다.
+ */
+function applyFilters(points: RawPoint[], settings: FilterSettings): RawPoint[] {
   const base = settings.useRawData
     ? points
     : filterPoints(points, { accuracyLimitM: settings.accuracyLimitM, outlier: settings.outlier });
@@ -669,7 +751,7 @@ function PickStage({
         {strings.trySample}
       </button>
 
-      {reading && <p className="mt-4 text-sm text-text-secondary">{strings.rendering}</p>}
+      {reading && <p className="mt-4 text-sm text-text-secondary">{strings.readingFile}</p>}
       {error && (
         <p className="mt-4 whitespace-pre-wrap rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
