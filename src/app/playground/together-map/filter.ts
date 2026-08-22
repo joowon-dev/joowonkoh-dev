@@ -17,8 +17,9 @@ export const MAX_PLAUSIBLE_KMH = 900;
 
 function kmh(a: RawPoint, b: RawPoint): number {
   const hours = Math.abs(b.t - a.t) / 3_600_000;
-  // 같은 시각의 점 — 나눌 수 없으니 판단을 보류하고 통과시킨다
-  if (hours === 0) return 0;
+  // 같은 시각의 두 좌표는 깨진 기록이다. 튀어 나간 점이 남으면
+  // 거짓 만남을 만들 수 있으므로, 버리는 쪽으로 기울인다.
+  if (hours === 0) return Infinity;
   return haversineMeters(a, b) / 1000 / hours;
 }
 
