@@ -9,6 +9,14 @@ export interface RawPoint {
   /** 미터. 옛 형식에만 있다. 없는 것과 «정확함»은 다르므로 0으로 채우지 않는다. */
   accuracy?: number;
   kind: "visit" | "path";
+  /**
+   * 이 자리에 언제까지 있었는지(epoch ms). 방문 세그먼트에만 붙는다.
+   *
+   * 구글은 «14시부터 16시까지 여기 있었다»를 좌표 하나로 적는다. 시작 시각만
+   * 읽으면 그 두 시간이 통째로 «모르는 구간»이 되어, 카페에 같이 앉아 있어도
+   * 만남으로 안 잡힌다. 아는 것을 버리지 않기 위한 필드다.
+   */
+  until?: number;
 }
 
 export class TimelineParseError extends Error {
@@ -103,10 +111,12 @@ function parseSegments(segments: unknown[]): { points: RawPoint[]; skipped: numb
     const start = parseTime(seg.startTime);
     const end = parseTime(seg.endTime);
 
-    // 방문 — 머무른 자리 하나
+    // 방문 — 머무른 자리 하나. 끝 시각이 시작보다 뒤일 때만 «머문 구간»으로 담는다.
+    // 없는 것과 «길이 0»은 다르므로 end === start면 until을 붙이지 않는다.
     const visited = visitLatLon(seg.visit);
     if (visited && start !== undefined) {
-      out.push({ t: start, ...visited, kind: "visit" });
+      const until = end !== undefined && end > start ? end : undefined;
+      out.push({ t: start, ...visited, kind: "visit", ...(until !== undefined ? { until } : {}) });
     } else if (seg.visit && start !== undefined) {
       // 방문 데이터가 있었지만 좌표를 읽을 수 없다.
       skipped += 1;

@@ -63,6 +63,14 @@ export function resample(
       out[i] = { lat: prev.lat, lon: prev.lon };
       continue;
     }
+
+    // 머문 구간 안이면 그 자리다. 구글이 «여기 있었다»고 적어 둔 시간이라
+    // 추측이 아니라 기록이다. 구멍 검사에 걸리기 전에 먼저 확인한다.
+    if (prev.until !== undefined && t >= prev.t && t <= prev.until) {
+      out[i] = { lat: prev.lat, lon: prev.lon };
+      continue;
+    }
+
     if (t < prev.t || next === undefined) continue; // 기록 범위 밖
     if (next.t - prev.t > maxGapMs) continue; // 구멍 — 잇지 않는다
 
@@ -73,11 +81,20 @@ export function resample(
   return out;
 }
 
+/**
+ * 마지막 점이 «언제까지 아는지»를 돌려준다. 방문 점은 시작 시각 하나만으로
+ * 배열에 들어가 있어도 until까지는 위치를 안다 — 카페에 두 시간 앉아 있었다면
+ * 점은 하나뿐이지만 아는 범위는 그 두 시간 전부다.
+ */
+function knownEnd(p: RawPoint): number {
+  return p.until !== undefined && p.until > p.t ? p.until : p.t;
+}
+
 /** 두 사람의 기록이 모두 존재하는 기간. */
 export function overlapRange(a: RawPoint[], b: RawPoint[]): { from: number; to: number } | null {
   if (a.length === 0 || b.length === 0) return null;
   const from = Math.max(a[0].t, b[0].t);
-  const to = Math.min(a[a.length - 1].t, b[b.length - 1].t);
+  const to = Math.min(knownEnd(a[a.length - 1]), knownEnd(b[b.length - 1]));
   return from <= to ? { from, to } : null;
 }
 
