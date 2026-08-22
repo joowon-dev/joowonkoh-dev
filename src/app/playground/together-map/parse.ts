@@ -25,10 +25,14 @@ export class TimelineParseError extends Error {
  *   안드로이드  "37.5665°, 126.9780°"
  *   아이폰      "geo:37.5665,126.9780"
  * 도 기호와 geo: 접두사를 걷어내고 숫자 두 개만 남기면 둘 다 같은 길로 처리된다.
+ * 아이폰은 RFC 5870 형식으로 geo:37.5665,126.9780;u=35 같은 불확실성 지시자를 붙일 수 있다.
+ * 세미콜론부터는 무시해야 한다.
  */
 export function parseLatLngString(s: unknown): LatLon | null {
   if (typeof s !== "string") return null;
-  const cleaned = s.replace(/^geo:/i, "").replace(/°/g, "");
+  // RFC 5870 불확실성 지시자(;u=...)를 제거한다 — 아이폰이 붙일 수 있다.
+  const withoutParam = s.split(";")[0];
+  const cleaned = withoutParam.replace(/^geo:/i, "").replace(/°/g, "");
   const parts = cleaned.split(",");
   if (parts.length !== 2) return null;
 
@@ -90,8 +94,9 @@ function activityLatLon(endpoint: unknown): LatLon | null {
   return null;
 }
 
-function parseSegments(segments: unknown[]): RawPoint[] {
+function parseSegments(segments: unknown[]): { points: RawPoint[]; skipped: number } {
   const out: RawPoint[] = [];
+  let skipped = 0;
 
   for (const seg of segments) {
     if (!isRecord(seg)) continue;
@@ -102,22 +107,22 @@ function parseSegments(segments: unknown[]): RawPoint[] {
     const visited = visitLatLon(seg.visit);
     if (visited && start !== undefined) {
       out.push({ t: start, ...visited, kind: "visit" });
+    } else if (seg.visit && start !== undefined) {
+      // 방문 데이터가 있었지만 좌표를 읽을 수 없다.
+      skipped += 1;
     }
 
-    // 이동 — 출발점과 도착점
-    if (isRecord(seg.activity)) {
-      const from = activityLatLon(seg.activity.start);
-      const to = activityLatLon(seg.activity.end);
-      if (from && start !== undefined) out.push({ t: start, ...from, kind: "path" });
-      if (to && end !== undefined) out.push({ t: end, ...to, kind: "path" });
-    }
-
-    // 경로 — 촘촘한 부스러기 점들
+    // 경로 — 촘촘한 부스러기 점들. 개수를 센다.
+    let pathCount = 0;
     if (Array.isArray(seg.timelinePath) && start !== undefined) {
       for (const step of seg.timelinePath) {
         if (!isRecord(step)) continue;
         const at = parseLatLngString(step.point);
-        if (!at) continue;
+        if (!at) {
+          // 경로 점이 있었지만 좌표를 읽을 수 없다.
+          skipped += 1;
+          continue;
+        }
 
         // 안드로이드는 절대 시각, 아이폰은 시작시각으로부터 몇 분인지를 적는다.
         const abs = parseTime(step.time);
@@ -126,24 +131,42 @@ function parseSegments(segments: unknown[]): RawPoint[] {
         if (t === undefined) continue;
 
         out.push({ t, ...at, kind: "path" });
+        pathCount += 1;
       }
+    }
+
+    // 이동 — 출발점과 도착점. timelinePath가 이미 같은 구간을 촘촘히 커버하면 중복을 피한다.
+    if (pathCount === 0 && isRecord(seg.activity)) {
+      const from = activityLatLon(seg.activity.start);
+      const to = activityLatLon(seg.activity.end);
+      if (from && start !== undefined) out.push({ t: start, ...from, kind: "path" });
+      if (to && end !== undefined) out.push({ t: end, ...to, kind: "path" });
     }
   }
 
-  return out;
+  return { points: out, skipped };
 }
 
-function parseRecords(locations: unknown[]): RawPoint[] {
+function parseRecords(locations: unknown[]): { points: RawPoint[]; skipped: number } {
   const out: RawPoint[] = [];
+  let skipped = 0;
 
   for (const loc of locations) {
     if (!isRecord(loc)) continue;
     const latE7 = num(loc.latitudeE7);
     const lonE7 = num(loc.longitudeE7);
-    if (latE7 === undefined || lonE7 === undefined) continue;
+    if (latE7 === undefined || lonE7 === undefined) {
+      // 위도나 경도를 읽을 수 없다.
+      skipped += 1;
+      continue;
+    }
 
     const t = parseTime(loc.timestamp) ?? num(loc.timestampMs);
-    if (t === undefined) continue;
+    if (t === undefined) {
+      // 시간을 읽을 수 없다.
+      skipped += 1;
+      continue;
+    }
 
     out.push({
       t,
@@ -154,7 +177,7 @@ function parseRecords(locations: unknown[]): RawPoint[] {
     });
   }
 
-  return out;
+  return { points: out, skipped };
 }
 
 /**
@@ -177,17 +200,33 @@ export function parseTimeline(data: unknown): RawPoint[] {
   }
 
   let points: RawPoint[];
+  let skipped: number;
   if (format === "android") {
-    points = parseSegments((data as { semanticSegments: unknown[] }).semanticSegments);
+    const result = parseSegments((data as { semanticSegments: unknown[] }).semanticSegments);
+    points = result.points;
+    skipped = result.skipped;
   } else if (format === "ios") {
-    points = parseSegments(data as unknown[]);
+    const result = parseSegments(data as unknown[]);
+    points = result.points;
+    skipped = result.skipped;
   } else {
-    points = parseRecords((data as { locations: unknown[] }).locations);
+    const result = parseRecords((data as { locations: unknown[] }).locations);
+    points = result.points;
+    skipped = result.skipped;
   }
 
   if (points.length === 0) {
     throw new TimelineParseError(
       `${format} 형식으로 읽었지만 위치가 하나도 없습니다. 내보내기 범위가 비어 있는지 확인해 주세요.`,
+    );
+  }
+
+  // 형식을 잘못 인식했을 가능성을 감지한다. 읽은 점보다 버린 점이 훨씬 많으면
+  // 이 파서가 예상하는 형식이 아닐 가능성이 크다.
+  if (skipped > points.length) {
+    throw new TimelineParseError(
+      `${format} 형식으로 읽었지만 위치 ${skipped}개를 버리고 ${points.length}개만 남겼습니다. ` +
+        `형식 인식이 어긋났거나 좌표 형식이 이 파서가 예상하지 않은 것일 수 있습니다.`,
     );
   }
 
