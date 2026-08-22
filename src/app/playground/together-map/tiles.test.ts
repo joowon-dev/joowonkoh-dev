@@ -60,7 +60,7 @@ describe("visibleTiles", () => {
   });
 
   it("극지방 바깥 타일을 주지 않는다 — 높은 위도에서도 y가 범위 안에 든다", () => {
-    const tiles = visibleTiles({ centerLat: 85, centerLon: 0, zoom: 12 }, SIZE);
+    const tiles = visibleTiles({ centerLat: 85.05, centerLon: 0, zoom: 12 }, SIZE);
     for (const t of tiles) {
       const max = 2 ** t.z;
       expect(t.y).toBeGreaterThanOrEqual(0);
