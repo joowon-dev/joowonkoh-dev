@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { View } from "./camera";
 import type { RawPoint } from "./parse";
-import { blurRadiusScreen, currentPosition, meetingPulse, tailSegments, viewToScreen } from "./render";
+import {
+  blurRadiusScreen,
+  currentPosition,
+  meetingPulse,
+  pulseMsFor,
+  tailMsFor,
+  tailSegments,
+  viewToScreen,
+} from "./render";
 
 const VIEW: View = { centerLat: 37.5, centerLon: 127.0, zoom: 12 };
 const SIZE = { w: 1080, h: 1080 };
@@ -97,25 +105,63 @@ describe("meetingPulse", () => {
   const meeting = { start: T0, end: T0 + 60 * MIN, lat: 37.5, lon: 127, minDistance: 10 };
 
   it("시작 직전엔 0", () => {
-    expect(meetingPulse(meeting, T0 - MIN)).toBe(0);
+    expect(meetingPulse(meeting, T0 - MIN, 20 * MIN)).toBe(0);
   });
 
   it("시작 순간이 가장 세다", () => {
-    expect(meetingPulse(meeting, T0)).toBeCloseTo(1, 6);
+    expect(meetingPulse(meeting, T0, 20 * MIN)).toBeCloseTo(1, 6);
   });
 
   it("시간이 지나면 잦아든다", () => {
-    const early = meetingPulse(meeting, T0 + 5 * MIN);
-    const late = meetingPulse(meeting, T0 + 30 * MIN);
+    const early = meetingPulse(meeting, T0 + 5 * MIN, 20 * MIN);
+    const late = meetingPulse(meeting, T0 + 30 * MIN, 20 * MIN);
     expect(late).toBeLessThan(early);
   });
 
   it("0과 1 사이를 벗어나지 않는다", () => {
     for (let m = -10; m < 120; m += 5) {
-      const v = meetingPulse(meeting, T0 + m * MIN);
+      const v = meetingPulse(meeting, T0 + m * MIN, 20 * MIN);
       expect(v).toBeGreaterThanOrEqual(0);
       expect(v).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe("tailMsFor / pulseMsFor — 압축률에 맞춰 늘어난다", () => {
+  // 이 도구의 실제 최악 조건: 90일을 10초(30fps)에 담으면 한 프레임이 약 7.17시간.
+  const PACE_90D_10S = (90 * 24 * 3_600_000) / (10 * 30);
+
+  it("꼬리는 한 프레임보다 반드시 길다 — 짧으면 선이 아예 안 그려진다", () => {
+    // 예전엔 꼬리가 타임라인 6시간 고정이라 7.17시간짜리 한 프레임보다 짧았다.
+    // 두 점 이상 담기려면 최소한 프레임 한 칸보다는 길어야 한다.
+    expect(tailMsFor(PACE_90D_10S)).toBeGreaterThan(PACE_90D_10S);
+  });
+
+  it("링은 한 프레임보다 반드시 길다 — 짧으면 만남이 프레임 사이로 빠진다", () => {
+    expect(pulseMsFor(PACE_90D_10S)).toBeGreaterThan(PACE_90D_10S);
+  });
+
+  it("압축이 심할수록 길어진다", () => {
+    expect(tailMsFor(PACE_90D_10S)).toBeGreaterThan(tailMsFor(PACE_90D_10S / 6));
+  });
+
+  it("pace가 0이어도 최소 길이가 남는다 — 꼬리가 사라지지 않는다", () => {
+    expect(tailMsFor(0)).toBeGreaterThan(0);
+    expect(pulseMsFor(0)).toBeGreaterThan(0);
+  });
+});
+
+describe("meetingPulse — 긴 만남", () => {
+  it("두 시간짜리 만남은 두 시간 내내 링이 남는다", () => {
+    // 창이 max(만남 길이, pulseMs)가 아니라 pulseMs 고정이면, 20분이 지난 뒤
+    // 아직 함께 있는데도 링이 꺼진다.
+    const long = { start: T0, end: T0 + 120 * MIN, lat: 37.5, lon: 127, minDistance: 10 };
+    expect(meetingPulse(long, T0 + 100 * MIN, 20 * MIN)).toBeGreaterThan(0);
+  });
+
+  it("만남이 끝난 한참 뒤에는 꺼진다", () => {
+    const long = { start: T0, end: T0 + 120 * MIN, lat: 37.5, lon: 127, minDistance: 10 };
+    expect(meetingPulse(long, T0 + 200 * MIN, 20 * MIN)).toBe(0);
   });
 });
 
@@ -125,41 +171,52 @@ describe("currentPosition", () => {
     // until 처리가 없다면 «다음 점 없음»으로 오인해 null이 나온다.
     const points = [visit(0, 30, 37.1, 127.1)];
     const pos = currentPosition(points, T0 + 15 * MIN);
-    expect(pos).toEqual({ lat: 37.1, lon: 127.1 });
+    expect(pos).toEqual({ lat: 37.1, lon: 127.1, stale: false });
   });
 
   it("머문 구간의 끝 경계(until)에서도 여전히 그 점이다", () => {
     const points = [visit(0, 30, 37.1, 127.1)];
     const pos = currentPosition(points, T0 + 30 * MIN);
-    expect(pos).toEqual({ lat: 37.1, lon: 127.1 });
+    expect(pos).toEqual({ lat: 37.1, lon: 127.1, stale: false });
   });
 
   it("머문 구간 밖에서 다음 점까지 간격은 머문 «시작»부터 잰다", () => {
     // 방문은 0~10분 머묾. 다음 점은 35분. 20분 시점(머문 구간 밖, 다음 점 이전)에서
     // 간격을 어디서부터 잴지에 따라 답이 갈린다:
-    //   - 머문 시작(0분)부터 재면: 35 - 0 = 35분 > MAX_GAP_MS(30분) → 구멍 → null
-    //   - 머문 끝(10분)부터 재면: 35 - 10 = 25분 <= 30분 → 안 끊기고 보간됨
+    //   - 머문 시작(0분)부터 재면: 35 - 0 = 35분 > MAX_GAP_MS(30분) → 구멍
+    //   - 머문 끝(10분)부터 재면: 35 - 10 = 25분 <= 30분 → 구멍이 아니라 보간
     // resample()이 prev.t(구간의 시작)로 간격을 재는 것과 같은 규칙을 따르기로
     // 했다 — 방문 한 점은 시작 시각 하나로 존재하는 기록이고, "몇 시에 그 자리를
     // 벗어났는지"는 모르므로 머문 끝을 기준으로 재는 것은 모르는 것을 안다고 치는
-    // 셈이다. 그래서 이 시나리오는 null이어야 한다. 끝(10분)을 기준으로 재는
-    // 구현으로 바뀌면 이 테스트는 실패해야 한다 — 두 관례가 실제로 갈리는
-    // 지점에서 검증하기 위해 일부러 이 숫자들을 골랐다.
+    // 셈이다. 그래서 이 시나리오는 구멍이어야 한다 — 즉 보간하지 않고 stale로
+    // 표시된 마지막 자리가 나와야 한다. 끝(10분)을 기준으로 재는 구현으로 바뀌면
+    // stale이 false가 되고 좌표도 38.2 쪽으로 끌려가서 이 테스트가 실패한다 —
+    // 두 관례가 실제로 갈리는 지점에서 검증하기 위해 일부러 이 숫자들을 골랐다.
     const points = [visit(0, 10, 37.1, 127.1), p(35, 38.2, 128.2)];
     const pos = currentPosition(points, T0 + 20 * MIN);
-    expect(pos).toBeNull();
+    expect(pos).toEqual({ lat: 37.1, lon: 127.1, stale: true });
   });
 
-  it("두 점 사이 간격이 MAX_GAP_MS를 넘으면 null — 있지 않은 이동을 그리지 않는다", () => {
-    const points = [p(0, 37, 127), p(40, 38, 128)]; // 40분 간격 > 30분
+  it("구멍 안에서는 보간하지 않고 마지막으로 알던 자리를 stale로 준다", () => {
+    // 40분 간격(> MAX_GAP_MS 30분)의 한가운데. 이동을 지어내면 안 되므로
+    // 중간 지점(37.5, 127.5)이 나와서는 안 되고, 그렇다고 점이 사라져서도 안 된다
+    // — 사라지면 영상에서 두 사람이 프레임의 42%에서 함께 안 보였다.
+    const points = [p(0, 37, 127), p(40, 38, 128)];
     const pos = currentPosition(points, T0 + 20 * MIN);
-    expect(pos).toBeNull();
+    expect(pos).toEqual({ lat: 37, lon: 127, stale: true });
+  });
+
+  it("구멍이 아닌 구간은 stale이 아니다 — 두 상태가 실제로 갈린다", () => {
+    // 위 테스트와 짝이다. 간격만 30분 이내로 줄이면 stale이 false가 되어야 한다.
+    // stale을 항상 true로 두는 구현은 이 테스트가 잡는다.
+    const points = [p(0, 37, 127), p(20, 38, 128)];
+    expect(currentPosition(points, T0 + 10 * MIN)!.stale).toBe(false);
   });
 
   it("간격이 정확히 MAX_GAP_MS면 끊지 않고 보간한다", () => {
     const points = [p(0, 37, 127), p(30, 38, 128)]; // 정확히 30분
     const pos = currentPosition(points, T0 + 15 * MIN);
-    expect(pos).toEqual({ lat: 37.5, lon: 127.5 });
+    expect(pos).toEqual({ lat: 37.5, lon: 127.5, stale: false });
   });
 
   it("첫 기록보다 이전이면 null", () => {
@@ -205,7 +262,7 @@ describe("currentPosition", () => {
     // 이 테스트는 그 실수를 잡는다.
     const points = [p(0, 37, 127), p(50, 38, 128), p(55, 38.1, 128.1)];
     const pos = currentPosition(points, T0 + 50 * MIN);
-    expect(pos).toEqual({ lat: 38, lon: 128 });
+    expect(pos).toEqual({ lat: 38, lon: 128, stale: false });
   });
 });
 

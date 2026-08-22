@@ -16,11 +16,33 @@ export interface Screen {
   y: number;
 }
 
-/** 화면에 남기는 꼬리 길이. 전체를 계속 그리면 곧 실뭉치가 된다. */
-export const TAIL_MS = 6 * 3_600_000;
+/**
+ * 꼬리와 링의 길이는 «타임라인 시간»이 아니라 «영상 시간»으로 정한다.
+ *
+ * 이 도구는 몇 달을 몇십 초로 압축한다. 90일을 10초에 담으면 한 프레임이
+ * 타임라인 7시간을 건너뛴다 — 꼬리를 타임라인 6시간으로 잡으면 꼬리 전체가
+ * 한 프레임보다 짧아서 선이 아예 안 그려지고, 링을 20분으로 잡으면 만남 하나가
+ * 프레임 사이 틈으로 통째로 빠져 한 번도 안 보인다. 실제로 샘플 90일/10초에서
+ * 만남 28건 중 화면에 링이 뜬 프레임은 300장 중 3장뿐이었다.
+ *
+ * 그래서 프레임당 진행량(pace)에 비례해 잡는다. 압축률이 얼마든 꼬리는 1.5초,
+ * 링은 1초 동안 보인다. 짧은 타임라인에서 pace가 작아 꼬리가 사라지지 않도록
+ * 최소값을 함께 둔다.
+ */
+const TAIL_FRAMES = 45;
+const MIN_TAIL_MS = 30 * 60_000;
+const PULSE_FRAMES = 30;
+const MIN_PULSE_MS = 5 * 60_000;
 
-/** 링이 퍼졌다가 잦아드는 데 걸리는 시간. */
-const PULSE_MS = 20 * 60_000;
+/** 이번 프레임에 그릴 꼬리 길이(타임라인 ms). */
+export function tailMsFor(paceMsPerFrame: number): number {
+  return Math.max(paceMsPerFrame * TAIL_FRAMES, MIN_TAIL_MS);
+}
+
+/** 만남 링이 퍼졌다가 잦아드는 데 걸리는 시간(타임라인 ms). */
+export function pulseMsFor(paceMsPerFrame: number): number {
+  return Math.max(paceMsPerFrame * PULSE_FRAMES, MIN_PULSE_MS);
+}
 
 export function viewToScreen(p: LatLon, view: View, size: Size): Screen {
   const worldPx = TILE_SIZE * 2 ** view.zoom;
@@ -71,10 +93,18 @@ export function tailSegments(
  * 만남이 끝난 뒤에도 잔상이 남게 두지 않는다 — 끝난 만남이 계속 빛나면
  * 지금 만나고 있는 것과 구분이 안 된다.
  */
-export function meetingPulse(meeting: Meeting, now: number): number {
-  if (now < meeting.start || now > meeting.end) return 0;
+export function meetingPulse(
+  meeting: Meeting,
+  now: number,
+  pulseMs: number,
+): number {
+  // 창은 «만남이 실제로 이어진 시간»과 «최소 노출 시간» 중 긴 쪽이다.
+  // 앞은 두 시간짜리 만남이 20분 만에 링을 잃지 않게 하고,
+  // 뒤는 압축된 영상에서 짧은 만남이 프레임 사이로 사라지지 않게 한다.
+  const window = Math.max(meeting.end - meeting.start, pulseMs);
+  if (now < meeting.start || now > meeting.start + window) return 0;
   const age = now - meeting.start;
-  return Math.max(0, 1 - age / PULSE_MS);
+  return Math.max(0, 1 - age / window);
 }
 
 /**
@@ -117,6 +147,11 @@ export interface FrameState {
    * 재생이 끝나기 3초 전부터 1로 올린다.
    */
   summary: { data: Summary; opacity: number } | null;
+  /**
+   * 한 프레임이 건너뛰는 타임라인 시간(ms). 꼬리 길이와 링 지속을 여기에 맞춘다.
+   * 자세한 이유는 TAIL_FRAMES 위 주석 참조.
+   */
+  paceMsPerFrame: number;
 }
 
 const FONT_STACK =
@@ -126,19 +161,31 @@ const FONT_STACK =
  * `now` 시각의 위치를 구한다.
  *
  * `points`는 시간순으로 정렬돼 있다고 가정한다(parseTimeline이 이미 정렬해 준다).
- * `now`를 감싸는 두 점을 찾아 보간하되, 두 가지는 «모른다»로 답한다:
- *   - `now`가 기록 시작보다 이르거나 마지막 기록 이후일 때
- *   - 앞뒤 점 사이 간격이 MAX_GAP_MS를 넘을 때(구멍 — 이으면 없는 이동이 생긴다)
+ * `now`를 감싸는 두 점을 찾아 보간한다. 기록이 아예 없는 구간 — `now`가 첫 기록보다
+ * 이르거나 마지막 기록 이후일 때 — 만 «모른다»(null)로 답한다.
+ *
+ * 앞뒤 점 사이가 MAX_GAP_MS를 넘는 «구멍»일 때는 null이 아니라 마지막으로 알던
+ * 자리를 `stale: true`로 돌려준다. 예전엔 여기서도 null을 줬는데, 그러면 샘플
+ * 90일 기준 프레임의 42%에서 두 사람 다 화면에서 사라졌다 — 영상 내내 점이
+ * 깜빡거렸다. 구멍을 «이어서 그리지 않는» 규칙은 꼬리(tailSegments)와 만남
+ * 감지기(meet.ts)가 계속 지킨다. 그쪽은 없는 이동과 없는 만남을 지어내지만,
+ * 마지막으로 알던 자리에 점을 두는 것은 아무것도 지어내지 않는다. 대신 호출부는
+ * `stale`을 보고 «지금 기록이 비어 있다»는 걸 그림으로 구분해 줘야 한다.
  *
  * `until`이 있는 방문 점은 예외다. [t, until] 구간 전체가 «그 자리에 있었다»는
  * 기록이므로, 그 안이면 바로 그 점을 준다 — 사람이 한자리에 오래 머무는 동안
  * 점이 사라지거나 다음 점으로 순간이동하면 안 된다. until은 MAX_STAY_MS로
  * 상한을 둔다(resample과 같은 규칙) — 손상된 until을 그대로 믿지 않는다.
  */
+export interface Head extends LatLon {
+  /** 지금 이 순간의 기록이 없어서 «마지막으로 알던 자리»를 보여 주는 중이다. */
+  stale: boolean;
+}
+
 export function currentPosition(
   points: RawPoint[],
   now: number,
-): LatLon | null {
+): Head | null {
   if (points.length === 0) return null;
 
   // now 이전(또는 같은) 마지막 점을 찾는다. points는 정렬돼 있다.
@@ -153,15 +200,18 @@ export function currentPosition(
 
   if (cur.until !== undefined) {
     const stayEnd = Math.min(cur.until, cur.t + MAX_STAY_MS);
-    if (now <= stayEnd) return { lat: cur.lat, lon: cur.lon };
+    if (now <= stayEnd) return { lat: cur.lat, lon: cur.lon, stale: false };
   }
 
   const next = points[idx + 1];
   if (next === undefined) return null; // 마지막 기록 이후 — 모른다
-  if (next.t - cur.t > MAX_GAP_MS) return null; // 구멍 — 잇지 않는다
+  // 구멍. 이어서 «움직였다»고 그리지는 않되, 마지막으로 알던 자리는 남긴다.
+  if (next.t - cur.t > MAX_GAP_MS) {
+    return { lat: cur.lat, lon: cur.lon, stale: true };
+  }
 
   const f = (now - cur.t) / (next.t - cur.t);
-  return lerpLatLon(cur, next, f);
+  return { ...lerpLatLon(cur, next, f), stale: false };
 }
 
 /**
@@ -345,8 +395,9 @@ export function drawFrame(
     ctx.lineJoin = "round";
     ctx.lineWidth = size.w / 270;
 
+    const tailMs = tailMsFor(state.paceMsPerFrame);
     for (const track of tracks) {
-      const segments = tailSegments(track.points, now, TAIL_MS, MAX_GAP_MS);
+      const segments = tailSegments(track.points, now, tailMs, MAX_GAP_MS);
       ctx.strokeStyle = track.color;
 
       for (const seg of segments) {
@@ -372,19 +423,25 @@ export function drawFrame(
       const s = viewToScreen(head, view, size);
       const r = size.w / 90;
 
+      // 기록이 비는 동안은 «마지막으로 알던 자리»다. 속을 비우고 옅게 그려서
+      // 지금 확실히 아는 위치와 구분한다 — 채워진 점과 똑같이 그리면
+      // 모르는 것을 안다고 말하는 셈이다.
+      ctx.globalAlpha = head.stale ? 0.55 : 1;
       ctx.beginPath();
       ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = track.color;
+      ctx.fillStyle = head.stale ? "#ffffff" : track.color;
       ctx.fill();
       ctx.lineWidth = r * 0.35;
-      ctx.strokeStyle = "#ffffff";
+      ctx.strokeStyle = head.stale ? track.color : "#ffffff";
       ctx.stroke();
     }
+    ctx.globalAlpha = 1;
 
     // 6. 만남 링. 진행 중인 것만 그린다 — 끝난 만남이 계속 빛나면
     //    지금 만나고 있는 것과 구분이 안 된다.
+    const pulseMs = pulseMsFor(state.paceMsPerFrame);
     for (const m of meetings) {
-      const pulse = meetingPulse(m, now);
+      const pulse = meetingPulse(m, now, pulseMs);
       if (pulse <= 0) continue;
       const s = viewToScreen(m, view, size);
 

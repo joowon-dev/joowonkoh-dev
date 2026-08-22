@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeNow,
   dateRangeBounds,
+  paceMsPerFrame,
   shouldKeepWaitingForTiles,
   summaryOpacity,
 } from "./playback";
@@ -108,5 +109,28 @@ describe("dateRangeBounds", () => {
   it("파싱할 수 없는 날짜는 null", () => {
     expect(dateRangeBounds("", "2026-03-01")).toBeNull();
     expect(dateRangeBounds("2026-03-01", "not-a-date")).toBeNull();
+  });
+});
+
+describe("paceMsPerFrame", () => {
+  const day = 24 * 3_600_000;
+
+  it("90일을 10초(30fps)에 담으면 한 프레임이 약 7.17시간", () => {
+    const pace = paceMsPerFrame({ from: 0, to: 90 * day }, 10, 30);
+    expect(pace / 3_600_000).toBeCloseTo(7.2, 1);
+  });
+
+  it("영상이 길수록 한 프레임이 덜 건너뛴다", () => {
+    const short = paceMsPerFrame({ from: 0, to: 90 * day }, 10, 30);
+    const long = paceMsPerFrame({ from: 0, to: 90 * day }, 60, 30);
+    expect(long).toBeCloseTo(short / 6, 6);
+  });
+
+  it("durationSec이 0이면 0 — 0으로 나누지 않는다", () => {
+    expect(paceMsPerFrame({ from: 0, to: 90 * day }, 0, 30)).toBe(0);
+  });
+
+  it("기간이 없으면 0", () => {
+    expect(paceMsPerFrame({ from: 5, to: 5 }, 10, 30)).toBe(0);
   });
 });

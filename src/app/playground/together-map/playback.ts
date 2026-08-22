@@ -25,6 +25,23 @@ export function computeNow(elapsedSec: number, durationSec: number, range: PlayR
 }
 
 /**
+ * 한 프레임이 건너뛰는 타임라인 시간(ms).
+ *
+ * 꼬리 길이와 만남 링 지속을 이 값에 맞춰 잡는다. 90일을 10초에 담으면
+ * 한 프레임이 7시간을 넘게 건너뛰므로, 타임라인 시간으로 고정한 꼬리·링은
+ * 한 프레임보다 짧아져 화면에 아예 안 나온다. (render.ts의 tailMsFor 참조)
+ */
+export function paceMsPerFrame(
+  range: PlayRange,
+  durationSec: number,
+  fps: number,
+): number {
+  const frames = durationSec * fps;
+  if (frames <= 0) return 0;
+  return Math.max(0, range.to - range.from) / frames;
+}
+
+/**
  * 녹화를 시작하기 전, 타일을 더 기다려야 하는지.
  *
  * 대기 중인 타일이 있어도 최대 시간을 넘기면 포기한다 — 타일 서버가 느리거나

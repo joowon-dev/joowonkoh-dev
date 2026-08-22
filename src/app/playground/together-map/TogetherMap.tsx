@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { boundsOf, DAMPING, fitView, padBounds, stepCamera, type View } from "./camera";
-import { recordCanvas, SIZES } from "./encode";
+import { FPS, recordCanvas, SIZES } from "./encode";
 import { DEFAULT_ACCURACY_LIMIT_M, filterPoints } from "./filter";
 import type { LatLon } from "./geo";
 import { resolveLang, t, type Lang, type Strings } from "./i18n";
@@ -19,13 +19,21 @@ import { TimelineParseError, parseTimeline, type RawPoint } from "./parse";
 import {
   currentPosition,
   drawFrame,
-  TAIL_MS,
+  meetingPulse,
+  pulseMsFor,
+  tailMsFor,
   tailSegments,
   type FrameState,
   type Size,
   type Track,
 } from "./render";
-import { computeNow, dateRangeBounds, shouldKeepWaitingForTiles, summaryOpacity } from "./playback";
+import {
+  computeNow,
+  dateRangeBounds,
+  paceMsPerFrame,
+  shouldKeepWaitingForTiles,
+  summaryOpacity,
+} from "./playback";
 import { buildSampleTimeline, SAMPLE_NAMES } from "./sample";
 import SetupPanel, { type Settings } from "./SetupPanel";
 import { buildSummary, type Summary } from "./summary";
@@ -116,6 +124,16 @@ export default function TogetherMap() {
   const tileCacheRef = useRef<TileCache | null>(null);
   const needsDrawRef = useRef(true);
   const viewRef = useRef<View>({ centerLat: 0, centerLon: 0, zoom: 2 });
+  /**
+   * 카메라가 첫 자리를 잡았는가.
+   *
+   * steady/dynamic은 목표를 향해 조금씩만 다가간다(stepCamera). 그런데 시작 시야는
+   * 위도 0, 경도 0 — 아프리카 앞바다다. 첫 프레임부터 damping을 걸면 영상이 대서양에서
+   * 한국까지 훑어 오는 것으로 시작하고, 그동안 두 사람은 화면 밖에 있어 아무것도
+   * 안 보인다. 그래서 첫 목표만은 damping 없이 그대로 앉힌다. 그 뒤부터가 부드럽게
+   * 따라가는 구간이다.
+   */
+  const cameraSeededRef = useRef(false);
   const nowRef = useRef(0);
   const playStateRef = useRef<{ playing: boolean; startPerf: number }>({
     playing: false,
@@ -278,6 +296,8 @@ export default function TogetherMap() {
 
   useEffect(() => {
     if (fixedView && settings.camera === "fixed") viewRef.current = fixedView;
+    // 카메라 모드나 데이터가 바뀌면 다시 «자리를 잡아야» 한다. 아래 seeded 참조.
+    cameraSeededRef.current = false;
   }, [fixedView, settings.camera]);
 
   // 매 렌더 뒤 최신 값을 ref에 채워 둔다. rAF 루프는 이것만 읽는다.
@@ -332,11 +352,19 @@ export default function TogetherMap() {
 
       const size: Size = { w: SIZES[state.settings.sizeIndex].w, h: SIZES[state.settings.sizeIndex].h };
 
+      // 압축률. 꼬리·링 길이와 카메라가 모두 같은 값을 봐야 서로 어긋나지 않는다.
+      const pace = state.range
+        ? paceMsPerFrame(state.range, state.settings.durationSec, FPS)
+        : 0;
+
       // 카메라. fixed는 useEffect에서 이미 고정해 뒀으니 여기서는 건드리지 않는다.
       if (state.settings.camera !== "fixed") {
-        const target = dynamicTarget(state, nowRef.current, size);
+        const target = dynamicTarget(state, nowRef.current, size, pace);
         if (target) {
-          viewRef.current = stepCamera(viewRef.current, target, DAMPING[state.settings.camera]);
+          viewRef.current = cameraSeededRef.current
+            ? stepCamera(viewRef.current, target, DAMPING[state.settings.camera])
+            : target;
+          cameraSeededRef.current = true;
         }
       }
 
@@ -379,6 +407,7 @@ export default function TogetherMap() {
         hide: state.homeSpots,
         strings: state.strings,
         summary: opacity > 0 && state.summary ? { data: state.summary, opacity } : null,
+        paceMsPerFrame: pace,
       };
 
       if (canvas.width !== size.w || canvas.height !== size.h) {
@@ -397,6 +426,8 @@ export default function TogetherMap() {
     if (!range) return;
     playStateRef.current = { playing: true, startPerf: performance.now() };
     nowRef.current = range.from;
+    // 첫 프레임부터 두 사람이 화면에 들어와 있어야 한다 — 시야를 다시 앉힌다.
+    cameraSeededRef.current = false;
     setStage("playing");
   }
 
@@ -437,6 +468,8 @@ export default function TogetherMap() {
     // 녹화 시작과 동시에 재생을 처음부터 다시 시작한다.
     playStateRef.current = { playing: true, startPerf: performance.now() };
     nowRef.current = range.from;
+    // 첫 프레임부터 두 사람이 화면에 들어와 있어야 한다 — 시야를 다시 앉힌다.
+    cameraSeededRef.current = false;
 
     try {
       const result = await recordCanvas(
@@ -685,11 +718,19 @@ function applyFilters(points: RawPoint[], settings: FilterSettings): RawPoint[] 
  * 사각형에 여유를 두고 맞춘다. dynamic이고 지금 진행 중인 만남이 있으면
  * 줌을 조금 더 당긴다.
  */
-function dynamicTarget(state: LatestState, now: number, size: Size): View | null {
+function dynamicTarget(
+  state: LatestState,
+  now: number,
+  size: Size,
+  pace: number,
+): View | null {
   if (!state.filteredA || !state.filteredB) return null;
 
-  const segA = tailSegments(state.filteredA, now, TAIL_MS, MAX_GAP_MS);
-  const segB = tailSegments(state.filteredB, now, TAIL_MS, MAX_GAP_MS);
+  // 그리는 쪽과 같은 꼬리 길이를 봐야 한다. 다른 값을 쓰면 카메라가
+  // 화면에 없는 궤적을 담으려고 엉뚱하게 물러선다.
+  const tailMs = tailMsFor(pace);
+  const segA = tailSegments(state.filteredA, now, tailMs, MAX_GAP_MS);
+  const segB = tailSegments(state.filteredB, now, tailMs, MAX_GAP_MS);
   const pts: LatLon[] = [];
   for (const seg of segA) pts.push(...seg);
   for (const seg of segB) pts.push(...seg);
@@ -709,7 +750,10 @@ function dynamicTarget(state: LatestState, now: number, size: Size): View | null
   const view = fitView(padBounds(bounds, 0.35), size.w, size.h, Math.round(size.w * 0.08));
 
   if (state.settings.camera === "dynamic") {
-    const active = state.meetings.some((m) => now >= m.start && now <= m.end);
+    // 링이 보이는 동안 줌도 같이 당긴다. m.end로 재면 만남 한 건이 한 프레임보다
+    // 짧아서 카메라가 거의 반응하지 않는다 — 링과 같은 창을 쓴다.
+    const pulseMs = pulseMsFor(pace);
+    const active = state.meetings.some((m) => meetingPulse(m, now, pulseMs) > 0);
     if (active) return { ...view, zoom: view.zoom + 0.8 };
   }
 
