@@ -75,8 +75,9 @@ export function recordCanvas(
     const stream = canvas.captureStream(FPS);
     const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
     const chunks: BlobPart[] = [];
-    let timer: number;
-
+    // teardown은 아래에서 timer를 참조하지만, teardown 자체는 (abortHandler나
+    // recorder의 콜백을 통해) 항상 timer 대입이 끝난 뒤 비동기로만 불린다 —
+    // 클로저라서 선언 순서가 뒤바뀌어도 호출 시점에는 이미 값이 있다.
     const teardown = () => {
       window.clearInterval(timer);
       stream.getTracks().forEach((track) => track.stop());
@@ -115,7 +116,7 @@ export function recordCanvas(
     };
 
     const startedAt = performance.now();
-    timer = window.setInterval(() => {
+    const timer = window.setInterval(() => {
       const ratio = (performance.now() - startedAt) / (seconds * 1000);
       onProgress(Math.min(1, ratio));
       if (ratio >= 1 && recorder.state === "recording") recorder.stop();

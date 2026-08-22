@@ -308,17 +308,18 @@ function Baseball() {
 function Together() {
   return (
     <>
-      {/* 두 사람의 경로. 각자 다른 곳에서 출발해 가운데서 겹친다. 배경은 타일 그러데이션이 대신한다 */}
+      {/* 두 사람의 경로. 화면에서 쓰는 트랙 색 그대로다. 각자 다른 곳에서 출발해 가운데서 겹친다.
+          배경은 타일 그러데이션이 대신한다 */}
       <path
         d="M12 18 Q22 20 28 32 T34 46"
-        stroke="#e8532e"
+        stroke="#2f6feb"
         strokeWidth="3.4"
         strokeLinecap="round"
         fill="none"
       />
       <path
         d="M52 14 Q40 22 34 32 T30 48"
-        stroke="#3b6fd8"
+        stroke="#e0447c"
         strokeWidth="3.4"
         strokeLinecap="round"
         fill="none"
