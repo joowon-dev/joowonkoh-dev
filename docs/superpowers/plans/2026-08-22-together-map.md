@@ -740,6 +740,17 @@ describe("이상치 필터 (보수적)", () => {
     expect(filterPoints(points, ON)).toHaveLength(2);
   });
 
+  it("앞뒤가 둘 다 같은 시각이면 버린다 — 기록이 깨진 것이다", () => {
+    const points = [p(0, 37.5, 127.0), p(0, 37.6, 127.1), p(0, 37.5, 127.0), p(5, 37.5, 127.0)];
+    const kept = filterPoints(points, ON);
+    expect(kept).toHaveLength(3);
+  });
+
+  it("한쪽만 같은 시각이면 남긴다 — 촘촘한 기록을 버리면 안 된다", () => {
+    const points = [p(0, 37.5, 127.0), p(0, 37.5001, 127.0), p(5, 37.5002, 127.0)];
+    expect(filterPoints(points, ON)).toHaveLength(3);
+  });
+
   it("같은 시각의 점이 있어도 0으로 나누지 않는다", () => {
     const points = [p(0, 37.5, 127.0), p(0, 37.6, 127.1), p(1, 37.5, 127.0)];
     expect(() => filterPoints(points, ON)).not.toThrow();
@@ -787,8 +798,13 @@ export const MAX_PLAUSIBLE_KMH = 900;
 
 function kmh(a: RawPoint, b: RawPoint): number {
   const hours = Math.abs(b.t - a.t) / 3_600_000;
-  // 같은 시각의 점 — 나눌 수 없으니 판단을 보류하고 통과시킨다
-  if (hours === 0) return 0;
+  // 같은 시각에 다른 좌표가 찍혔다는 건 기록 자체가 깨진 것이다. 이 도구는
+  // 점을 하나 더 버리는 것보다 튄 점을 남겨 없던 만남을 만드는 쪽이 훨씬 나쁘다.
+  // 그래서 판단을 보류하지 않고 «말이 안 된다»로 친다.
+  //
+  // 이상치 규칙이 앞뒤 둘 다 비현실적일 때만 버리므로, 한쪽만 시간차가 0인
+  // 촘촘한 기록은 그대로 살아남는다. 양쪽이 다 0인 점만 걸린다.
+  if (hours === 0) return Infinity;
   return haversineMeters(a, b) / 1000 / hours;
 }
 
