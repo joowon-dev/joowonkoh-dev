@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { View } from "./camera";
 import type { RawPoint } from "./parse";
-import { meetingPulse, tailSegments, viewToScreen } from "./render";
+import { blurRadiusScreen, meetingPulse, tailSegments, viewToScreen } from "./render";
 
 const VIEW: View = { centerLat: 37.5, centerLon: 127.0, zoom: 12 };
 const SIZE = { w: 1080, h: 1080 };
@@ -70,6 +70,23 @@ describe("tailSegments", () => {
     const points = [p(100, 37, 127)];
     expect(tailSegments(points, T0, 30 * MIN, 30 * MIN)).toEqual([]);
   });
+
+  it("구멍이 정확히 maxGapMs이면 끊지 않는다", () => {
+    // 두 점 사이가 정확히 maxGapMs — 끊지 않아야 한다
+    const points = [p(0, 37, 127), p(30, 38, 128), p(35, 38, 128)];
+    const segs = tailSegments(points, T0 + 35 * MIN, 120 * MIN, 30 * MIN);
+    expect(segs).toHaveLength(1);
+    expect(segs[0]).toHaveLength(3);
+  });
+
+  it("구멍이 maxGapMs를 넘으면 끊는다", () => {
+    // 두 점 사이가 maxGapMs보다 조금 더 많음 — 끊어야 한다
+    const points = [p(0, 37, 127), p(30.5, 38, 128), p(35, 38, 128)];
+    const segs = tailSegments(points, T0 + 35 * MIN, 120 * MIN, 30 * MIN);
+    expect(segs).toHaveLength(2);
+    expect(segs[0]).toHaveLength(1);
+    expect(segs[1]).toHaveLength(2);
+  });
 });
 
 describe("meetingPulse", () => {
@@ -95,5 +112,38 @@ describe("meetingPulse", () => {
       expect(v).toBeGreaterThanOrEqual(0);
       expect(v).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe("blurRadiusScreen", () => {
+  it("구체적인 값 검증: 위도 37.5°, 줌 15, 반경 200m은 52.76908084053102px", () => {
+    const view: View = { centerLat: 37.5, centerLon: 127.0, zoom: 15 };
+    const radius = blurRadiusScreen(200, 37.5, view);
+    expect(radius).toBeCloseTo(52.76908084053102, 8);
+  });
+
+  it("줌이 한 단계 오르면 픽셀 반경이 두 배", () => {
+    const lat = 37.5;
+    const view12: View = { centerLat: 37.5, centerLon: 127.0, zoom: 12 };
+    const view13: View = { centerLat: 37.5, centerLon: 127.0, zoom: 13 };
+    const radius12 = blurRadiusScreen(200, lat, view12);
+    const radius13 = blurRadiusScreen(200, lat, view13);
+    expect(radius13).toBeCloseTo(radius12 * 2, 4);
+  });
+
+  it("거리를 두 배로 늘리면 픽셀도 두 배", () => {
+    const view: View = { centerLat: 37.5, centerLon: 127.0, zoom: 15 };
+    const radius200 = blurRadiusScreen(200, 37.5, view);
+    const radius400 = blurRadiusScreen(400, 37.5, view);
+    expect(radius400).toBeCloseTo(radius200 * 2, 4);
+  });
+
+  it("위도가 다르면 같은 거리도 다른 픽셀이 된다", () => {
+    const view: View = { centerLat: 37.5, centerLon: 127.0, zoom: 15 };
+    const radiusEq = blurRadiusScreen(200, 0, view); // 적도: cos(0) = 1
+    const radiusHigh = blurRadiusScreen(200, 60, view); // 고위도: cos(60°) ≈ 0.5
+    expect(radiusHigh).toBeGreaterThan(radiusEq);
+    // 위도 차이가 클수록 cos 차이도 크므로, 테스트는 충분히 다른 픽셀 값을 확인한다
+    expect(Math.abs(radiusEq - radiusHigh)).toBeGreaterThan(5);
   });
 });
