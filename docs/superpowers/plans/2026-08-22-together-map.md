@@ -15,8 +15,10 @@
 - `package.json`에 의존성을 추가하지 않는다.
 - 테스트는 `npm test` (vitest, `environment: "node"`, `include: ["src/**/*.test.ts"]`).
 - 린트는 `npm run lint`. 이 저장소는 기존 오류 345건을 안고 있다 — **내가 건드린 파일에서 새 오류가 나지 않는 것**만 확인한다.
-- 경로 별칭은 `@/*` → `./src/*`.
-- 난수는 `@/app/playground/_shared/random`의 `createRng`를 쓴다. `Math.random()`은 쓰지 않는다.
+- **테스트가 도는 `.ts` 모듈에서는 `@/` 별칭을 쓰지 않는다.** `vitest.config.ts`에
+  `resolve.alias`가 없어서 해석되지 않는다. 상대 경로로 가져온다.
+  (`.tsx` 컴포넌트는 Next.js가 빌드 때 처리하므로 그쪽은 `@/`를 써도 된다.)
+- 난수는 `../_shared/random`의 `createRng`를 쓴다. `Math.random()`은 쓰지 않는다.
 - 주석과 UI 문구는 한국어. 주변 코드의 말투를 따른다 — 무엇을 하는지가 아니라 **왜 그렇게 했는지**를 적는다.
 - 모든 파일은 `src/app/playground/together-map/` 아래. 라우트는 `/playground/together-map`.
 - 이 페이지는 서버에서 데이터를 가져오지 않으므로 `runtime = "edge"`를 쓰지 않는다. 마지막 작업에서 빌드 출력이 `○`(static)인지 확인한다.
@@ -1310,7 +1312,10 @@ Expected: FAIL — `Failed to resolve import "./sample"`
 `src/app/playground/together-map/sample.ts`:
 
 ```ts
-import { createRng, randRange, type Rng } from "@/app/playground/_shared/random";
+// 상대 경로로 가져온다. vitest.config.ts에 resolve.alias가 없어서 `@/`는
+// 테스트에서 해석되지 않는다. 저장소의 다른 `@/` import는 전부 .tsx라
+// 테스트 글롭(src/**/*.test.ts)에 안 걸려서 이제껏 드러나지 않았을 뿐이다.
+import { createRng, randRange, type Rng } from "../_shared/random";
 import { lerpLatLon, type LatLon } from "./geo";
 
 /**
