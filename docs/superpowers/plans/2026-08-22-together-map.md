@@ -1196,6 +1196,120 @@ git commit -m "feat(together-map): 만난 순간 검출
 
 ---
 
+### Task 4c: 방문 구간 살리기 — parse.ts · meet.ts
+
+**Files:**
+- Modify: `src/app/playground/together-map/parse.ts`
+- Modify: `src/app/playground/together-map/parse.test.ts`
+- Modify: `src/app/playground/together-map/meet.ts`
+- Modify: `src/app/playground/together-map/meet.test.ts`
+
+**왜 이 작업이 생겼나**
+
+계획에 구멍이 있었다. 구글의 방문 세그먼트는 **머문 구간 전체를 좌표 하나로** 적는다 —
+시작 14:00, 끝 16:00, 좌표 하나. 그런데 파서가 시작 시각만 읽고 끝 시각을 버렸다.
+그래서 두 시간 머문 것이 점 하나가 되고, 다음 점까지 두 시간짜리 구멍이 생긴다.
+
+`resample`은 그 구멍을 «위치를 모르는 구간»으로 처리한다. 그건 옳은 동작이다 —
+서울에서 부산까지 직선을 그어 없던 만남을 만드는 걸 막는 규칙이다.
+
+두 규칙이 부딪힌다. **실제 구글 파일로 «카페에 두 시간 같이 앉아 있었다»를 넣으면
+만남이 0건 나온다.** 이 도구가 존재하는 이유가 그건데.
+
+Task 5에서 이 벽에 부딪힌 구현자는 샘플 쪽을 바꿔 빠져나갔다 — 방문을 10~20분마다
+새 세그먼트로 쪼갰다. 테스트는 통과하지만 구글은 그렇게 뱉지 않는다. 픽스처를
+실제와 다르게 만들어 파서를 봐준 것이고, 진짜 파일을 넣는 날까지 안 드러났을 것이다.
+
+**고치는 방향**
+
+거리 기준으로 «앞뒤가 가까우면 구멍이어도 잇는다»를 넣지 않는다. 그러면 Task 4에서
+세 라운드 들여 지킨 구멍 규칙이 헐거워진다. 대신 **방문 점이 «언제까지 있었는지»를
+들고 다니게** 하고, 그 구간만 «아는 구간»으로 친다. 구멍 규칙 자체는 손대지 않는다.
+
+**parse.ts**
+
+`RawPoint`에 선택 필드를 하나 더한다.
+
+```ts
+export interface RawPoint {
+  t: number;
+  lat: number;
+  lon: number;
+  accuracy?: number;
+  kind: "visit" | "path";
+  /**
+   * 이 자리에 언제까지 있었는지(epoch ms). 방문 세그먼트에만 붙는다.
+   *
+   * 구글은 «14시부터 16시까지 여기 있었다»를 좌표 하나로 적는다. 시작 시각만
+   * 읽으면 그 두 시간이 통째로 «모르는 구간»이 되어, 카페에 같이 앉아 있어도
+   * 만남으로 안 잡힌다. 아는 것을 버리지 않기 위한 필드다.
+   */
+  until?: number;
+}
+```
+
+방문을 만들 때 `endTime`이 있고 `startTime`보다 뒤면 `until`에 담는다.
+없거나 같으면 `until`을 붙이지 않는다 — 없는 것과 «길이 0»은 다르다.
+
+`activity`와 `timelinePath`에서 나온 점에는 붙이지 않는다. 그쪽은 이동이라
+«그 자리에 계속 있었다»가 성립하지 않는다.
+
+**meet.ts — `resample`**
+
+격자 시각 `t`를 채울 때, 보간보다 **먼저** 머문 구간을 본다.
+
+```ts
+// 머문 구간 안이면 그 자리다. 구글이 «여기 있었다»고 적어 둔 시간이라
+// 추측이 아니라 기록이다. 구멍 검사에 걸리기 전에 먼저 확인한다.
+if (prev.until !== undefined && t >= prev.t && t <= prev.until) {
+  out[i] = { lat: prev.lat, lon: prev.lon };
+  continue;
+}
+```
+
+그다음은 지금 그대로다 — 구멍이면 비우고, 아니면 보간한다.
+**`MAX_GAP_MS` 규칙은 한 글자도 바꾸지 않는다.**
+
+**테스트 (parse.test.ts)**
+
+- 방문에 `endTime`이 있으면 `until`이 붙는다
+- `endTime`이 없으면 `until`은 `undefined`다
+- `endTime`이 `startTime`과 같으면 `until`은 붙지 않는다
+- `activity`·`timelinePath`에서 나온 점에는 `until`이 없다
+- 아이폰 모양에서도 똑같이 붙는다
+
+**테스트 (meet.test.ts) — 이 작업의 핵심**
+
+```ts
+it("카페에 두 시간 같이 앉아 있으면 만남으로 잡힌다", () => {
+  // 구글이 실제로 뱉는 모양: 머문 구간 전체가 좌표 하나 + 시작/끝 시각
+  const stay = (fromMin: number, toMin: number): RawPoint[] => [
+    { t: T0 + fromMin * MIN, until: T0 + toMin * MIN, lat: 37.5445, lon: 127.0557, kind: "visit" },
+  ];
+  expect(findMeetings(stay(0, 120), stay(0, 120), OPTS)).toHaveLength(1);
+});
+```
+
+이 테스트는 고치기 전 코드에서 반드시 **실패해야** 한다. 확인하고 넘어간다.
+
+그리고 구멍 규칙이 살아 있는지 다시 못 박는다 — 기존
+«구멍 너머로 가짜 만남을 만들지 않는다»가 그대로 통과해야 하고,
+`until`이 없는 두 점은 여전히 안 이어져야 한다.
+
+- [ ] **Step 1: 카페 테스트를 먼저 쓰고, 지금 코드에서 실패하는 것을 확인한다**
+- [ ] **Step 2: `RawPoint.until`과 파서 쪽 테스트를 쓴다 (실패 확인)**
+- [ ] **Step 3: parse.ts에 `until`을 채운다**
+- [ ] **Step 4: meet.ts `resample`에 머문 구간 분기를 넣는다**
+- [ ] **Step 5: 전체 테스트. Task 4의 변이 다섯 개를 다시 돌려 여전히 죽는지 확인한다**
+
+Step 5를 건너뛰지 않는다. `resample`을 건드리는 작업이라, Task 4가 세 라운드에 걸쳐
+세운 방어가 그대로인지 확인해야 한다. 특히 «구멍 너머로 가짜 만남을 만들지 않는다»에
+`if (false)` 변이를 다시 걸어 보고 여전히 실패하는지 본다.
+
+- [ ] **Step 6: 커밋**
+
+---
+
 ### Task 5: sample.ts — 가상 여행
 
 **Files:**
