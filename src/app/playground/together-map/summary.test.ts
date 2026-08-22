@@ -91,4 +91,31 @@ describe("buildSummary", () => {
     expect(s.meetCount).toBe(0);
     expect(s.farthest).toBeNull();
   });
+
+  it("기록 구간이 끝나면 알 수 없는 자리를 지어내지 않는다", () => {
+    // A: 0~120분 연속 기록, 서울
+    const a = stay(0, 120, 37.5, 127.0);
+    // B: 0~30분 부산, 35~65분 빈 구간(>30분), 70~120분 서울
+    const b = [...stay(0, 30, 35.1, 129.0), ...stay(70, 120, 37.5, 127.0)];
+    const s = buildSummary(a, b, []);
+    // 알려진 구간에선 최대 서울↔부산 거리(~300km)이어야 한다
+    // (null guard가 없으면 빈 구간의 셀이 {lat:0, lon:0}으로 계산돼 ~9700km가 나온다)
+    expect(s.farthest?.meters).toBeLessThan(400_000);
+  });
+
+  it("같은 거리의 두 순간은 먼저 나온 것을 보고한다", () => {
+    // 두 시점 모두 같은 거리 떨어져 있도록 설계
+    // 격자 크기가 5분이므로, 정확히 같은 거리를 만들려면 같은 좌표 쌍을 반복
+    const a1 = stay(0, 20, 37.5, 127.0);
+    const a2 = stay(25, 45, 37.5, 127.0);
+    const a = [...a1, ...a2];
+
+    const b1 = stay(0, 20, 37.6, 127.1);
+    const b2 = stay(25, 45, 37.6, 127.1);
+    const b = [...b1, ...b2];
+
+    const s = buildSummary(a, b, []);
+    // 둘 다 약 11km 떨어져 있지만, 처음 나오는 시점(0분대)을 보고해야 함
+    expect(s.farthest?.at).toBeLessThan(T0 + 25 * MIN);
+  });
 });

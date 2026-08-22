@@ -23,7 +23,9 @@ const SAME_PLACE_M = 300;
  *
  * 클러스터링을 제대로 하지 않고 «먼저 나온 것을 중심으로 반경 안을 흡수»하는
  * 단순한 방법을 쓴다. 만남이 많아야 수십 건이라 이걸로 충분하고,
- * k-means 같은 것을 얹으면 결과가 실행마다 달라져서 오히려 나쁘다.
+ * k-means 같은 것을 얹으면 결과가 실행마다 달라져서 오히려 나쁘다. 이 greedy
+ * 방식은 첫 만남의 순서에 따라 클러스터 결과가 달라지지만, 입력이 정렬돼 있고
+ * 만남이 적어서 문제가 되지 않는다.
  */
 function favouritePlace(meetings: Meeting[]): Summary["favourite"] {
   if (meetings.length === 0) return null;
