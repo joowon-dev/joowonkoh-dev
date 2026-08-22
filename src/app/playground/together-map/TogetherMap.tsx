@@ -36,7 +36,6 @@ import {
 } from "./playback";
 import { buildSampleTimeline, SAMPLE_NAMES } from "./sample";
 import SetupPanel, { type Settings } from "./SetupPanel";
-import { buildSummary, type Summary } from "./summary";
 import { TileCache, visibleTiles } from "./tiles";
 
 type Stage = "pick" | "consent" | "setup" | "playing" | "recording" | "done";
@@ -87,7 +86,6 @@ interface LatestState {
   filteredB: RawPoint[] | null;
   range: { from: number; to: number } | null;
   meetings: Meeting[];
-  summary: Summary | null;
   settings: Settings;
   strings: Strings;
   lang: Lang;
@@ -267,12 +265,6 @@ export default function TogetherMap() {
     });
   }, [filteredA, filteredB, settings.meetRadiusM, settings.meetMinMinutes]);
 
-  // 마무리 카드용 요약. 한 번만 계산해 둔다.
-  const summary = useMemo(() => {
-    if (!filteredA || !filteredB) return null;
-    return buildSummary(filteredA, filteredB, meetings);
-  }, [filteredA, filteredB, meetings]);
-
   const homeSpots = useMemo(() => {
     if (!settings.hideHome || !filteredA || !filteredB) return null;
     const spots: { lat: number; lon: number; radiusM: number }[] = [];
@@ -319,7 +311,6 @@ export default function TogetherMap() {
       filteredB,
       range,
       meetings,
-      summary,
       settings,
       strings,
       lang,
@@ -365,7 +356,7 @@ export default function TogetherMap() {
       const totalSpan = state.range ? Math.max(1, state.range.to - state.range.from) : 1;
       const ratio = state.range ? (nowRef.current - state.range.from) / totalSpan : 0;
       const opacity =
-        state.settings.showSummary && state.summary
+        state.settings.showSummary
           ? summaryOpacity(ratio, state.settings.durationSec)
           : 0;
 
@@ -427,7 +418,7 @@ export default function TogetherMap() {
         title: state.settings.videoTitle,
         hide: state.homeSpots,
         strings: state.strings,
-        summary: opacity > 0 && state.summary ? { data: state.summary, opacity } : null,
+        finale: opacity,
         paceMsPerFrame: pace,
         lang: state.lang,
         progress: ratio,

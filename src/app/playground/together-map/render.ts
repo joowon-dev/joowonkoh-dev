@@ -3,7 +3,6 @@ import { lerpLatLon, projectMercator, type LatLon } from "./geo";
 import { MAX_GAP_MS, MAX_STAY_MS, type Meeting } from "./meet";
 import type { RawPoint } from "./parse";
 import type { Strings } from "./i18n";
-import type { Summary } from "./summary";
 import { TILE_ATTRIBUTION } from "./tiles";
 
 export interface Size {
@@ -143,10 +142,13 @@ export interface FrameState {
   hide: { lat: number; lon: number; radiusM: number }[] | null;
   strings: Strings;
   /**
-   * 마무리 카드. 0이면 안 그리고, 1이면 완전히 덮는다.
-   * 재생이 끝나기 3초 전부터 1로 올린다.
+   * 마무리로 넘어가는 정도(0~1). 재생이 끝나기 3초 전부터 1로 올린다.
+   *
+   * 0보다 크면 꼬리 제한을 풀어 여정 «전체»를 펼치고, 시야도 전체가 담기는
+   * 곳까지 물러난다(물러나는 것은 TogetherMap이 이 값으로 몬다). 마지막 화면은
+   * 지도와 총 경로 그것뿐이다 — 위에 덮는 카드나 수치는 두지 않는다.
    */
-  summary: { data: Summary; opacity: number } | null;
+  finale: number;
   /**
    * 한 프레임이 건너뛰는 타임라인 시간(ms). 꼬리 길이와 링 지속을 여기에 맞춘다.
    * 자세한 이유는 TAIL_FRAMES 위 주석 참조.
@@ -317,145 +319,7 @@ function drawChrome(ctx: CanvasRenderingContext2D, state: FrameState): void {
   ctx.fillText(TILE_ATTRIBUTION, size.w - pad * 0.4, size.h - pad * 0.4);
 }
 
-/**
- * 마무리 카드.
- *
- * 지도를 완전히 덮지 않는다. 이 화면의 주인공은 «둘이 함께 지나온 길»이고 수치는
- * 그 위에 얹히는 것이다. 옅은 흰 막만 깔아 길이 비쳐 보이게 한 뒤, 가운데
- * 카드에 두 사람 이름과 요약을 쌓는다.
- *
- * favourite와 farthest는 null일 수 있다 — 계산이 안 된 것과 실제로 0/없음인 것을
- * 구분할 수 없으므로 「0km」나 「-」를 적지 않고 그 줄 자체를 건너뛴다.
- */
-function drawSummaryCard(
-  ctx: CanvasRenderingContext2D,
-  state: FrameState,
-  summary: Summary,
-  opacity: number,
-): void {
-  const { size, strings, tracks } = state;
 
-  ctx.globalAlpha = opacity;
-
-  // 1. 길이 비쳐 보이는 옅은 막. 진하게 깔면 «전체 경로를 보여준다»는 목적이
-  //    막 뒤에서 지워진다 — 글자가 읽힐 만큼만 덮는다.
-  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-  ctx.fillRect(0, 0, size.w, size.h);
-
-  // 2. 본문 줄들을 먼저 정해야 카드 높이를 잴 수 있다.
-  const rows: string[] = [];
-  if (summary.totalTogetherMs > 0) {
-    const hours = summary.totalTogetherMs / 3_600_000;
-    // 문자열 자체가 구분자(": ")를 이미 품고 있다(meetingsFound와 같은 관례) —
-    // 여기서 또 ": "를 붙이면 두 번 찍힌다. {n}은 값만 채운다.
-    rows.push(
-      strings.totalTogether.replace("{n}", `${hours.toFixed(1)}${strings.hoursUnit}`),
-    );
-  }
-  if (summary.favourite) {
-    // 좌표를 그대로 찍지 않는다. 지도 위 집 주변 가리기(6.5)는 지도에만 적용되고
-    // 이 카드는 건드리지 않는다 — 두 사람이 가장 자주 만난 곳은 대개 둘 중 한쪽
-    // 집이라, 좌표를 4자리(≈11m 오차)까지 적으면 지도에서 가린 집 주소를 카드가
-    // 그대로 흘린다. 카드는 스크린샷으로 공유되는 프레임이라 더 위험하다.
-    // 좌표 대신 몇 번 만났는지(count)를 보여준다 — 그게 실제로 궁금한 값이다.
-    rows.push(strings.favouriteSpot.replace("{n}", String(summary.favourite.count)));
-  }
-  if (summary.farthest) {
-    const km = (summary.farthest.meters / 1000).toFixed(1);
-    const date = formatDate(summary.farthest.at, state.lang);
-    rows.push(
-      strings.farthestApart.replace("{n}", `${km}${strings.kmUnit} (${date})`),
-    );
-  }
-
-  const nameSize = Math.round(size.w / 28);
-  const headlineSize = Math.round(size.w / 15);
-  const rowSize = Math.round(size.w / 27);
-  const rowGap = rowSize * 1.75;
-  const inset = size.w * 0.07;
-
-  const cardW = size.w * 0.86;
-  const cardX = (size.w - cardW) / 2;
-  const cardH =
-    inset * 2 + nameSize * 1.6 + headlineSize * 1.5 + rows.length * rowGap;
-  // 카드는 아래쪽에 앉힌다. 한가운데 두면 궤적이 제일 촘촘한 생활권 위를 그대로
-  // 덮어서, 정작 «함께 걸은 길»이 카드 뒤에 숨는다.
-  const cardY = size.h - cardH - size.h * 0.1;
-
-  // 3. 카드 바탕.
-  ctx.beginPath();
-  ctx.roundRect(cardX, cardY, cardW, cardH, size.w * 0.045);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-  ctx.fill();
-  ctx.lineWidth = Math.max(1, size.w / 540);
-  ctx.strokeStyle = "rgba(26, 26, 26, 0.10)";
-  ctx.stroke();
-
-  let y = cardY + inset + nameSize;
-
-  // 4. 두 사람 — 각자의 색 점과 이름, 사이에 하트. 이 영상이 «둘»의 것이라는 걸
-  //    수치보다 먼저 보여 준다.
-  ctx.textBaseline = "alphabetic";
-  ctx.font = `600 ${nameSize}px ${FONT_STACK}`;
-  const heart = " ♥ ";
-  const dotR = nameSize * 0.3;
-  const gap = dotR * 1.6;
-  const [ta, tb] = tracks;
-  const wA = ctx.measureText(ta.name).width;
-  const wB = ctx.measureText(tb.name).width;
-  const wHeart = ctx.measureText(heart).width;
-  const total = dotR * 2 + gap + wA + wHeart + dotR * 2 + gap + wB;
-
-  let x = (size.w - total) / 2;
-  ctx.textAlign = "left";
-
-  ctx.beginPath();
-  ctx.arc(x + dotR, y - nameSize * 0.32, dotR, 0, Math.PI * 2);
-  ctx.fillStyle = ta.color;
-  ctx.fill();
-  x += dotR * 2 + gap;
-  ctx.fillStyle = "#1a1a1a";
-  ctx.fillText(ta.name, x, y);
-  x += wA;
-
-  ctx.fillStyle = "#e0447c";
-  ctx.fillText(heart, x, y);
-  x += wHeart;
-
-  ctx.beginPath();
-  ctx.arc(x + dotR, y - nameSize * 0.32, dotR, 0, Math.PI * 2);
-  ctx.fillStyle = tb.color;
-  ctx.fill();
-  x += dotR * 2 + gap;
-  ctx.fillStyle = "#1a1a1a";
-  ctx.fillText(tb.name, x, y);
-
-  y += nameSize * 0.6 + headlineSize;
-
-  // 5. 큰 한 줄 — 만난 횟수.
-  ctx.textAlign = "center";
-  ctx.font = `700 ${headlineSize}px ${FONT_STACK}`;
-  ctx.fillStyle = "#1a1a1a";
-  ctx.fillText(
-    summary.meetCount > 0
-      ? strings.meetingsFound.replace("{n}", String(summary.meetCount))
-      : strings.noMeetings,
-    size.w / 2,
-    y,
-  );
-
-  y += headlineSize * 0.5;
-
-  // 6. 나머지 수치들.
-  ctx.font = `500 ${rowSize}px ${FONT_STACK}`;
-  ctx.fillStyle = "#4a5160";
-  for (const row of rows) {
-    y += rowGap;
-    ctx.fillText(row, size.w / 2, y);
-  }
-
-  ctx.globalAlpha = 1;
-}
 
 /**
  * 한 프레임을 캔버스에 그린다. 호출 순서가 곧 겹치는 순서다.
@@ -472,7 +336,7 @@ export function drawFrame(
 ): void {
   const { size, view, tracks, meetings, now } = state;
 
-  // save()/restore()를 try/finally로 감싼다. 안에서(특히 drawSummaryCard의
+  // save()/restore()를 try/finally로 감싼다. 안에서(특히 drawChrome의
   // 날짜 포맷팅) 던져진 예외가 restore()를 건너뛰면, 이번 프레임에서 바꾼
   // globalAlpha·fillStyle 등이 지워지지 않은 채 다음 프레임의 «깨끗한» save()
   // 시작점이 돼 버린다 — 즉 한 번의 실패가 이후 모든 프레임에 새어 나간다.
@@ -500,7 +364,7 @@ export function drawFrame(
     // 두 사람의 «걸은 길»이 배경의 일부처럼 읽힌다. 확실히 더 굵게 긋는다.
     // 마무리에서는 영상에 나왔던 길 «전체»를 다시 펼친다. 꼬리 길이를 그대로 두면
     // 마지막 몇 시간만 남아서, 요약 수치가 가리키는 여정이 정작 화면에 없다.
-    const finale = state.summary !== null;
+    const finale = state.finale > 0;
     const tailMs = finale ? Number.POSITIVE_INFINITY : tailMsFor(state.paceMsPerFrame);
 
     // 마무리는 오히려 «가늘게» 긋는다.
@@ -606,10 +470,7 @@ export function drawFrame(
     // 7. 글자. 캔버스는 웹폰트를 못 쓸 수 있으므로 시스템 폰트로 지정한다.
     drawChrome(ctx, state);
 
-    // 8. 마무리 카드
-    if (state.summary && state.summary.opacity > 0) {
-      drawSummaryCard(ctx, state, state.summary.data, state.summary.opacity);
-    }
+    // 마무리에 덮는 것은 없다. 마지막 화면은 지도와 총 경로 그것뿐이다.
   } finally {
     ctx.restore();
   }
