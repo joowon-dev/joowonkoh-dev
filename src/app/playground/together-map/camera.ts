@@ -95,7 +95,7 @@ export function fitView(b: Bounds, w: number, h: number, paddingPx: number): Vie
 
 /** 현재 시야를 목표 쪽으로 한 걸음 당긴다. damping이 1이면 한 번에 붙는다. */
 export function stepCamera(current: View, target: View, damping: number): View {
-  if (damping === 1) return target;
+  if (damping === 1) return { ...target };
   const f = Math.max(0, Math.min(1, damping));
   return {
     centerLat: current.centerLat + (target.centerLat - current.centerLat) * f,
