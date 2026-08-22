@@ -192,4 +192,34 @@ describe("findMeetings", () => {
     expect(meets[0].minDistance).toBeGreaterThan(50);
     expect(meets[0].minDistance).toBeLessThan(100);
   });
+
+  it("만남이 최소 시간에 살짝 못 미치면 세지 않는다", () => {
+    // A: 0-30분, B: 0-10분 가깝고, 15-30분 멀다.
+    // 격자: 0,5,10,15,20,25,30분
+    // 셀 0-2: 둘 다 가깝다 (10분)
+    // 셀 3+: 멀어진다 (37.6은 37.5에서 약 11km)
+    // close(i-1): end = T0 + 2*5min = T0 + 10min, 10min < 15min 미포함
+    // close(i) 변이: end = T0 + 3*5min = T0 + 15min, 15min >= 15min 포함 (거짓 양성)
+    const a = stay(0, 30, 37.5, 127.0);
+    const b = [...stay(0, 10, 37.5, 127.0), ...stay(15, 30, 37.6, 127.0)];
+    expect(findMeetings(a, b, OPTS)).toHaveLength(0);
+  });
+
+  it("대표 위치는 중앙값이라 평균에서 벗어난다", () => {
+    // 넓은 반경(2000m)을 써서 먼 점도 포함할 수 있게 함.
+    // A: 전체 37.5, B: 처음 40분은 37.5, 나머지 45-60분은 37.505 (약 710m)
+    // 대표: 처음 9개 셀은 37.5, 마지막 4개 셀은 37.5025
+    // 중앙값: 37.5 (처음 6개)
+    // 평균: (37.5*9 + 37.5025*4)/13 ≈ 37.50077
+    // toBeCloseTo(37.5, 4) 허용범위 0.00005:
+    //   중앙값은 0 < 허용범위 ✓
+    //   평균은 0.00077 > 허용범위 ✗
+    const wide = { radiusM: 2000, minDurationMs: 15 * MIN };
+    const a = stay(0, 60, 37.5, 127.0);
+    const b = [...stay(0, 40, 37.5, 127.0), ...stay(45, 60, 37.505, 127.005)];
+    const meets = findMeetings(a, b, wide);
+    expect(meets).toHaveLength(1);
+    expect(meets[0].lat).toBeCloseTo(37.5, 4);
+    expect(meets[0].lon).toBeCloseTo(127.0, 4);
+  });
 });
