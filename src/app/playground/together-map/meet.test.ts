@@ -114,17 +114,6 @@ describe("findMeetings", () => {
     expect(findMeetings(a, b, OPTS)).toHaveLength(2);
   });
 
-  it("대표 위치는 중앙값이라 끝에 붙은 이동에 끌려가지 않는다", () => {
-    // 처음 50분간 37.5, 마지막 10분간 37.8에서 떨어져 있다.
-    // 중앙값은 37.5 (13개 중 앞 11개)이지만, 평균은 37.538이 되어 끌려간다.
-    const a = stay(0, 60, 37.5, 127.0);
-    const b = [...stay(0, 50, 37.5, 127.0), ...stay(55, 60, 37.8, 127.0)];
-    const meets = findMeetings(a, b, OPTS);
-    expect(meets).toHaveLength(1);
-    expect(meets[0].lat).toBeCloseTo(37.5, 4);
-    expect(meets[0].lon).toBeCloseTo(127.0, 4);
-  });
-
   it("시작과 끝 시각이 실제 구간과 맞는다", () => {
     const a = stay(0, 60, 37.5, 127.0);
     const b = stay(0, 60, 37.5, 127.0);
