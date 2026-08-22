@@ -19,6 +19,18 @@ describe("SIZES", () => {
       expect(s.h % 2).toBe(0);
     }
   });
+
+  it("shape은 치수와 일치한다", () => {
+    for (const s of SIZES) {
+      if (s.shape === "square") {
+        expect(s.w).toBe(s.h);
+      } else if (s.shape === "portrait") {
+        expect(s.h).toBeGreaterThan(s.w);
+      } else if (s.shape === "landscape") {
+        expect(s.w).toBeGreaterThan(s.h);
+      }
+    }
+  });
 });
 
 describe("DURATIONS", () => {

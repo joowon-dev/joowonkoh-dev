@@ -65,39 +65,63 @@ export function recordCanvas(
   onProgress: (ratio: number) => void,
   signal: AbortSignal,
 ): Promise<{ blob: Blob; ext: "mp4" | "webm" }> {
+  // 이미 취소된 신호면 바로 거절한다 — 리소스를 만들지 않는다.
+  if (signal.aborted) {
+    return Promise.reject(new DOMException("취소했습니다", "AbortError"));
+  }
+
   return new Promise((resolve, reject) => {
     const { mimeType, ext } = pickMimeType((type) => MediaRecorder.isTypeSupported(type));
     const stream = canvas.captureStream(FPS);
     const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
     const chunks: BlobPart[] = [];
+    let timer: number;
+
+    const teardown = () => {
+      window.clearInterval(timer);
+      stream.getTracks().forEach((track) => track.stop());
+      signal.removeEventListener("abort", abortHandler);
+    };
+
+    const abortHandler = () => {
+      if (recorder.state === "recording") {
+        recorder.stop();
+      } else {
+        // 녹화 중이 아니면 onstop이 오지 않으므로 직접 정리하고 거절한다.
+        teardown();
+        reject(new DOMException("취소했습니다", "AbortError"));
+      }
+    };
 
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunks.push(e.data);
     };
     recorder.onstop = () => {
-      window.clearInterval(timer);
-      stream.getTracks().forEach((track) => track.stop());
+      teardown();
       if (signal.aborted) {
         reject(new DOMException("취소했습니다", "AbortError"));
+        return;
+      }
+      // 데이터가 없으면 빈 파일을 제공하지 말고 거절한다.
+      if (chunks.length === 0) {
+        reject(new Error("영상 데이터가 없습니다."));
         return;
       }
       resolve({ blob: new Blob(chunks, { type: mimeType || "video/webm" }), ext });
     };
     recorder.onerror = () => {
-      window.clearInterval(timer);
+      teardown();
       reject(new Error("영상을 만들지 못했습니다."));
     };
 
     const startedAt = performance.now();
-    const timer = window.setInterval(() => {
+    timer = window.setInterval(() => {
       const ratio = (performance.now() - startedAt) / (seconds * 1000);
       onProgress(Math.min(1, ratio));
       if (ratio >= 1 && recorder.state === "recording") recorder.stop();
     }, 100);
 
-    signal.addEventListener("abort", () => {
-      if (recorder.state === "recording") recorder.stop();
-    });
+    signal.addEventListener("abort", abortHandler);
 
     recorder.start();
   });
