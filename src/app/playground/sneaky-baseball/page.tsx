@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import PlatformTabs from "./PlatformTabs";
+import VersionHistory from "./VersionHistory";
+import { LATEST } from "./releases";
 
 const TITLE = "몰래 야구 — 일하는 화면 위로 공이 날아가는 바탕화면 야구 (맥 · 윈도우)";
 const DESCRIPTION =
@@ -48,6 +50,10 @@ const RULES: { title: string; body: string }[] = [
     body: "같은 타이밍이라도 낮게 들어온 공은 발사각이 깎여 덜 날아갑니다. 20ms 안쪽으로 맞혀도 낮은 공이면 담장 앞에 떨어집니다.",
   },
   {
+    title: "잘 맞혔다고 다 안타가 아닙니다",
+    body: "담장 앞에 외야수가 서 있습니다. 뜬공이 뜨면 낙구 지점으로 달려가고, 체공 시간 안에 닿으면 아웃입니다. 그래서 잘 맞힐수록 홈런 아니면 아웃이고, 오히려 힘없이 맞은 공이 안타로 남습니다. 바운드된 공은 잡지 않습니다.",
+  },
+  {
     title: "기록은 연속이 아니라 비거리입니다",
     body: "가장 멀리 친 거리가 남습니다. 담장에 막혀 끊긴 타구도 담장이 없었다면 떨어졌을 지점까지 세어 줍니다.",
   },
@@ -72,7 +78,7 @@ const STEPS: { title: string; body: string }[] = [
   },
   {
     title: "메뉴 막대에서 야구공을 찾는다",
-    body: "Dock에는 아이콘이 없습니다. 최고 비거리도, 종료도 이 메뉴에서 합니다. 손쉬운 사용 같은 권한은 하나도 요구하지 않습니다. 유니폼도 여기서 고릅니다 — 처음엔 롯데를 입고 나오고, KBO 10개 구단의 홈·원정을 타자와 투수에게 따로 입힐 수 있습니다. 모니터가 여러 대면 어느 화면에 띄울지도 고릅니다.",
+    body: "Dock에는 아이콘이 없습니다. 최고 비거리도, 종료도 이 메뉴에서 합니다. 손쉬운 사용 같은 권한은 하나도 요구하지 않습니다. 유니폼도 여기서 고릅니다 — 처음엔 롯데를 입고 나오고, KBO 10개 구단의 홈·원정을 타자와 투수에게 따로 입힐 수 있습니다. 모니터가 여러 대면 어느 화면에 띄울지도 고릅니다. 투수 거리도 여기서 고릅니다 — 투수를 당기면 공이 일찍 와서 어려워집니다.",
   },
   {
     title: "스윙이 안 되면 조작키를 바꾼다",
@@ -92,7 +98,7 @@ function MacPanel() {
   return (
     <div>
       <a
-        href="/downloads/SneakyBaseball-mac.zip"
+        href={LATEST.mac.href}
         download
         className="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-border bg-card-bg p-5 shadow-ambient spring-transition hover:shadow-ambient-hover hover:scale-[1.01] active:scale-[0.99]"
       >
@@ -101,7 +107,8 @@ function MacPanel() {
             SneakyBaseball-mac.zip 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
-            290KB · macOS 13 이상 · Apple Silicon &amp; Intel · 서명 없음
+            {LATEST.version} · {LATEST.mac.size} · macOS 13 이상 · Apple Silicon &amp;
+            Intel · 애플 공증
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-text-primary px-4 py-2 text-xs font-semibold text-card-bg">
@@ -180,6 +187,7 @@ export default function SneakyBaseballPage() {
 
       <SectionHeading>받기</SectionHeading>
       <PlatformTabs mac={<MacPanel />} />
+      <VersionHistory />
 
       <p className="mt-14 text-xs leading-relaxed text-text-secondary">
         소스는{" "}
