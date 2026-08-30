@@ -79,6 +79,21 @@ export function magnusDirection(tiltHours: number, velocity: Vec3): Vec3 {
   return normalize(perpendicular);
 }
 
+/**
+ * 회전축. 마그누스 힘이 `F ∝ ω × v`라 축은 진행 방향과 힘 방향의 외적으로
+ * 되돌려 얻는다. 화면에서 실밥이 도는 축이 곧 이것이라, 궤적을 만든 숫자와
+ * 눈에 보이는 회전이 같은 데서 나온다.
+ */
+export function spinAxis(tiltHours: number, velocity: Vec3): Vec3 {
+  const v = normalize(velocity);
+  const d = magnusDirection(tiltHours, velocity);
+  return normalize({
+    x: v.y * d.z - v.z * d.y,
+    y: v.z * d.x - v.x * d.z,
+    z: v.x * d.y - v.y * d.x,
+  });
+}
+
 export interface Spin {
   /** 분당 회전수 (총 회전) */
   rpm: number;

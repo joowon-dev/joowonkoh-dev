@@ -16,7 +16,8 @@ export type IconName =
   | "sauna"
   | "horse"
   | "imax"
-  | "baseball";
+  | "baseball"
+  | "mitt";
 
 export interface Project {
   title: string;
@@ -139,6 +140,16 @@ export const projects: Project[] = [
     icon: "eye",
     tile: ["#fff1f0", "#ffd5d2"],
     hidden: true,
+  },
+  {
+    title: "포수 시점",
+    description: "KBO 투수가 던지는 공을 포수 눈높이에서 받아 봅니다 ⚾",
+    tags: ["WebGL", "Physics", "Baseball"],
+    href: "/playground/catchers-view",
+    icon: "mitt",
+    tile: ["#131a26", "#080b12"],
+    blurb:
+      "홈플레이트 뒤 1.2m, 눈높이 1.05m — 쭈그려 앉은 포수의 머리 위치에 카메라를 두고 16.4m 앞에서 날아오는 공을 봅니다. 152km/h 포심이 미트에 박히기까지 0.41초입니다. 구종마다 곡선을 그려 두는 대신 중력·항력·마그누스를 1000분의 1초 간격으로 적분하기 때문에, 회전축을 바꾸면 궤적이 실제로 따라 바뀝니다. 좌투수를 고르면 슬라이더가 반대로 휘는 것도 그림이 아니라 계산 결과입니다. 구속과 구종 배합은 공개 기록이고 회전수는 구종별 통상값 추정치라고 화면에 적어 뒀습니다.",
   },
   {
     title: "아이맥스 1열",

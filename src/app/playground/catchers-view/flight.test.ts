@@ -7,6 +7,7 @@ import {
   liftCoefficient,
   magnusDirection,
   simulate,
+  spinAxis,
   throwPitch,
   type Spin,
   type Vec3,
@@ -168,5 +169,28 @@ describe("throwPitch", () => {
     for (let i = 1; i < samples.length; i++) {
       expect(samples[i].rotation).toBeGreaterThanOrEqual(samples[i - 1].rotation);
     }
+  });
+});
+
+describe("spinAxis", () => {
+  const straight: Vec3 = { x: 0, y: 0, z: -40 };
+
+  it("진행 방향과도 마그누스 방향과도 직각이다", () => {
+    const axis = spinAxis(11, straight);
+    const force = magnusDirection(11, straight);
+    expect(axis.x * straight.x + axis.y * straight.y + axis.z * straight.z).toBeCloseTo(0, 6);
+    expect(axis.x * force.x + axis.y * force.y + axis.z * force.z).toBeCloseTo(0, 6);
+    expect(Math.hypot(axis.x, axis.y, axis.z)).toBeCloseTo(1, 6);
+  });
+
+  it("순수 백스핀은 가로축으로 돈다", () => {
+    // 12시 방향으로 밀리는 공은 포수가 볼 때 좌우로 누운 축을 가진다
+    const axis = spinAxis(12, straight);
+    expect(Math.abs(axis.x)).toBeCloseTo(1, 6);
+    expect(axis.y).toBeCloseTo(0, 6);
+  });
+
+  it("탑스핀은 백스핀과 반대로 돈다", () => {
+    expect(spinAxis(6, straight).x).toBeCloseTo(-spinAxis(12, straight).x, 6);
   });
 });
