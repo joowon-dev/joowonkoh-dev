@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import PlatformTabs from "./PlatformTabs";
+import VersionHistory from "./VersionHistory";
+import { LATEST } from "./releases";
 
 const TITLE = "WebSwing — 창 사이를 날아다니는 데스크톱 펫 (맥 · 윈도우)";
 const DESCRIPTION =
@@ -36,6 +38,7 @@ const MODE_SWITCHES: { key: string; action: string }[] = [
   { key: "⌘⇧T", action: "타자 모드 켜기 / 끄기" },
   { key: "⌘⇧S", action: "게임 모드 전환" },
   { key: "⌘⇧H", action: "숨기기 / 다시 부르기 — 눈을 클릭해도 돌아옵니다" },
+  { key: "⌘⇧K", action: "키링 모드 — 창 모서리에 거꾸로 매달립니다" },
 ];
 
 const CONTROLS: { key: string; action: string }[] = [
@@ -77,7 +80,7 @@ function MacPanel() {
   return (
     <div>
       <a
-        href="/downloads/WebSwing.zip"
+        href={LATEST.mac.href}
         download
         className="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-border bg-card-bg p-5 shadow-ambient spring-transition hover:shadow-ambient-hover hover:scale-[1.01] active:scale-[0.99]"
       >
@@ -86,7 +89,8 @@ function MacPanel() {
             WebSwing.zip 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
-            299KB · macOS 13 이상 · Apple Silicon &amp; Intel · 애플 공증 완료
+            {LATEST.version} · {LATEST.mac.size} · macOS 13 이상 · Apple Silicon
+            &amp; Intel · 애플 공증 완료
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-accent-soft px-4 py-2 text-xs font-medium text-accent">
@@ -181,6 +185,35 @@ function MacPanel() {
       <p className="mt-3 text-sm leading-relaxed text-text-secondary">
         빠르게 여러 번 눌러도 다 받습니다. 같은 자리를 두 번 누르는 더블클릭만
         한 번으로 세고, 다른 자리를 누르면 그건 새 지시입니다.
+      </p>
+
+      <SectionHeading>키링 모드</SectionHeading>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        <kbd className="rounded bg-tag-bg px-1.5 py-0.5 font-mono text-[11px] text-text-primary">
+          ⌘⇧K
+        </kbd>
+        . 창 모서리나 메뉴 막대 밑에{" "}
+        <strong className="text-text-primary">거꾸로 매달려</strong> 흔들립니다.
+        가방에 달아 둔 키링처럼, 아무것도 하지 않고 그냥 걸려 있는 모드입니다.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        집어서 끌어다 다른 곳에 걸 수 있습니다. 걸어둔 창이 사라지면 떨어졌다가
+        거미줄을 쏘아 가까운 곳에 다시 매답니다. 흔들림은 타건과, 창을 끄는
+        동작과, 커서의 급가속에서 옵니다 — 창을 빠르게 옮기면 매달린 채로
+        휘청입니다.
+      </p>
+
+      <SectionHeading>누구로 있을지</SectionHeading>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        메뉴의 <strong className="text-text-primary">Character</strong>에서 Spider
+        · Classic · Venom 셋 중에 고릅니다. 누르면 그 자리에서 갈아입습니다 —
+        매달려 있던 거미줄도, 하던 동작도 끊기지 않습니다.
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+        셋의 <strong className="text-text-primary">움직임은 완전히 같습니다</strong>
+        . 다른 것은 골격 치수와 색과 눈 모양뿐이고, 자세는 같은 관절 각도에서
+        나옵니다. 다리 길이가 다른 만큼 걸음 속도만 각자 맞춰 뒀습니다 — 안
+        맞추면 디딘 발이 미끄러져 뒤로 걷는 것처럼 보입니다.
       </p>
 
       <SectionHeading>크기와 디스플레이</SectionHeading>
@@ -342,6 +375,7 @@ export default function WebSwingPage() {
       </figure>
 
       <PlatformTabs mac={<MacPanel />} />
+      <VersionHistory />
     </div>
   );
 }

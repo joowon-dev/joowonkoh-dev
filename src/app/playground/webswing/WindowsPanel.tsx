@@ -7,6 +7,8 @@
  * 공개로 돌렸고, 그때 PlatformTabs 의 잠금과 dynamic import 를 함께 걷어냈다.
  */
 
+import { LATEST } from "./releases";
+
 type Step = {
   title: string;
   body: React.ReactNode;
@@ -25,7 +27,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: ".NET 9 데스크톱 런타임을 먼저 깐다",
-    body: "이 빌드는 런타임을 포함하지 않습니다(126KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
+    body: `이 빌드는 런타임을 포함하지 않습니다(${LATEST.windows.size}인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.`,
     link: {
       // 목록 페이지가 아니라 설치 파일로 바로 간다. 그 페이지에는 SDK ·
       // ASP.NET · Desktop 이 아키텍처별로 늘어서 있어서, 필요한 하나를 고르는
@@ -48,9 +50,9 @@ const STEPS: Step[] = [
       // 새 빌드마다 크롬과 SmartScreen 입장에서 세상에 처음 나온 파일이 되고,
       // 조금씩 쌓이던 다운로드 평판이 매번 0으로 돌아간다. 경고를 줄이는
       // 쪽이 캐시를 깨는 쪽보다 중요하다.
-      href: "/downloads/WebSwing-win-x64.zip",
+      href: LATEST.windows.href,
       label: "WebSwing (Windows) 내려받기",
-      note: "126KB · Windows 10 1809 이상 · 64비트 · 서명 없음",
+      note: `${LATEST.version} · ${LATEST.windows.size} · Windows 10 1809 이상 · 64비트 · 서명 없음`,
     },
   },
   {
@@ -68,6 +70,10 @@ const STEPS: Step[] = [
 ];
 
 const TRAY_OPTIONS: { title: string; body: string }[] = [
+  {
+    title: "Character — 누구로 있을지",
+    body: "Spider · Classic · Venom 셋 중에 고릅니다. 누르면 그 자리에서 갈아입습니다 — 매달려 있던 거미줄도, 하던 동작도 끊기지 않습니다. 셋의 움직임은 완전히 같고 골격 치수와 색과 눈 모양만 다릅니다.",
+  },
   {
     title: "Monitor — 어느 화면에서 살지",
     body: "기본은 모든 모니터를 하나의 화면처럼 쓰는 것입니다. 왼쪽 모니터에서 출발해 오른쪽으로 건너갈 수 있습니다. 특정 모니터 하나를 고르면 그 화면이 전부가 되고 나머지는 건드리지 않습니다 — 발표하거나 작업 중인 화면에 끼어들지 않게요. 누르면 바로 옮겨갑니다.",
@@ -89,6 +95,7 @@ const CONTROLS: { key: string; action: string }[] = [
     key: "Ctrl+Shift+H",
     action: "숨기기 / 다시 부르기 — 눈을 클릭해도 돌아옵니다",
   },
+  { key: "Ctrl+Shift+K", action: "키링 모드 — 창 모서리에 거꾸로 매달립니다" },
   { key: "Space / 클릭", action: "커서 방향으로 거미줄 발사 · 떼면 놓기" },
   { key: "A · D", action: "좌우 조종, 스윙에 힘 싣기" },
   { key: "S", action: "줄 감기 — 끝까지 감으면 창턱 위로 올라섬" },
