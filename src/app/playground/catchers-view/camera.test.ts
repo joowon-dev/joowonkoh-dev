@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BALL_RADIUS, type Vec3 } from "./flight";
 import { CATCHER_EYE, catcherCamera, makeCamera, project, projectedRadius } from "./camera";
+import { BASES, MOUND_CENTER } from "./field";
 
 const AHEAD: Vec3 = { x: 0, y: 0, z: 10 };
 
@@ -86,7 +87,7 @@ describe("projectedRadius", () => {
 
 describe("catcherCamera", () => {
   it("릴리스 지점이 화면 위쪽 절반 안에 들어온다", () => {
-    // 눈높이 0.95m에서 1.8m 릴리스를 보므로 중앙보다 위지만 화면 밖은 아니다
+    // 눈높이 1.05m에서 1.8m 릴리스를 보므로 중앙보다 위지만 화면 밖은 아니다
     const p = project(catcherCamera(16 / 9), { x: -0.35, y: 1.8, z: 16.5 })!;
     expect(p.y).toBeGreaterThan(0);
     expect(p.y).toBeLessThan(1);
@@ -106,5 +107,24 @@ describe("catcherCamera", () => {
 
   it("눈은 홈플레이트 뒤에 있다", () => {
     expect(CATCHER_EYE.z).toBeLessThan(0);
+  });
+
+  it("16:9 화면에 1·2·3루가 전부 들어온다", () => {
+    // 화각을 55°에서 60°로 넓힌 이유가 이것이다. 55°에서는 가로 반각이
+    // 42.8°라 45°에 있는 1루와 3루가 딱 2° 차이로 잘려 나갔다
+    const camera = catcherCamera(16 / 9);
+    for (const base of BASES) {
+      const p = project(camera, { x: base.x, y: 0.05, z: base.z })!;
+      expect(Math.abs(p.x), base.name).toBeLessThan(1);
+    }
+  });
+
+  it("마운드 위 투수가 화면 안에 온전히 들어온다", () => {
+    const camera = catcherCamera(16 / 9);
+    // 발끝(마운드 꼭대기)부터 머리(1.9m)까지
+    for (const y of [0.25, 1.9]) {
+      const p = project(camera, { x: -0.35, y, z: MOUND_CENTER.z })!;
+      expect(Math.abs(p.y)).toBeLessThan(1);
+    }
   });
 });

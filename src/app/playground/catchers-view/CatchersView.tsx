@@ -26,6 +26,9 @@ import { makeTimeline, sampleAt, stageAt, type Phase, type Timeline } from "./st
 
 /** 화면에 남겨 두는 자국 개수. 더 쌓으면 어느 게 뭔지 안 보인다 */
 const MAX_TRAILS = 6;
+/** 낮↔밤이 넘어가는 데 걸리는 느낌. 클수록 느리다 */
+const DAYLIGHT_EASE = 0.18;
+const DAYLIGHT_KEY = "catchers-view:daylight";
 
 interface Live {
   plan: PitchPlan;
@@ -56,6 +59,7 @@ export default function CatchersView() {
   const [caption, setCaption] = useState<Live | null>(null);
   const [showMarks, setShowMarks] = useState(true);
   const [paused, setPaused] = useState(false);
+  const [isDay, setIsDay] = useState(false);
   /** 자막은 리플레이에서만 뜬다. 0.4초짜리 공에 글씨를 얹으면 글씨를 읽다 공을 놓친다 */
   const [showCaption, setShowCaption] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -74,13 +78,28 @@ export default function CatchersView() {
   const phaseRef = useRef<Phase | null>(null);
   const pausedRef = useRef(false);
   const showMarksRef = useRef(true);
+  /** 목표는 0 또는 1, 현재 값은 그쪽으로 미끄러진다 */
+  const daylightTargetRef = useRef(0);
+  const daylightRef = useRef(0);
 
   // rAF 루프는 리액트 밖에서 도는 외부 시스템이라, 토글 값을 ref로 흘려보낸다.
   // 렌더 중에 ref를 건드리면 두 세계의 시점이 어긋난다
   useEffect(() => {
     pausedRef.current = paused;
     showMarksRef.current = showMarks;
-  }, [paused, showMarks]);
+    daylightTargetRef.current = isDay ? 1 : 0;
+  }, [paused, showMarks, isDay]);
+
+  const toggleDaylight = useCallback(() => {
+    setIsDay((day) => {
+      try {
+        localStorage.setItem(DAYLIGHT_KEY, day ? "night" : "day");
+      } catch {
+        /* 못 적어도 이번 세션에서는 바뀐다 */
+      }
+      return !day;
+    });
+  }, []);
 
   /** 다음 공을 미리 계산해 둔다. 궤적은 프레임마다 풀지 않는다 */
   const nextPitch = useCallback((who: Pitcher): Live => {
@@ -123,6 +142,14 @@ export default function CatchersView() {
   const attachCanvas = useCallback((canvas: HTMLCanvasElement | null) => {
     if (!canvas) return;
 
+    // 지난번에 고른 시간대를 되살린다. 서버 렌더에서는 늘 밤으로 그리고
+    // 붙은 뒤에 바꾸므로 하이드레이션이 어긋나지 않는다
+    try {
+      if (localStorage.getItem(DAYLIGHT_KEY) === "day") setIsDay(true);
+    } catch {
+      /* 사생활 보호 모드 등 — 기본값 그대로 간다 */
+    }
+
     let renderer: Renderer;
     try {
       renderer = createRenderer(canvas);
@@ -136,6 +163,11 @@ export default function CatchersView() {
     const frame = (now: number) => {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
+
+      // 토글을 눌러도 뚝 끊기지 않게 미끄러뜨린다
+      daylightRef.current +=
+        (daylightTargetRef.current - daylightRef.current) * (1 - Math.exp(-dt / DAYLIGHT_EASE));
+      const daylight = daylightRef.current;
 
       const live = liveRef.current;
       if (live) {
@@ -184,10 +216,15 @@ export default function CatchersView() {
 
         const trails: TrailLayer[] = [
           {
-            // 스트라이크존. 옅게 깔아 두기만 한다 — 판정하는 페이지가 아니다
+            // 스트라이크존. 옅게 깔아 두기만 한다 — 판정하는 페이지가 아니다.
+            // 낮에는 밝은 잔디 위라 흰 선이 사라져서, 반대로 어둡게 긋는다
             points: rectangleLoop(-ZONE.halfWidth, ZONE.halfWidth, ZONE.bottom, ZONE.top, 0),
-            color: [0.85, 0.87, 0.9],
-            opacity: 0.22,
+            color: [
+              0.85 - 0.78 * daylight,
+              0.87 - 0.79 * daylight,
+              0.9 - 0.79 * daylight,
+            ],
+            opacity: 0.22 + 0.16 * daylight,
             width: 0.0035,
           },
         ];
@@ -219,6 +256,7 @@ export default function CatchersView() {
 
         renderer.draw({
           camera,
+          daylight,
           pitcher: {
             x: release.x,
             z: release.z + 0.25,
@@ -348,6 +386,13 @@ export default function CatchersView() {
 
       {/* 조작 */}
       <div className="pointer-events-none absolute right-3 bottom-4 flex flex-col items-end gap-1.5 sm:right-4 sm:bottom-6">
+        <button
+          type="button"
+          onClick={toggleDaylight}
+          className="pointer-events-auto rounded-full bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white/75 backdrop-blur transition hover:bg-black/65 hover:text-white"
+        >
+          {isDay ? "밤 경기" : "낮 경기"}
+        </button>
         <button
           type="button"
           onClick={() => setPaused((v) => !v)}

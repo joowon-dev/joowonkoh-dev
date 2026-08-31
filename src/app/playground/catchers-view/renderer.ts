@@ -13,6 +13,7 @@ import { BALL_RADIUS, type Vec3 } from "./flight";
 import type { Camera } from "./camera";
 import { buildRibbons } from "./ribbon";
 import { seamMap } from "./seam";
+import { BASES, fielderUniform } from "./field";
 
 /** 조명은 포수 쪽 위에서 온다. 날아오는 면이 밝아야 실밥이 보인다 */
 const LIGHT: Vec3 = { x: -0.35, y: 0.85, z: -0.4 };
@@ -27,6 +28,8 @@ export interface TrailLayer {
 
 export interface Scene {
   camera: Camera;
+  /** 0 밤 → 1 낮. 토글이 이 값을 애니메이션한다 */
+  daylight: number;
   /** 마운드 위 실루엣 */
   pitcher: { x: number; z: number; handSign: 1 | -1; armPhase: number };
   /** 날고 있는 공. 없으면 안 그린다 */
@@ -95,6 +98,12 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
+  // 구장 좌표는 한 번도 안 바뀌므로 링크 직후에 한 번만 넣는다
+  const bases = new Float32Array(BASES.flatMap((b) => [b.x, b.z, 0]));
+  gl.useProgram(scene.program);
+  gl.uniform3fv(scene.uniform("uBases"), bases);
+  gl.uniform3fv(scene.uniform("uFielders"), fielderUniform());
+
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -129,6 +138,7 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     gl.uniform1f(scene.uniform("uPitcherZ"), state.pitcher.z);
     gl.uniform1f(scene.uniform("uHand"), state.pitcher.handSign);
     gl.uniform1f(scene.uniform("uArmPhase"), state.pitcher.armPhase);
+    gl.uniform1f(scene.uniform("uDaylight"), state.daylight);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     // 2. 궤적선
@@ -170,6 +180,7 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
       gl.uniformMatrix3fv(ball.uniform("uToBody"), false, state.ball.toBody);
       gl.uniform3f(ball.uniform("uLight"), LIGHT.x, LIGHT.y, LIGHT.z);
       gl.uniform1f(ball.uniform("uFade"), state.ball.fade);
+      gl.uniform1f(ball.uniform("uDaylight"), state.daylight);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, seamTexture);
       gl.uniform1i(ball.uniform("uSeam"), 0);
