@@ -45,6 +45,13 @@ export interface StageState {
   flightTime: number | null;
   /** 투수 팔 0(준비) → 1(릴리스) */
   armPhase: number;
+  /**
+   * 릴리스 뒤 팔로스루 0 → 1.
+   *
+   * armPhase를 1에서 멈추면 투수가 릴리스 자세로 얼어붙는다. 공이 날아가는
+   * 0.4초 동안 몸이 따라 넘어가야 «던졌다»가 성립한다.
+   */
+  followThrough: number;
   /** 공 불투명도. 미트 직후 사라진다 */
   ballFade: number;
   /** 리플레이 진행도 0~1. 자막을 띄우는 구간에서만 0보다 크다 */
@@ -63,6 +70,7 @@ export function stageAt(t: number, timeline: Timeline): StageState {
       phase: "windup",
       flightTime: null,
       armPhase: clamp01(t / windupEnd),
+      followThrough: 0,
       ballFade: 0,
       replayProgress: 0,
     };
@@ -73,6 +81,8 @@ export function stageAt(t: number, timeline: Timeline): StageState {
       phase: "live",
       flightTime: t - windupEnd,
       armPhase: 1,
+      // 팔로스루는 공보다 조금 늦게 끝난다
+      followThrough: clamp01((t - windupEnd) / 0.24),
       ballFade: 1,
       replayProgress: 0,
     };
@@ -84,6 +94,7 @@ export function stageAt(t: number, timeline: Timeline): StageState {
       phase: "mitt",
       flightTime: flightDuration,
       armPhase: 1,
+      followThrough: 1,
       ballFade: 1 - clamp01((t - liveEnd) / (mittEnd - liveEnd)),
       replayProgress: 0,
     };
@@ -95,15 +106,20 @@ export function stageAt(t: number, timeline: Timeline): StageState {
       phase: "replay",
       flightTime: Math.min(flightDuration, elapsed * REPLAY_SPEED),
       armPhase: 1,
+      followThrough: 1,
       ballFade: 1,
       replayProgress: clamp01(elapsed / (replayEnd - mittEnd)),
     };
   }
 
+  // 쉬는 동안 자세를 되감아 셋포지션으로 돌려놓는다. 되감기는 엄밀히는 거꾸로
+  // 도는 그림이지만, 1.1초에 걸쳐 천천히 지나가면 «자세를 푸는» 것으로 읽힌다
+  const settle = clamp01(1 - (t - replayEnd) / Math.max(1e-6, total - replayEnd));
   return {
     phase: "rest",
     flightTime: null,
-    armPhase: clamp01(1 - (t - replayEnd) / Math.max(1e-6, total - replayEnd)),
+    armPhase: settle,
+    followThrough: settle,
     ballFade: 0,
     replayProgress: 1,
   };

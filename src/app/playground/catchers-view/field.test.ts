@@ -3,13 +3,17 @@ import { RUBBER_Z } from "./flight";
 import {
   BASES,
   BASE_DISTANCE,
-  FENCE_RADIUS,
+  FENCE_CENTER,
+  FENCE_CORNER,
+  FENCE_HEIGHT,
   FIELDERS,
   FOUL_ANGLE,
   HOME_APEX_Z,
   MOUND_CENTER,
   MOUND_RADIUS,
+  azimuthOf,
   distanceFromHome,
+  fenceRadiusAt,
   fielderUniform,
   isFair,
   spotAt,
@@ -106,8 +110,10 @@ describe("수비 위치", () => {
   });
 
   it("전원이 담장 안쪽에 선다", () => {
+    // 폴대 쪽은 100m밖에 안 되므로 방위각마다 따로 재야 한다
     for (const fielder of FIELDERS) {
-      expect(distanceFromHome(fielder), fielder.name).toBeLessThan(FENCE_RADIUS);
+      const wall = fenceRadiusAt(azimuthOf(fielder));
+      expect(distanceFromHome(fielder), fielder.name).toBeLessThan(wall);
     }
   });
 
@@ -169,5 +175,48 @@ describe("fielderUniform", () => {
       expect(data[i * 3]).toBeCloseTo(spot.x, 4);
       expect(data[i * 3 + 1]).toBeCloseTo(spot.z, 4);
     });
+  });
+});
+
+describe("잠실 담장", () => {
+  it("중앙이 125m, 폴대가 100m다", () => {
+    expect(fenceRadiusAt(0)).toBeCloseTo(FENCE_CENTER, 9);
+    expect(fenceRadiusAt(FOUL_ANGLE)).toBeCloseTo(FENCE_CORNER, 9);
+    expect(fenceRadiusAt(-FOUL_ANGLE)).toBeCloseTo(FENCE_CORNER, 9);
+  });
+
+  it("좌우 대칭이고 중앙에서 멀어질수록 가까워진다", () => {
+    let previous = fenceRadiusAt(0);
+    for (let deg = 5; deg <= 45; deg += 5) {
+      const a = (deg * Math.PI) / 180;
+      const r = fenceRadiusAt(a);
+      expect(r).toBeCloseTo(fenceRadiusAt(-a), 9);
+      expect(r).toBeLessThan(previous);
+      previous = r;
+    }
+  });
+
+  it("좌중간이 알려진 잠실 수치 언저리에 온다", () => {
+    // 좌중간·우중간은 공표된 실측을 못 찾아 선형으로 이었다. 그 결과가
+    // 상식적인 범위를 벗어나면 보간을 다시 봐야 한다
+    expect(fenceRadiusAt(FOUL_ANGLE / 2)).toBeGreaterThan(108);
+    expect(fenceRadiusAt(FOUL_ANGLE / 2)).toBeLessThan(116);
+  });
+
+  it("파울라인 밖으로는 더 벌어지지 않는다", () => {
+    expect(fenceRadiusAt(FOUL_ANGLE * 2)).toBeCloseTo(FENCE_CORNER, 9);
+  });
+
+  it("펜스가 사람보다 높다 — 넘어가는 게 홈런이어야 한다", () => {
+    expect(FENCE_HEIGHT).toBeGreaterThan(1.9);
+  });
+});
+
+describe("azimuthOf", () => {
+  it("spotAt이 넣은 각을 그대로 돌려준다", () => {
+    for (const degrees of [-44, -18, 0, 22, 40]) {
+      const back = (azimuthOf(spotAt("점", 55, degrees)) * 180) / Math.PI;
+      expect(back).toBeCloseTo(degrees, 6);
+    }
   });
 });

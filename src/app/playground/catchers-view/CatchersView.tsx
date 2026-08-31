@@ -6,7 +6,7 @@ import { GAME_HELP } from "../_shared/helpContent";
 import { useFullscreen } from "../_shared/useFullscreen";
 import { createRng } from "../_shared/random";
 import { catcherCamera } from "./camera";
-import { msToKmh, spinAxis, type ThrownPitch, type Vec3 } from "./flight";
+import { BALL_RADIUS, msToKmh, spinAxis, type ThrownPitch, type Vec3 } from "./flight";
 import {
   PITCHERS,
   PITCH_COLOR,
@@ -20,7 +20,13 @@ import {
   type PitchPlan,
   type Pitcher,
 } from "./pitchers";
-import { createRenderer, toBodyMatrix, type Renderer, type TrailLayer } from "./renderer";
+import {
+  createRenderer,
+  toBodyMatrix,
+  type DiscLayer,
+  type Renderer,
+  type TrailLayer,
+} from "./renderer";
 import { rectangleLoop } from "./ribbon";
 import { makeTimeline, sampleAt, stageAt, type Phase, type Timeline } from "./stage";
 
@@ -42,7 +48,18 @@ interface Mark {
   key: number;
   points: Vec3[];
   color: [number, number, number];
+  /** 홈플레이트를 지나간 자리 */
+  arrival: Vec3;
 }
+
+/**
+ * 통과 지점 원판의 반지름(m).
+ *
+ * 중계 그래픽처럼 공보다 크게 찍어 봤더니 존을 반이나 덮어서, 어디로 들어왔는지가
+ * 오히려 뭉갰다. 실제 공 크기 그대로 찍는 쪽이 «이만한 게 여기로 들어왔다»가
+ * 정확히 읽힌다.
+ */
+const SPOT_RADIUS = BALL_RADIUS;
 
 /** 릴리스 직후 방향으로 회전축을 잡는다. 표본 두 개면 충분하다 */
 function axisOf(flight: ThrownPitch, tiltHours: number): Vec3 {
@@ -181,6 +198,7 @@ export default function CatchersView() {
               key: markKeyRef.current++,
               points: live.flight.samples.map((s) => s.p),
               color: PITCH_COLOR[live.plan.type.kind],
+              arrival: live.flight.arrival,
             },
           ].slice(-MAX_TRAILS);
           clockRef.current = 0;
@@ -199,6 +217,9 @@ export default function CatchersView() {
         const aspect = Math.max(0.1, canvas.clientWidth / Math.max(1, canvas.clientHeight));
         const camera = catcherCamera(aspect);
         const release = releasePoint(current.plan.pitcher);
+        // 빌보드는 릴리스 지점이 아니라 몸 중심에 세운다. 릴리스 x(±0.35)에
+        // 세우면 몸이 통째로 그쪽으로 밀려, 투구판을 벗어난 데서 던지게 된다
+        const bodyX = current.plan.pitcher.hand === "R" ? -0.12 : 0.12;
 
         let ball = null;
         if (stage.flightTime !== null && stage.ballFade > 0) {
@@ -229,6 +250,29 @@ export default function CatchersView() {
           },
         ];
 
+        // 통과 지점. 지난 공은 옅게 깔고, 방금 들어온 공만 진하게 남긴다
+        const discs: DiscLayer[] = [];
+        if (showMarksRef.current) {
+          for (const mark of marksRef.current) {
+            discs.push({
+              center: mark.arrival,
+              radius: SPOT_RADIUS,
+              color: mark.color,
+              opacity: 0.26,
+            });
+          }
+        }
+        // 아직 날아오는 중에는 안 띄운다 — 도착점을 미리 알려 주면 «체감»이
+        // 아니라 예고편이 된다
+        if (stage.phase !== "windup" && stage.phase !== "live") {
+          discs.push({
+            center: current.flight.arrival,
+            radius: SPOT_RADIUS,
+            color: PITCH_COLOR[current.plan.type.kind],
+            opacity: 0.62,
+          });
+        }
+
         if (showMarksRef.current) {
           for (const mark of marksRef.current) {
             trails.push({
@@ -258,13 +302,15 @@ export default function CatchersView() {
           camera,
           daylight,
           pitcher: {
-            x: release.x,
+            x: bodyX,
             z: release.z + 0.25,
             handSign: current.plan.pitcher.hand === "R" ? 1 : -1,
             armPhase: stage.armPhase,
+            followThrough: stage.followThrough,
           },
           ball,
           trails,
+          discs,
         });
       }
 

@@ -120,3 +120,36 @@ describe("sampleAt", () => {
     expect(f).toBe(0);
   });
 });
+
+describe("팔로스루", () => {
+  const timeline = makeTimeline(0.42);
+
+  it("와인드업 동안에는 없다", () => {
+    expect(stageAt(0, timeline).followThrough).toBe(0);
+    expect(stageAt(timeline.windupEnd * 0.9, timeline).followThrough).toBe(0);
+  });
+
+  it("릴리스 직후에 시작해 공보다 먼저 끝난다", () => {
+    expect(stageAt(timeline.windupEnd + 0.001, timeline).followThrough).toBeLessThan(0.05);
+    expect(stageAt(timeline.windupEnd + 0.30, timeline).followThrough).toBe(1);
+  });
+
+  it("미트와 리플레이 내내 유지된다 — 릴리스 자세로 얼어붙지 않는다", () => {
+    expect(stageAt(timeline.liveEnd + 0.1, timeline).followThrough).toBe(1);
+    expect(stageAt(timeline.mittEnd + 0.5, timeline).followThrough).toBe(1);
+  });
+
+  it("쉬는 동안 팔과 함께 셋포지션으로 돌아온다", () => {
+    const rest = stageAt(timeline.replayEnd + 0.01, timeline);
+    expect(rest.followThrough).toBeCloseTo(rest.armPhase, 9);
+    expect(stageAt(timeline.total - 0.001, timeline).followThrough).toBeLessThan(0.02);
+  });
+
+  it("언제나 0과 1 사이다", () => {
+    for (let t = 0; t < timeline.total; t += 0.01) {
+      const v = stageAt(t, timeline).followThrough;
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
+  });
+});

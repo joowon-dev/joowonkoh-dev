@@ -32,24 +32,38 @@ export const MOUND_CENTER: Vec3 = { x: 0, y: 0, z: RUBBER_Z };
 export const RUBBER_WIDTH = 0.61;
 export const RUBBER_DEPTH = 0.152;
 
-/**
- * 외야 담장까지의 거리.
- *
- * 실제 구장은 가운데가 멀고(120m대) 폴대 쪽이 가깝지만(100m 안팎), 여기서는
- * 하나의 원기둥으로 둔다. 원기둥이면 담장 윗변이 시야를 가로지르는 수평선으로
- * 곧게 남는데, 평면으로 세우면 가장자리로 갈수록 멀어져 윗변이 아래로
- * 처지는 — 실제와 반대인 — 그림이 나온다.
- */
-export const FENCE_RADIUS = 118;
-export const FENCE_HEIGHT = 3.6;
-/** 관중석 꼭대기 */
-export const STAND_HEIGHT = 27;
-/** 조명탑이 서 있는 거리와 높이 */
-export const TOWER_RADIUS = 142;
-export const TOWER_HEIGHT = 44;
-
 /** 파울라인은 홈 꼭짓점에서 좌우 45°로 뻗는다 */
 export const FOUL_ANGLE = Math.PI / 4;
+
+/**
+ * 잠실야구장 치수.
+ *
+ * 공개된 실측은 셋이다 — 좌우 폴대 100m, 중앙 125m, 외야 펜스 높이 2.6m.
+ * 그 사이(좌중간·우중간)는 공표된 수치를 못 찾아서 방위각에 선형으로 잇는다.
+ * 이러면 중간 지점이 112m쯤 되는데, 흔히 알려진 잠실 좌중간과 얼추 맞는다.
+ *
+ * 처음에는 반경 하나짜리 원기둥으로 뒀다. 그러면 담장 윗변이 화면을 가로지르는
+ * 완전한 수평선이 되어 «벽»으로 보인다. 폴대 쪽이 25m 가까워지면 양 끝이
+ * 올라오면서 그제야 구장이 나를 감싼 것처럼 보인다.
+ */
+export const FENCE_CORNER = 100;
+export const FENCE_CENTER = 125;
+export const FENCE_HEIGHT = 2.6;
+/** 광선 반복의 첫 추정값이자 «가장 먼 담장» */
+export const FENCE_RADIUS = FENCE_CENTER;
+/** 펜스 앞 경고 트랙 폭 */
+export const WARNING_TRACK = 4.6;
+/** 외야 관중석 꼭대기. 잠실 외야는 단층이라 내야석보다 한참 낮다 */
+export const STAND_HEIGHT = 15.5;
+/** 조명탑이 서 있는 거리와 높이 */
+export const TOWER_RADIUS = 150;
+export const TOWER_HEIGHT = 46;
+
+/** 파울폴(100m)에서 중앙(125m)까지, 방위각에 따라 멀어지는 담장 */
+export function fenceRadiusAt(azimuth: number): number {
+  const t = Math.min(1, Math.abs(azimuth) / FOUL_ANGLE);
+  return FENCE_CENTER - (FENCE_CENTER - FENCE_CORNER) * t;
+}
 
 export interface Spot {
   /** 화면에 안 띄우지만 코드를 읽을 때 필요하다 */
@@ -92,6 +106,11 @@ export const FIELDERS: Spot[] = [
 /** 홈 꼭짓점에서의 거리 */
 export function distanceFromHome(spot: Spot): number {
   return Math.hypot(spot.x, spot.z - HOME_APEX_Z);
+}
+
+/** 홈 꼭짓점에서 본 방위각(rad). 0이 중견수 쪽, +가 1루 쪽 */
+export function azimuthOf(spot: Spot): number {
+  return Math.atan2(spot.x, spot.z - HOME_APEX_Z);
 }
 
 /** 파울라인 안쪽인가 */

@@ -12,6 +12,7 @@ import { BALL_FRAGMENT, LINE_FRAGMENT, LINE_VERTEX, QUAD_VERTEX, SCENE_FRAGMENT 
 import { BALL_RADIUS, type Vec3 } from "./flight";
 import type { Camera } from "./camera";
 import { buildRibbons } from "./ribbon";
+import { buildDisc } from "./disc";
 import { seamMap } from "./seam";
 import { BASES, fielderUniform } from "./field";
 
@@ -26,15 +27,26 @@ export interface TrailLayer {
   fade?: (progress: number) => number;
 }
 
+/** 공이 지나간 자리를 찍는 반투명 원판 */
+export interface DiscLayer {
+  center: Vec3;
+  /** 월드 반지름(m) */
+  radius: number;
+  color: [number, number, number];
+  opacity: number;
+}
+
 export interface Scene {
   camera: Camera;
   /** 0 밤 → 1 낮. 토글이 이 값을 애니메이션한다 */
   daylight: number;
   /** 마운드 위 실루엣 */
-  pitcher: { x: number; z: number; handSign: 1 | -1; armPhase: number };
+  pitcher: { x: number; z: number; handSign: 1 | -1; armPhase: number; followThrough: number };
   /** 날고 있는 공. 없으면 안 그린다 */
   ball: { center: Vec3; toBody: Float32Array; fade: number } | null;
   trails: TrailLayer[];
+  /** 홈플레이트 통과 지점. 궤적선 위에 얹는다 */
+  discs: DiscLayer[];
 }
 
 export interface Renderer {
@@ -138,6 +150,7 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     gl.uniform1f(scene.uniform("uPitcherZ"), state.pitcher.z);
     gl.uniform1f(scene.uniform("uHand"), state.pitcher.handSign);
     gl.uniform1f(scene.uniform("uArmPhase"), state.pitcher.armPhase);
+    gl.uniform1f(scene.uniform("uFollow"), state.pitcher.followThrough);
     gl.uniform1f(scene.uniform("uDaylight"), state.daylight);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
@@ -165,6 +178,26 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, ribbon.count);
       }
+    }
+
+    // 2.5 통과 지점. 같은 프로그램을 쓰되 궤적선보다 나중에 그려 위에 얹는다
+    for (const layer of state.discs) {
+      const disc = buildDisc(state.camera, layer.center, layer.radius);
+      if (!disc) continue;
+      gl.uniform3f(lines.uniform("uColor"), layer.color[0], layer.color[1], layer.color[2]);
+      gl.uniform1f(lines.uniform("uOpacity"), layer.opacity);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, ribbonPositions);
+      gl.bufferData(gl.ARRAY_BUFFER, disc.positions, gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, ribbonAlphas);
+      gl.bufferData(gl.ARRAY_BUFFER, disc.alphas, gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(alphaLocation);
+      gl.vertexAttribPointer(alphaLocation, 1, gl.FLOAT, false, 0, 0);
+
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, disc.count);
     }
 
     // 3. 공

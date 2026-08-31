@@ -79,7 +79,8 @@ uniform float uDaylight;  // 0 밤 → 1 낮
 uniform float uPitcherX;
 uniform float uPitcherZ;
 uniform float uHand;      // 우투 +1, 좌투 -1
-uniform float uArmPhase;  // 0 와인드업 시작 → 1 릴리스
+uniform float uArmPhase;  // 0 셋포지션 → 1 릴리스
+uniform float uFollow;    // 릴리스 뒤 팔로스루 0 → 1
 uniform vec3 uBases[3];   // (x, z, _) — 1루, 2루, 3루
 uniform vec3 uFielders[7];
 
@@ -88,17 +89,38 @@ const float HOME_APEX_Z = -0.43;
 const float MOUND_R = 2.74;
 const float MOUND_H = 0.254;
 const float MOUND_Z = 18.44;
-const float FENCE_R = 118.0;
-const float FENCE_H = 3.6;
-const float STAND_H = 27.0;
-const float TOWER_R = 142.0;
+/** 잠실 — 폴대 100m, 중앙 125m, 펜스 2.6m */
+const float FENCE_CORNER = 100.0;
+const float FENCE_CENTER = 125.0;
+const float FENCE_H = 2.6;
+const float TRACK = 4.6;
+const float STAND_H = 15.5;
+const float TOWER_R = 150.0;
 const float PI = 3.14159265359;
 const float FOUL = 0.78539816;  // 45°
-/** 조명탑 네 기가 선 방위각(rad). 23°와 58° */
-const float TOWER_AZIMUTH[4] = float[4](0.40, -0.40, 1.02, -1.02);
+/**
+ * 조명탑이 선 방위각(rad). 잠실 실측 도면을 못 구해서 개수와 자리는 사진에서
+ * 어림한 값이다 — 확실한 건 화각 안에 드는 넷이 좌우 대칭이라는 것뿐이다.
+ */
+const float TOWER_AZIMUTH[6] = float[6](0.30, -0.30, 0.76, -0.76, 1.22, -1.22);
 
 /** 해는 3루 쪽 위에서 든다. 그림자가 1루 쪽으로 눕는다 */
 const vec2 SUN_SHADOW = vec2(0.62, 0.34);
+
+/**
+ * 홈팀 흰 유니폼에 남색 모자·스타킹.
+ *
+ * 실루엣 한 덩어리로 두면 사람이긴 해도 야구선수로는 안 읽힌다. 반대로 등번호나
+ * 핀스트라이프는 40~90m 밖에서 한 픽셀도 안 되니 넣어 봐야 얼룩이다. 이 여섯
+ * 색이 그 사이에서 «야구선수»가 성립하는 최소 조합이었다.
+ */
+const vec3 JERSEY = vec3(0.905, 0.910, 0.925);
+const vec3 PANTS  = vec3(0.845, 0.855, 0.878);
+const vec3 TRIM   = vec3(0.086, 0.137, 0.310);  // 모자·스타킹·벨트
+const vec3 SKIN   = vec3(0.760, 0.590, 0.470);
+const vec3 GLOVE  = vec3(0.360, 0.205, 0.110);
+const vec3 SHOE   = vec3(0.090, 0.095, 0.110);
+const vec3 LEATHER = vec3(0.94, 0.93, 0.90);
 
 float segDist(vec2 p, vec2 a, vec2 b) {
   vec2 pa = p - a;
@@ -109,6 +131,14 @@ float segDist(vec2 p, vec2 a, vec2 b) {
 
 float sdSegment(vec2 p, vec2 a, vec2 b, float r) {
   return segDist(p, a, b) - r;
+}
+
+/** 더 앞에 있는 부위가 색을 가져간다 */
+void nearer(float d, vec3 c, inout float best, inout vec3 albedo) {
+  if (d < best) {
+    best = d;
+    albedo = c;
+  }
 }
 
 /** 낮/밤 두 색을 섞는다 */
@@ -152,6 +182,33 @@ float cylinderT(vec3 rd, float radius) {
   float disc = b * b - a * c;
   if (disc < 0.0) return -1.0;
   return (-b + sqrt(disc)) / a;
+}
+
+/** 파울폴(100m)에서 중앙(125m)까지 멀어지는 담장 */
+float fenceRadiusAt(float azimuth) {
+  return FENCE_CENTER - (FENCE_CENTER - FENCE_CORNER) * min(abs(azimuth) / FOUL, 1.0);
+}
+
+/**
+ * 반지름이 방위각에 따라 달라지는 벽과의 교차.
+ *
+ * 반지름을 하나 가정해 원기둥으로 풀고, 맞은 자리의 방위각으로 반지름을 고쳐
+ * 다시 푼다. 눈이 거의 원점에 있어 방위각은 사실상 광선 방향이 정하므로 한
+ * 번이면 수렴하지만, 한 번 더 돌아도 공짜다.
+ */
+float wallHit(vec3 rd, out vec3 p, out float azimuth) {
+  float r = FENCE_CENTER;
+  float t = -1.0;
+  p = uEye;
+  azimuth = 0.0;
+  for (int i = 0; i < 2; i++) {
+    t = cylinderT(rd, r);
+    if (t <= 0.0) return -1.0;
+    p = uEye + rd * t;
+    azimuth = atan(p.x, p.z);
+    r = fenceRadiusAt(azimuth);
+  }
+  return t;
 }
 
 /**
@@ -202,6 +259,9 @@ vec3 ground(vec3 p) {
   vec2 q = vec2(p.x, p.z - HOME_APEX_Z);
   float r = length(q);
   float ax = abs(q.x);
+  // 담장은 구장 원점 기준이라 따로 잰다
+  float fromCenter = length(p.xz);
+  float wallR = fenceRadiusAt(atan(p.x, p.z));
 
   vec3 grassA = tone(vec3(0.115, 0.235, 0.125), vec3(0.239, 0.451, 0.192));
   vec3 grassB = tone(vec3(0.090, 0.195, 0.105), vec3(0.198, 0.396, 0.161));
@@ -218,23 +278,28 @@ vec3 ground(vec3 p) {
   vec2 home = vec2(0.0, 0.0);
 
   // 흙 — 홈 원, 베이스 원 셋, 그 사이를 잇는 베이스패스
-  float skin = 1.0 - smoothstep(3.6, 4.0, r);
-  skin = max(skin, 1.0 - smoothstep(3.5, 3.9, length(q - first)));
-  skin = max(skin, 1.0 - smoothstep(3.5, 3.9, length(q - second)));
-  skin = max(skin, 1.0 - smoothstep(3.5, 3.9, length(q - third)));
+  // 경계를 40cm에 걸쳐 풀었더니 흙과 잔디가 서로 스며서 «물감»처럼 보였다.
+  // 실제 그라운드는 삽으로 자른 것처럼 선이 서 있다
+  float skin = 1.0 - smoothstep(3.90, 4.00, r);
+  skin = max(skin, 1.0 - smoothstep(3.80, 3.90, length(q - first)));
+  skin = max(skin, 1.0 - smoothstep(3.80, 3.90, length(q - second)));
+  skin = max(skin, 1.0 - smoothstep(3.80, 3.90, length(q - third)));
 
   float path = min(
     min(segDist(q, home, first), segDist(q, first, second)),
     min(segDist(q, second, third), segDist(q, third, home))
   );
-  skin = max(skin, 1.0 - smoothstep(0.85, 1.05, path));
+  skin = max(skin, 1.0 - smoothstep(0.95, 1.05, path));
   // 마운드 흙
-  skin = max(skin, 1.0 - smoothstep(MOUND_R - 0.3, MOUND_R + 0.1, length(q - vec2(0.0, MOUND_Z - HOME_APEX_Z))));
+  skin = max(skin, 1.0 - smoothstep(MOUND_R - 0.1, MOUND_R + 0.05, length(q - vec2(0.0, MOUND_Z - HOME_APEX_Z))));
+  // 펜스 앞 경고 트랙. 담장이 잔디에서 바로 솟으면 외야가 «끝»이 아니라
+  // «잘린» 것처럼 보인다
+  skin = max(skin, smoothstep(wallR - TRACK, wallR - TRACK + 0.7, fromCenter));
   c = mix(c, dirt, skin);
 
   // 파울라인 — 홈 꼭짓점에서 담장까지
   float lineDist = abs(ax - q.y) * 0.70710678;
-  float foul = (q.y > 0.0 && r < FENCE_R) ? 1.0 - smoothstep(0.028, 0.048, lineDist) : 0.0;
+  float foul = (q.y > 0.0 && fromCenter < wallR) ? 1.0 - smoothstep(0.028, 0.048, lineDist) : 0.0;
   c = mix(c, chalk, foul * 0.9);
 
   // 베이스 — 흙 위의 흰 사각형
@@ -254,6 +319,11 @@ vec3 ground(vec3 p) {
   if (inBoxX && boxZ < 0.03) boxLine = 1.0;
   c = mix(c, chalk, boxLine * 0.8);
 
+  // 대기타석 원. 처음에 (±5.6, 5.2)에 뒀다가 베이스패스 흙에 통째로 먹혔다 —
+  // 파울라인 바깥으로 물려야 잔디 위의 원으로 보인다
+  float onDeck = min(length(q - vec2(7.6, 2.4)), length(q - vec2(-7.6, 2.4)));
+  c = mix(c, dirt, (1.0 - smoothstep(1.42, 1.52, onDeck)) * 0.85);
+
   // 홈플레이트 — 포수 쪽으로 뾰족한 오각형. 넓은 모서리가 투수를 향한다
   if (p.z > -0.43 && p.z < 0.0) {
     float halfWidth = p.z > -0.216 ? 0.216 : p.z + 0.43;
@@ -268,121 +338,283 @@ vec3 ground(vec3 p) {
   shade = max(shade, shadowAt(q, vec2(uPitcherX, uPitcherZ - HOME_APEX_Z), 1.0));
   c *= 1.0 - shade;
 
-  // 흙과 잔디의 얼룩
-  c *= 0.90 + 0.20 * hash(floor(vec2(p.x, p.z) * 24.0));
+  // 흙과 잔디의 얼룩. 발밑 몇 미터는 화면에서 한 칸이 30픽셀이 넘어가서, 같은
+  // 세기로 뿌리면 그라운드가 아니라 자갈밭이 된다 — 가까울수록 눌러 준다
+  float grain = smoothstep(2.0, 12.0, length(p - uEye));
+  c *= 1.0 - 0.10 * grain + 0.20 * grain * hash(floor(vec2(p.x, p.z) * 24.0));
 
   // 멀수록 대기에 잠긴다
   float fog = 1.0 - exp(-length(p - uEye) * (uDaylight > 0.5 ? 0.0055 : 0.016));
   return mix(c, horizonHaze(), clamp(fog, 0.0, 0.92));
 }
 
-/** 담장·관중석·전광판·파울폴. 전부 반경 118m 원기둥 위에 있다 */
+/** 담장·경고트랙 뒤 벽·외야석·전광판·파울폴 */
 bool fenceHit(vec3 rd, out float t, out vec3 color) {
-  t = cylinderT(rd, FENCE_R);
-  if (t <= 0.0) return false;
-  vec3 p = uEye + rd * t;
-  if (p.y < 0.0 || p.y > STAND_H) return false;
+  vec3 p;
+  float azimuth;
+  t = wallHit(rd, p, azimuth);
+  if (t <= 0.0 || p.y < 0.0) return false;
 
-  float azimuth = atan(p.x, p.z);
-
-  // 파울폴 — 파울라인이 담장과 만나는 자리에 노랗게 선다
-  if (abs(abs(azimuth) - FOUL) < 0.006 && p.y < 14.0) {
-    color = vec3(0.92, 0.74, 0.14) * (0.55 + 0.45 * uDaylight);
+  // 파울폴. 반각 0.005rad로 뒀더니 100m 밖에서 1m 두께 — 화면 양 끝에 노란
+  // 기둥 두 개가 서서 시야에서 제일 밝은 것이 되어 있었다. 실제 폴대 굵기인
+  // 30cm로 줄이고 채도도 눌렀다
+  if (abs(abs(azimuth) - FOUL) < 0.0016 && p.y < 11.0) {
+    color = tone(vec3(0.24, 0.21, 0.11), vec3(0.56, 0.49, 0.24));
     return true;
   }
+
+  // 전광판. 잠실 것은 중앙에서 좌중간 쪽으로 치우쳐 외야석 위에 선다
+  if (azimuth > -0.33 && azimuth < 0.02 && p.y > 9.0 && p.y < 20.6) {
+    vec3 frame = tone(vec3(0.030, 0.033, 0.040), vec3(0.135, 0.142, 0.156));
+    bool inner = p.y > 9.7 && p.y < 19.9 && azimuth > -0.315 && azimuth < 0.005;
+    if (!inner) {
+      color = frame;
+      return true;
+    }
+    vec3 panel = tone(vec3(0.022, 0.026, 0.033), vec3(0.082, 0.090, 0.104));
+    // 난수 픽셀은 QR코드처럼, 얇은 여러 줄은 주사선처럼 보였다. 굵은 글줄 셋이
+    // 100m 밖에서 전광판으로 읽히는 최소한이다
+    float band = step(0.60, fract((p.y - 10.4) * 0.31));
+    color = panel + vec3(0.21, 0.23, 0.25) * band * (1.0 - 0.60 * uDaylight);
+    // 맨 위 한 줄만 색을 넣는다 — 전광판에는 늘 팀 색 리본이 하나 있다
+    if (p.y > 19.1) color = mix(color, vec3(0.16, 0.26, 0.46), 0.85 - 0.35 * uDaylight);
+    return true;
+  }
+
+  if (p.y > STAND_H) return false;
 
   if (p.y < FENCE_H) {
-    // 담장 패드와 그 위를 두르는 노란 선
-    vec3 pad = tone(vec3(0.048, 0.098, 0.068), vec3(0.106, 0.243, 0.157));
-    color = p.y > FENCE_H - 0.22 ? mix(pad, vec3(0.85, 0.72, 0.22), 0.75) : pad;
+    // 외야 펜스 패드. 잠실은 짙은 초록이다. 실제로는 윗변에 노란 홈런 라인이
+    // 그어져 있지만 뺐다 — 100m 밖에서 화면을 가로지르는 노란 띠 하나가 시야에서
+    // 제일 밝은 것이 되어, 정작 봐야 할 공에서 눈을 빼앗아 간다
+    vec3 pad = tone(vec3(0.040, 0.086, 0.058), vec3(0.086, 0.196, 0.129));
+    pad *= 0.95 + 0.09 * step(0.5, fract(azimuth * 84.0));  // 패드 이음매
+
+    // 광고판. KBO 구장 외야 담장은 광고로 덮여 있어서, 짙은 초록 한 색으로 두면
+    // 어느 나라 어느 구장도 아닌 담장이 된다. 글자는 100m 밖에서 못 읽으니
+    // 색 있는 칸으로만 남긴다
+    float slot = floor(azimuth * 13.0);
+    float within = fract(azimuth * 13.0);
+    if (p.y > 0.30 && p.y < FENCE_H - 0.34 && within > 0.05 && within < 0.95) {
+      float h = hash(vec2(slot, 3.0));
+      // 원색을 그대로 쓰니 담장이 아니라 색종이가 됐다. 채도를 낮추고 초록
+      // 패드와 섞는 비율도 줄인다
+      vec3 ad = mix(vec3(0.42, 0.17, 0.16), vec3(0.14, 0.20, 0.36), fract(h * 5.7));
+      ad = mix(ad, vec3(0.62, 0.61, 0.57), step(0.76, h));
+      pad = mix(pad, ad * mix(0.30, 1.0, uDaylight), 0.62);
+    }
+
+    if (p.y > FENCE_H - 0.09) pad = mix(pad, tone(vec3(0.10, 0.12, 0.11), vec3(0.30, 0.33, 0.31)), 0.6);
+    color = pad;
     return true;
   }
 
-  // 전광판 — 가운데 담장 위에 선 큰 판.
-  // 난수 픽셀은 QR코드처럼, 얇은 여러 줄은 주사선처럼 보였다. 굵은 글줄 셋이
-  // 118m 밖에서 전광판으로 읽히는 최소한이다
-  if (abs(azimuth) < 0.20 && p.y > 12.5 && p.y < 22.0) {
-    vec3 panel = tone(vec3(0.026, 0.030, 0.038), vec3(0.095, 0.105, 0.125));
-    float band = step(0.55, fract((p.y - 13.2) * 0.36));
-    float inset = step(13.2, p.y) * step(p.y, 21.3);
-    color = panel + vec3(0.22, 0.26, 0.13) * band * inset * (1.0 - 0.65 * uDaylight);
+  // 펜스 뒤 통로. 그늘지긴 해도 낮에 새까맣게 두면 담장 위로 검은 띠가
+  // 하나 더 생겨서, 방금 걷어낸 노란 띠와 똑같은 짓이 된다
+  if (p.y < FENCE_H + 1.4) {
+    color = tone(vec3(0.026, 0.030, 0.038), vec3(0.178, 0.186, 0.198));
     return true;
   }
 
-  // 관중석. 중간에 통로 한 줄이 지난다
-  vec3 seats = tone(vec3(0.048, 0.052, 0.068), vec3(0.216, 0.226, 0.251));
-  // 위로 갈수록 처마 그늘에 들어간다
-  seats *= 1.0 - 0.30 * smoothstep(FENCE_H, STAND_H, p.y);
-  seats *= 0.93 + 0.10 * step(0.5, fract(p.y * 1.1));
-  if (abs(p.y - 13.0) < 0.6) seats *= 0.62;
-  // 관중. 칸을 크게 잡았더니 낮에 모자이크처럼 보여서 잘게 쪼갰다
-  vec2 cell = floor(vec2(p.x * 2.4, p.y * 2.0));
-  vec3 shirt = tone(vec3(0.028, 0.030, 0.038), vec3(0.088, 0.084, 0.096));
-  seats += shirt * step(0.62, hash(cell)) * (0.6 + 0.8 * hash(cell + 7.3));
+  // 외야 관중석. 잠실 외야는 단층이라 여기서 끝나고 그 위는 그냥 하늘이다.
+  // deck은 아래 0 → 위 1
+  float deck = clamp((p.y - FENCE_H - 1.4) / (STAND_H - FENCE_H - 1.4), 0.0, 1.0);
+  vec3 seats = tone(vec3(0.062, 0.072, 0.102), vec3(0.196, 0.234, 0.310));
+  seats *= 0.88 + 0.22 * deck;
+  seats *= 0.95 + 0.08 * step(0.5, fract(p.y * 1.3));  // 계단
+  // 가로 통로 한 줄과 세로 통로 여럿. 이게 없으면 관중석이 아니라 자갈밭이다
+  seats *= 1.0 - 0.42 * (1.0 - smoothstep(0.0, 0.05, abs(deck - 0.44)));
+  seats *= 1.0 - 0.34 * (1.0 - smoothstep(0.0, 0.0045, abs(fract(azimuth * 5.0) - 0.5)));
+  // 관중. 칸을 방위각으로 쪼개야 담장을 따라 밀도가 고르다. 색을 더하지 않고
+  // 섞는다 — 더하면 관중이 아니라 텔레비전 노이즈가 된다
+  vec2 cell = floor(vec2(azimuth * 430.0, p.y * 2.2));
+  float who = hash(cell);
+  vec3 shirt = tone(vec3(0.086, 0.088, 0.098), vec3(0.32, 0.31, 0.33));
+  seats = mix(seats, shirt, step(0.44, who) * (0.35 + 0.40 * hash(cell + 7.3)));
+  // 맨 윗줄 콘크리트 난간
+  if (deck > 0.94) seats = tone(vec3(0.036, 0.039, 0.047), vec3(0.400, 0.410, 0.425));
   color = seats;
   return true;
 }
 
-/** 조명탑 넷. 관중석보다 뒤에 서서 위로 솟는다 */
+/** 조명탑. 관중석보다 뒤에 서서 위로 솟는다 */
 bool towerHit(vec3 rd, out float t, out vec3 color) {
   t = cylinderT(rd, TOWER_R);
   if (t <= 0.0) return false;
   vec3 p = uEye + rd * t;
-  if (p.y < 0.0 || p.y > 46.0) return false;
+  if (p.y < 0.0 || p.y > 48.0) return false;
 
   float azimuth = atan(p.x, p.z);
   float nearest = 9.0;
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 6; i++) {
     nearest = min(nearest, abs(azimuth - TOWER_AZIMUTH[i]));
   }
 
   vec3 steel = tone(vec3(0.038, 0.042, 0.056), vec3(0.29, 0.31, 0.34));
 
-  // 기둥. 가늘어도 142m에서 8픽셀쯤 되어 보인다
-  if (nearest < 0.014 && p.y < 37.0) {
-    color = steel;
+  // 기둥. 격자 철탑이라 가로 가새가 규칙적으로 지난다
+  if (nearest < 0.013 && p.y < 38.0) {
+    color = steel * (0.80 + 0.34 * step(0.5, fract(p.y * 0.85)));
     return true;
   }
-  // 조명 머리. 가로줄로 쪼갰더니 142m 밖에서 주사선처럼 보여서, 통째로
-  // 켜진 판 하나로 두고 테두리만 철골을 남겼다
-  if (nearest < 0.058 && p.y > 35.5 && p.y < 42.2) {
-    float lit = smoothstep(0.058, 0.046, nearest)
-              * smoothstep(35.5, 36.4, p.y)
-              * smoothstep(42.2, 41.3, p.y);
-    color = mix(steel, vec3(1.0, 0.97, 0.88), lit * (1.0 - uDaylight) * 0.92);
+  // 조명 머리. 램프를 줄로 쪼갰더니 150m 밖에서 주사선처럼 보였다. 통째로 한
+  // 면으로 두되, 낮에는 꺼진 유리면이고 밤에만 켜진다
+  if (nearest < 0.055 && p.y > 36.5 && p.y < 43.5) {
+    bool lamp = nearest < 0.047 && p.y > 37.3 && p.y < 42.7;
+    vec3 glass = tone(vec3(0.055, 0.060, 0.075), vec3(0.545, 0.555, 0.570));
+    color = lamp ? mix(glass, vec3(1.0, 0.97, 0.88), (1.0 - uDaylight) * 0.92) : steel;
     return true;
   }
   return false;
 }
 
-/** 마운드 위 투수. 세로 좌표는 발이 닿은 높이에서 잰다 */
-float pitcherMask(vec2 local) {
-  vec2 p = vec2(local.x * uHand, local.y);
-
-  // 던지는 팔은 뒤에서 앞으로 넘어온다
-  vec2 hand = mix(vec2(-0.55, 1.05), vec2(0.42, 1.62), smoothstep(0.0, 1.0, uArmPhase));
-
-  float d = 1e9;
-  d = min(d, sdSegment(p, vec2(-0.16, 0.0), vec2(0.0, 0.82), 0.085));  // 뒷다리
-  d = min(d, sdSegment(p, vec2(0.30, 0.02), vec2(0.03, 0.84), 0.085)); // 앞다리
-  d = min(d, sdSegment(p, vec2(0.0, 0.80), vec2(0.05, 1.44), 0.155));  // 몸통
-  d = min(d, length(p - vec2(0.07, 1.63)) - 0.125);                    // 머리
-  d = min(d, sdSegment(p, vec2(0.05, 1.40), hand, 0.062));             // 던지는 팔
-  d = min(d, sdSegment(p, vec2(0.03, 1.36), vec2(-0.34, 1.20), 0.07)); // 글러브 팔
-
-  return 1.0 - smoothstep(-0.012, 0.012, d);
+/**
+ * 어깨와 손, 골반과 발 사이를 접는 팔꿈치·무릎.
+ *
+ * bend는 관절이 옆으로 밀려나는 거리(m)다. 팔다리 길이에 비례해 정하게 뒀더니
+ * 무릎이 25cm씩 바깥으로 튀어나가 다리가 «∧»자가 됐다 — 부위마다 정해 준다.
+ */
+vec2 hinge(vec2 root, vec2 tip, float bend) {
+  vec2 d = tip - root;
+  float l = max(length(d), 1e-3);
+  vec2 n = vec2(-d.y, d.x) / l;
+  return root + d * 0.5 + n * bend;
 }
 
-/** 야수. 40~90m 밖이라 화면에서 20~40픽셀이고, 몸통과 머리면 충분하다 */
-float fielderMask(vec2 p) {
-  float d = 1e9;
-  d = min(d, sdSegment(p, vec2(-0.11, 0.0), vec2(-0.05, 0.86), 0.075));
-  d = min(d, sdSegment(p, vec2(0.11, 0.0), vec2(0.05, 0.86), 0.075));
-  d = min(d, sdSegment(p, vec2(0.0, 0.82), vec2(0.0, 1.42), 0.145));
-  d = min(d, length(p - vec2(0.0, 1.58)) - 0.115);
-  d = min(d, sdSegment(p, vec2(-0.03, 1.36), vec2(-0.27, 1.02), 0.06));
-  d = min(d, sdSegment(p, vec2(0.03, 1.36), vec2(0.27, 1.02), 0.06));
-  return 1.0 - smoothstep(-0.012, 0.012, d);
+/** 모자. 머리 위에 얹는 크라운과 앞으로 나온 챙 */
+void cap(vec2 p, vec2 head, inout float best, inout vec3 albedo) {
+  nearer(sdSegment(p, head + vec2(-0.050, 0.055), head + vec2(0.050, 0.055), 0.068), TRIM, best, albedo);
+  nearer(sdSegment(p, head + vec2(0.020, 0.035), head + vec2(0.155, 0.020), 0.026), TRIM, best, albedo);
+}
+
+/** 발. 원으로 그리면 공을 밟고 선 것처럼 보인다 */
+void shoe(vec2 p, vec2 foot, float dir, inout float best, inout vec3 albedo) {
+  nearer(sdSegment(p, foot, foot + vec2(0.075 * dir, 0.0), 0.042), SHOE, best, albedo);
+}
+
+/**
+ * 야수. 40~90m 밖이라 화면에서 25~45픽셀이고, 유니폼 색이 전부다.
+ *
+ * 처음엔 몸통을 반지름 15cm 캡슐 하나로 뒀는데, 그러면 어깨가 골반과 같은 폭이라
+ * 팔이 몸통 안에 파묻혀 눈사람이 된다. 어깨를 따로 긋고 팔을 그 바깥에서
+ * 시작해야 그제야 사람이다. 서 있는 키 1.80m 기준.
+ */
+float fielderShape(vec2 p, out vec3 albedo) {
+  float best = 1e9;
+  albedo = JERSEY;
+
+  // 다리 — 무릎 위는 바지, 아래는 스타킹
+  nearer(sdSegment(p, vec2(-0.115, 0.52), vec2(-0.075, 0.98), 0.072), PANTS, best, albedo);
+  nearer(sdSegment(p, vec2(0.115, 0.52), vec2(0.075, 0.98), 0.072), PANTS, best, albedo);
+  nearer(sdSegment(p, vec2(-0.125, 0.11), vec2(-0.115, 0.53), 0.058), TRIM, best, albedo);
+  nearer(sdSegment(p, vec2(0.125, 0.11), vec2(0.115, 0.53), 0.058), TRIM, best, albedo);
+  shoe(p, vec2(-0.085, 0.045), -1.0, best, albedo);
+  shoe(p, vec2(0.085, 0.045), 1.0, best, albedo);
+
+  // 몸통·어깨·벨트
+  nearer(sdSegment(p, vec2(0.0, 1.00), vec2(0.0, 1.44), 0.115), JERSEY, best, albedo);
+  nearer(sdSegment(p, vec2(-0.19, 1.46), vec2(0.19, 1.46), 0.085), JERSEY, best, albedo);
+  nearer(sdSegment(p, vec2(-0.105, 1.00), vec2(0.105, 1.00), 0.046), TRIM, best, albedo);
+
+  // 팔 — 소매 아래는 맨살
+  nearer(sdSegment(p, vec2(-0.21, 1.44), vec2(-0.26, 1.22), 0.058), JERSEY, best, albedo);
+  nearer(sdSegment(p, vec2(0.21, 1.44), vec2(0.26, 1.22), 0.058), JERSEY, best, albedo);
+  nearer(sdSegment(p, vec2(-0.26, 1.22), vec2(-0.245, 1.02), 0.046), SKIN, best, albedo);
+  nearer(sdSegment(p, vec2(0.26, 1.22), vec2(0.245, 1.02), 0.046), SKIN, best, albedo);
+  // 글러브는 던지는 손 반대쪽 — 대부분 우투라 포수가 볼 때 오른쪽이다
+  nearer(length(p - vec2(0.255, 0.95)) - 0.082, GLOVE, best, albedo);
+
+  // 목·머리·모자
+  nearer(sdSegment(p, vec2(0.0, 1.46), vec2(0.0, 1.58), 0.048), SKIN, best, albedo);
+  nearer(length(p - vec2(0.0, 1.68)) - 0.106, SKIN, best, albedo);
+  cap(p, vec2(0.0, 1.68), best, albedo);
+
+  return 1.0 - smoothstep(-0.012, 0.012, best);
+}
+
+/**
+ * 투구 동작의 다섯 자세 사이를 잇는다.
+ *
+ * 셋포지션 → 레그킥 → 스트라이드 → 릴리스 → 팔로스루. f가 0에서 1로 가는 동안
+ * 앞의 넷을 지나고, 공이 손을 떠난 뒤에는 g가 마지막 자세로 데려간다.
+ * 팔 하나만 움직이면 «팔을 흔드는 사람»이지 투수가 아니다 — 다리를 들고,
+ * 몸이 내려앉고, 축발이 따라 돌아야 그제야 던지는 것으로 보인다.
+ */
+vec2 pose(vec2 a, vec2 b, vec2 c, vec2 d, vec2 e, float f, float g) {
+  vec2 p = mix(a, b, smoothstep(0.00, 0.34, f));
+  p = mix(p, c, smoothstep(0.34, 0.74, f));
+  p = mix(p, d, smoothstep(0.74, 1.00, f));
+  return mix(p, e, smoothstep(0.0, 1.0, g));
+}
+
+/**
+ * 마운드 위 투수. 세로 좌표는 발이 닿은 높이에서 잰다.
+ *
+ * 좌표는 «던지는 팔이 -x 쪽»인 우투수 기준이다 — 포수가 마주 보면 우투수의
+ * 오른팔이 화면 왼쪽에 오고, 내딛는 왼발은 오른쪽에 떨어진다. 좌투는 uHand가
+ * 통째로 뒤집는다.
+ */
+float pitcherShape(vec2 local, out vec3 albedo) {
+  vec2 p = vec2(local.x * uHand, local.y);
+  float f = uArmPhase;
+  float g = uFollow;
+
+  vec2 pelvis    = pose(vec2( 0.00, 1.02), vec2(-0.04, 1.08), vec2( 0.06, 0.98), vec2( 0.10, 0.95), vec2( 0.15, 0.88), f, g);
+  vec2 chest     = pose(vec2( 0.00, 1.48), vec2(-0.05, 1.54), vec2( 0.02, 1.45), vec2( 0.05, 1.42), vec2( 0.10, 1.32), f, g);
+  vec2 head      = pose(vec2(-0.02, 1.72), vec2(-0.06, 1.77), vec2(-0.02, 1.69), vec2( 0.00, 1.67), vec2( 0.06, 1.57), f, g);
+  vec2 backFoot  = pose(vec2(-0.15, 0.05), vec2(-0.15, 0.05), vec2(-0.17, 0.05), vec2(-0.21, 0.14), vec2( 0.18, 0.05), f, g);
+  vec2 frontFoot = pose(vec2(-0.01, 0.05), vec2( 0.03, 0.76), vec2( 0.46, 0.05), vec2( 0.50, 0.05), vec2( 0.50, 0.05), f, g);
+  vec2 frontKnee = pose(vec2( 0.00, 0.55), vec2( 0.19, 1.14), vec2( 0.32, 0.54), vec2( 0.36, 0.56), vec2( 0.36, 0.54), f, g);
+  vec2 hand      = pose(vec2( 0.06, 1.25), vec2( 0.02, 1.46), vec2(-0.60, 1.58), vec2(-0.26, 2.06), vec2( 0.38, 0.80), f, g);
+  vec2 glove     = pose(vec2( 0.15, 1.25), vec2( 0.12, 1.46), vec2( 0.44, 1.50), vec2( 0.24, 1.22), vec2( 0.06, 1.08), f, g);
+
+  // 어깨선. 던지는 어깨가 릴리스에서 올라갔다가 팔로스루에서 반대로 넘어간다 —
+  // 이게 없으면 팔만 휘두르고 몸은 가만히 선 사람이 된다
+  float tilt = mix(0.0, 0.22, smoothstep(0.00, 0.40, f));
+  tilt = mix(tilt, 0.62, smoothstep(0.40, 1.00, f));
+  tilt = mix(tilt, -0.55, smoothstep(0.0, 1.0, g));
+  vec2 span = vec2(-cos(tilt), sin(tilt)) * 0.195;
+  vec2 throwShoulder = chest + span;
+  vec2 gloveShoulder = chest - span;
+
+  vec2 backKnee = hinge(pelvis, backFoot, -0.055);
+  vec2 elbow = hinge(throwShoulder, hand, 0.13);
+  vec2 gloveElbow = hinge(gloveShoulder, glove, -0.13);
+
+  float best = 1e9;
+  albedo = JERSEY;
+
+  // 다리 — 스타킹은 무릎 아래까지
+  nearer(sdSegment(p, pelvis, backKnee, 0.078), PANTS, best, albedo);
+  nearer(sdSegment(p, pelvis, frontKnee, 0.078), PANTS, best, albedo);
+  nearer(sdSegment(p, backKnee, backFoot, 0.060), TRIM, best, albedo);
+  nearer(sdSegment(p, frontKnee, frontFoot, 0.060), TRIM, best, albedo);
+  shoe(p, backFoot, -1.0, best, albedo);
+  shoe(p, frontFoot, 1.0, best, albedo);
+
+  // 몸통·어깨·벨트
+  nearer(sdSegment(p, pelvis, chest, 0.118), JERSEY, best, albedo);
+  nearer(sdSegment(p, throwShoulder, gloveShoulder, 0.085), JERSEY, best, albedo);
+  nearer(sdSegment(p, pelvis + vec2(-0.105, 0.01), pelvis + vec2(0.105, 0.01), 0.048), TRIM, best, albedo);
+
+  // 팔 — 위팔은 소매, 아래팔은 맨살
+  nearer(sdSegment(p, throwShoulder, elbow, 0.060), JERSEY, best, albedo);
+  nearer(sdSegment(p, elbow, hand, 0.047), SKIN, best, albedo);
+  nearer(sdSegment(p, gloveShoulder, gloveElbow, 0.060), JERSEY, best, albedo);
+  nearer(sdSegment(p, gloveElbow, glove, 0.047), SKIN, best, albedo);
+  nearer(length(p - glove) - 0.088, GLOVE, best, albedo);
+
+  // 목·머리·모자
+  nearer(sdSegment(p, chest, head, 0.048), SKIN, best, albedo);
+  nearer(length(p - head) - 0.108, SKIN, best, albedo);
+  cap(p, head, best, albedo);
+
+  // 손에 든 공. 릴리스 전까지는 여기 있어야 «지금 던지려는 참»으로 보인다
+  if (f < 0.99 && g < 0.02) {
+    nearer(length(p - hand) - 0.040, LEATHER, best, albedo);
+  }
+
+  return 1.0 - smoothstep(-0.012, 0.012, best);
 }
 
 /** 사람은 카메라를 마주 보는 판 한 장에 그린다 */
@@ -400,19 +632,21 @@ bool billboardHit(vec3 rd, vec3 foot, out float t, out vec2 local) {
   if (t <= 0.0) return false;
 
   vec3 hit = uEye + rd * t;
-  vec3 side = vec3(-n.z, 0.0, n.x);
+  // side를 vec3(-n.z, 0, n.x)로 두면 오른손 규칙상 -x를 가리켜, 판 위의 좌우가
+  // 화면과 뒤집힌다. 우투수의 오른팔이 화면 오른쪽에 나오는 걸 보고서야 알았다
+  vec3 side = vec3(n.z, 0.0, -n.x);
   local = vec2(dot(hit - foot, side), hit.y - foot.y);
   return true;
 }
 
 /**
- * 멀리 있는 사람일수록 대기에 묻힌다.
+ * 유니폼 색에 조명과 거리를 입힌다.
  *
- * 밤에도 새까맣게 두지 않는다. 조명탑 넷이 켜진 구장에서 선수만 실루엣으로
- * 남을 이유가 없다. 대신 공(0.94)보다는 확실히 어둡게 눌러 시선을 안 뺏는다.
+ * 밤에도 새까맣게 두지 않는다. 조명탑이 켜진 구장에서 선수만 실루엣으로 남을
+ * 이유가 없다. 대신 흰 유니폼이라도 공(0.94)보다는 확실히 눌러 시선을 안 뺏는다.
  */
-vec3 personColor(float distance) {
-  vec3 body = tone(vec3(0.315, 0.325, 0.350), vec3(0.80, 0.81, 0.84));
+vec3 personColor(vec3 albedo, float distance) {
+  vec3 body = albedo * mix(0.44, 0.92, uDaylight);
   float fog = 1.0 - exp(-distance * (uDaylight > 0.5 ? 0.0055 : 0.016));
   return mix(body, horizonHaze(), clamp(fog, 0.0, 0.9));
 }
@@ -453,13 +687,14 @@ void main() {
 
   // 야수 일곱
   vec2 local;
+  vec3 albedo;
   for (int i = 0; i < FIELDER_COUNT; i++) {
     vec3 foot = vec3(uFielders[i].x, 0.0, uFielders[i].y);
     if (!billboardHit(dir, foot, t, local)) continue;
     if (t >= best) continue;
-    if (fielderMask(local) < 0.5) continue;
+    if (fielderShape(local, albedo) < 0.5) continue;
     best = t;
-    color = personColor(t);
+    color = personColor(albedo, t);
   }
 
   // 투수. 마운드가 부푼 만큼 발이 올라가 있다
@@ -467,12 +702,12 @@ void main() {
   float stand = MOUND_H * max(0.0, 1.0 - toCenter * toCenter);
   vec3 pitcherFoot = vec3(uPitcherX, stand, uPitcherZ);
   if (billboardHit(dir, pitcherFoot, t, local) && t < best) {
-    float mask = pitcherMask(local);
-    if (mask > 0.5) {
+    if (pitcherShape(local, albedo) > 0.5) {
       best = t;
-      color = personColor(t);
+      color = personColor(albedo, t);
       // 조명 반대편에서 들어오는 가장자리 빛
-      float rim = 1.0 - pitcherMask(local + vec2(0.02, 0.02));
+      vec3 ignored;
+      float rim = 1.0 - pitcherShape(local + vec2(0.02, 0.02), ignored);
       color += tone(vec3(0.10, 0.11, 0.13), vec3(0.10, 0.10, 0.08)) * rim;
     }
   }
