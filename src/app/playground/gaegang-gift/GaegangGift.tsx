@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatPercent, semesterStatus } from "./semester";
+import Banner from "./Banner";
 import styles from "./gift.module.css";
 
 /** 뚜껑이 날아가고 나서 속을 보여주기까지. 상자가 떠는 0.24초 + 뚜껑의 비행 시간 */
@@ -111,6 +112,18 @@ export default function GaegangGift() {
       <div className="relative flex min-h-full flex-col items-center justify-center overflow-hidden px-6 py-16">
         <Backdrop />
 
+        {/*
+          상자를 열면 화면 맨 위에 현수막이 걸린다. 카드 위 한 줄짜리 축하
+          문구를 이걸로 바꿨다 — 진짜 경사에 쓰는 물건이라 개강에 걸어 두면
+          설명을 안 붙여도 놀리는 게 된다. 아래 카드보다 넓게 걸어야
+          «현수막»으로 읽혀서 이 블록만 단 바깥에 둔다.
+        */}
+        {revealed && (
+          <div className={`${styles.rise} relative z-10 mb-12 w-full max-w-2xl`}>
+            <Banner text="개 강" />
+          </div>
+        )}
+
         <div className="relative z-10 flex w-full max-w-md flex-col items-center">
           {!opened && (
             <p className="mb-8 rounded-full bg-white/10 px-4 py-1.5 text-[12px] font-medium tracking-[0.12em] text-white/70">
@@ -141,14 +154,6 @@ export default function GaegangGift() {
 
           {revealed && status && (
             <div className={`${styles.rise} mt-10 w-full`}>
-              {/*
-                진짜 축하처럼 크게 쓴다. 밑에서 나오는 게 진행률 막대라서,
-                이 한 줄이 클수록 놀리는 맛이 산다.
-              */}
-              <p className="mb-7 text-center font-display text-3xl font-bold tracking-tight text-[#f4c95d]">
-                축 개강입니다 🎉
-              </p>
-
               <ProgressCard
                 progress={status.progress}
                 daysLeft={status.daysLeft}
