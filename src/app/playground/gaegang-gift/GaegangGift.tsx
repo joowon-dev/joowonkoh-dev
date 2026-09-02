@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { formatPercent, semesterStatus, SEMESTER_END, SEMESTER_START } from "./semester";
+import { formatPercent, semesterStatus } from "./semester";
 import styles from "./gift.module.css";
 
 /** 뚜껑이 날아가고 나서 속을 보여주기까지. 상자가 떠는 0.24초 + 뚜껑의 비행 시간 */
@@ -49,12 +49,6 @@ function makeConfetti(): Piece[] {
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
-
-const KST_DATE = new Intl.DateTimeFormat("ko-KR", {
-  timeZone: "Asia/Seoul",
-  month: "long",
-  day: "numeric",
-});
 
 export default function GaegangGift() {
   const [opened, setOpened] = useState(false);
@@ -145,13 +139,20 @@ export default function GaegangGift() {
             <p className="mt-8 animate-pulse text-[15px] text-white/75">눌러서 열어보세요</p>
           )}
 
-          {revealed && status && now && (
+          {revealed && status && (
             <div className={`${styles.rise} mt-10 w-full`}>
+              {/*
+                진짜 축하처럼 크게 쓴다. 밑에서 나오는 게 진행률 막대라서,
+                이 한 줄이 클수록 놀리는 맛이 산다.
+              */}
+              <p className="mb-7 text-center font-display text-3xl font-bold tracking-tight text-[#f4c95d]">
+                축 개강입니다 🎉
+              </p>
+
               <ProgressCard
                 progress={status.progress}
                 daysLeft={status.daysLeft}
                 phase={status.phase}
-                now={now}
               />
 
               <button
@@ -214,12 +215,10 @@ function ProgressCard({
   progress,
   daysLeft,
   phase,
-  now,
 }: {
   progress: number;
   daysLeft: number;
   phase: "before" | "during" | "after";
-  now: Date;
 }) {
   if (phase === "after") {
     return (
@@ -251,11 +250,6 @@ function ProgressCard({
         {formatPercent(progress)}
       </p>
 
-      <div className="mt-2 flex justify-between text-[12px] text-white/45">
-        <span>개강 {KST_DATE.format(new Date(SEMESTER_START))}</span>
-        <span>종강 {KST_DATE.format(new Date(SEMESTER_END))}</span>
-      </div>
-
       <hr className="my-6 border-white/10" />
 
       <p className="text-center text-[15px] text-white/80">
@@ -264,11 +258,6 @@ function ProgressCard({
           {daysLeft}일
         </strong>{" "}
         남았어요
-      </p>
-      <p className="mt-2 text-center text-[13px] leading-relaxed text-white/45">
-        {phase === "before"
-          ? "아직 개강도 안 했네요. 그래도 종강은 저 멀리 있습니다."
-          : `${KST_DATE.format(now)} 기준. 네, 이게 선물이에요.`}
       </p>
     </div>
   );
