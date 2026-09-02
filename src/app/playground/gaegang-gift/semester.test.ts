@@ -68,12 +68,16 @@ describe("종강 이후", () => {
 });
 
 describe("진행률 표기", () => {
-  it("소수점 한 자리까지 보여준다 — 눈에 안 띄게 움직이는 게 요점이다", () => {
-    expect(formatPercent(0.008)).toBe("0.8%");
+  it("소수점 셋째 자리까지 보여준다", () => {
+    expect(formatPercent(0.008)).toBe("0.800%");
   });
 
-  it("0은 0.0%다", () => {
-    expect(formatPercent(0)).toBe("0.0%");
+  it("셋째 자리에서 반올림한다", () => {
+    expect(formatPercent(0.0123456)).toBe("1.235%");
+  });
+
+  it("0은 0.000%다", () => {
+    expect(formatPercent(0)).toBe("0.000%");
   });
 
   it("1은 100%다 — 끝났는데 100.0%는 어색하다", () => {

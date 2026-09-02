@@ -34,13 +34,14 @@ export function semesterStatus(now: Date): SemesterStatus {
 }
 
 /**
- * 소수점 한 자리까지 보여준다. 이 장난감의 요점이 «눌러도 안 움직이는 바»라서
- * 정수로 반올림하면 며칠 내내 0%로 굳어 버리고, 그러면 살아 있는 줄 모른다.
- * 다 끝난 뒤의 100.0%만 어색해서 그때만 자릿수를 뗀다.
+ * 소수점 셋째 자리까지 보여준다. 한 자리로 끊으면 며칠 내내 같은 숫자로 굳어
+ * 죽은 화면처럼 보인다. 셋째 자리는 학기 108일 기준 93초에 한 번 올라가서,
+ * 오래 들여다보면 «아주 가끔은» 움직이는 게 보인다.
+ * 다 끝난 뒤의 100.000%만 어색해서 그때만 자릿수를 뗀다.
  */
 export function formatPercent(progress: number): string {
   const p = clamp01(progress);
-  return p >= 1 ? "100%" : `${(p * 100).toFixed(1)}%`;
+  return p >= 1 ? "100%" : `${(p * 100).toFixed(3)}%`;
 }
 
 function clamp01(n: number): number {
