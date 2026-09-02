@@ -17,7 +17,8 @@ export type IconName =
   | "horse"
   | "imax"
   | "baseball"
-  | "mitt";
+  | "mitt"
+  | "gift";
 
 export interface Project {
   title: string;
@@ -178,6 +179,16 @@ export const projects: Project[] = [
     icon: "code",
     tile: ["#f6f6f8", "#e0e0e6"],
     hidden: true,
+  },
+  {
+    title: "개강 선물",
+    description: "카톡으로 보내면 열어보는 사람만 손해입니다 🎁",
+    tags: ["Interactive", "SVG", "Open Graph"],
+    href: "/playground/gaegang-gift",
+    icon: "gift",
+    tile: ["#2b3350", "#141a2e"],
+    blurb:
+      "개강한 친구에게 링크 하나만 보내는 장난입니다. 대화방에는 리본 묶인 상자와 «개강 선물이 도착했어요»만 뜨고, 종강이라는 단어는 미리보기 어디에도 없습니다 — 열기 전까지 정체를 모르는 게 전부라서 제목·설명·썸네일에서 힌트를 전부 뺐습니다. 눌러서 열면 뚜껑이 날아가고 색종이가 터진 자리에 학기 진행률 막대만 남습니다. 1초마다 다시 그리지만 소수점 아래로만 움직여서, 지켜봐도 자라는 게 안 보입니다. 서버도 저장도 없이 링크 하나로 끝나서 디스코드나 문자로 보내도 똑같이 동작합니다.",
   },
 ];
 

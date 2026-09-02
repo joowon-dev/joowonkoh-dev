@@ -341,6 +341,21 @@ function Baseball() {
   );
 }
 
+/** 개강 선물 — 리본 묶인 상자 */
+function Gift() {
+  return (
+    <>
+      <rect x="12" y="26" width="40" height="30" rx="3" fill="#ef6f6c" />
+      <rect x="9" y="19" width="46" height="9" rx="2.5" fill="#f5837f" />
+      <rect x="28" y="19" width="8" height="37" fill="#f4c95d" />
+      {/* 리본 고리 */}
+      <path d="M32 19 C32 11 22 7 20 13 C18.5 18 26 19 32 19 Z" fill="#f4c95d" />
+      <path d="M32 19 C32 11 42 7 44 13 C45.5 18 38 19 32 19 Z" fill="#f4c95d" />
+      <circle cx="32" cy="18" r="3" fill="#ffdf8a" />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -357,6 +372,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   imax: Imax,
   baseball: Baseball,
   mitt: Mitt,
+  gift: Gift,
 };
 
 /**
