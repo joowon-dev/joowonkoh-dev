@@ -246,6 +246,43 @@ function Horse() {
   );
 }
 
+/** 포수 시점 — 코앞까지 날아온 공과, 그 뒤로 남은 자국 */
+function Mitt() {
+  return (
+    <>
+      {/*
+        멀리서 코앞까지 오는 동안 공이 커지는 그 가속이 이 페이지의 전부라,
+        아이콘도 작은 공 하나와 큰 공 하나로 그 간격만 보여준다.
+      */}
+      <path
+        d="M18 13 Q26 26 34 44"
+        stroke="#ff5c4d"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.5"
+      />
+      <circle cx="18" cy="13" r="3.2" fill="#f2efe8" opacity="0.55" />
+      {/* 포수 미트 — 공 뒤에 반쯤 가려 놓는다 */}
+      <path
+        d="M12 52 Q12 34 30 33 Q48 34 50 50 Q50 58 31 58 Q13 58 12 52 Z"
+        fill="#8a5a30"
+      />
+      <path d="M20 40 Q31 36 42 41" stroke="#5f3c1e" strokeWidth="2" fill="none" />
+      {/* 코앞의 공 */}
+      <circle cx="34" cy="44" r="14" fill="#f7f5f0" />
+      <path
+        d="M25 35 Q31 44 25 53 M43 35 Q37 44 43 53"
+        stroke="#c0292c"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <circle cx="29" cy="39" r="5" fill="#ffffff" opacity="0.45" />
+    </>
+  );
+}
+
 /** 아이맥스 1열 — 1열에서 올려다본 곡면 스크린과 그 위에 걸린 얼굴 */
 function Imax() {
   return (
@@ -319,6 +356,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   horse: Horse,
   imax: Imax,
   baseball: Baseball,
+  mitt: Mitt,
 };
 
 /**
