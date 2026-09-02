@@ -4,8 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatPercent, semesterStatus, SEMESTER_END, SEMESTER_START } from "./semester";
 import styles from "./gift.module.css";
 
-/** 뚜껑이 날아가고 나서 속을 보여주기까지. 짧으면 선물처럼 안 보이고 길면 지루하다. */
-const REVEAL_MS = 950;
+/** 뚜껑이 날아가고 나서 속을 보여주기까지. 상자가 떠는 0.24초 + 뚜껑의 비행 시간 */
+const REVEAL_MS = 1250;
+
+/**
+ * 진행률을 다시 읽는 주기. 셋째 자리는 93초에 한 번 올라가지만, 그 한 번을
+ * 93초 늦게 알려 주면 «가끔 갱신되는 화면»이 된다. 자주 읽어 두면 자리가
+ * 바뀌는 순간 바로 바뀐다. 하는 일이 Date 하나 읽는 것뿐이라 부담이 없다.
+ */
+const TICK_MS = 250;
 
 const CONFETTI_COLORS = ["#f4c95d", "#ef6f6c", "#5bc0be", "#c77dff", "#f7f7f2", "#7bd389"];
 
@@ -13,7 +20,10 @@ interface Piece {
   id: number;
   left: number;
   color: string;
+  /** 가로로 흩어지는 거리 */
   dx: number;
+  /** 솟구치는 높이. 음수다 */
+  peak: number;
   dur: number;
   delay: number;
   spin: number;
@@ -22,17 +32,22 @@ interface Piece {
 }
 
 function makeConfetti(): Piece[] {
-  return Array.from({ length: 44 }, (_, id) => ({
+  return Array.from({ length: 56 }, (_, id) => ({
     id,
-    left: 50 + (Math.random() - 0.5) * 46,
+    left: 50 + (Math.random() - 0.5) * 16,
     color: CONFETTI_COLORS[id % CONFETTI_COLORS.length],
-    dx: (Math.random() - 0.5) * 420,
-    dur: 2.4 + Math.random() * 2.2,
-    delay: Math.random() * 0.35,
-    spin: 360 + Math.random() * 900,
+    dx: (Math.random() - 0.5) * 620,
+    peak: -(150 + Math.random() * 300),
+    dur: 2.6 + Math.random() * 2.0,
+    delay: Math.random() * 0.18,
+    spin: (Math.random() < 0.5 ? -1 : 1) * (420 + Math.random() * 900),
     w: 6 + Math.random() * 6,
     h: 9 + Math.random() * 8,
   }));
+}
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 const KST_DATE = new Intl.DateTimeFormat("ko-KR", {
@@ -51,9 +66,11 @@ export default function GaegangGift() {
 
   const open = useCallback(() => {
     if (opened) return;
+    const calm = prefersReducedMotion();
     setOpened(true);
     setNow(new Date());
-    setConfetti(makeConfetti());
+    setConfetti(calm ? [] : makeConfetti());
+    if (calm) setRevealed(true);
   }, [opened]);
 
   /*
@@ -64,7 +81,7 @@ export default function GaegangGift() {
   useEffect(() => {
     if (!opened) return;
     const reveal = window.setTimeout(() => setRevealed(true), REVEAL_MS);
-    const tick = window.setInterval(() => setNow(new Date()), 1000);
+    const tick = window.setInterval(() => setNow(new Date()), TICK_MS);
     return () => {
       window.clearTimeout(reveal);
       window.clearInterval(tick);
@@ -98,77 +115,95 @@ export default function GaegangGift() {
     */
     <div className="fixed inset-0 z-40 overflow-y-auto bg-[#141a2e] text-white">
       <div className="relative flex min-h-full flex-col items-center justify-center overflow-hidden px-6 py-16">
-      <Backdrop />
+        <Backdrop />
 
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center">
-        {!opened && (
-          <p className="mb-8 rounded-full bg-white/10 px-4 py-1.5 text-[12px] font-medium tracking-[0.12em] text-white/70">
-            개강 선물
-          </p>
-        )}
+        <div className="relative z-10 flex w-full max-w-md flex-col items-center">
+          {!opened && (
+            <p className="mb-8 rounded-full bg-white/10 px-4 py-1.5 text-[12px] font-medium tracking-[0.12em] text-white/70">
+              개강 선물
+            </p>
+          )}
 
-        <button
-          type="button"
-          onClick={open}
-          disabled={opened}
-          aria-label={opened ? "열린 선물 상자" : "선물 상자 열기"}
-          className="relative outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-4 focus-visible:ring-offset-[#141a2e] rounded-3xl disabled:cursor-default"
-        >
-          <GiftBox opened={opened} />
-        </button>
+          <button
+            type="button"
+            onClick={open}
+            disabled={opened}
+            aria-label={opened ? "열린 선물 상자" : "선물 상자 열기"}
+            className="relative rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-4 focus-visible:ring-offset-[#141a2e] disabled:cursor-default"
+          >
+            {/* 상자 입에서 새어 나오는 빛. 뚜껑이 떠나는 순간에 맞춰 한 번 터진다 */}
+            {opened && (
+              <span
+                aria-hidden
+                className={`${styles.burst} pointer-events-none absolute left-1/2 top-[41%] -z-10 block h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,#fff5d6_0%,#f4c95d_45%,transparent_70%)] blur-[6px]`}
+              />
+            )}
+            <GiftBox opened={opened} />
+          </button>
 
-        {!opened && (
-          <p className="mt-8 animate-pulse text-[15px] text-white/75">
-            눌러서 열어보세요
-          </p>
-        )}
+          {!opened && (
+            <p className="mt-8 animate-pulse text-[15px] text-white/75">눌러서 열어보세요</p>
+          )}
 
-        {revealed && status && now && (
-          <div className={`${styles.rise} mt-10 w-full`}>
-            <ProgressCard
-              progress={status.progress}
-              daysLeft={status.daysLeft}
-              phase={status.phase}
-              now={now}
-            />
+          {revealed && status && now && (
+            <div className={`${styles.rise} mt-10 w-full`}>
+              <ProgressCard
+                progress={status.progress}
+                daysLeft={status.daysLeft}
+                phase={status.phase}
+                now={now}
+              />
 
-            <button
-              type="button"
-              onClick={copyLink}
-              className="mt-6 w-full rounded-2xl border border-white/15 bg-white/5 py-3.5 text-[14px] font-medium text-white/85 transition hover:bg-white/10 active:scale-[0.98]"
-            >
-              {copied ? "링크를 복사했어요" : "나도 친구 놀리기 — 링크 복사"}
-            </button>
+              <button
+                type="button"
+                onClick={copyLink}
+                className="mt-6 w-full rounded-2xl border border-white/15 bg-white/5 py-3.5 text-[14px] font-medium text-white/85 transition hover:bg-white/10 active:scale-[0.98]"
+              >
+                {copied ? "링크를 복사했어요" : "나도 친구 놀리기 — 링크 복사"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/*
+          색종이는 화면 전체에 뿌린다. 가로 이동을 바깥 span에, 세로 이동을
+          안쪽 span에 나눠 걸어야 포물선이 나온다 — 상자에서 솟구쳤다가 떨어진다.
+          클릭을 먹지 않게 pointer-events를 끈다.
+        */}
+        {confetti.length > 0 && (
+          <div aria-hidden className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+            {confetti.map((p) => (
+              <span
+                key={p.id}
+                className={styles.drift}
+                style={
+                  {
+                    position: "absolute",
+                    top: "47%",
+                    left: `${p.left}%`,
+                    animationDelay: `${0.24 + p.delay}s`,
+                    "--dx": `${p.dx}px`,
+                    "--peak": `${p.peak}px`,
+                    "--dur": `${p.dur}s`,
+                    "--spin": `${p.spin}deg`,
+                  } as React.CSSProperties
+                }
+              >
+                <span
+                  className={styles.toss}
+                  style={{
+                    display: "block",
+                    width: p.w,
+                    height: p.h,
+                    borderRadius: 2,
+                    background: p.color,
+                    animationDelay: `${0.24 + p.delay}s`,
+                  }}
+                />
+              </span>
+            ))}
           </div>
         )}
-      </div>
-
-      {/* 색종이는 화면 전체에 뿌린다. 클릭을 먹지 않게 pointer-events를 끈다. */}
-      {opened && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
-          {confetti.map((p) => (
-            <span
-              key={p.id}
-              className={styles.piece}
-              style={
-                {
-                  position: "absolute",
-                  top: "38%",
-                  left: `${p.left}%`,
-                  width: p.w,
-                  height: p.h,
-                  borderRadius: 2,
-                  background: p.color,
-                  "--dx": `${p.dx}px`,
-                  "--dur": `${p.dur}s`,
-                  "--delay": `${p.delay}s`,
-                  "--spin": `${p.spin}deg`,
-                } as React.CSSProperties
-              }
-            />
-          ))}
-        </div>
-      )}
       </div>
     </div>
   );
@@ -201,13 +236,13 @@ function ProgressCard({
       <p className="text-center text-[13px] tracking-[0.14em] text-white/55">학기 진행률</p>
 
       {/*
-        바는 소수점 단위로만 움직인다. 1초마다 갱신하지만 보통은 눈에 안 띈다 —
+        바는 소수점 단위로만 움직인다. 자주 다시 그리지만 보통은 눈에 안 띈다 —
         «열심히 봐도 안 자라는 막대»가 이 선물의 내용물이다. width에 transition을
         걸어 두면 갱신 순간이 튀지 않고 스르륵 흐른다.
       */}
       <div className="mt-5 h-3.5 w-full overflow-hidden rounded-full bg-white/10">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#f4c95d] to-[#ef6f6c] transition-[width] duration-1000 ease-linear"
+          className="h-full rounded-full bg-gradient-to-r from-[#f4c95d] to-[#ef6f6c] transition-[width] duration-300 ease-linear"
           style={{ width: `max(6px, ${progress * 100}%)` }}
         />
       </div>
@@ -239,12 +274,17 @@ function ProgressCard({
   );
 }
 
-/** 리본 묶인 선물 상자. 뚜껑만 따로 떼어 두어 열 때 날려 보낸다. */
+/**
+ * 리본 묶인 선물 상자.
+ *
+ * 뚜껑을 몸통과 다른 그룹으로 떼어 두었다. 열 때 바깥 그룹이 먼저 부르르 떨고,
+ * 그다음 뚜껑만 포물선으로 날아가고, 몸통은 그 반동으로 눌렸다 펴진다.
+ */
 function GiftBox({ opened }: { opened: boolean }) {
   return (
     <svg
       viewBox="0 0 200 200"
-      className={`h-56 w-56 sm:h-64 sm:w-64 ${opened ? "" : styles.bob}`}
+      className="h-56 w-56 sm:h-64 sm:w-64"
       role="presentation"
     >
       <defs>
@@ -256,31 +296,31 @@ function GiftBox({ opened }: { opened: boolean }) {
           <stop offset="0" stopColor="#f5837f" />
           <stop offset="1" stopColor="#d64d49" />
         </linearGradient>
+        {/* 열린 상자 안쪽. 위로 갈수록 어두워야 «구멍»으로 보인다 */}
+        <linearGradient id="gift-inner" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3d0f0e" />
+          <stop offset="1" stopColor="#7a2a27" />
+        </linearGradient>
       </defs>
 
       <ellipse cx="100" cy="178" rx="62" ry="10" fill="#000" opacity="0.28" />
 
-      {/* 상자 몸통 */}
-      <g className={opened ? styles.recoil : undefined}>
-        <rect x="38" y="78" width="124" height="96" rx="8" fill="url(#gift-body)" />
-        <rect x="90" y="78" width="20" height="96" fill="#f4c95d" />
-        {/* 열리면 안쪽 어둠이 보인다 */}
-        {opened && <rect x="44" y="78" width="112" height="12" rx="4" fill="#5a1b1a" />}
-      </g>
+      <g className={opened ? styles.shudder : styles.bob}>
+        {/* 상자 몸통 */}
+        <g className={opened ? styles.recoil : undefined}>
+          <rect x="38" y="78" width="124" height="96" rx="8" fill="url(#gift-body)" />
+          <rect x="90" y="78" width="20" height="96" fill="#f4c95d" />
+          {opened && <rect x="44" y="76" width="112" height="14" rx="4" fill="url(#gift-inner)" />}
+        </g>
 
-      {/* 뚜껑 + 리본. 열면 통째로 날아간다 */}
-      <g className={opened ? styles.lid : undefined}>
-        <rect x="28" y="60" width="144" height="26" rx="7" fill="url(#gift-lid-g)" />
-        <rect x="90" y="60" width="20" height="26" fill="#f4c95d" />
-        <path
-          d="M100 60 C100 40 76 30 72 44 C69 55 88 60 100 60 Z"
-          fill="#f4c95d"
-        />
-        <path
-          d="M100 60 C100 40 124 30 128 44 C131 55 112 60 100 60 Z"
-          fill="#f4c95d"
-        />
-        <circle cx="100" cy="57" r="7" fill="#ffdf8a" />
+        {/* 뚜껑 + 리본. 열면 통째로 날아간다 */}
+        <g className={opened ? styles.lid : undefined}>
+          <rect x="28" y="60" width="144" height="26" rx="7" fill="url(#gift-lid-g)" />
+          <rect x="90" y="60" width="20" height="26" fill="#f4c95d" />
+          <path d="M100 60 C100 40 76 30 72 44 C69 55 88 60 100 60 Z" fill="#f4c95d" />
+          <path d="M100 60 C100 40 124 30 128 44 C131 55 112 60 100 60 Z" fill="#f4c95d" />
+          <circle cx="100" cy="57" r="7" fill="#ffdf8a" />
+        </g>
       </g>
     </svg>
   );
