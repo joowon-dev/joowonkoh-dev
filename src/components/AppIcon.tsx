@@ -356,6 +356,32 @@ function Gift() {
   );
 }
 
+/** 불꽃놀이 — 밤하늘에 터진 불꽃과 올라가는 불꽃탄 */
+function Firework() {
+  return (
+    <>
+      {/* 터진 불꽃. 방사선 끝에 알갱이를 찍어 «퍼지는 중»으로 읽히게 한다 */}
+      <g stroke="#ffd166" strokeWidth="2.2" strokeLinecap="round">
+        <path d="M26 24 L26 10 M26 24 L36 14 M26 24 L40 24 M26 24 L36 34 M26 24 L26 38 M26 24 L16 34 M26 24 L12 24 M26 24 L16 14" />
+      </g>
+      <g fill="#fff3c4">
+        <circle cx="26" cy="9" r="2" />
+        <circle cx="37" cy="13" r="2" />
+        <circle cx="41" cy="24" r="2" />
+        <circle cx="37" cy="35" r="2" />
+        <circle cx="26" cy="39" r="2" />
+        <circle cx="15" cy="35" r="2" />
+        <circle cx="11" cy="24" r="2" />
+        <circle cx="15" cy="13" r="2" />
+      </g>
+      <circle cx="26" cy="24" r="3.4" fill="#fffdf0" />
+      {/* 뒤따라 올라가는 작은 불꽃탄 */}
+      <path d="M48 56 Q50 46 49 38" stroke="#ff8fb1" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <circle cx="49" cy="37" r="2.6" fill="#ffe0ea" />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -373,6 +399,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   baseball: Baseball,
   mitt: Mitt,
   gift: Gift,
+  firework: Firework,
 };
 
 /**
