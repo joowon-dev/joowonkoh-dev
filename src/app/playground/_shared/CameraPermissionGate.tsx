@@ -1,11 +1,21 @@
 "use client";
 
+/**
+ * 카메라를 못 쓸 때 화면을 덮는 안내.
+ *
+ * 무대 위에 절대 위치로 깔리므로, 감싸는 쪽이 `relative`여야 한다.
+ * `note`를 받는 이유: 무엇을 위해 카메라를 켜는지는 게임마다 다르고,
+ * 권한을 물을 때야말로 그걸 가장 알고 싶다.
+ */
 export function CameraPermissionGate({
   status,
   onRetry,
+  note,
 }: {
   status: "denied" | "unsupported";
   onRetry: () => void;
+  /** 이 페이지가 카메라로 무엇을 하는지 한 줄. 허용 안내 앞에 붙는다. */
+  note: string;
 }) {
   const denied = status === "denied";
   return (
@@ -17,7 +27,7 @@ export function CameraPermissionGate({
         </h3>
         <p className="mt-2 text-sm text-text-secondary">
           {denied
-            ? "웹캠에 잡힌 얼굴 개수만 셉니다. 브라우저 설정에서 카메라를 허용한 뒤 다시 시도해 주세요."
+            ? `${note} 브라우저 설정에서 카메라를 허용한 뒤 다시 시도해 주세요.`
             : "이 브라우저는 카메라 입력을 지원하지 않아요. 다른 브라우저에서 열어 주세요."}
         </p>
         {denied && (

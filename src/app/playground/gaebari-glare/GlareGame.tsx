@@ -5,7 +5,7 @@ import { GAME_HELP } from "../_shared/helpContent";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FaceDetector } from "@mediapipe/tasks-vision";
 import Eyes, { LEVEL_LABELS } from "./Eyes";
-import { CameraPermissionGate } from "./CameraPermissionGate";
+import { CameraPermissionGate } from "../_shared/CameraPermissionGate";
 import { SENSITIVITY_RANGE, useSettings } from "./useSettings";
 import { useFullscreen } from "../_shared/useFullscreen";
 import {
@@ -248,6 +248,7 @@ export default function GlareGame() {
         {(phase === "denied" || phase === "unsupported") && (
           <CameraPermissionGate
             status={phase}
+            note="웹캠에 잡힌 얼굴 개수만 셉니다."
             onRetry={() => {
               setPhase("ready");
               void start();
