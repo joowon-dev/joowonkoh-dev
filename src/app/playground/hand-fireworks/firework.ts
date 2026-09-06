@@ -52,13 +52,38 @@ export const BURST_SPEED = 0.52;
 /** 손을 높이 들었을 때 얹히는 몫 */
 export const BURST_SPEED_PER_POWER = 0.38;
 
+const pick = <T,>(arr: T[], rng: Rng): T => arr[Math.min(arr.length - 1, Math.floor(rng() * arr.length))];
+
 /** 폭발 모양 */
 export type BurstKind = "peony" | "ring" | "willow" | "double";
 
-const KINDS: BurstKind[] = ["peony", "peony", "ring", "willow", "double"];
+/** 고를 수 있는 모양 전부. 세팅 화면이 이 순서대로 늘어놓는다. */
+export const BURST_KINDS: BurstKind[] = ["peony", "ring", "willow", "double"];
+
+/**
+ * 무작위로 뽑을 때 쓰는 가중치 목록. 국화가 두 번 들어 있다 —
+ * 가장 «불꽃다운» 모양이라 이게 기본값처럼 자주 나와야 한다.
+ */
+const WEIGHTED_KINDS: BurstKind[] = ["peony", "peony", "ring", "willow", "double"];
 
 /** 실제 불꽃놀이에서 쓰는 금속염 색들 — 스트론튬 빨강, 나트륨 노랑, 구리 파랑 */
-const HUES = [8, 32, 48, 140, 190, 210, 280, 320];
+export const BURST_HUES = [8, 32, 48, 140, 190, 210, 280, 320];
+
+/**
+ * 한 발. 모양과 색을 묶은 것이 불꽃 하나다.
+ *
+ * 실제 불꽃놀이에서 포탄을 고르는 단위와 같게 뒀다 — 모양 목록과 색 목록을
+ * 따로 두면 «이번엔 무슨 색이 나올지»를 사람이 정할 수 없다.
+ */
+export interface Shot {
+  kind: BurstKind;
+  hue: number;
+}
+
+/** 프로그램을 안 짰을 때 한 발을 만드는 방법 */
+export function randomShot(rng: Rng): Shot {
+  return { kind: pick(WEIGHTED_KINDS, rng), hue: pick(BURST_HUES, rng) };
+}
 
 export interface Shell {
   x: number;
@@ -126,16 +151,21 @@ export function createWorld(): World {
   return { shells: [], particles: [], flashes: [], bursts: 0 };
 }
 
-const pick = <T,>(arr: T[], rng: Rng): T => arr[Math.min(arr.length - 1, Math.floor(rng() * arr.length))];
-
 /**
  * 불꽃탄 하나를 쏜다.
  *
  * @param at 발사점. **세계 좌표**다 — 영상 프레임 좌표를 넘기면 안 된다.
  *           변환은 viewport.ts의 toWorld가 한다.
  * @param power 0~1. 손을 높이 들수록 크고, 그만큼 높이 올라간다.
+ * @param shot 이 발의 모양과 색. 프로그램이 정해 주거나, 없으면 randomShot이 만든다 —
+ *             어느 쪽이든 여기서는 «이미 정해진 것»으로 받는다.
  */
-export function launchShell(at: { x: number; y: number }, power: number, rng: Rng): Shell {
+export function launchShell(
+  at: { x: number; y: number },
+  power: number,
+  shot: Shot,
+  rng: Rng,
+): Shell {
   return {
     x: at.x,
     y: at.y,
@@ -143,9 +173,9 @@ export function launchShell(at: { x: number; y: number }, power: number, rng: Rn
     py: at.y,
     vx: (rng() - 0.5) * 0.1,
     vy: -(0.55 + 0.38 * power),
-    hue: pick(HUES, rng),
+    hue: shot.hue,
     power,
-    kind: pick(KINDS, rng),
+    kind: shot.kind,
     trailDue: 0,
   };
 }

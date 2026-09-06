@@ -7,7 +7,10 @@ import { GAME_HELP } from "../_shared/helpContent";
 import { CameraPermissionGate } from "../_shared/CameraPermissionGate";
 import { useFullscreen } from "../_shared/useFullscreen";
 import { powerFromHeight, stepHands, type HandObservation, type HandState } from "./gesture";
-import { createWorld, launchShell, stepWorld, type World } from "./firework";
+import { createWorld, launchShell, randomShot, stepWorld, type World } from "./firework";
+import { nextShot, peekIndex } from "./program";
+import { useProgram } from "./useProgram";
+import ProgramEditor, { ShotGlyph, shotLabel } from "./ProgramEditor";
 import { drawHands, drawWorld } from "./render";
 import { coverRect, toWorld } from "./viewport";
 
@@ -63,7 +66,10 @@ function handKey(label: string, used: Set<string>): string {
 }
 
 export default function HandFireworks() {
+  const { program, save } = useProgram();
   const [phase, setPhase] = useState<Phase>("ready");
+  /** 프로그램에서 다음에 나갈 칸. 화면에 보여주려고 state로도 들고 있다 */
+  const [cursor, setCursor] = useState(0);
   const [handCount, setHandCount] = useState(0);
   const [bursts, setBursts] = useState(0);
   const [everLaunched, setEverLaunched] = useState(false);
@@ -81,6 +87,14 @@ export default function HandFireworks() {
   const sizeRef = useRef({ w: 0, h: 0 });
   /** 다음 프레임에 쏠 것들. **세계 좌표**로 넣는다 */
   const pendingRef = useRef<{ x: number; y: number; power: number }[]>([]);
+  /**
+   * 프로그램 커서. **양손이 하나를 나눠 쓴다** — 손마다 따로 세면 왼손이 1·3번,
+   * 오른손이 2·4번을 쏘게 되어 짜 놓은 순서가 깨진다.
+   */
+  const cursorRef = useRef(0);
+  /** 루프를 다시 만들지 않으려고 프로그램을 ref로도 읽는다 */
+  const programRef = useRef(program);
+  programRef.current = program;
   const lastFrameRef = useRef(0);
   const lastDetectRef = useRef(0);
   const lastStatsRef = useRef(0);
@@ -113,6 +127,9 @@ export default function HandFireworks() {
     worldRef.current = createWorld();
     handsRef.current = [];
     pendingRef.current = [];
+    // 프로그램은 공연이라 다시 켜면 1번 발부터다
+    cursorRef.current = 0;
+    setCursor(0);
     restoreConsole?.();
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -177,13 +194,13 @@ export default function HandFireworks() {
 
       let world = worldRef.current;
       if (pendingRef.current.length > 0) {
-        world = {
-          ...world,
-          shells: [
-            ...world.shells,
-            ...pendingRef.current.map((l) => launchShell(l, l.power, Math.random)),
-          ],
-        };
+        const shells = pendingRef.current.map((l) => {
+          // 프로그램이 비어 있으면 nextShot이 null을 준다 — 그때만 무작위로 만든다
+          const step = nextShot(programRef.current, cursorRef.current);
+          cursorRef.current = step.index;
+          return launchShell(l, l.power, step.shot ?? randomShot(Math.random), Math.random);
+        });
+        world = { ...world, shells: [...world.shells, ...shells] };
         pendingRef.current = [];
       }
 
@@ -198,6 +215,7 @@ export default function HandFireworks() {
         lastStatsRef.current = now;
         setHandCount(handsRef.current.length);
         setBursts(world.bursts);
+        setCursor(cursorRef.current);
         if (world.bursts > 0) setEverLaunched(true);
       }
     }
@@ -287,6 +305,8 @@ export default function HandFireworks() {
   }, [ensureLoop, stop]);
 
   const running = phase === "running";
+  const cursorAt = peekIndex(program, cursor);
+  const nextUp = cursorAt === null ? null : program[cursorAt];
 
   return (
     // 바깥 레이아웃이 위에 py-16을 두는데, 이 페이지는 무대가 주인공이라
@@ -349,6 +369,19 @@ export default function HandFireworks() {
           <p className="pointer-events-none absolute inset-x-0 top-1/2 text-center text-sm text-white/70">
             주먹을 꽉 쥐었다가, 활짝 펴 보세요
           </p>
+        )}
+
+        {/*
+          패널은 화면 아래라 카메라 앞에 서면 안 보이고, 전체화면에선 아예 없다.
+          다음에 뭐가 나갈지 모르면 프로그램을 짠 보람이 없어서 무대에도 하나 띄운다.
+        */}
+        {nextUp && (
+          <div className="pointer-events-none absolute bottom-8 left-3 flex items-center gap-2 rounded-full bg-black/45 py-1.5 pl-1.5 pr-3 backdrop-blur-sm">
+            <ShotGlyph shot={nextUp} size={22} />
+            <span className="text-[11px] text-white/70">
+              다음 <span className="text-white/95">{shotLabel(nextUp)}</span>
+            </span>
+          </div>
         )}
 
         <p className="pointer-events-none absolute inset-x-0 bottom-0 px-4 py-2 text-center text-xs text-white/30">
@@ -416,6 +449,8 @@ export default function HandFireworks() {
         </dl>
       )}
 
+      <ProgramEditor program={program} onChange={save} cursor={cursorAt} />
+
       <div className="mt-6 rounded-2xl border border-border bg-card-bg p-5 text-sm text-text-secondary">
         <p className="font-semibold text-text-primary">잘 안 나갈 때</p>
         <p className="mt-1">
@@ -433,6 +468,13 @@ export default function HandFireworks() {
           무대 오른쪽 위 버튼이나 <kbd className="rounded border border-border px-1">F</kbd> 키로
           전체화면이 됩니다. 나갈 때는 <kbd className="rounded border border-border px-1">Esc</kbd>.
           잘려 나가는 화면 비율은 알아서 맞추니 손과 불꽃이 어긋나지 않습니다.
+        </p>
+
+        <p className="mt-3 font-semibold text-text-primary">쏠 불꽃을 미리 정해 둘 수 있습니다</p>
+        <p className="mt-1">
+          아래 «불꽃 세팅»에서 모양과 색을 골라 순서대로 담아 두면, 실제 불꽃놀이처럼 그
+          순서대로 나가고 끝나면 처음으로 돌아옵니다. 양손이 같은 순서를 나눠 쓰기 때문에
+          번갈아 쏴도 순서가 안 꼬입니다. 아무것도 안 담으면 지금처럼 무작위입니다.
         </p>
 
         <p className="mt-3 font-semibold text-text-primary">카메라 없이도 됩니다</p>

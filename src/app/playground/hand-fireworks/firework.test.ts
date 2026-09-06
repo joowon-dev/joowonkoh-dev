@@ -8,6 +8,7 @@ import {
   createWorld,
   flashFor,
   launchShell,
+  randomShot,
   stepWorld,
   type Rng,
   type Shell,
@@ -47,24 +48,30 @@ function runUntilBurst(shell: Shell, rng: Rng) {
 
 describe("launchShell", () => {
   it("위로 나간다", () => {
-    expect(launchShell(AT, 0.7, seeded()).vy).toBeLessThan(0);
+    expect(launchShell(AT, 0.7, randomShot(seeded()), seeded()).vy).toBeLessThan(0);
   });
 
   it("손을 높이 들수록(power가 클수록) 세게 나간다", () => {
-    const weak = launchShell(AT, 0.45, seeded());
-    const strong = launchShell(AT, 1, seeded());
+    const weak = launchShell(AT, 0.45, randomShot(seeded()), seeded());
+    const strong = launchShell(AT, 1, randomShot(seeded()), seeded());
     expect(strong.vy).toBeLessThan(weak.vy);
   });
 
+  it("받은 발의 모양과 색을 그대로 쓴다 — 여기서 다시 뽑지 않는다", () => {
+    const shell = launchShell(AT, 0.7, { kind: "willow", hue: 123 }, seeded());
+    expect(shell.kind).toBe("willow");
+    expect(shell.hue).toBe(123);
+  });
+
   it("받은 자리에서 그대로 출발한다", () => {
-    const s = launchShell(AT, 0.7, seeded());
+    const s = launchShell(AT, 0.7, randomShot(seeded()), seeded());
     expect([s.x, s.y, s.px, s.py]).toEqual([AT.x, AT.y, AT.x, AT.y]);
   });
 });
 
 describe("stepWorld — 불꽃탄", () => {
   it("정점에서 터지고, 터진 자리에 입자가 생긴다", () => {
-    const shell = launchShell(AT, 0.7, seeded(7));
+    const shell = launchShell(AT, 0.7, randomShot(seeded(7)), seeded(7));
     const { world, y } = runUntilBurst(shell, seeded(7));
     expect(world.shells).toHaveLength(0);
     expect(world.bursts).toBe(1);
@@ -74,8 +81,8 @@ describe("stepWorld — 불꽃탄", () => {
   });
 
   it("세게 쏘면 더 높은 곳에서 터진다", () => {
-    const weak = runUntilBurst(launchShell(AT, 0.45, seeded(3)), seeded(3));
-    const strong = runUntilBurst(launchShell(AT, 1, seeded(3)), seeded(3));
+    const weak = runUntilBurst(launchShell(AT, 0.45, randomShot(seeded(3)), seeded(3)), seeded(3));
+    const strong = runUntilBurst(launchShell(AT, 1, randomShot(seeded(3)), seeded(3)), seeded(3));
     expect(strong.y).toBeLessThan(weak.y);
   });
 
@@ -83,7 +90,7 @@ describe("stepWorld — 불꽃탄", () => {
     // 폭발 지름이 화면 높이에 육박하므로 꼭대기에서 터지면 위쪽 절반이 잘린다.
     // 손을 화면 위쪽에서 펴면 여기에 걸린다.
     const rng = seeded();
-    const shell: Shell = { ...launchShell(AT, 1, rng), y: CEILING + 0.02, vy: -1 };
+    const shell: Shell = { ...launchShell(AT, 1, randomShot(rng), rng), y: CEILING + 0.02, vy: -1 };
     let world = makeWorld({ shells: [shell], particles: [] });
     let highest = 1;
     for (let i = 0; i < 10 && world.bursts === 0; i += 1) {
@@ -96,7 +103,7 @@ describe("stepWorld — 불꽃탄", () => {
   });
 
   it("올라가는 동안 꼬리를 흘린다", () => {
-    const shell = launchShell(AT, 0.7, seeded());
+    const shell = launchShell(AT, 0.7, randomShot(seeded()), seeded());
     const world = stepWorld(makeWorld({ shells: [shell], particles: [] }), DT, seeded());
     expect(world.shells).toHaveLength(1);
     expect(world.particles.length).toBeGreaterThan(0);
@@ -106,7 +113,7 @@ describe("stepWorld — 불꽃탄", () => {
 describe("stepWorld — 입자", () => {
   it("중력이 아래로 끌어당긴다", () => {
     const rng = seeded();
-    const p = burst({ ...launchShell(AT, 0.7, rng), vx: 0, vy: 0, kind: "peony" }, rng);
+    const p = burst({ ...launchShell(AT, 0.7, randomShot(rng), rng), vx: 0, vy: 0, kind: "peony" }, rng);
     // 위로 곧게 나간 입자 하나만 남긴다
     const up = { ...p[0], vx: 0, vy: -0.2, drag: 0 };
     let world: World = makeWorld({ shells: [], particles: [up] });
@@ -116,7 +123,7 @@ describe("stepWorld — 입자", () => {
 
   it("수명이 다하면 사라진다", () => {
     const rng = seeded();
-    const shell = { ...launchShell(AT, 0.7, rng), vx: 0, vy: 0 };
+    const shell = { ...launchShell(AT, 0.7, randomShot(rng), rng), vx: 0, vy: 0 };
     let world: World = makeWorld({ shells: [], particles: burst(shell, rng) });
     expect(world.particles.length).toBeGreaterThan(0);
     for (let i = 0; i < 60 * 6; i += 1) world = stepWorld(world, DT, rng);
@@ -125,7 +132,7 @@ describe("stepWorld — 입자", () => {
 
   it("화면 아래로 흘러내린 입자는 지운다", () => {
     const rng = seeded();
-    const fallen = { ...burst({ ...launchShell(AT, 0.7, rng), vx: 0, vy: 0 }, rng)[0] };
+    const fallen = { ...burst({ ...launchShell(AT, 0.7, randomShot(rng), rng), vx: 0, vy: 0 }, rng)[0] };
     const world = stepWorld(
       makeWorld({ shells: [], particles: [{ ...fallen, y: 1.24, vy: 1, drag: 0, life: 5 }] }),
       DT,
@@ -138,7 +145,7 @@ describe("stepWorld — 입자", () => {
     const rng = seeded();
     // 전부 정점에 놓아 같은 프레임에 터뜨린다
     const shells = Array.from({ length: 40 }, () => ({
-      ...launchShell(AT, 0.7, rng),
+      ...launchShell(AT, 0.7, randomShot(rng), rng),
       vy: 0,
       kind: "double" as const,
     }));
@@ -150,7 +157,7 @@ describe("stepWorld — 입자", () => {
 
 describe("burst — 모양", () => {
   const atRest = (kind: Shell["kind"], rng: Rng): Shell => ({
-    ...launchShell(AT, 0.7, rng),
+    ...launchShell(AT, 0.7, randomShot(rng), rng),
     vx: 0,
     vy: 0,
     kind,
@@ -193,7 +200,7 @@ describe("폭발 크기", () => {
    */
   it("국화 한 발이 화면 높이의 절반 이상을 덮는다", () => {
     const rng = seeded(5);
-    const shell = { ...launchShell({ x: 0, y: 0 }, 0.53, rng), vx: 0, vy: 0, kind: "peony" as const };
+    const shell = { ...launchShell({ x: 0, y: 0 }, 0.53, randomShot(rng), rng), vx: 0, vy: 0, kind: "peony" as const };
     let world = makeWorld({ particles: burst(shell, rng) });
     const before = world.particles.length;
 
@@ -213,7 +220,7 @@ describe("폭발 크기", () => {
 describe("섬광", () => {
   it("터질 때 폭발 지점에 하나 생긴다", () => {
     const rng = seeded();
-    const shell = { ...launchShell(AT, 0.7, rng), vy: 0 };
+    const shell = { ...launchShell(AT, 0.7, randomShot(rng), rng), vy: 0 };
     const world = stepWorld(makeWorld({ shells: [shell] }), DT, rng);
     expect(world.flashes).toHaveLength(1);
     expect(world.flashes[0].hue).toBe(shell.hue);
@@ -221,14 +228,14 @@ describe("섬광", () => {
   });
 
   it("세게 쏜 불꽃일수록 크게 번쩍인다", () => {
-    expect(flashFor(launchShell(AT, 1, seeded())).radius).toBeGreaterThan(
-      flashFor(launchShell(AT, 0.45, seeded())).radius,
+    expect(flashFor(launchShell(AT, 1, randomShot(seeded()), seeded())).radius).toBeGreaterThan(
+      flashFor(launchShell(AT, 0.45, randomShot(seeded()), seeded())).radius,
     );
   });
 
   it("수명이 지나면 사라진다 — 남으면 «펑»이 아니라 조명이 된다", () => {
     const rng = seeded();
-    let world = makeWorld({ shells: [{ ...launchShell(AT, 0.7, rng), vy: 0 }] });
+    let world = makeWorld({ shells: [{ ...launchShell(AT, 0.7, randomShot(rng), rng), vy: 0 }] });
     world = stepWorld(world, DT, rng);
     expect(world.flashes).toHaveLength(1);
     for (let i = 0; i < Math.ceil(FLASH_LIFE / DT) + 1; i += 1) world = stepWorld(world, DT, rng);
@@ -239,7 +246,7 @@ describe("섬광", () => {
 describe("stepWorld — 순수성", () => {
   it("들어온 세계를 건드리지 않는다", () => {
     const rng = seeded();
-    const world: World = makeWorld({ shells: [launchShell(AT, 0.7, rng)], particles: [] });
+    const world: World = makeWorld({ shells: [launchShell(AT, 0.7, randomShot(rng), rng)], particles: [] });
     const snapshot = structuredClone(world);
     stepWorld(world, DT, rng);
     expect(world).toEqual(snapshot);
