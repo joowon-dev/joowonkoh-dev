@@ -62,25 +62,6 @@ const SHOW: { title: string; body: string }[] = [
   },
 ];
 
-const MADE: { title: string; body: string }[] = [
-  {
-    title: "배경을 칠하지 않습니다",
-    body: "보통 불꽃놀이 캔버스는 매 프레임 검은 반투명을 덮어 잔상을 만듭니다. 이 앱은 그럴 수 없습니다 — 배경을 칠하는 순간 바탕화면이 가려지니까요. 그래서 매 프레임 캔버스를 통째로 지우고, 잔상은 불씨마다 들고 다니는 지난 위치를 선으로 이어 그려서 만듭니다.",
-  },
-  {
-    title: "글자는 계산으로 세웁니다",
-    body: "공기 저항을 지수 감쇠로 두면, 초기 속도 v0 인 입자가 멈출 때까지 가는 거리가 정확히 v0/drag 입니다. 이 식을 거꾸로 써서 목표 지점까지의 거리에 저항 계수를 곱한 속도를 주면, 입자가 반복도 보정도 없이 그 자리에 가서 섭니다.",
-  },
-  {
-    title: "소리에 음원 파일이 없습니다",
-    body: "발사음은 잡음을 좁은 대역으로 훑어 올리고, 터짐은 저역 잡음에 사인파 한 번을 겹칩니다. 터지는 높이에 따라 소리가 조금 늦게 오는데, 물리적으로 정확해서가 아니라 그래야 「멀리서 터졌다」로 들리기 때문입니다.",
-  },
-  {
-    title: "크로미움을 담지 않았습니다",
-    body: "앱이 600KB 남짓인 이유입니다. 맥은 Swift + WKWebView, 윈도우는 .NET + WebView2 — OS 에 이미 있는 웹뷰를 씁니다. 쇼 코드는 두 플랫폼이 완전히 같은 파일을 씁니다.",
-  },
-];
-
 const STEPS: { title: string; body: string }[] = [
   {
     title: "내려받고 압축을 푼다",
@@ -170,6 +151,12 @@ export default function DesktopFireworksPage() {
         마우스는 언제나 전부 통과하니 불꽃이 떠 있는 채로 평소처럼 일하면 됩니다.
       </p>
 
+      <h2 className="mt-10 font-display text-xl font-bold tracking-tight md:text-2xl">
+        받기
+      </h2>
+      <PlatformTabs mac={<MacPanel />} />
+      <VersionHistory />
+
       <div className="mt-10 overflow-hidden rounded-2xl border border-border shadow-ambient">
         <Image
           src="/desktop-fireworks/screenshot.jpg"
@@ -229,22 +216,6 @@ export default function DesktopFireworksPage() {
         맨 위의 네 줄만 고치고 다시 빌드하면 됩니다. 이름을 넣어도 되고 이모지도 됩니다.
         글자 수가 늘면 같은 줄의 입자 수도 같이 올리면 또렷해집니다.
       </p>
-
-      <SectionHeading>어떻게 만들었나</SectionHeading>
-      <div className="mt-6 space-y-5">
-        {MADE.map((item) => (
-          <div key={item.title}>
-            <h3 className="text-sm font-semibold text-text-primary">{item.title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-text-secondary">
-              {item.body}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <SectionHeading>받기</SectionHeading>
-      <PlatformTabs mac={<MacPanel />} />
-      <VersionHistory />
 
       <p className="mt-14 text-xs leading-relaxed text-text-secondary">
         소스는{" "}
