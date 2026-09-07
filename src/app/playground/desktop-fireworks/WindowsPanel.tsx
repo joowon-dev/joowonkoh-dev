@@ -32,7 +32,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: ".NET 9 데스크톱 런타임을 먼저 깐다",
-    body: "이 빌드는 런타임을 포함하지 않습니다(600KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
+    body: "이 빌드는 런타임을 포함하지 않습니다(1MB도 안 되는 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
     link: {
       // 목록이 아니라 설치 파일로 바로 보낸다.
       // aka.ms 별칭은 마이크로소프트가 최신 패치로 리디렉션해 준다.
@@ -76,7 +76,11 @@ const STEPS: Step[] = [
 const CONTROLS: { key: string; action: string }[] = [
   { key: "Alt+Shift+F", action: "쇼를 처음부터 다시" },
   { key: "Alt+Shift+H", action: "숨기기 / 다시 부르기" },
-  { key: "알림 영역 아이콘", action: "소리 크기 · 모니터 선택 · 종료" },
+  { key: "Alt+Shift+I", action: "마지막에 쏜 사진을 한 발 더" },
+  {
+    key: "알림 영역 아이콘",
+    action: "보관함 · 이미지로 불꽃 · 카운트다운 · 쇼 고르기 · 소리 크기 · 모니터 선택 · 종료",
+  },
 ];
 
 function SectionHeading({

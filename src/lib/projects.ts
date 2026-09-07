@@ -203,7 +203,7 @@ export const projects: Project[] = [
   },
   {
     title: "바탕화면 불꽃놀이",
-    description: "일하는 화면 위로 불꽃이 터집니다. I · LOVE · YOU 🎆",
+    description: "사진을 올리면 그 사진으로 불꽃이 터집니다 🎆",
     tags: ["macOS", "Windows", "Canvas"],
     href: "/playground/desktop-fireworks",
     icon: "firework",

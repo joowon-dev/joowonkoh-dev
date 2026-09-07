@@ -39,9 +39,27 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "1.1.0",
+    date: "2026-09-07",
+    latest: true,
+    notes: [
+      "사진을 올리면 그 사진 모양 그대로 불꽃이 됩니다. 점 18000개가 날아가 그림 자리에 서고, 색은 원본 픽셀 색을 그대로 씁니다. 배경을 지우거나 파일을 손볼 필요가 없습니다.",
+      "보관함이 생겼습니다 (메뉴 막대 🎆 → 보관함 열기…). 올려 둔 사진과 문구를 목록으로 모아 두고, 체크로 쏠 것을 고르고, 끌어서 순서를 바꾸고, ✕로 지웁니다. 「고른 것 차례로 쏘기」를 누르면 정한 간격으로 하나씩 올라갑니다.",
+      "문구도 보관함에서 바로 적어 넣습니다. 이제 이름이나 축하 문구를 띄우려고 소스를 고쳐 다시 빌드하지 않아도 됩니다. 같은 문구는 언제나 같은 색으로 뜹니다.",
+      "카운트다운이 생겼습니다 (없음 · 3 · 5 · 10초). 숫자를 세고 나서 터집니다. 프러포즈나 생일 케이크 앞에서 쓰라고 만들었습니다.",
+      "쇼를 고를 수 있습니다 — I LOVE YOU · 생일 축하 · 이미지만. 「이미지만」을 고르면 자동 쇼가 멈추고 올린 것만 뜹니다.",
+      "이미지가 터질 때 화면이 몇 초씩 멈추던 것을 고쳤습니다. 맥 웹뷰가 한 프레임에 선분 수천 개를 못 긋는 것이 원인이었습니다 — 이제 점 18000개를 2~3ms에 그립니다.",
+      "카운트다운이 끝나고 한 박자를 더 기다리던 것을 고쳤습니다. 이제 「1」 다음 박자에 바로 터집니다.",
+    ],
+    mac: { href: "/downloads/DesktopFireworks-mac.zip", size: "653KB" },
+    windows: {
+      href: "/downloads/DesktopFireworks-win-x64.zip",
+      size: "653KB",
+    },
+  },
+  {
     version: "1.0.0",
     date: "2026-09-06",
-    latest: true,
     notes: [
       "첫 배포입니다. 바탕화면 위에 얹혀 약 58초짜리 불꽃놀이 쇼가 돌고, 끝나면 처음부터 다시 시작합니다.",
       "발사대 아홉 대가 한 줄로 일제히 쏘아 올리는 것으로 시작해서, I → LOVE → YOU 를 한 낱말씩 띄우고, 하트, 그리고 사랑해 양옆에 하트 둘, 마지막은 다시 일제 발사로 끝납니다.",
@@ -49,9 +67,12 @@ export const RELEASES: Release[] = [
       "소리는 음원 파일 없이 WebAudio 로 합성합니다. 발사음·터짐음·잔불 소리가 터지는 높이에 따라 조금씩 늦게 옵니다.",
       "문구는 소스의 script.js 한 곳에서 바꿉니다. 한글도 이모지도 폰트가 그릴 수 있으면 그대로 불꽃이 됩니다.",
     ],
-    mac: { href: "/downloads/DesktopFireworks-mac.zip", size: "609KB" },
+    mac: {
+      href: "/downloads/desktop-fireworks/v1.0.0/DesktopFireworks-mac.zip",
+      size: "609KB",
+    },
     windows: {
-      href: "/downloads/DesktopFireworks-win-x64.zip",
+      href: "/downloads/desktop-fireworks/v1.0.0/DesktopFireworks-win-x64.zip",
       size: "614KB",
     },
   },
