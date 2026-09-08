@@ -26,7 +26,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     title: ".NET 9 데스크톱 런타임을 먼저 깐다",
-    body: "이 빌드는 런타임을 포함하지 않습니다(630KB인 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
+    body: "이 빌드는 런타임을 포함하지 않습니다(앱이 1MB도 안 되는 이유). 없으면 실행해도 아무 일도 안 일어난 것처럼 보입니다. 아래를 누르면 x64 설치 파일이 바로 받아집니다 — 목록에서 SDK 와 ASP.NET 중에 고를 일이 없습니다.",
     link: {
       // WebSwing 페이지와 같은 이유로 목록이 아니라 설치 파일로 바로 보낸다.
       // aka.ms 별칭은 마이크로소프트가 최신 패치로 리디렉션해 준다.
@@ -38,24 +38,29 @@ const STEPS: Step[] = [
     },
   },
   {
-    title: "이 파일을 다운받는다",
+    title: "설치 파일을 다운받는다",
     body: "위의 런타임을 깔고 나서 받는 편이 낫습니다. 런타임이 없으면 실행해도 아무 반응이 없어서 파일이 깨진 줄로 오해하기 쉽습니다.",
     link: {
       // 주소는 릴리스가 바뀌어도 이대로 둔다. 파일 이름에 빌드 해시를 달면
       // 새 빌드마다 크롬과 SmartScreen 입장에서 세상에 처음 나온 파일이 되고,
       // 조금씩 쌓이던 다운로드 평판이 매번 0으로 돌아간다.
-      href: "/downloads/SneakyBaseball-win-x64.zip",
-      label: "몰래 야구 (Windows) 내려받기",
-      note: "1.1.0 · 640KB · Windows 10 1809 이상 · 64비트 · 서명 없음",
+      href: "/downloads/SneakyBaseball-win-Setup.exe",
+      label: "몰래 야구 설치 파일 (Windows) 내려받기",
+      note: "1.2.0 · 2.4MB · Windows 10 1809 이상 · 64비트 · 서명 없음",
     },
   },
   {
-    title: "압축을 풀고 폴더째 둔다",
-    body: "SneakyBaseball.exe 혼자로는 안 됩니다. 옆의 DLL과 web 폴더가 같이 있어야 합니다. web 폴더 안에 게임이 통째로 들어 있습니다.",
+    title: "설치 파일을 실행한다",
+    body: "서명이 없어서 SmartScreen이 한 번 막습니다. 추가 정보 → 실행을 누르면 됩니다. 관리자 권한은 안 물어봅니다 — 내 사용자 폴더에만 깝니다. 다음만 누르면 끝나고, 「윈도우를 켤 때 함께 실행」은 원하면 체크하세요.",
   },
   {
-    title: "SneakyBaseball.exe 를 실행한다",
-    body: "서명이 없어서 SmartScreen이 막습니다. 추가 정보 → 실행을 한 번 눌러주면 그다음부터는 안 묻습니다.",
+    title: "압축본이 편하면 그걸 받아도 된다",
+    body: "설치하지 않고 폴더째 두고 쓰는 쪽이 편하면 이쪽입니다. 대신 SneakyBaseball.exe 혼자로는 안 됩니다 — 옆의 DLL과 web 폴더가 같이 있어야 합니다. 자동 업데이트는 설치본만 받으므로, 압축본을 쓰면 새 버전은 직접 받아야 합니다.",
+    link: {
+      href: "/downloads/SneakyBaseball-win-x64.zip",
+      label: "압축본 (설치 없이 쓰기)",
+      note: "1.2.0 · 667KB · 자동 업데이트 안 됨",
+    },
   },
   {
     title: "알림 영역에서 야구공을 찾는다",
@@ -64,6 +69,10 @@ const STEPS: Step[] = [
   {
     title: "스윙이 안 되거나 창 메뉴가 뜨면 조작키를 바꾼다",
     body: "윈도우는 Alt+Space 를 창 메뉴로 먼저 가져갑니다. 스윙이 안 들어가거나 메뉴가 뜨면 알림 영역 메뉴의 조작키에서 Alt+Shift 같은 다른 조합으로 바꾸세요.",
+  },
+  {
+    title: "다음부터는 앱이 알려준다",
+    body: "새 버전이 나오면 알림 영역 메뉴에 「새 버전 설치」가 생깁니다. 눌러야만 갈아 끼웁니다. 설치본으로 깐 경우에만 됩니다.",
   },
 ];
 
@@ -119,7 +128,7 @@ export default function WindowsPanel() {
     <div>
       <SectionHeading className="mt-8">설치하기</SectionHeading>
       <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-        순서가 중요합니다. 런타임을 먼저 깔아야 두 번째 파일이 실행됩니다.
+        순서가 중요합니다. 런타임을 먼저 깔아야 설치 파일이 실행됩니다.
       </p>
       <ol className="mt-4 space-y-3">
         {STEPS.map((step, index) => (

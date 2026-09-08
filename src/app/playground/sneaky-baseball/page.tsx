@@ -58,6 +58,14 @@ const RULES: { title: string; body: string }[] = [
     body: "가장 멀리 친 거리가 남습니다. 담장에 막혀 끊긴 타구도 담장이 없었다면 떨어졌을 지점까지 세어 줍니다.",
   },
   {
+    title: "치면 포인트가 쌓이고, 그걸로 배트를 삽니다",
+    body: "홈런은 비거리 m 그대로, 안타는 그 0.4배가 포인트로 들어옵니다. 아웃은 잃는 것도 얻는 것도 없습니다. 모은 포인트로 배트를 사면 같은 타이밍이라도 공이 더 멀리 갑니다 — 맨손으로는 13ms 안쪽으로 맞혀야 넘어가던 담장이, 카본 배트를 들면 33ms까지 넓어집니다. 맨몸 기록과 배트 기록은 따로 남습니다.",
+  },
+  {
+    title: "입은 유니폼의 구단에 응원이 쌓입니다",
+    body: "친 만큼 그 구단의 응원 점수가 올라가고, 받은 사람들 전체와 함께 집계됩니다. 구단별과 개인별로 일간·주간·연간·전체를 봅니다. 배트를 사도 응원은 한 점도 줄지 않습니다 — 안 쓰고 모은 사람이 이기는 순위가 되면 안 되니까요. 로그인도 회원가입도 없고, 기기가 만든 무작위 번호 하나가 전부입니다.",
+  },
+  {
     title: "결과는 공이 알려줍니다",
     body: "치자마자 답이 나오지 않습니다. 홈런은 담장을 넘는 순간 담장 위에, 안타는 공이 다 굴러 멈춘 자리에 뜹니다. 그 글씨가 사라져야 다음 공이 옵니다.",
   },
@@ -65,16 +73,16 @@ const RULES: { title: string; body: string }[] = [
 
 const STEPS: { title: string; body: string }[] = [
   {
-    title: "내려받고 압축을 푼다",
-    body: "SneakyBaseball-mac.zip을 풀면 Sneaky Baseball.app 하나가 나옵니다.",
+    title: "받은 dmg 를 연다",
+    body: "더블클릭하면 창이 하나 뜹니다. 애플 공증을 받은 파일이라 경고가 없습니다.",
   },
   {
-    title: "응용 프로그램 폴더로 옮긴다",
-    body: "꼭 옮겨야 하는 건 아니지만, 다운로드 폴더에 두면 나중에 실수로 지우기 쉽습니다.",
+    title: "응용 프로그램 폴더로 끌어 넣는다",
+    body: "창 안에 응용 프로그램 폴더가 나란히 있습니다. 야구공 아이콘을 그 위로 끌어다 놓으면 설치가 끝납니다. 다 되면 창은 닫고 dmg 는 버려도 됩니다.",
   },
   {
     title: "더블클릭으로 연다",
-    body: "애플 공증을 받은 앱이라 경고 없이 그냥 열립니다.",
+    body: "공증 도장이 파일 안에 박혀 있어서 인터넷이 끊겨 있어도 그냥 열립니다.",
   },
   {
     title: "메뉴 막대에서 야구공을 찾는다",
@@ -83,6 +91,10 @@ const STEPS: { title: string; body: string }[] = [
   {
     title: "스윙이 안 되면 조작키를 바꾼다",
     body: "쓰는 입력기나 다른 앱이 ⌥Space를 먼저 가져가면 공은 오는데 스윙만 안 됩니다. 메뉴의 조작키에서 ⌥⇧ 같은 다른 조합으로 바꾸면 됩니다.",
+  },
+  {
+    title: "다음부터는 앱이 알려준다",
+    body: "새 버전이 나오면 메뉴에 「새 버전 설치」가 생깁니다. 눌러야만 갈아 끼우고, 안 누르면 메뉴에 아무 흔적도 남지 않습니다. 이 페이지를 다시 찾아올 일은 없습니다.",
   },
 ];
 
@@ -104,7 +116,7 @@ function MacPanel() {
       >
         <span>
           <span className="block font-display text-sm font-semibold text-text-primary">
-            SneakyBaseball-mac.zip 내려받기
+            SneakyBaseball-mac.dmg 내려받기
           </span>
           <span className="mt-1 block text-xs text-text-secondary">
             {LATEST.version} · {LATEST.mac.size} · macOS 13 이상 · Apple Silicon &amp;
