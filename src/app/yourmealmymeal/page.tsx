@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -44,10 +45,21 @@ export default function YourMealMyMealPage() {
         iOS App
       </span>
 
-      <h1 className="font-display text-3xl font-bold leading-snug tracking-tight md:text-4xl">
-        네밥내밥
-      </h1>
-      <p className="mt-1 text-sm text-text-muted">밥 먹었냐고 묻는 대신</p>
+      <div className="flex items-center gap-5">
+        <Image
+          src="/yourmealmymeal-icon.png"
+          alt="네밥내밥 앱 아이콘"
+          width={84}
+          height={84}
+          className="rounded-2xl border border-border shadow-ambient"
+        />
+        <div>
+          <h1 className="font-display text-3xl font-bold leading-snug tracking-tight md:text-4xl">
+            네밥내밥
+          </h1>
+          <p className="mt-1 text-sm text-text-muted">밥 먹었냐고 묻는 대신</p>
+        </div>
+      </div>
 
       <p className="mt-6 max-w-[60ch] leading-[1.85] text-text-secondary">
         네밥내밥은 오늘 먹은 끼니를 식판 한 칸씩 사진으로 채우고, 가족이나 친구와
