@@ -169,10 +169,10 @@ export default function YourMealMyMealPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-5">
           <a
-            href="mailto:joowonkoh0505@gmail.com"
+            href="mailto:contact@joowonkoh.com"
             className="text-sm font-medium text-text-secondary spring-transition hover:text-accent"
           >
-            joowonkoh0505@gmail.com →
+            contact@joowonkoh.com →
           </a>
           <Link
             href="/yourmealmymeal/privacy"

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 const UPDATED_AT = "2026년 7월 31일";
-const CONTACT = "joowonkoh0505@gmail.com";
+const CONTACT = "contact@joowonkoh.com";
 
 export default function MoneyTickPrivacyPage() {
   return (
