@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   },
 };
 
-const UPDATED_AT = "2026년 7월 31일";
+const UPDATED_AT = "2026년 9월 18일";
 const CONTACT = "contact@joowonkoh.com";
 
 export default function MoneyTickPrivacyPage() {
@@ -50,9 +50,11 @@ export default function MoneyTickPrivacyPage() {
             <li>
               본 앱은{" "}
               <strong className="text-text-primary">
-                이용자를 추적하지 않습니다.
+                맞춤형 광고를 위해 이용자의 동의를 받아 광고 식별자(IDFA)를
+                이용합니다.
               </strong>{" "}
-              광고 식별자(IDFA)에 접근하지 않으며 맞춤형 광고를 제공하지 않습니다.
+              iOS 의 앱 추적 투명성(ATT) 안내창에서 허용하신 경우에만 해당하며,
+              허용하지 않으셔도 모든 기능을 동일하게 이용하실 수 있습니다.
             </li>
           </ul>
           <p className="mt-3">
@@ -101,26 +103,38 @@ export default function MoneyTickPrivacyPage() {
             3. 광고 (Google AdMob)
           </h2>
           <p className="mb-3">
-            본 앱은 Google AdMob 을 통해 앱 내에 광고를 게재합니다. 금액 변경 횟수를
-            충전하는 보상형 광고와, 비교 기능을 일정 횟수 사용했을 때 나타나는 전면
-            광고 두 가지입니다.
+            본 앱은 Google AdMob 을 통해 앱 내에 광고를 게재합니다. 화면 하단에 항상
+            표시되는 배너 광고, 금액 변경 횟수를 충전하는 보상형 광고, 비교 기능을
+            일정 횟수 사용했을 때 나타나는 전면 광고 세 가지입니다.
           </p>
           <p className="mb-3">
             <strong className="text-text-primary">
-              본 앱은 비맞춤형(non-personalized) 광고만 요청합니다.
+              맞춤형 광고는 이용자가 허용한 경우에만 제공됩니다.
             </strong>{" "}
-            이용자의 관심사나 과거 행동에 기반한 맞춤형 광고를 제공하지 않으며, 이를
-            위해 iOS 의 앱 추적 투명성(ATT) 동의를 요청하지 않고 광고 식별자(IDFA)에도
-            접근하지 않습니다.
+            본 앱은 iOS 의 앱 추적 투명성(ATT) 안내창을 통해 추적 허용 여부를 여쭙고,
+            허용하신 경우에만 광고 식별자(IDFA)를 이용해 이용자의 관심사에 맞춘 광고를
+            요청합니다.
           </p>
           <p className="mb-3">
-            비맞춤형 광고에서도 광고를 전달하고 부정 클릭을 방지하기 위해 Google 이
-            다음과 같은 정보를 처리할 수 있습니다.
+            <strong className="text-text-primary">
+              허용하지 않으시면 비맞춤형(non-personalized) 광고만 요청합니다.
+            </strong>{" "}
+            이 경우 광고 식별자(IDFA)에 접근하지 않습니다. 허용 여부와 관계없이 앱의
+            모든 기능을 동일하게 이용하실 수 있으며, 한 번 선택하신 뒤에도 iOS 설정에서
+            언제든지 바꾸실 수 있습니다.
+          </p>
+          <p className="mb-3">
+            맞춤형·비맞춤형 어느 경우에도 광고를 전달하고 부정 클릭을 방지하기 위해
+            Google 이 다음과 같은 정보를 처리할 수 있습니다.
           </p>
           <ul className="ml-5 list-disc space-y-1.5">
             <li>IP 주소 및 이로부터 추정되는 대략적인 지역(국가·도시 수준)</li>
             <li>기기 종류, 운영체제 버전, 언어 설정 등 기기 정보</li>
             <li>광고 노출·클릭 여부 등 광고 상호작용 기록</li>
+            <li>
+              추적을 허용하신 경우에 한해, 광고 식별자(IDFA)와 이를 이용한 관심사 추정
+              정보
+            </li>
           </ul>
           <p className="mt-3">
             또한 본 앱은 Apple 의 SKAdNetwork 를 지원합니다. 개별 이용자를 식별하지
@@ -212,6 +226,14 @@ export default function MoneyTickPrivacyPage() {
             7. 이용자의 선택권
           </h2>
           <ul className="ml-5 list-disc space-y-1.5">
+            <li>
+              iOS 의{" "}
+              <strong className="text-text-primary">
+                설정 &gt; 개인정보 보호 및 보안 &gt; 추적
+              </strong>{" "}
+              에서 본 앱의 추적 허용 여부를 언제든지 바꾸실 수 있습니다. 허용을
+              끄시면 그 이후로는 비맞춤형 광고만 표시됩니다.
+            </li>
             <li>
               iOS 의{" "}
               <strong className="text-text-primary">
