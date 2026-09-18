@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   },
 };
 
-const UPDATED_AT = "2026년 9월 17일";
+const UPDATED_AT = "2026년 9월 18일";
 const CONTACT = "contact@joowonkoh.com";
 
 export default function YourMealMyMealPrivacyPage() {
@@ -88,6 +88,11 @@ export default function YourMealMyMealPrivacyPage() {
             <li>
               <strong className="text-text-primary">기기 푸시 토큰</strong> — 알림을
               보낼 곳을 알기 위해 저장합니다.
+            </li>
+            <li>
+              <strong className="text-text-primary">계정 식별자</strong> — 가입할 때
+              자동으로 만들어지는 임의의 문자열입니다. 사진과 기록이 누구의 것인지
+              잇는 데만 쓰이고, 이름이나 이메일과 달리 화면에 드러나지 않습니다.
             </li>
           </ul>
           <p className="mt-3">
