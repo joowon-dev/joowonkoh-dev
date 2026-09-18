@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "이게내연봉 개인정보처리방침",
   description:
-    "iOS 앱 이게내연봉이 처리하는 정보, 광고와 이용 통계에 쓰이는 제3자 서비스, 이용자의 선택권에 대한 안내입니다.",
+    "iOS · Android 앱 이게내연봉이 처리하는 정보, 광고와 이용 통계에 쓰이는 제3자 서비스, 이용자의 선택권에 대한 안내입니다.",
   alternates: {
     canonical: "https://joowonkoh.com/moneytick/privacy",
   },
 };
 
-const UPDATED_AT = "2026년 9월 18일";
+const UPDATED_AT = "2026년 9월 19일";
 const CONTACT = "contact@joowonkoh.com";
 
 export default function MoneyTickPrivacyPage() {
@@ -30,7 +30,7 @@ export default function MoneyTickPrivacyPage() {
           </h2>
           <p className="mb-3">
             이게내연봉(이하 &ldquo;본 앱&rdquo;)은 이용자가 입력한 급여를 바탕으로
-            지금까지 쌓인 금액을 실시간으로 보여주는 iOS 애플리케이션입니다.
+            지금까지 쌓인 금액을 실시간으로 보여주는 iOS · Android 애플리케이션입니다.
             본 방침은 본 앱이 처리하는 정보와 그 목적, 이용자의 선택권을 설명합니다.
           </p>
           <p className="mb-3">요약하면 다음과 같습니다.</p>
@@ -50,11 +50,12 @@ export default function MoneyTickPrivacyPage() {
             <li>
               본 앱은{" "}
               <strong className="text-text-primary">
-                맞춤형 광고를 위해 이용자의 동의를 받아 광고 식별자(IDFA)를
-                이용합니다.
+                맞춤형 광고를 위해 광고 식별자를 이용합니다.
               </strong>{" "}
-              iOS 의 앱 추적 투명성(ATT) 안내창에서 허용하신 경우에만 해당하며,
-              허용하지 않으셔도 모든 기능을 동일하게 이용하실 수 있습니다.
+              iOS 에서는 앱 추적 투명성(ATT) 안내창에서 허용하신 경우에만 광고
+              식별자(IDFA)를 이용합니다. Android 에서는 별도의 안내창 없이 기기의
+              광고 ID(AAID)를 이용하며, 기기 설정에서 언제든지 끄실 수 있습니다.
+              어느 쪽이든 모든 기능을 동일하게 이용하실 수 있습니다.
             </li>
           </ul>
           <p className="mt-3">
@@ -79,17 +80,17 @@ export default function MoneyTickPrivacyPage() {
               <strong className="text-text-primary">
                 이용자의 기기 내부에만 저장됩니다.
               </strong>{" "}
-              앱과 위젯, 다이나믹 아일랜드가 같은 값을 표시할 수 있도록 iOS 의
-              App Group 저장소를 사용합니다.
+              iOS 에서는 앱과 위젯이 같은 값을 표시할 수 있도록 App Group
+              저장소를, Android 에서는 앱 전용 저장소를 사용합니다.
             </li>
             <li>
               개발자를 포함한 누구도 이 정보를 열람할 수 없습니다. 전송되는 곳이
               없기 때문입니다. 이 정보는 광고나 통계에도 사용되지 않습니다.
             </li>
             <li>
-              기기에 iCloud 백업이 설정되어 있는 경우 앱 데이터가 Apple 의 백업에
-              포함될 수 있습니다. 이는 iOS 의 기본 동작이며 본 앱이 별도로 요청하는
-              것이 아닙니다.
+              기기에 백업이 설정되어 있는 경우 앱 데이터가 Apple 의 iCloud 백업
+              또는 Google 의 Android 자동 백업에 포함될 수 있습니다. 이는 각
+              운영체제의 기본 동작이며 본 앱이 별도로 요청하는 것이 아닙니다.
             </li>
           </ul>
           <p className="mt-3">
@@ -108,20 +109,33 @@ export default function MoneyTickPrivacyPage() {
             일정 횟수 사용했을 때 나타나는 전면 광고 세 가지입니다.
           </p>
           <p className="mb-3">
+            맞춤형 광고에 쓰이는 식별자와 그 동의 방식은{" "}
             <strong className="text-text-primary">
-              맞춤형 광고는 이용자가 허용한 경우에만 제공됩니다.
-            </strong>{" "}
-            본 앱은 iOS 의 앱 추적 투명성(ATT) 안내창을 통해 추적 허용 여부를 여쭙고,
-            허용하신 경우에만 광고 식별자(IDFA)를 이용해 이용자의 관심사에 맞춘 광고를
-            요청합니다.
+              운영체제에 따라 다릅니다.
+            </strong>
           </p>
-          <p className="mb-3">
-            <strong className="text-text-primary">
-              허용하지 않으시면 비맞춤형(non-personalized) 광고만 요청합니다.
-            </strong>{" "}
-            이 경우 광고 식별자(IDFA)에 접근하지 않습니다. 허용 여부와 관계없이 앱의
-            모든 기능을 동일하게 이용하실 수 있으며, 한 번 선택하신 뒤에도 iOS 설정에서
-            언제든지 바꾸실 수 있습니다.
+          <ul className="ml-5 list-disc space-y-1.5">
+            <li>
+              <strong className="text-text-primary">iOS</strong> — 앱 추적
+              투명성(ATT) 안내창을 통해 추적 허용 여부를 여쭙고,{" "}
+              <strong className="text-text-primary">허용하신 경우에만</strong>{" "}
+              광고 식별자(IDFA)를 이용해 관심사에 맞춘 광고를 요청합니다.
+              허용하지 않으시면 비맞춤형(non-personalized) 광고만 요청하며 IDFA
+              에 접근하지 않습니다.
+            </li>
+            <li>
+              <strong className="text-text-primary">Android</strong> — ATT 에
+              해당하는 제도가 없어 앱 안에서 별도로 여쭙지 않으며,{" "}
+              <strong className="text-text-primary">
+                기본적으로 기기의 광고 ID(AAID)를 이용한 맞춤형 광고를
+                요청합니다.
+              </strong>{" "}
+              기기 설정에서 광고 ID 를 삭제하시면 그 이후로는 비맞춤형 광고만
+              표시됩니다(아래 7. 이용자의 선택권 참고).
+            </li>
+          </ul>
+          <p className="mb-3 mt-3">
+            어느 경우에도 앱의 모든 기능을 동일하게 이용하실 수 있습니다.
           </p>
           <p className="mb-3">
             맞춤형·비맞춤형 어느 경우에도 광고를 전달하고 부정 클릭을 방지하기 위해
@@ -132,13 +146,13 @@ export default function MoneyTickPrivacyPage() {
             <li>기기 종류, 운영체제 버전, 언어 설정 등 기기 정보</li>
             <li>광고 노출·클릭 여부 등 광고 상호작용 기록</li>
             <li>
-              추적을 허용하신 경우에 한해, 광고 식별자(IDFA)와 이를 이용한 관심사 추정
-              정보
+              맞춤형 광고가 적용되는 경우에 한해, 광고 식별자(iOS 의 IDFA 또는
+              Android 의 광고 ID)와 이를 이용한 관심사 추정 정보
             </li>
           </ul>
           <p className="mt-3">
-            또한 본 앱은 Apple 의 SKAdNetwork 를 지원합니다. 개별 이용자를 식별하지
-            않고 광고 성과를 측정하도록 Apple 이 제공하는 방식입니다.
+            또한 iOS 에서는 Apple 의 SKAdNetwork 를 지원합니다. 개별 이용자를
+            식별하지 않고 광고 성과를 측정하도록 Apple 이 제공하는 방식입니다.
           </p>
         </section>
 
@@ -162,8 +176,8 @@ export default function MoneyTickPrivacyPage() {
             </li>
             <li>
               <strong className="text-text-primary">앱 사용 이벤트</strong> — 화면
-              조회, 급여 단위 변경, 비교 실행, 위젯·다이나믹 아일랜드 사용 여부 등
-              기능 사용 기록.
+              조회, 급여 단위 변경, 비교 실행, 위젯 사용 여부(iOS) 등 기능 사용
+              기록.
             </li>
           </ul>
           <p className="mt-3">
@@ -227,19 +241,24 @@ export default function MoneyTickPrivacyPage() {
           </h2>
           <ul className="ml-5 list-disc space-y-1.5">
             <li>
-              iOS 의{" "}
+              <strong className="text-text-primary">iOS</strong> —{" "}
               <strong className="text-text-primary">
                 설정 &gt; 개인정보 보호 및 보안 &gt; 추적
               </strong>{" "}
               에서 본 앱의 추적 허용 여부를 언제든지 바꾸실 수 있습니다. 허용을
-              끄시면 그 이후로는 비맞춤형 광고만 표시됩니다.
+              끄시면 그 이후로는 비맞춤형 광고만 표시됩니다. 같은 메뉴의{" "}
+              <strong className="text-text-primary">Apple 광고</strong> 에서
+              개인 맞춤형 광고를 제한할 수도 있습니다.
             </li>
             <li>
-              iOS 의{" "}
+              <strong className="text-text-primary">Android</strong> —{" "}
               <strong className="text-text-primary">
-                설정 &gt; 개인정보 보호 및 보안 &gt; Apple 광고
+                설정 &gt; 보안 및 개인정보 보호 &gt; 개인정보 보호 &gt; 광고
               </strong>{" "}
-              에서 개인 맞춤형 광고를 제한할 수 있습니다.
+              (기기에 따라 <strong className="text-text-primary">설정 &gt;
+              Google &gt; 모든 서비스 &gt; 광고</strong>)에서{" "}
+              <strong className="text-text-primary">광고 ID 삭제</strong> 를
+              선택하시면 그 이후로는 비맞춤형 광고만 표시됩니다.
             </li>
             <li>
               앱을 삭제하면 기기에 저장된 데이터와 앱 인스턴스 식별자가 함께
