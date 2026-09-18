@@ -9,7 +9,7 @@ export const PROFILE = {
   tagline: "낮엔 130만 명이 쓰는 서비스를, 밤엔 제 이름을 건 서비스를 만듭니다.",
   intro:
     "회사에선 130만 명이 쓰는 서비스를, 퇴근 후엔 실사용자 1만+의 웹·앱을 직접 만들어 운영합니다.",
-  email: "joowonkoh0505@gmail.com",
+  email: "contact@joowonkoh.com",
   github: "https://github.com/joowon-dev",
   blog: "https://joowonkoh.com",
 };
