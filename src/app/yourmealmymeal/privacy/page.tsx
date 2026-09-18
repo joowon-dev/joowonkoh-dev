@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "네밥내밥 개인정보처리방침",
   description:
-    "iOS 앱 네밥내밥이 처리하는 정보, 사진과 끼니 기록을 누가 볼 수 있는지, 계정을 지우는 방법에 대한 안내입니다.",
+    "iOS·안드로이드 앱 네밥내밥이 처리하는 정보, 사진과 끼니 기록을 누가 볼 수 있는지, 계정을 지우는 방법에 대한 안내입니다.",
   alternates: {
     canonical: "https://joowonkoh.com/yourmealmymeal/privacy",
   },
@@ -30,7 +31,7 @@ export default function YourMealMyMealPrivacyPage() {
           </h2>
           <p className="mb-3">
             네밥내밥(이하 &ldquo;본 앱&rdquo;)은 오늘 먹은 끼니를 사진으로 기록하고
-            같은 모임 사람들과 나누는 iOS 애플리케이션입니다. 본 방침은 본 앱이
+            같은 모임 사람들과 나누는 iOS·안드로이드 애플리케이션입니다. 본 방침은 본 앱이
             처리하는 정보와 그 목적, 이용자의 선택권을 설명합니다.
           </p>
           <p className="mb-3">요약하면 다음과 같습니다.</p>
@@ -182,8 +183,18 @@ export default function YourMealMyMealPrivacyPage() {
           </h2>
           <ul className="ml-5 list-disc space-y-1.5">
             <li>표시 이름은 앱에서 언제든 고칠 수 있습니다.</li>
-            <li>계정과 모든 기록은 위 6번 방법으로 즉시 지울 수 있습니다.</li>
-            <li>알림은 iOS 설정에서 언제든 끌 수 있습니다.</li>
+            <li>
+              계정과 모든 기록은 위 6번 방법으로 즉시 지울 수 있습니다. 앱을 이미
+              지우셨다면{" "}
+              <Link
+                className="font-medium text-accent underline underline-offset-4"
+                href="/yourmealmymeal/delete-account"
+              >
+                계정 삭제 안내
+              </Link>
+              를 보아주세요.
+            </li>
+            <li>알림은 기기 설정에서 언제든 끌 수 있습니다.</li>
             <li>
               그 밖의 열람·정정·삭제 요청은 위 이메일 주소로 연락해 주시기 바랍니다.
             </li>

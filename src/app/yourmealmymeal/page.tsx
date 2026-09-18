@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "네밥내밥",
   description:
-    "아침·점심·저녁을 식판 한 칸씩 사진으로 채우고, 가족이나 친구와 서로 챙기는 앱. iOS 앱 네밥내밥 소개 및 지원 페이지입니다.",
+    "아침·점심·저녁을 식판 한 칸씩 사진으로 채우고, 가족이나 친구와 서로 챙기는 앱. iOS·안드로이드 앱 네밥내밥 소개 및 지원 페이지입니다.",
   alternates: {
     canonical: "https://joowonkoh.com/yourmealmymeal",
   },
@@ -42,7 +42,7 @@ export default function YourMealMyMealPage() {
   return (
     <div className="animate-fade-in-up">
       <span className="mb-4 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-accent">
-        iOS App
+        iOS · Android App
       </span>
 
       <div className="flex items-center gap-5">
@@ -63,7 +63,7 @@ export default function YourMealMyMealPage() {
 
       <p className="mt-6 max-w-[60ch] leading-[1.85] text-text-secondary">
         네밥내밥은 오늘 먹은 끼니를 식판 한 칸씩 사진으로 채우고, 가족이나 친구와
-        서로 챙기는 iOS 앱입니다. 잘 먹고 다니냐고 묻는 말은 자주 하기 민망하고,
+        서로 챙기는 iOS·안드로이드 앱입니다. 잘 먹고 다니냐고 묻는 말은 자주 하기 민망하고,
         묻는다고 제대로 답이 오지도 않습니다. 대신 각자 자기 식판을 채워 두면
         말없이도 서로 확인이 됩니다.
       </p>
