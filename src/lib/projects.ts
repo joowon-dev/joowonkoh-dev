@@ -19,7 +19,8 @@ export type IconName =
   | "baseball"
   | "mitt"
   | "gift"
-  | "firework";
+  | "firework"
+  | "shark";
 
 export interface Project {
   title: string;
@@ -208,6 +209,15 @@ export const projects: Project[] = [
     href: "/playground/desktop-fireworks",
     icon: "firework",
     tile: ["#1a1030", "#0b0b14"],
+    hidden: true,
+  },
+  {
+    title: "바탕화면 상어",
+    description: "클릭하면 밥이 떨어지고 상어가 달려옵니다 🦈",
+    tags: ["macOS", "Windows", "Canvas"],
+    href: "/playground/desktop-shark",
+    icon: "shark",
+    tile: ["#0e2a3d", "#05111a"],
     hidden: true,
   },
 ];

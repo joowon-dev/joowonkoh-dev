@@ -357,6 +357,23 @@ function Gift() {
 }
 
 /** 불꽃놀이 — 밤하늘에 터진 불꽃과 올라가는 불꽃탄 */
+function Shark() {
+  return (
+    <>
+      {/* 수면 위로 나온 등지느러미 하나. 몸을 다 그리면 «상어 그림»이 되고,
+          지느러미만 두면 «밑에 있다»가 된다 — 앱이 실제로 주는 느낌이 그쪽이다 */}
+      <path d="M32 40 C33 26 38 16 46 10 C42 22 42 32 44 40 Z" fill="#0b1f2e" />
+      {/* 지느러미가 가르고 지나간 자국 */}
+      <path d="M12 41 L52 41" stroke="#7fd4f5" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+      {/* 수면 */}
+      <g stroke="#3f9dc4" strokeWidth="2.4" strokeLinecap="round" fill="none" opacity="0.85">
+        <path d="M8 49 Q16 45 24 49 T40 49 T56 49" />
+        <path d="M12 56 Q20 52 28 56 T44 56" opacity="0.6" />
+      </g>
+    </>
+  );
+}
+
 function Firework() {
   return (
     <>
@@ -400,6 +417,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   mitt: Mitt,
   gift: Gift,
   firework: Firework,
+  shark: Shark,
 };
 
 /**
