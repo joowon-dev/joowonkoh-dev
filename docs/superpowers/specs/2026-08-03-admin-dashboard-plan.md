@@ -128,7 +128,32 @@ curl "$SUPABASE_URL/rest/v1/metrics_daily?select=*" \
 허용목록이 막아 주므로 `/admin/denied`에서 멈추고 지표는 보이지 않지만, 필요 없는
 가입 경로다. Google만 쓸 것이면 대시보드에서 이메일 provider를 끄는 편이 낫다.
 
-**배포 경로 — Cloudflare Pages다. (2026-08-04 정정)**
+**배포 경로 — Vercel로 이전한다. (2026-08-04 최종)**
+
+Cloudflare에서 하루에 두 번 빌드가 깨졌고, 원인이 모두 플랫폼 제약이었다.
+어댑터를 바꿔 봐도 벽이 계속 나와서 Vercel로 옮기기로 했다.
+
+| 시도 | 막힌 지점 |
+| --- | --- |
+| next-on-pages (기존) | deprecated. 모든 서버 라우트에 edge 런타임 강제 |
+| @opennextjs/cloudflare | Next 16 Proxy 미지원(Node 미들웨어 불가). Worker 번들 gzip 3882 KiB로 무료 한도 3072 KiB 초과 |
+| Vercel | 제약 없음. Proxy·Node 런타임·ISR 모두 기본 동작 |
+
+OpenNext 시도에서 확인한 사실은 남겨 둔다. `@opennextjs/cloudflare@1.20.2`의
+peer 범위는 `next@">=15.5.21 <16 || >=16.2.11"`이라 16.0.0~16.2.10은 의도적으로
+제외돼 있다. 또 `generateStaticParams`로 만든 페이지는 증분 캐시를 지정하지 않으면
+전부 404가 되며, ISR을 쓰지 않는 사이트는
+`staticAssetsIncrementalCache`가 맞는 선택이었다.
+
+Vercel 이전으로 되찾은 것: **`proxy.ts` 복구**(세션 쿠키 자동 갱신),
+서버 라우트의 `runtime = 'edge'` 선언 제거.
+
+주의: 이 사이트는 AdSense를 게재하므로 Vercel Hobby 플랜의 비상업적 사용 조건에
+걸릴 수 있다. Pro 플랜을 전제로 한다.
+
+---
+
+**(이전 기록) Cloudflare Pages였다. (2026-08-04 정정)**
 
 앞서 `next.config.ts`의 `output: "standalone"`만 보고 Node 서버 배포라고 적었는데
 틀렸다. 실제 CI는 `npx vercel build` 후 `@cloudflare/next-on-pages`로 Cloudflare

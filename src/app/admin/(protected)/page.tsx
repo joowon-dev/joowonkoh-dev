@@ -6,8 +6,6 @@ import { loadDashboard, WINDOW_DAYS, yesterdayOf } from "@/lib/admin/queries";
 import { buildSeries, computeDelta } from "@/lib/admin/series";
 import { SOURCE_LABELS, type Source } from "@/lib/admin/types";
 
-export const runtime = "edge";
-
 /**
  * 화면에 세울 지표. 소스를 붙일 때마다 여기에 한 줄씩 는다.
  * 수집 파이프라인이 아직 없는 소스도 자리를 비워 두고 먼저 보여준다.
