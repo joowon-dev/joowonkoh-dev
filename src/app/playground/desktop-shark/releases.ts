@@ -37,9 +37,19 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "1.0.1",
+    date: "2026-09-23",
+    latest: true,
+    notes: [
+      "윈도우에서 상어가 얹힌 모니터의 클릭과 타자가 먹통이던 것을 고쳤습니다. 이제 상어가 떠 있어도 밑의 앱을 평소처럼 쓰면 됩니다.",
+      "모니터가 여러 대일 때, 상어가 없는 화면에서 클릭해도 밥이 떨어집니다. 그쪽 가장자리로 들어옵니다.",
+    ],
+    mac: { href: "/downloads/DesktopShark-mac.dmg", size: "575KB" },
+    windows: { href: "/downloads/DesktopShark-win-Setup.exe", size: "2.3MB" },
+  },
+  {
     version: "1.0.0",
     date: "2026-09-22",
-    latest: true,
     notes: [
       "바탕화면에 상어가 삽니다. 평소에는 흐릿한 그림자로 지나가고, 배가 고프면 화면 가운데를 맴돕니다.",
       "밥은 그냥 일하면 줍니다. 아무 데나 클릭하면 그 자리에 큰 밥이, 타자를 치면 아무 데나 작은 밥이 떨어집니다 — 창은 클릭을 삼키지 않으니 하던 일은 그대로 합니다.",
@@ -49,8 +59,14 @@ export const RELEASES: Release[] = [
       "랭킹은 몰래 야구와 같은 계정을 씁니다. 복구 코드 하나로 두 게임이 이어집니다.",
       "맥은 dmg 로, 윈도우는 설치 파일로 받습니다. 새 버전이 나오면 앱이 메뉴로 알려 주고, 눌러야만 갈아 낍니다.",
     ],
-    mac: { href: "/downloads/DesktopShark-mac.dmg", size: "575KB" },
-    windows: { href: "/downloads/DesktopShark-win-Setup.exe", size: "2.3MB" },
+    mac: {
+      href: "/downloads/desktop-shark/v1.0.0/DesktopShark-mac.zip",
+      size: "280KB",
+    },
+    windows: {
+      href: "/downloads/desktop-shark/v1.0.0/DesktopShark-win-x64.zip",
+      size: "624KB",
+    },
   },
 ];
 

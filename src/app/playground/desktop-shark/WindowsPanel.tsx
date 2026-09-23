@@ -49,7 +49,7 @@ const STEPS: Step[] = [
       // 조금씩 쌓이던 다운로드 평판이 매번 0으로 돌아간다.
       href: "/downloads/DesktopShark-win-Setup.exe",
       label: "바탕화면 상어 설치 파일 (Windows) 내려받기",
-      note: "1.0.0 · 2.3MB · Windows 10 1809 이상 · 64비트 · 서명 없음",
+      note: "1.0.1 · 2.3MB · Windows 10 1809 이상 · 64비트 · 서명 없음",
     },
   },
   {
@@ -62,7 +62,7 @@ const STEPS: Step[] = [
     link: {
       href: "/downloads/DesktopShark-win-x64.zip",
       label: "압축본 (설치 없이 쓰기)",
-      note: "1.0.0 · 623KB · 자동 업데이트 안 됨",
+      note: "1.0.1 · 624KB · 자동 업데이트 안 됨",
     },
   },
   {
