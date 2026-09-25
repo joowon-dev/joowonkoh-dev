@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   },
 };
 
-const UPDATED_AT = "2026년 9월 24일";
+const UPDATED_AT = "2026년 9월 25일";
 const CONTACT = "contact@joowonkoh.com";
 
 export default function YourMealMyMealPrivacyPage() {
@@ -96,6 +96,19 @@ export default function YourMealMyMealPrivacyPage() {
               보낼 곳을 알기 위해 저장합니다.
             </li>
             <li>
+              <strong className="text-text-primary">댓글</strong> — 같은 모임 사람의
+              끼니에 남긴 글입니다. 그 모임 사람에게만 보입니다.
+            </li>
+            <li>
+              <strong className="text-text-primary">프로필 사진</strong> — 이용자가
+              직접 올리는 사진입니다. 나와 같은 모임 사람에게만 보입니다.
+            </li>
+            <li>
+              <strong className="text-text-primary">신고·차단 기록</strong> — 누가
+              무엇을 왜 신고했는지, 누구를 차단했는지입니다. 부적절한 내용을 처리하는
+              데만 씁니다.
+            </li>
+            <li>
               <strong className="text-text-primary">계정 식별자</strong> — 가입할 때
               자동으로 만들어지는 임의의 문자열입니다. 사진과 기록이 누구의 것인지
               잇는 데만 쓰이고, 이름이나 이메일과 달리 화면에 드러나지 않습니다.
@@ -140,6 +153,12 @@ export default function YourMealMyMealPrivacyPage() {
             푸시 토큰은 본인만 읽을 수 있는 별도의 표에 둡니다. 같은 모임 사람에게도
             보이지 않습니다. 토큰을 알면 그 기기로 임의의 알림을 보낼 수 있기
             때문입니다.
+          </p>
+          <p className="mt-3">
+            댓글과 반응은{" "}
+            <strong className="text-text-primary">남긴 모임 안에서만</strong> 보입니다.
+            같은 사진이라도 다른 모임 사람에게는 보이지 않습니다. 신고하거나 차단한
+            내용은 그 순간부터 신고·차단한 사람에게 보이지 않습니다.
           </p>
         </section>
 
@@ -207,8 +226,9 @@ export default function YourMealMyMealPrivacyPage() {
             <strong className="text-text-primary">설정 &gt; 계정 삭제</strong>.
           </p>
           <p className="mb-3">
-            지우면 프로필과 표시 이름, 올린 사진 파일, 끼니 기록, 반응, 모임 멤버십,
-            푸시 토큰이 모두 삭제되며 되돌릴 수 없습니다.
+            지우면 프로필과 표시 이름, 프로필 사진, 올린 사진 파일, 끼니 기록, 댓글,
+            반응, 신고·차단 기록, 모임 멤버십, 푸시 토큰이 모두 삭제되며 되돌릴 수
+            없습니다.
           </p>
           <p>
             내가 만든 모임은 남아 있는 사람 중 가장 오래 있던 사람에게 넘어갑니다.
@@ -233,6 +253,9 @@ export default function YourMealMyMealPrivacyPage() {
                 계정 삭제 안내
               </Link>
               를 보아주세요.
+            </li>
+            <li>
+              차단은 &lsquo;나&rsquo; 탭 &gt; 차단한 사람에서 언제든 풀 수 있습니다.
             </li>
             <li>알림은 기기 설정에서 언제든 끌 수 있습니다.</li>
             <li>
