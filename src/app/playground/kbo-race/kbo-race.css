@@ -44,10 +44,10 @@
 html:has(.kbo-race) { overflow: hidden; }
 /* 경기장과 조작부는 한 화면에 들어오는 만큼 크게 — 남는 세로 공간에 맞춰 폭을 정한다. */
 .kbo-race > .kr-head, .kbo-race > .park, .kbo-race > .controls {
-  width: min(100%, calc((100dvh - 150px) * 400 / 180));
+  width: min(100%, calc((100dvh - 200px) * 400 / 180));
   margin-inline: auto;
 }
-.kbo-race > .lower, .kbo-race > .lede, .kbo-race > .source {
+.kbo-race > .chart, .kbo-race > .lede, .kbo-race > .source {
   width: min(100%, 1280px);
   margin-inline: auto;
 }
@@ -64,7 +64,7 @@ html:has(.kbo-race) { overflow: hidden; }
 .kbo-race .lede b { color: var(--ink); font-weight: 400; }
 
 /* ---------- 경기장 ---------- */
-.kbo-race .park { background: var(--shadow); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow); }
+.kbo-race .park { position: relative; background: var(--shadow); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow); }
 .kbo-race .screen { position: relative; overflow: hidden; }
 .kbo-race .screen canvas { display: block; width: 100%; aspect-ratio: 400 / 180; height: auto; }
 .kbo-race .tags { position: absolute; inset: 0; pointer-events: none; }
@@ -116,10 +116,9 @@ html:has(.kbo-race) { overflow: hidden; }
 .kbo-race .count { color: var(--mute); font-family: var(--mono); white-space: nowrap; }
 
 /* ---------- 순위표 + 그래프 ---------- */
-.kbo-race .lower { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 16px; align-items: start; }
-@container (max-width: 820px) { .kbo-race .lower { grid-template-columns: minmax(0, 1fr); } }
 
-.kbo-race .board { background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow); }
+/* 폰: 경기장 바로 밑에 작게. 경기장이 주인공이라 순위표는 한 줄을 낮고 좁게 잡는다. */
+.kbo-race .board { --row: 21px; background: var(--panel); border-top: 2px solid var(--line); font-size: 11px; }
 .kbo-race .board-head {
   display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
   padding: 10px 12px 8px; border-bottom: 2px solid var(--line); background: var(--panel-2);
@@ -150,17 +149,21 @@ html:has(.kbo-race) { overflow: hidden; }
 .kbo-race .mv.up { color: var(--up); }
 .kbo-race .mv.down { color: var(--down); }
 .kbo-race .games { border-top: 2px solid var(--line); padding: 10px 12px 12px; display: grid; gap: 6px; }
-.kbo-race .games h2, .kbo-race .chart h2 { font-size: 12px; font-weight: 700; margin: 0; color: var(--mute); letter-spacing: .04em; }
 .kbo-race .game-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .kbo-race .game-list li { white-space: nowrap; font-family: var(--mono); }
 .kbo-race .game-list .w { color: var(--ink); }
 .kbo-race .game-list .l { color: var(--mute); }
 
-.kbo-race .chart {
-  background: var(--panel); border: 2px solid var(--line); padding: 12px;
-  display: grid; gap: 8px; box-shadow: 4px 4px 0 var(--shadow);
+.kbo-race .chart { background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow); }
+.kbo-race .chart summary {
+  cursor: pointer; padding: 10px 12px; color: var(--ink); font-weight: 700; list-style: none;
+  display: flex; align-items: center; gap: 8px;
 }
-.kbo-race .chart-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.kbo-race .chart summary::-webkit-details-marker { display: none; }
+.kbo-race .chart summary::before { content: "▶"; color: var(--amber); font-size: 10px; transition: transform .2s; }
+.kbo-race .chart[open] summary::before { transform: rotate(90deg); }
+.kbo-race .chart summary:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+.kbo-race .chart-body { display: grid; gap: 8px; padding: 0 12px 12px; }
 .kbo-race .chart-note { color: var(--mute); }
 .kbo-race .chart-box { overflow-x: auto; overflow-y: hidden; }
 .kbo-race .chart-inner { min-width: 520px; position: relative; }
@@ -172,3 +175,34 @@ html:has(.kbo-race) { overflow: hidden; }
 .kbo-race .months span { position: absolute; top: 2px; transform: translateX(-2px); white-space: nowrap; }
 
 .kbo-race .source { color: var(--mute); margin: 0; }
+
+/* 재생·일시정지 아이콘 버튼 */
+.kbo-race .play { min-width: 0; width: 40px; height: 32px; display: grid; place-items: center; padding: 0; }
+.kbo-race .play svg { width: 14px; height: 14px; fill: currentColor; }
+
+/* 폰: 순위표 칸을 좁힌다 */
+.kbo-race .board .cols, .kbo-race .board .row { grid-template-columns: 20px 12px minmax(0, 1fr) 64px 36px 30px 24px; gap: 5px; padding-inline: 8px; }
+.kbo-race .board .cols { height: 22px; }
+.kbo-race .board-head { padding: 7px 10px 6px; }
+.kbo-race .board-date { font-size: 18px; }
+.kbo-race .mini { width: 12px; height: 19px; }
+.kbo-race .games { padding: 6px 10px 8px; }
+
+/* PC: 한 화면에 — 순위표를 경기장 왼쪽 위에 얹는다. 관중석 자리라 선수를 가리지 않는다. */
+@container (min-width: 900px) {
+  .kbo-race .board {
+    --row: clamp(16px, 1.75cqi, 21px);
+    position: absolute; top: 10px; left: 10px; z-index: 30;
+    width: clamp(250px, 24cqi, 320px);
+    font-size: clamp(10px, .85cqi, 12px);
+    background: rgba(9, 14, 29, .84);
+    border: 2px solid var(--line);
+    box-shadow: 3px 3px 0 var(--shadow);
+    backdrop-filter: blur(2px);
+  }
+  .kbo-race .board .cols { height: 18px; }
+  .kbo-race .board-date { font-size: clamp(14px, 1.5cqi, 20px); }
+  .kbo-race .board .row:hover { background: rgba(22, 31, 58, .9); }
+  .kbo-race .games { padding: 5px 10px 7px; }
+  .kbo-race .game-list { gap: 2px 10px; }
+}

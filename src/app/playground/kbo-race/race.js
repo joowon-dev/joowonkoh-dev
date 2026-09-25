@@ -45,10 +45,10 @@ function text(ctx, s, x, y, col, sc = 1) {
 const textW = (s, sc = 1) => s.length * 4 * sc - sc;
 
 /* ---------- 장면 치수 (캔버스 단위 = 장면 픽셀) ---------- */
-const W = 400, H = 180, GROUND = 150;
-const LEAD_X = 374;   // 1위가 달리는 자리
-const GAP = 20;       // 선수 한 명 폭 — 이보다 가까우면 바짝 붙어 달린다
-const SCALE = 9.5;    // 1게임차 = 9.5 장면 픽셀
+const H = 180, GROUND = 150;
+// 장면 폭은 화면에 따라 바꾼다. 폰에서는 좁게 잘라 확대해서 선수가 작아지지 않게 한다.
+const WIDE = 400, NARROW = 210, NARROW_BELOW = 640;
+const MAX_SCALE = 9.5;   // 1게임차 = 최대 9.5 장면 픽셀
 const HS = 32;        // 선수 키
 const RUN_SPEED = 60, DAY_MS = 520, HOLD_MS = 6000;
 
@@ -66,7 +66,7 @@ function layer(w, h, paint) {
 }
 
 /** 배경 판. 시드가 고정이라 열 때마다 같은 관중석이 나온다. */
-function buildBackdrop(season) {
+export function buildBackdrop(season) {
   let seed = 11;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const standPx = [];
@@ -126,9 +126,18 @@ export function mountRace(root, F) {
   /* ---------- 캔버스 ---------- */
   const park = q("park");
   const ctx = park.getContext("2d");
-  let K = 1;
+  const maxGb = Math.max(1, ...F.flatMap((f) => f.s.map((r) => r[5])));
+  let K = 1, W = WIDE, LEAD_X = WIDE - 26, SCALE = MAX_SCALE, GAP = 20, ROWS = 2;
   const fit = () => {
-    const w = park.clientWidth || W;
+    const w = park.clientWidth || WIDE;
+    W = w < NARROW_BELOW ? NARROW : WIDE;
+    LEAD_X = W - 26;
+    // 선수 한 명 폭 — 이보다 가까우면 바짝 붙어 달린다. 좁은 장면에선 조금 더 붙이고 이름표를 세 줄로 나눈다.
+    GAP = W === NARROW ? 17 : 20;
+    ROWS = W === NARROW ? 3 : 2;
+    // 시즌 최대 게임차여도 꼴찌가 화면 안에 남도록 간격을 줄인다.
+    SCALE = Math.min(MAX_SCALE, (LEAD_X - 14) / maxGb);
+    park.style.aspectRatio = `${W} / ${H}`;
     K = Math.max(1, Math.round(w * (window.devicePixelRatio || 1)) / W);
     park.width = Math.round(W * K);
     park.height = Math.round(H * K);
@@ -288,7 +297,13 @@ export function mountRace(root, F) {
   }
 
   /* ---------- 조작 ---------- */
-  const syncPlay = () => ($play.textContent = playing ? "일시정지" : "재생");
+  const ICON_PAUSE = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/></svg>';
+  const ICON_PLAY = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z"/></svg>';
+  const syncPlay = () => {
+    $play.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
+    $play.setAttribute("aria-label", playing ? "일시정지" : "재생");
+    $play.title = playing ? "일시정지" : "재생";
+  };
   on($play, "click", () => {
     playing = !playing;
     if (playing && pos >= N - 1) { pos = 0; hold = 0; }
@@ -332,10 +347,11 @@ export function mountRace(root, F) {
     tile(bg.grass, world * 1.25, 160);
 
     const f = F[cur], mm = f.d.slice(4, 6), dd = f.d.slice(6, 8);
-    ctx.fillStyle = "#2A3358"; ctx.fillRect(162, 1, 76, 27);
-    ctx.fillStyle = "#05070F"; ctx.fillRect(164, 3, 72, 23);
-    text(ctx, `KBO ${season}`, 200 - textW(`KBO ${season}`) / 2, 5, "#8C96BA");
-    text(ctx, `${mm}.${dd}`, 200 - textW(`${mm}.${dd}`, 2) / 2, 13, "#FFC24A", 2);
+    const cx = W / 2;
+    ctx.fillStyle = "#2A3358"; ctx.fillRect(cx - 38, 1, 76, 27);
+    ctx.fillStyle = "#05070F"; ctx.fillRect(cx - 36, 3, 72, 23);
+    text(ctx, `KBO ${season}`, cx - textW(`KBO ${season}`) / 2, 5, "#8C96BA");
+    text(ctx, `${mm}.${dd}`, cx - textW(`${mm}.${dd}`, 2) / 2, 13, "#FFC24A", 2);
 
     // 선수 자리: 1위와의 게임차만큼 뒤. 한 명 폭보다 가까우면 바로 뒤에 붙는다.
     const e = ease(dayT), g = {};
@@ -363,7 +379,7 @@ export function mountRace(root, F) {
       }
       const tag = tagEls[id];
       tag.style.left = `${(x / W) * 100}%`;
-      tag.style.setProperty("--lift", `${(k % 2) * 20}px`);
+      tag.style.setProperty("--lift", `${(k % ROWS) * 18}px`);
       tag.style.zIndex = String(10 + k);
     });
   }

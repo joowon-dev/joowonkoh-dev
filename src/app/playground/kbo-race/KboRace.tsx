@@ -44,22 +44,8 @@ export default function KboRace() {
           <div className="tags" data-k="tags" aria-hidden="true" />
           <div className="banner" data-k="banner" role="status" hidden />
         </div>
-      </section>
 
-      <div className="controls">
-        <button className="btn play" data-k="play" type="button">
-          일시정지
-        </button>
-        <input data-k="scrub" id="kbo-race-scrub" type="range" min="0" max="0" defaultValue="0" aria-label="날짜 이동" />
-        <div className="speed" role="group" aria-label="재생 속도">
-          <button className="btn" type="button" data-speed="1" aria-pressed="true">1x</button>
-          <button className="btn" type="button" data-speed="2" aria-pressed="false">2x</button>
-          <button className="btn" type="button" data-speed="4" aria-pressed="false">4x</button>
-        </div>
-        <span className="count" data-k="count" />
-      </div>
-
-      <section className="lower">
+        {/* PC에서는 경기장 왼쪽 위에 얹고, 폰에서는 경기장 밑에 작게 붙인다. */}
         <aside className="board" aria-label="그날의 순위표">
           <div className="board-head">
             <span className="board-date" data-k="date" />
@@ -70,26 +56,37 @@ export default function KboRace() {
           </div>
           <div className="rows" data-k="rows" />
           <div className="games">
-            <h2>이날 경기</h2>
             <ul className="game-list" data-k="games" />
           </div>
         </aside>
+      </section>
 
-        <section className="chart">
-          <div className="chart-top">
-            <h2>날짜별 순위</h2>
-            <span className="chart-note" data-k="chart-note">
-              순위표에서 팀을 누르면 그 팀 줄을 따라 볼 수 있다
-            </span>
-          </div>
+      <div className="controls">
+        <button className="btn play" data-k="play" type="button" aria-label="일시정지" />
+        <input data-k="scrub" id="kbo-race-scrub" type="range" min="0" max="0" defaultValue="0" aria-label="날짜 이동" />
+        <div className="speed" role="group" aria-label="재생 속도">
+          <button className="btn" type="button" data-speed="1" aria-pressed="true">1x</button>
+          <button className="btn" type="button" data-speed="2" aria-pressed="false">2x</button>
+          <button className="btn" type="button" data-speed="4" aria-pressed="false">4x</button>
+        </div>
+        <span className="count" data-k="count" />
+      </div>
+
+      {/* 날짜별 순위 그래프는 접어 두고 펼쳐서 본다 — 한 화면에 경기장과 순위표가 먼저 들어오게. */}
+      <details className="chart">
+        <summary>날짜별 순위 펼쳐 보기</summary>
+        <div className="chart-body">
+          <span className="chart-note" data-k="chart-note">
+            순위표에서 팀을 누르면 그 팀 줄을 따라 볼 수 있다
+          </span>
           <div className="chart-box">
             <div className="chart-inner">
               <canvas data-k="bump" width="306" height="104" role="img" aria-label="개막일부터 오늘까지 10개 구단 순위 변화 그래프" />
               <div className="months" data-k="months" />
             </div>
           </div>
-        </section>
-      </section>
+        </div>
+      </details>
 
       <p className="lede">
         열 개 구단 선수가 홈 유니폼을 입고 한 줄로 달린다. 맨 앞이 1위이고{" "}
