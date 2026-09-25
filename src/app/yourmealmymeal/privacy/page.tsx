@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   },
 };
 
-const UPDATED_AT = "2026년 9월 18일";
+const UPDATED_AT = "2026년 9월 24일";
 const CONTACT = "contact@joowonkoh.com";
 
 export default function YourMealMyMealPrivacyPage() {
@@ -44,10 +44,15 @@ export default function YourMealMyMealPrivacyPage() {
               보입니다.
             </li>
             <li>
-              본 앱은{" "}
-              <strong className="text-text-primary">광고를 싣지 않고</strong>,
-              이용 통계를 모으는 분석 도구를 붙이지 않으며, 이용자를 추적하지
-              않습니다.
+              본 앱은 화면 아래에{" "}
+              <strong className="text-text-primary">Google AdMob 배너 광고</strong>를
+              싣고, 이용 통계를 위해 Google Analytics for Firebase를 씁니다. 이름·이메일·
+              사진·끼니 기록은 이 서비스들에 넘기지 않습니다.
+            </li>
+            <li>
+              iOS에서는 광고 추적을{" "}
+              <strong className="text-text-primary">허용할지 먼저 묻고</strong>,
+              거절해도 앱의 모든 기능을 그대로 쓸 수 있습니다.
             </li>
             <li>
               계정은{" "}
@@ -96,9 +101,24 @@ export default function YourMealMyMealPrivacyPage() {
               잇는 데만 쓰이고, 이름이나 이메일과 달리 화면에 드러나지 않습니다.
             </li>
           </ul>
+          <p className="mt-3">광고와 이용 통계를 위해 다음 정보가 처리됩니다.</p>
+          <ul className="ml-5 mt-3 list-disc space-y-1.5">
+            <li>
+              <strong className="text-text-primary">앱 이용 정보</strong> — 본 화면과
+              누른 기능, 앱 인스턴스 ID, 기기 종류와 OS, 대략적인 지역. 어떤 기능이
+              쓰이는지 알고 앱을 고치는 데 쓰이며 Google Analytics for Firebase가
+              처리합니다.
+            </li>
+            <li>
+              <strong className="text-text-primary">광고 식별자와 광고 정보</strong> —
+              iOS의 IDFA 또는 안드로이드 광고 ID, 광고 노출·클릭 정보. 광고를 보여주고
+              성과를 재는 데 쓰이며 Google AdMob이 처리합니다. iOS에서는 &ldquo;앱 추적
+              허용&rdquo;을 거절하면 IDFA가 쓰이지 않고 맞춤형이 아닌 광고가 나갑니다.
+            </li>
+          </ul>
           <p className="mt-3">
-            본 앱은 위치 정보, 연락처, 통화 기록, 건강 정보, 결제 정보, 광고
-            식별자(IDFA)에 접근하지 않습니다.
+            본 앱은 정확한 위치 정보, 연락처, 통화 기록, 건강 정보, 결제 정보에
+            접근하지 않습니다.
           </p>
         </section>
 
@@ -128,8 +148,9 @@ export default function YourMealMyMealPrivacyPage() {
             4. 제3자 서비스
           </h2>
           <p className="mb-3">
-            본 앱은 개인정보를 판매하거나 광고 목적으로 제3자에게 제공하지 않습니다.
-            앱이 동작하기 위해 이용하는 서비스는 다음과 같습니다.
+            본 앱은 개인정보를 판매하지 않습니다. 이름·이메일·사진·끼니 기록은 광고나
+            분석 목적으로 제3자에게 제공하지 않습니다. 앱이 이용하는 서비스는 다음과
+            같습니다.
           </p>
           <ul className="ml-5 list-disc space-y-1.5">
             <li>
@@ -145,7 +166,25 @@ export default function YourMealMyMealPrivacyPage() {
               <strong className="text-text-primary">Apple / Google</strong> — 로그인.
               이메일 주소를 전달받습니다.
             </li>
+            <li>
+              <strong className="text-text-primary">Google AdMob</strong> — 배너 광고.
+              광고 식별자, 광고 노출·클릭 정보, 기기 정보가 전달됩니다.
+            </li>
+            <li>
+              <strong className="text-text-primary">Google Analytics for Firebase</strong>{" "}
+              — 이용 통계. 앱 이용 정보, 앱 인스턴스 ID, 기기 정보가 전달됩니다.
+            </li>
           </ul>
+          <p className="mt-3">
+            Google이 이 정보를 처리하는 방식은{" "}
+            <a
+              className="text-accent hover:underline"
+              href="https://policies.google.com/technologies/partner-sites"
+            >
+              Google 파트너 사이트·앱의 데이터 사용 안내
+            </a>
+            에서 볼 수 있습니다.
+          </p>
         </section>
 
         <section>
@@ -154,7 +193,8 @@ export default function YourMealMyMealPrivacyPage() {
           </h2>
           <p>
             계정이 유지되는 동안 보관하며, 계정을 지우면 함께 지웁니다. 별도로
-            보관하는 사본은 없습니다.
+            보관하는 사본은 없습니다. 이용 통계는 계정에 묶여 있지 않으며 Google
+            Analytics 기본 설정에 따라 2개월이 지나면 지워집니다.
           </p>
         </section>
 
@@ -195,6 +235,10 @@ export default function YourMealMyMealPrivacyPage() {
               를 보아주세요.
             </li>
             <li>알림은 기기 설정에서 언제든 끌 수 있습니다.</li>
+            <li>
+              광고 추적은 iOS 설정 &gt; 개인정보 보호 및 보안 &gt; 추적에서, 안드로이드는
+              설정 &gt; Google &gt; 광고에서 언제든 끄거나 광고 ID를 지울 수 있습니다.
+            </li>
             <li>
               그 밖의 열람·정정·삭제 요청은 위 이메일 주소로 연락해 주시기 바랍니다.
             </li>
