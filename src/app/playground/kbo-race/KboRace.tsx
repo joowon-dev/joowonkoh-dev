@@ -45,7 +45,19 @@ export default function KboRace() {
           <div className="banner" data-k="banner" role="status" hidden />
         </div>
 
-        {/* PC에서는 경기장 왼쪽 위에 얹고, 폰에서는 경기장 밑에 작게 붙인다. */}
+        {/* 재생 조작은 늘 경기장 바로 밑. */}
+        <div className="controls">
+          <button className="btn play" data-k="play" type="button" aria-label="일시정지" />
+          <input data-k="scrub" id="kbo-race-scrub" type="range" min="0" max="0" defaultValue="0" aria-label="날짜 이동" />
+          <div className="speed" role="group" aria-label="재생 속도">
+            <button className="btn" type="button" data-speed="1" aria-pressed="true">1x</button>
+            <button className="btn" type="button" data-speed="2" aria-pressed="false">2x</button>
+            <button className="btn" type="button" data-speed="4" aria-pressed="false">4x</button>
+          </div>
+          <span className="count" data-k="count" />
+        </div>
+
+        {/* PC에서는 경기장 왼쪽 위에 얹고, 폰에서는 재생 조작 밑에 작게 붙인다. */}
         <aside className="board" aria-label="그날의 순위표">
           <div className="board-head">
             <span className="board-date" data-k="date" />
@@ -60,17 +72,6 @@ export default function KboRace() {
           </div>
         </aside>
       </section>
-
-      <div className="controls">
-        <button className="btn play" data-k="play" type="button" aria-label="일시정지" />
-        <input data-k="scrub" id="kbo-race-scrub" type="range" min="0" max="0" defaultValue="0" aria-label="날짜 이동" />
-        <div className="speed" role="group" aria-label="재생 속도">
-          <button className="btn" type="button" data-speed="1" aria-pressed="true">1x</button>
-          <button className="btn" type="button" data-speed="2" aria-pressed="false">2x</button>
-          <button className="btn" type="button" data-speed="4" aria-pressed="false">4x</button>
-        </div>
-        <span className="count" data-k="count" />
-      </div>
 
       {/* 날짜별 순위 그래프는 접어 두고 펼쳐서 본다 — 한 화면에 경기장과 순위표가 먼저 들어오게. */}
       <details className="chart">

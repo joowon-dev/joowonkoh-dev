@@ -43,7 +43,7 @@
 /* 뒤에 깔린 사이트 페이지가 같이 스크롤되지 않게 */
 html:has(.kbo-race) { overflow: hidden; }
 /* 경기장과 조작부는 한 화면에 들어오는 만큼 크게 — 남는 세로 공간에 맞춰 폭을 정한다. */
-.kbo-race > .kr-head, .kbo-race > .park, .kbo-race > .controls {
+.kbo-race > .kr-head, .kbo-race > .park {
   width: min(100%, calc((100dvh - 200px) * 400 / 180));
   margin-inline: auto;
 }
@@ -101,7 +101,14 @@ html:has(.kbo-race) { overflow: hidden; }
 /* ---------- 조작 ---------- */
 .kbo-race .controls {
   display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
-  background: var(--panel); border: 2px solid var(--line); padding: 10px 12px; box-shadow: 4px 4px 0 var(--shadow);
+  /* 경기장 틀 안, 화면 바로 밑에 붙는다 */
+  background: var(--panel); border-top: 2px solid var(--line); padding: 10px 12px;
+}
+@container (max-width: 560px) {
+  .kbo-race .controls { gap: 8px; padding: 8px 10px; flex-wrap: nowrap; }
+  .kbo-race .count { display: none; }
+  .kbo-race input[type=range] { flex-basis: 60px; }
+  .kbo-race .speed .btn { padding-inline: 7px; }
 }
 .kbo-race .btn {
   font: inherit; color: var(--ink); background: var(--panel-2); border: 2px solid var(--line);
