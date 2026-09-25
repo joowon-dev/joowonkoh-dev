@@ -17,6 +17,7 @@ export type IconName =
   | "horse"
   | "imax"
   | "baseball"
+  | "ball"
   | "mitt"
   | "gift"
   | "firework"
@@ -46,7 +47,7 @@ export const projects: Project[] = [
     description: "10개 구단이 홈 유니폼 입고 한 줄로 달리는 순위 변화 ⚾",
     tags: ["Canvas", "Pixel Art", "Data"],
     href: "/playground/kbo-race",
-    icon: "baseball",
+    icon: "ball",
     tile: ["#1a2242", "#090e1d"],
     blurb:
       "개막일부터 오늘까지 KBO 순위를 날짜별로 다시 틀어 줍니다. 선수 사이 간격이 그날의 실제 게임차라서 1위 경쟁이 붙으면 선수들이 앞뒤로 엎치락뒤치락하고, 새 1위가 나오면 전광판 밑에 알림이 뜹니다. KBO 기록실의 경기 결과를 날짜마다 받아 승률과 게임차를 직접 계산했고, 공식 순위표와 맞춰 봤습니다. 선수들은 몰래 야구의 유니폼 렌더러를 그대로 가져와 입혔습니다.",
