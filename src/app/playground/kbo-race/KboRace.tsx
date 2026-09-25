@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback } from "react";
 import games from "./data/games.json";
 import { buildFrames, type Day } from "./standings.mjs";
@@ -22,17 +23,15 @@ export default function KboRace() {
 
   return (
     <div className="kbo-race" ref={attach}>
+      {/* 사이트 머리글·본문 폭을 덮고 화면 전체를 쓴다. 나갈 길은 이 링크 하나다. */}
       <header className="kr-head">
-        <div className="eyebrow">
-          {games.season} KBO 리그 정규시즌 · {md(FIRST)} 개막 → {md(LAST)}
-        </div>
+        <Link href="/playground" className="back">
+          ← Playground
+        </Link>
         <h1>KBO 순위 레이스</h1>
-        <p className="lede">
-          열 개 구단 선수가 홈 유니폼을 입고 한 줄로 달린다. 맨 앞이 1위이고{" "}
-          <b>앞사람과 벌어진 거리가 그날의 실제 게임차</b>다. 이름표에는 순위와 팀
-          이름이 붙어 있고, 순위표와 아래 그래프는 경기가 열린 날마다 바뀐다.
-          끝까지 가면 개막일로 돌아가 다시 달린다.
-        </p>
+        <span className="eyebrow">
+          {games.season} 정규시즌 · {md(FIRST)} 개막 → {md(LAST)}
+        </span>
       </header>
 
       <section className="park">
@@ -92,6 +91,12 @@ export default function KboRace() {
         </section>
       </section>
 
+      <p className="lede">
+        열 개 구단 선수가 홈 유니폼을 입고 한 줄로 달린다. 맨 앞이 1위이고{" "}
+        <b>앞사람과 벌어진 거리가 그날의 실제 게임차</b>다. 이름표에는 순위와 팀
+        이름이 붙어 있고, 순위표와 그래프는 경기가 열린 날마다 바뀐다.
+        끝까지 가면 개막일로 돌아가 다시 달린다.
+      </p>
       <p className="source">
         자료: KBO 공식 기록실(koreabaseball.com) 정규시즌 {GAME_COUNT}경기 결과로 계산. {md(LAST)}까지.
         승률은 무승부를 뺀 승÷(승+패).

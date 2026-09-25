@@ -341,6 +341,52 @@ function Baseball() {
   );
 }
 
+/** KBO 순위 레이스 — 진짜 야구공. 흰 가죽에 빨간 실밥이 양옆으로 휘어 들어간다. */
+function Ball() {
+  // 실밥 곡선 위 점에서 곡선에 수직으로 짧은 실밥을 긋는다.
+  const seam = (side: 1 | -1) => {
+    const x0 = 32 + side * 13;
+    const x1 = 32 + side * 4;
+    const pts = [0.14, 0.32, 0.5, 0.68, 0.86].map((u) => {
+      const v = 1 - u;
+      const x = v * v * v * x0 + 3 * v * v * u * x1 + 3 * v * u * u * x1 + u * u * u * x0;
+      const y = v * v * v * 13 + 3 * v * v * u * 22 + 3 * v * u * u * 42 + u * u * u * 51;
+      const dx = 3 * v * v * (x1 - x0) + 3 * u * u * (x0 - x1);
+      const dy = 3 * v * v * 9 + 6 * v * u * 20 + 3 * u * u * 9;
+      const len = Math.hypot(dx, dy);
+      return { x, y, nx: -dy / len, ny: dx / len, key: u };
+    });
+    return (
+      <>
+        <path
+          d={`M${x0} 13 C${x1} 22 ${x1} 42 ${x0} 51`}
+          fill="none"
+          stroke="#d7263d"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        {pts.map((p) => (
+          <path
+            key={p.key}
+            d={`M${p.x - p.nx * 3} ${p.y - p.ny * 3 - 1.2} L${p.x + p.nx * 3} ${p.y + p.ny * 3 - 1.2}`}
+            stroke="#d7263d"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        ))}
+      </>
+    );
+  };
+  return (
+    <>
+      <circle cx="32" cy="32" r="23" fill="#f7f4ec" />
+      <circle cx="32" cy="32" r="23" fill="none" stroke="#d9d3c4" strokeWidth="1.5" />
+      {seam(-1)}
+      {seam(1)}
+    </>
+  );
+}
+
 /** 개강 선물 — 리본 묶인 상자 */
 function Gift() {
   return (
@@ -414,6 +460,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   horse: Horse,
   imax: Imax,
   baseball: Baseball,
+  ball: Ball,
   mitt: Mitt,
   gift: Gift,
   firework: Firework,

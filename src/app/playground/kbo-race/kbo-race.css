@@ -21,9 +21,16 @@
   --row: 34px;
   --mono: "KR GalmuriMono", "KR Galmuri", ui-monospace, monospace;
 
+  /* 사이트 레이아웃을 무시하고 화면을 통째로 덮는다(머리글 z-40 위). */
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   container-type: inline-size;
   display: grid;
-  gap: 18px;
+  align-content: start;
+  gap: 14px;
   color-scheme: dark;
   color: var(--ink);
   background: var(--night);
@@ -31,15 +38,28 @@
   font-size: 12px;
   line-height: 1.6;
   -webkit-font-smoothing: none;
-  padding: 22px 16px 26px;
-  border-radius: 14px;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + 28px);
+}
+/* 뒤에 깔린 사이트 페이지가 같이 스크롤되지 않게 */
+html:has(.kbo-race) { overflow: hidden; }
+/* 경기장과 조작부는 한 화면에 들어오는 만큼 크게 — 남는 세로 공간에 맞춰 폭을 정한다. */
+.kbo-race > .kr-head, .kbo-race > .park, .kbo-race > .controls {
+  width: min(100%, calc((100dvh - 150px) * 400 / 180));
+  margin-inline: auto;
+}
+.kbo-race > .lower, .kbo-race > .lede, .kbo-race > .source {
+  width: min(100%, 1280px);
+  margin-inline: auto;
 }
 .kbo-race *, .kbo-race *::before, .kbo-race *::after { box-sizing: border-box; }
 .kbo-race [hidden] { display: none !important; }
 
-.kbo-race .kr-head { display: grid; gap: 8px; }
-.kbo-race .eyebrow { color: var(--amber); letter-spacing: .06em; }
-.kbo-race h1 { font-weight: 700; font-size: 24px; line-height: 1.3; margin: 0; text-wrap: balance; }
+.kbo-race .kr-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.kbo-race .back { color: var(--mute); text-decoration: none; }
+.kbo-race .back:hover { color: var(--ink); }
+.kbo-race .back:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.kbo-race .eyebrow { color: var(--amber); letter-spacing: .04em; margin-left: auto; }
+.kbo-race h1 { font-weight: 700; font-size: 20px; line-height: 1.3; margin: 0; }
 .kbo-race .lede { color: var(--mute); margin: 0; max-width: 62ch; }
 .kbo-race .lede b { color: var(--ink); font-weight: 400; }
 
