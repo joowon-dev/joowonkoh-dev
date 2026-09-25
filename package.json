@@ -13,7 +13,8 @@
     "pages:build": "npx @cloudflare/next-on-pages",
     "pages:dev": "npx wrangler pages dev .vercel/output/static --compatibility-date=2024-01-01",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "kbo:update": "node scripts/kbo-race-update.mjs"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
