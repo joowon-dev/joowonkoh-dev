@@ -1,0 +1,154 @@
+/*
+  KBO 순위 레이스. 사이트 테마와 상관없이 늘 밤 경기 전광판 색이다 — 라이트 모드에서
+  밝게 뒤집으면 관중석·조명이 한낮 경기처럼 보여서 도트 그림과 안 맞는다.
+  글꼴은 한글 도트 글꼴 Galmuri(OFL)를 이 페이지에 쓰는 글자만 잘라 두었다.
+*/
+@font-face { font-family: "KR Galmuri"; src: url("/playground/kbo-race/galmuri11.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "KR Galmuri"; src: url("/playground/kbo-race/galmuri11-bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "KR GalmuriMono"; src: url("/playground/kbo-race/galmurimono11.woff2") format("woff2"); font-display: swap; }
+
+.kbo-race {
+  --night: #090E1D;
+  --panel: #10172C;
+  --panel-2: #161F3A;
+  --line: #26325A;
+  --ink: #E8ECF7;
+  --mute: #8C96BA;
+  --amber: #FFC24A;
+  --up: #5BE38A;
+  --down: #FF6B6B;
+  --shadow: #04060D;
+  --row: 34px;
+  --mono: "KR GalmuriMono", "KR Galmuri", ui-monospace, monospace;
+
+  container-type: inline-size;
+  display: grid;
+  gap: 18px;
+  color-scheme: dark;
+  color: var(--ink);
+  background: var(--night);
+  font-family: "KR Galmuri", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+  -webkit-font-smoothing: none;
+  padding: 22px 16px 26px;
+  border-radius: 14px;
+}
+.kbo-race *, .kbo-race *::before, .kbo-race *::after { box-sizing: border-box; }
+.kbo-race [hidden] { display: none !important; }
+
+.kbo-race .kr-head { display: grid; gap: 8px; }
+.kbo-race .eyebrow { color: var(--amber); letter-spacing: .06em; }
+.kbo-race h1 { font-weight: 700; font-size: 24px; line-height: 1.3; margin: 0; text-wrap: balance; }
+.kbo-race .lede { color: var(--mute); margin: 0; max-width: 62ch; }
+.kbo-race .lede b { color: var(--ink); font-weight: 400; }
+
+/* ---------- 경기장 ---------- */
+.kbo-race .park { background: var(--shadow); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow); }
+.kbo-race .screen { position: relative; overflow: hidden; }
+.kbo-race .screen canvas { display: block; width: 100%; aspect-ratio: 400 / 180; height: auto; }
+.kbo-race .tags { position: absolute; inset: 0; pointer-events: none; }
+.kbo-race .tag {
+  position: absolute; top: calc(100% * 115 / 180);
+  transform: translate(-50%, calc(-100% - var(--lift, 0px)));
+  transition: transform .3s;
+  display: flex; gap: 4px; align-items: baseline; white-space: nowrap;
+  font-size: 12px; line-height: 1; padding: 3px 5px 2px;
+  background: rgba(5, 7, 15, .86); color: #fff; border-bottom: 2px solid var(--tc);
+}
+.kbo-race .tag b { font-family: var(--mono); font-weight: 400; color: var(--mute); }
+.kbo-race .tag.lead b { color: var(--amber); }
+.kbo-race .tag.on { outline: 2px solid var(--amber); }
+@container (max-width: 560px) { .kbo-race .tag { font-size: 11px; padding: 2px 3px 1px; } }
+
+/* 새 1위 알림 — 전광판 날짜 바로 밑에서 내려온다 */
+.kbo-race .banner {
+  position: absolute; left: 50%; top: calc(100% * 33 / 180); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; z-index: 40;
+  background: #0B1122; color: var(--ink); font-size: 12px; line-height: 1;
+  padding: 7px 12px 6px; border: 2px solid var(--amber); box-shadow: 3px 3px 0 var(--shadow); white-space: nowrap;
+  animation: kr-toast .32s cubic-bezier(.2, .9, .3, 1.3);
+}
+.kbo-race .banner b { color: var(--amber); font-weight: 700; }
+.kbo-race .banner .was { color: var(--mute); }
+.kbo-race .banner .crown {
+  width: 14px; height: 9px; background: var(--amber);
+  clip-path: polygon(0 100%, 0 20%, 25% 60%, 50% 0, 75% 60%, 100% 20%, 100% 100%);
+}
+@keyframes kr-toast { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-reduced-motion: reduce) { .kbo-race .banner { animation: none; } }
+
+/* ---------- 조작 ---------- */
+.kbo-race .controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+  background: var(--panel); border: 2px solid var(--line); padding: 10px 12px; box-shadow: 4px 4px 0 var(--shadow);
+}
+.kbo-race .btn {
+  font: inherit; color: var(--ink); background: var(--panel-2); border: 2px solid var(--line);
+  padding: 4px 10px; cursor: pointer; box-shadow: 2px 2px 0 var(--shadow);
+}
+.kbo-race .btn:active { transform: translate(2px, 2px); box-shadow: none; }
+.kbo-race .btn:focus-visible, .kbo-race input[type=range]:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.kbo-race .btn[aria-pressed="true"] { background: var(--amber); color: #1A1200; border-color: var(--amber); }
+.kbo-race .play { min-width: 92px; }
+.kbo-race .speed { display: flex; gap: 6px; }
+.kbo-race input[type=range] { flex: 1 1 200px; min-width: 0; accent-color: var(--amber); }
+.kbo-race .count { color: var(--mute); font-family: var(--mono); white-space: nowrap; }
+
+/* ---------- 순위표 + 그래프 ---------- */
+.kbo-race .lower { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 16px; align-items: start; }
+@container (max-width: 820px) { .kbo-race .lower { grid-template-columns: minmax(0, 1fr); } }
+
+.kbo-race .board { background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow); }
+.kbo-race .board-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  padding: 10px 12px 8px; border-bottom: 2px solid var(--line); background: var(--panel-2);
+}
+.kbo-race .board-date { font-family: var(--mono); font-size: 24px; color: var(--amber); line-height: 1; }
+.kbo-race .board-day { color: var(--mute); }
+.kbo-race .cols, .kbo-race .row {
+  display: grid; grid-template-columns: 22px 18px minmax(0, 1fr) 72px 40px 36px 26px;
+  gap: 6px; align-items: center; padding-inline: 10px;
+}
+.kbo-race .cols { color: var(--mute); height: 26px; border-bottom: 1px solid var(--line); }
+.kbo-race .cols span:nth-child(n+4), .kbo-race .row .num { text-align: right; }
+.kbo-race .rows { position: relative; height: calc(var(--row) * 10); }
+.kbo-race .row {
+  position: absolute; left: 0; right: 0; top: 0; height: var(--row); width: 100%;
+  background: transparent; border: 0; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+  transition: transform .42s cubic-bezier(.3, .7, .2, 1), background-color .2s;
+}
+.kbo-race .row:hover { background: var(--panel-2); }
+.kbo-race .row:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+.kbo-race .row[aria-pressed="true"] { background: var(--panel-2); box-shadow: inset 3px 0 0 var(--tc); }
+.kbo-race .row.lead .rk { color: var(--amber); }
+.kbo-race .rk { font-family: var(--mono); text-align: right; }
+.kbo-race .mini { width: 16px; height: 26px; }
+.kbo-race .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 2px; }
+.kbo-race .num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kbo-race .mv { font-size: 11px; text-align: right; font-family: var(--mono); }
+.kbo-race .mv.up { color: var(--up); }
+.kbo-race .mv.down { color: var(--down); }
+.kbo-race .games { border-top: 2px solid var(--line); padding: 10px 12px 12px; display: grid; gap: 6px; }
+.kbo-race .games h2, .kbo-race .chart h2 { font-size: 12px; font-weight: 700; margin: 0; color: var(--mute); letter-spacing: .04em; }
+.kbo-race .game-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.kbo-race .game-list li { white-space: nowrap; font-family: var(--mono); }
+.kbo-race .game-list .w { color: var(--ink); }
+.kbo-race .game-list .l { color: var(--mute); }
+
+.kbo-race .chart {
+  background: var(--panel); border: 2px solid var(--line); padding: 12px;
+  display: grid; gap: 8px; box-shadow: 4px 4px 0 var(--shadow);
+}
+.kbo-race .chart-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.kbo-race .chart-note { color: var(--mute); }
+.kbo-race .chart-box { overflow-x: auto; overflow-y: hidden; }
+.kbo-race .chart-inner { min-width: 520px; position: relative; }
+.kbo-race .chart canvas {
+  display: block; width: 100%; height: clamp(180px, 34cqi, 260px);
+  image-rendering: pixelated; image-rendering: crisp-edges;
+}
+.kbo-race .months { position: relative; height: 18px; color: var(--mute); }
+.kbo-race .months span { position: absolute; top: 2px; transform: translateX(-2px); white-space: nowrap; }
+
+.kbo-race .source { color: var(--mute); margin: 0; }
