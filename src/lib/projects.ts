@@ -43,6 +43,16 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "부캉이의 기록",
+    description: "북항 수로에 들어온 상어 부캉이의 하루하루 🦈",
+    tags: ["Canvas", "Pixel Art", "Data"],
+    href: "/playground/bukangi",
+    icon: "shark",
+    tile: ["#1b6a80", "#08202f"],
+    blurb:
+      "2026년 9월 18일 부산 북항 친수공원 수로에 3.5m 상어가 들어왔습니다. 출구를 못 찾고 같은 자리를 뱅뱅 도는 사이 이름이 붙고, 추석에는 하루 13만 명이 몰렸고, 롯데는 그날부터 연승을 달렸습니다. 부산시설공단 방문객 집계와 보도를 날짜별로 모아 하루씩 넘겨 봅니다. KBO 순위 레이스와 같은 틀에, 롯데 결과는 그쪽 경기 기록을 그대로 읽습니다.",
+  },
+  {
     title: "KBO 순위 레이스",
     description: "10개 구단이 홈 유니폼 입고 한 줄로 달리는 순위 변화 ⚾",
     tags: ["Canvas", "Pixel Art", "Data"],
