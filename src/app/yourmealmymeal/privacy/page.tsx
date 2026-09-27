@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   },
 };
 
-const UPDATED_AT = "2026년 9월 25일";
+const UPDATED_AT = "2026년 9월 27일";
 const CONTACT = "contact@joowonkoh.com";
 
 export default function YourMealMyMealPrivacyPage() {
@@ -173,8 +173,13 @@ export default function YourMealMyMealPrivacyPage() {
           </p>
           <ul className="ml-5 list-disc space-y-1.5">
             <li>
-              <strong className="text-text-primary">Supabase</strong> — 로그인, 데이터
-              보관, 사진 저장. 서버는 대한민국(서울)에 있습니다.
+              <strong className="text-text-primary">Supabase</strong> — 로그인과 데이터
+              보관. 서버는 대한민국(서울)에 있습니다.
+            </li>
+            <li>
+              <strong className="text-text-primary">Cloudflare R2</strong> — 끼니 사진과
+              프로필 사진 저장. 아시아·태평양 지역에 비공개로 보관하고, 볼 자격을 확인한
+              뒤 한 시간 동안만 유효한 주소로 내려줍니다.
             </li>
             <li>
               <strong className="text-text-primary">Expo</strong> — 알림 전달. iOS는
