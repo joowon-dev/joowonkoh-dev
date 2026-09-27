@@ -46,9 +46,11 @@ async function gamesOn(date) {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const { game = [] } = await res.json();
-      return game
-        .filter((x) => x.SR_ID === 0 && x.GAME_STATE_SC === "3" && x.CANCEL_SC_ID === "0")
+      const regular = game.filter((x) => x.SR_ID === 0 && x.CANCEL_SC_ID === "0");
+      const done = regular
+        .filter((x) => x.GAME_STATE_SC === "3")
         .map((x) => [x.AWAY_ID, Number(x.T_SCORE_CN), x.HOME_ID, Number(x.B_SCORE_CN)]);
+      return Object.assign(done, { pending: regular.length > done.length });
     } catch (err) {
       if (attempt >= 3) throw new Error(`${date} 받기 실패: ${err.message}`);
       await new Promise((r) => setTimeout(r, 800 * attempt));
@@ -81,11 +83,16 @@ const kept = fresh ? [] : saved.days.filter((day) => day.d < start);
 const added = dates.filter((d) => got.get(d).length).map((d) => ({ d, g: got.get(d) }));
 const days = [...kept, ...added];
 
+// 오늘 경기가 아직 안 끝났으면 받은 날은 어제까지다 — 그래야 화면이 오늘을 「경기 없음」이 아니라
+// 「기록 대기」로 그린다. 다음 실행은 through 부터 다시 받으니 오늘 경기도 그때 채워진다.
+const yesterday = (() => { const d = toDate(end); d.setUTCDate(d.getUTCDate() - 1); return toStr(d); })();
+const through = end === today && got.get(today)?.pending ? yesterday : end;
+
 // 한 날짜에 한 줄씩 — 다음 갱신 때 diff가 날짜 단위로 읽힌다.
 const body = [
   "{",
   `  "season": ${season},`,
-  `  "through": "${end}",`,
+  `  "through": "${through}",`,
   '  "days": [',
   days.map((d) => `    ${JSON.stringify(d)}`).join(",\n"),
   "  ]",
@@ -96,7 +103,7 @@ await writeFile(FILE, body);
 
 const frames = buildFrames(days);
 const games = days.reduce((n, d) => n + d.g.length, 0);
-console.log(`${start} ~ ${end} 훑음 · 경기가 있던 날 ${added.length}일 새로 받음`);
+console.log(`${start} ~ ${end} 훑음${through !== end ? " (오늘 경기는 아직 안 끝남)" : ""} · 경기가 있던 날 ${added.length}일 새로 받음`);
 console.log(`시즌 ${season}: 경기일 ${days.length}일 · 정규시즌 ${games}경기 · 마지막 경기 ${days.at(-1)?.d ?? "없음"}`);
 if (frames.length) {
   for (const [t, r, w, l, dr, gb] of frames.at(-1).s) {
