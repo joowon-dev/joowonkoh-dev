@@ -30,12 +30,13 @@ export default function Bukangi() {
           ← Playground
         </Link>
         <h1>부캉이의 기록</h1>
-        <span className="eyebrow">
+        <span className="eyebrow" data-nosnippet="">
           부산 북항 친수공원 · {md(FIRST)} 발견 → {md(LAST)}
         </span>
       </header>
 
-      <section className="park">
+      {/* 화면 UI(재생 단추·기록판)는 검색 결과 설명으로 긁혀 가지 않게 한다 — 설명은 meta description 과 아래 소개 글이 맡는다. */}
+      <section className="park" data-nosnippet="">
         <div className="screen">
           <canvas
             data-k="park"
@@ -76,7 +77,7 @@ export default function Bukangi() {
         </aside>
       </section>
 
-      <details className="chart">
+      <details className="chart" data-nosnippet="">
         <summary>날짜별 구경꾼 펼쳐 보기</summary>
         <div className="chart-body">
           <span className="chart-note">
