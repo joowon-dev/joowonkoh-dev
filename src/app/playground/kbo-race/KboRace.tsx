@@ -29,12 +29,13 @@ export default function KboRace() {
           ← Playground
         </Link>
         <h1>KBO 순위 레이스</h1>
-        <span className="eyebrow">
+        <span className="eyebrow" data-nosnippet="">
           {games.season} 정규시즌 · {md(FIRST)} 개막 → {md(LAST)}
         </span>
       </header>
 
-      <section className="park">
+      {/* 화면 UI(재생 단추·기록판)는 검색 결과 설명으로 긁혀 가지 않게 한다 — 설명은 meta description 과 아래 소개 글이 맡는다. */}
+      <section className="park" data-nosnippet="">
         <div className="screen">
           <canvas
             data-k="park"
@@ -74,7 +75,7 @@ export default function KboRace() {
       </section>
 
       {/* 날짜별 순위 그래프는 접어 두고 펼쳐서 본다 — 한 화면에 경기장과 순위표가 먼저 들어오게. */}
-      <details className="chart">
+      <details className="chart" data-nosnippet="">
         <summary>날짜별 순위 펼쳐 보기</summary>
         <div className="chart-body">
           <span className="chart-note" data-k="chart-note">

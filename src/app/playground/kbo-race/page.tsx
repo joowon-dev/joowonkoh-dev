@@ -8,15 +8,15 @@ const URL = "https://joowonkoh.com/playground/kbo-race";
 const OG_IMAGE = "/og/kbo-race.jpg";
 
 export const metadata: Metadata = {
-  // 사이트 이름을 붙이지 않고 이름 그대로 — 공유했을 때 «KBO 순위 레이스»만 보이게.
-  title: { absolute: TITLE },
+  // 문서 제목은 무엇인지까지 적는다. 이름만 두면 짧아서 구글이 « - Joowon Koh»를 붙여 버린다.
+  // 공유 카드(og·twitter)에는 이름만.
+  title: { absolute: "KBO 순위 레이스 — 2026 날짜별 순위 도트 애니메이션" },
   description: DESCRIPTION,
   keywords: ["KBO 순위", "KBO 게임차", "프로야구 순위 변화", "KBO 2026", "야구 도트"],
   alternates: { canonical: URL },
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    siteName: "Joowon Koh",
     title: TITLE,
     description: DESCRIPTION,
     url: URL,
