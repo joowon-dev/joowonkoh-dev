@@ -1,50 +1,69 @@
 import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { dateRange, kstDate } from "./series";
-import type { CollectionRun, MetricRow } from "./types";
+import { type BreakdownTotal, pivotBreakdown } from "./breakdown";
+import type { CollectionRun, MetricRow, Source } from "./types";
 
-export const WINDOW_DAYS = 30;
+/** PostgREST 는 한 번에 1000행까지만 준다. 90일 × 두 기간이면 넘으므로 나눠 받는다. */
+const PAGE = 1000;
 
-export type DashboardData = {
-  rows: MetricRow[];
-  runs: CollectionRun[];
-  endDate: string;
-  /** 테이블이 아직 없거나 조회가 막힌 경우. 화면은 빈 골격으로 뜬다. */
-  unavailable: string | null;
-};
+type Page<T> = { data: T[] | null; error: { message: string } | null };
 
-export async function loadDashboard(now: Date): Promise<DashboardData> {
-  const endDate = dashboardEndDate(now);
-  const dates = dateRange(endDate, WINDOW_DAYS);
-  const startDate = dates[0];
+async function fetchAll<T>(query: (from: number, to: number) => PromiseLike<Page<T>>): Promise<T[]> {
+  const all: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await query(from, from + PAGE - 1);
+    if (error) throw new Error(error.message);
+    all.push(...(data ?? []));
+    if (!data || data.length < PAGE) return all;
+  }
+}
 
+/** metrics_daily 를 기간으로. 소스 합계 — 카드·추이·원본 표가 쓴다. */
+export async function loadDaily(start: string, end: string): Promise<MetricRow[]> {
   const supabase = await createServerSupabase();
-
-  const [metrics, runs] = await Promise.all([
+  const rows = await fetchAll<MetricRow>((from, to) =>
     supabase
       .from("metrics_daily")
       .select("source, metric_date, entity, metric_key, value")
-      .gte("metric_date", startDate)
-      .lte("metric_date", endDate),
-    supabase
-      .from("collection_runs")
-      .select("source, last_run_at, last_success, status, error"),
-  ]);
-
-  const failure = metrics.error ?? runs.error;
-
-  return {
-    rows: (metrics.data ?? []) as MetricRow[],
-    runs: (runs.data ?? []) as CollectionRun[],
-    endDate,
-    unavailable: failure ? failure.message : null,
-  };
+      .gte("metric_date", start)
+      .lte("metric_date", end)
+      .order("metric_date")
+      .order("source")
+      .order("entity")
+      .order("metric_key")
+      .range(from, to),
+  );
+  // numeric 은 문자열로 올 수 있다
+  return rows.map((r) => ({ ...r, value: Number(r.value) }));
 }
 
-/**
- * 대시보드는 어제(KST)까지를 완성된 하루로 본다. 오늘 값은 수집 중이라 불완전하다.
- * 조회 범위와 화면 범위가 같은 끝 날짜를 써야 차트 첫날이 비지 않는다.
- */
-export function dashboardEndDate(now: Date): string {
-  return kstDate(now, -1);
+export async function loadRuns(): Promise<CollectionRun[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("collection_runs")
+    .select("source, last_run_at, last_success, status, error");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as CollectionRun[];
+}
+
+/** 한 차원의 기간 합계를 표 한 줄씩으로. 합계는 DB(admin_breakdown)가 낸다. */
+export async function loadBreakdown(source: Source, dimension: string, start: string, end: string) {
+  const supabase = await createServerSupabase();
+  const rows = await fetchAll<BreakdownTotal>((from, to) =>
+    supabase
+      .rpc("admin_breakdown", { p_source: source, p_dimension: dimension, p_start: start, p_end: end })
+      .order("dim_value")
+      .order("metric_key")
+      .range(from, to),
+  );
+  return pivotBreakdown(rows);
+}
+
+/** 조회가 막혀도(권한, 테이블 없음) 화면은 뜨게 한다. 이유는 화면에 적는다. */
+export async function settle<T>(promise: Promise<T>, fallback: T): Promise<{ value: T; error: string | null }> {
+  try {
+    return { value: await promise, error: null };
+  } catch (err) {
+    return { value: fallback, error: err instanceof Error ? err.message : String(err) };
+  }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSeries, computeDelta, dateRange, kstDate } from "./series";
+import { buildSeries, computeDelta, dateRange, kstDate, sumPoints } from "./series";
 import type { MetricRow } from "./types";
 
 function row(overrides: Partial<MetricRow>): MetricRow {
@@ -148,5 +148,12 @@ describe("kstDate", () => {
     const now = new Date("2026-10-01T05:00:00Z"); // 14:00 KST
     expect(kstDate(now)).toBe("2026-10-01");
     expect(kstDate(now, -1)).toBe("2026-09-30");
+  });
+});
+
+describe("sumPoints", () => {
+  it("null 은 건너뛰고, 전부 null 이면 null", () => {
+    expect(sumPoints([{ date: "a", value: 2 }, { date: "b", value: null }, { date: "c", value: 3 }])).toBe(5);
+    expect(sumPoints([{ date: "a", value: null }])).toBeNull();
   });
 });

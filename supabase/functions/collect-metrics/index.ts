@@ -1,5 +1,6 @@
 /**
- * collect-metrics — 외부 지표를 받아 metrics_daily 에 쌓는다.
+ * collect-metrics — 외부 지표를 받아 metrics_daily(소스 합계)와
+ * metrics_breakdown(페이지·유입경로·광고단위 등 차원별 세부)에 쌓는다.
  *
  *   POST /functions/v1/collect-metrics?source=ga4|admob&days=3
  *   x-collect-secret: <Vault collect_metrics_secret>
@@ -14,8 +15,23 @@
  * 이 테이블을 본다 — 조용히 멈추는 수집이 가장 나쁘다.
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { buildNetworkReportRequest, normalizeAdmobReport } from "./admob.ts";
-import { buildReportRequest, normalizeGa4Report } from "./ga4.ts";
+import {
+  ADMOB_BREAKDOWNS,
+  type AdmobBreakdown,
+  buildAdmobBreakdownRequest,
+  buildNetworkReportRequest,
+  normalizeAdmobBreakdown,
+  normalizeAdmobReport,
+} from "./admob.ts";
+import type { BreakdownRow } from "./breakdown.ts";
+import {
+  buildBreakdownRequest,
+  buildReportRequest,
+  GA4_BREAKDOWNS,
+  type Ga4Breakdown,
+  normalizeGa4Breakdown,
+  normalizeGa4Report,
+} from "./ga4.ts";
 import {
   fetchAccessToken,
   refreshAccessToken,
@@ -39,7 +55,13 @@ type Row = {
   value: number;
 };
 
-const COLLECTORS: Record<string, (days: number) => Promise<Row[]>> = {
+/** 한 번 수집에서 나오는 것: 소스 합계(metrics_daily)와 차원별 세부(metrics_breakdown). */
+type Collected = { daily: Row[]; breakdown: BreakdownRow[] };
+
+/** 한 요청에 너무 큰 본문을 보내지 않게 나눠 쓴다. */
+const UPSERT_CHUNK = 1000;
+
+const COLLECTORS: Record<string, (days: number) => Promise<Collected>> = {
   ga4: collectGa4,
   admob: collectAdmob,
 };
@@ -68,15 +90,15 @@ Deno.serve(async (req) => {
   const startedAt = new Date().toISOString();
 
   try {
-    const rows = await collect(days);
+    const { daily, breakdown } = await collect(days);
 
-    const { error } = await supabase
-      .from("metrics_daily")
-      .upsert(
-        rows.map((row) => ({ ...row, updated_at: startedAt })),
-        { onConflict: "source,metric_date,entity,metric_key" },
-      );
-    if (error) throw new Error(`metrics_daily upsert 실패: ${error.message}`);
+    await upsertAll("metrics_daily", daily, "source,metric_date,entity,metric_key", startedAt);
+    await upsertAll(
+      "metrics_breakdown",
+      breakdown,
+      "source,metric_date,dimension,dim_value,metric_key",
+      startedAt,
+    );
 
     await recordRun(source, {
       last_run_at: startedAt,
@@ -85,7 +107,7 @@ Deno.serve(async (req) => {
       error: null,
     });
 
-    return json({ source, days, rows: rows.length });
+    return json({ source, days, rows: daily.length, breakdownRows: breakdown.length });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // last_success 는 건드리지 않는다. 배너가 "마지막 성공이 언제였나"를 보여야 한다.
@@ -94,7 +116,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function collectGa4(days: number) {
+async function collectGa4(days: number): Promise<Collected> {
   const key = JSON.parse(await requireSecret("ga4_service_account_json")) as ServiceAccountKey;
 
   const token = await fetchAccessToken(
@@ -102,46 +124,84 @@ async function collectGa4(days: number) {
     "https://www.googleapis.com/auth/analytics.readonly",
   );
 
-  const res = await fetch(
-    `https://analyticsdata.googleapis.com/v1beta/properties/${GA4_PROPERTY_ID}:runReport`,
-    {
-      method: "POST",
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify(buildReportRequest(days)),
-    },
-  );
-  const body = await res.json();
-  if (!res.ok) {
-    throw new Error(`GA4 runReport 실패 (${res.status}): ${body?.error?.message ?? JSON.stringify(body)}`);
-  }
+  const runReport = async (request: unknown) => {
+    const res = await fetch(
+      `https://analyticsdata.googleapis.com/v1beta/properties/${GA4_PROPERTY_ID}:runReport`,
+      {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify(request),
+      },
+    );
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(`GA4 runReport 실패 (${res.status}): ${body?.error?.message ?? JSON.stringify(body)}`);
+    }
+    return body;
+  };
 
-  return normalizeGa4Report(body, GA4_PROPERTY_ID);
+  const dimensions = Object.keys(GA4_BREAKDOWNS) as Ga4Breakdown[];
+  const [total, ...reports] = await Promise.all([
+    runReport(buildReportRequest(days)),
+    ...dimensions.map((d) => runReport(buildBreakdownRequest(d, days))),
+  ]);
+
+  return {
+    daily: normalizeGa4Report(total, GA4_PROPERTY_ID),
+    breakdown: reports.flatMap((report, i) => normalizeGa4Breakdown(report, dimensions[i])),
+  };
 }
 
-async function collectAdmob(days: number) {
+async function collectAdmob(days: number): Promise<Collected> {
   const token = await refreshAccessToken({
     clientId: await requireSecret("admob_client_id"),
     clientSecret: await requireSecret("admob_client_secret"),
     refreshToken: await requireSecret("admob_refresh_token"),
   });
 
-  const request = buildNetworkReportRequest(new Date(), days);
-  const res = await fetch(
-    `https://admob.googleapis.com/v1/${ADMOB_ACCOUNT}/networkReport:generate`,
-    {
-      method: "POST",
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify(request),
-    },
-  );
-  const body = await res.json();
-  if (!res.ok) {
-    // 에러도 배열로 올 때가 있다: [{ error: {...} }]
-    const error = Array.isArray(body) ? body[0]?.error : body?.error;
-    throw new Error(`AdMob networkReport 실패 (${res.status}): ${error?.message ?? JSON.stringify(body)}`);
-  }
+  const generate = async (request: unknown) => {
+    const res = await fetch(
+      `https://admob.googleapis.com/v1/${ADMOB_ACCOUNT}/networkReport:generate`,
+      {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify(request),
+      },
+    );
+    const body = await res.json();
+    if (!res.ok) {
+      // 에러도 배열로 올 때가 있다: [{ error: {...} }]
+      const error = Array.isArray(body) ? body[0]?.error : body?.error;
+      throw new Error(`AdMob networkReport 실패 (${res.status}): ${error?.message ?? JSON.stringify(body)}`);
+    }
+    return body;
+  };
 
-  return normalizeAdmobReport(body, request.reportSpec.dateRange);
+  const now = new Date();
+  const request = buildNetworkReportRequest(now, days);
+  const dimensions = Object.keys(ADMOB_BREAKDOWNS) as AdmobBreakdown[];
+  const [total, ...reports] = await Promise.all([
+    generate(request),
+    ...dimensions.map((d) => generate(buildAdmobBreakdownRequest(now, days, d))),
+  ]);
+
+  return {
+    daily: normalizeAdmobReport(total, request.reportSpec.dateRange),
+    breakdown: reports.flatMap((report, i) => normalizeAdmobBreakdown(report, dimensions[i])),
+  };
+}
+
+async function upsertAll(
+  table: string,
+  rows: readonly object[],
+  onConflict: string,
+  updatedAt: string,
+) {
+  for (let i = 0; i < rows.length; i += UPSERT_CHUNK) {
+    const chunk = rows.slice(i, i + UPSERT_CHUNK).map((row) => ({ ...row, updated_at: updatedAt }));
+    const { error } = await supabase.from(table).upsert(chunk, { onConflict });
+    if (error) throw new Error(`${table} upsert 실패: ${error.message}`);
+  }
 }
 
 async function readSecret(name: string): Promise<string | null> {

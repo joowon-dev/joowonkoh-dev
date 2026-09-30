@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import HideOnAdmin from "@/components/HideOnAdmin";
 import ScrollToTop from "@/components/ScrollToTop";
 import Script from "next/script";
 import { ADSENSE_CLIENT } from "@/lib/adsense";
@@ -70,9 +71,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           />
         </noscript>
         <ScrollToTop />
-        <Header />
+        <HideOnAdmin>
+          <Header />
+        </HideOnAdmin>
         <main className="mx-auto max-w-3xl px-6 py-16">{children}</main>
-        <Footer />
+        <HideOnAdmin>
+          <Footer />
+        </HideOnAdmin>
         <Script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}

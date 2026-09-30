@@ -30,11 +30,11 @@ export default function LoginButton() {
         type="button"
         onClick={signIn}
         disabled={busy}
-        className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm font-medium transition-colors hover:bg-neutral-800 disabled:opacity-50"
+        className="w-full rounded-lg bg-[var(--ink)] px-4 py-3 text-sm font-semibold text-[var(--paper)] transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {busy ? "이동 중..." : "Google로 계속하기"}
+        {busy ? "구글로 이동 중" : "Google로 계속하기"}
       </button>
-      {error && <p className="mt-4 text-xs text-red-400">{error}</p>}
+      {error && <p className="mt-4 text-xs text-[var(--down)]">{error}</p>}
     </>
   );
 }

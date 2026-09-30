@@ -77,3 +77,15 @@ export function computeDelta(series: readonly SeriesPoint[]): Delta {
 
   return { current, previous, changeRatio };
 }
+
+/** 기간 합계. 값이 하나도 없으면 null — 0 과 "모름"을 구분한다. */
+export function sumPoints(series: readonly SeriesPoint[]): number | null {
+  let sum = 0;
+  let any = false;
+  for (const p of series) {
+    if (p.value === null) continue;
+    sum += p.value;
+    any = true;
+  }
+  return any ? sum : null;
+}
