@@ -7,6 +7,7 @@ type Item = { href: string; label: string; color: string; icon: React.ReactNode 
 
 const ITEMS: Item[] = [
   { href: "/admin", label: "오늘", color: "var(--ink)", icon: <IconHome /> },
+  { href: "/admin/sns", label: "승인", color: "var(--apps)", icon: <IconCheck /> },
   { href: "/admin/web", label: "웹", color: "var(--web)", icon: <IconWeb /> },
   { href: "/admin/apps", label: "앱", color: "var(--apps)", icon: <IconApps /> },
   { href: "/admin/instagram", label: "인스타", color: "var(--insta)", icon: <IconInsta /> },
@@ -73,7 +74,7 @@ export function AdminTabBar() {
       aria-label="관리 화면"
       className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--rule)] bg-[var(--paper)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
     >
-      <ul className="mx-auto grid max-w-lg grid-cols-5">
+      <ul className="mx-auto grid max-w-lg grid-cols-6">
         {ITEMS.map((item) => {
           const active = isActive(pathname, item.href);
           return (
@@ -107,6 +108,9 @@ function Svg({ children }: { children: React.ReactNode }) {
 }
 function IconHome() {
   return <Svg><path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" /></Svg>;
+}
+function IconCheck() {
+  return <Svg><rect x="3" y="3" width="18" height="18" rx="4" /><path d="M8 12.5l2.8 2.8L16.5 9" /></Svg>;
 }
 function IconWeb() {
   return <Svg><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18" /></Svg>;
