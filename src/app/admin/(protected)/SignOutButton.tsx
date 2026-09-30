@@ -20,9 +20,9 @@ export default function SignOutButton() {
       type="button"
       onClick={signOut}
       disabled={busy}
-      className="text-neutral-500 underline underline-offset-4 transition-colors hover:text-neutral-300 disabled:opacity-50"
+      className="text-[var(--ink-soft)] underline underline-offset-4 transition-colors hover:text-[var(--ink)] disabled:opacity-50"
     >
-      {busy ? "..." : "로그아웃"}
+      {busy ? "로그아웃 중" : "로그아웃"}
     </button>
   );
 }

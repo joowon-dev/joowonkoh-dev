@@ -13,8 +13,8 @@ Supabase MCP(프로젝트 `gshkmannztzwwkyyltvw`)로 직접 적용한다. 비밀
 - [x] 1b. GA4 세부 수집(정규화 + 테스트) + 합계 지표 3개 추가
 - [x] 1c. AdMob 세부 수집(정규화 + 테스트)
 - [x] 1d. Edge Function 배포, 30일 소급, 행 수 확인
-- [ ] 3a. 어드민 셸 분리(Header/Footer 숨김, 전체 화면 레이아웃, 탭바/사이드바)
-- [ ] 3b. 홈 · 웹 · 앱 · 인스타 · 데이터 화면
+- [x] 3a. 어드민 셸 분리(Header/Footer 숨김, 전체 화면 레이아웃, 탭바/사이드바)
+- [x] 3b. 홈 · 웹 · 앱 · 인스타 · 데이터 화면
 - [ ] 3c. 테스트·tsc·lint·`pages:build`, PR, 머지, 운영에서 모바일/PC 확인
 - [ ] 2. Instagram — 아래 "사람 손" 참고
 
@@ -31,3 +31,8 @@ Supabase MCP(프로젝트 `gshkmannztzwwkyyltvw`)로 직접 적용한다. 비밀
   `declare const Deno`, `paths: {"npm:@supabase/supabase-js@2": ["node_modules/@supabase/supabase-js"]}`,
   `allowImportingTsExtensions`. 배포는 Supabase MCP `deploy_edge_function` 에 파일 5개
   (index, ga4, admob, google, breakdown)를 통째로 넘긴다.
+- 3a·3b 완료. 로컬에서는 구글 로그인을 대신할 수 없어서, DB 에서 뽑은 실제 데이터로 임시 미리보기
+  라우트를 만들어 PC·모바일(390px iframe)을 확인하고 지웠다. 표의 sticky 첫 열은
+  `border-collapse` 에서 테두리가 사라져 `border-separate border-spacing-0` + 칸마다 border 로 바꿨다.
+- 루트 레이아웃의 Header/Footer 는 `HideOnAdmin` 으로 감싸 /admin 에서 뺐다. GA·AdSense 스크립트는
+  루트에 남아 있어 어드민 방문도 GA 에 잡힌다(내 방문 몇 건 — 필요하면 GA 에서 내부 트래픽 필터).

@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { AdminSidebar, AdminTabBar } from "@/components/admin/AdminNav";
 import { checkAdmin } from "@/lib/admin/auth";
 import SignOutButton from "./SignOutButton";
 
@@ -21,15 +23,17 @@ export default async function ProtectedAdminLayout({
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-10">
-      <header className="mb-8 flex items-baseline justify-between border-b border-neutral-800 pb-4">
-        <h1 className="text-lg font-semibold tracking-tight">Admin</h1>
-        <div className="flex items-baseline gap-3 text-xs text-neutral-500">
-          <span>{check.identity.email}</span>
-          <SignOutButton />
-        </div>
-      </header>
-      {children}
+    <div className="flex min-h-dvh">
+      <Suspense>
+        <AdminSidebar email={check.identity.email} signOut={<SignOutButton />} />
+      </Suspense>
+      {/* 하단 탭바 높이만큼 모바일에서 아래를 비운다 */}
+      <main className="min-w-0 flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-10 lg:pb-16 lg:pt-8">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </main>
+      <Suspense>
+        <AdminTabBar />
+      </Suspense>
     </div>
   );
 }

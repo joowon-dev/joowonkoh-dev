@@ -1,0 +1,68 @@
+/*
+ * 어드민 전용 토큰. 사이트(흰 바탕, Outfit)와 일부러 다르게 간다.
+ * 모눈종이 바탕 — 이 화면에서 하는 일이 전부 차트 읽기라서.
+ * 소스마다 잉크 색 하나: 웹 = 코발트, 앱 = 초록, 인스타 = 자홍.
+ */
+.admin-root {
+  --paper: #eef2f6;
+  --paper-raised: #f8fafc;
+  --grid: #dce3eb;
+  --rule: #c9d3de;
+  --ink: #14213d;
+  --ink-soft: #5b6b82;
+  --ink-faint: #8a98ab;
+  --web: #2f5bea;
+  --apps: #0f9d6b;
+  --insta: #d6336c;
+  --up: #0f9d6b;
+  --down: #c2410c;
+  --warn-bg: #fff4dc;
+  --warn-ink: #8a5a00;
+
+  color-scheme: light;
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-root {
+    --paper: #0e1622;
+    --paper-raised: #142032;
+    --grid: #1b2940;
+    --rule: #26374f;
+    --ink: #e4ebf4;
+    --ink-soft: #9fb0c6;
+    --ink-faint: #6b7d95;
+    --web: #6f93ff;
+    --apps: #3cc893;
+    --insta: #f06597;
+    --up: #3cc893;
+    --down: #ff8a5c;
+    --warn-bg: #2f2410;
+    --warn-ink: #f3c46b;
+
+    color-scheme: dark;
+  }
+}
+
+/* 모눈 — 차트와 표가 놓이는 판 */
+.admin-graph {
+  background-color: var(--paper-raised);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: -1px -1px;
+}
+
+.admin-num {
+  font-family: var(--font-admin-num), "Pretendard", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.admin-root :focus-visible {
+  outline: 2px solid var(--web);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
