@@ -116,7 +116,26 @@ curl "$SUPABASE_URL/rest/v1/metrics_daily?select=*" \
 
 </details>
 
-## 3단계 — AdMob
+## 3단계 — AdMob (완료, 2026-10-01)
+
+- 계정 `pub-7807290470382730`(보고 시간대 Asia/Seoul, 통화 USD). 앱별로 `estimated_earnings`(USD),
+  `impressions` 를 쌓는다. entity = AdMob app id. eCPM 은 앱별 비율이라 합산하면 틀려서 저장하지 않는다.
+- AdMob API 는 서비스 계정을 받지 않는다. GCP `joowonkoh-site` 에 OAuth 동의 화면(외부,
+  **프로덕션 게시** — 테스트면 리프레시 토큰이 7일에 만료) + 데스크톱 OAuth 클라이언트
+  `admin-metrics-admob` 를 만들고, 주원 계정으로 한 번 동의받은 리프레시 토큰을 Vault 에 둔다
+  (`admob_client_id`, `admob_client_secret`, `admob_refresh_token`).
+- API 는 `timeZone` 을 받지 않는다(LA 만 허용). 비워 두면 계정 보고 시간대(KST)를 쓴다.
+- 광고 0 인 날은 행이 안 온다 → 요청 범위에서 빈 날을 entity `none` 값 0 으로 채운다.
+  안 채우면 대시보드가 수집 누락으로 보고 선을 끊는다.
+- cron `collect-metrics-admob` 02:05 KST(GA4 와 5분 어긋나게 — 새 버전 배포 직후 동시에 두 요청을
+  보냈을 때 하나가 함수에 닿기 전에 500 이 났다).
+- 9/1~9/30 소급 120행, 9월 합계 $29.38.
+
+토큰이 죽으면(`invalid_grant` 가 collection_runs.error 에 뜬다): 동의를 다시 받아
+`vault.update_secret` 으로 `admob_refresh_token` 만 바꾼다.
+
+<details><summary>원래 계획</summary>
+
 
 1. GCP에서 OAuth 클라이언트 생성, AdMob API 활성화
 2. 리프레시 토큰 1회 발급 (`https://www.googleapis.com/auth/admob.readonly`)
@@ -127,6 +146,8 @@ curl "$SUPABASE_URL/rest/v1/metrics_daily?select=*" \
 5. cron 등록
 
 **필요한 정보**: AdMob publisher id, app id 목록
+
+</details>
 
 ## 4단계 — Instagram
 
