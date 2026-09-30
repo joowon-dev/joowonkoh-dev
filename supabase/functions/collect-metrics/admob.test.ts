@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildNetworkReportRequest, normalizeAdmobReport } from "./admob";
+import {
+  buildAdmobBreakdownRequest,
+  buildNetworkReportRequest,
+  normalizeAdmobBreakdown,
+  normalizeAdmobReport,
+} from "./admob";
 
 // 2026-10-01 에 pub-7807290470382730 으로 실제 받은 응답을 줄였다.
 const SAMPLE = [
@@ -105,5 +110,64 @@ describe("normalizeAdmobReport — 광고가 없던 날", () => {
     ]);
     // 행이 있는 날은 건드리지 않는다.
     expect(rows.filter((r) => r.metric_date === "2026-09-27" && r.entity === "none")).toEqual([]);
+  });
+});
+
+describe("normalizeAdmobBreakdown", () => {
+  const AD_UNIT_REPORT = [
+    { header: { localizationSettings: { currencyCode: "USD" } } },
+    {
+      row: {
+        dimensionValues: {
+          DATE: { value: "20260929" },
+          AD_UNIT: { value: "ca-app-pub-7807290470382730/1111111111", displayLabel: "연봉 결과 배너" },
+        },
+        metricValues: {
+          ESTIMATED_EARNINGS: { microsValue: "1200000" },
+          IMPRESSIONS: { integerValue: "4000" },
+          CLICKS: { integerValue: "12" },
+          AD_REQUESTS: { integerValue: "5000" },
+          MATCHED_REQUESTS: { integerValue: "4500" },
+        },
+      },
+    },
+    { footer: {} },
+  ];
+
+  it("광고단위 × 지표로 눕히고, 이름은 displayLabel 에서", () => {
+    const rows = normalizeAdmobBreakdown(AD_UNIT_REPORT, "ad_unit");
+
+    expect(rows).toHaveLength(5);
+    expect(rows[0]).toEqual({
+      source: "admob",
+      metric_date: "2026-09-29",
+      dimension: "ad_unit",
+      dim_value: "ca-app-pub-7807290470382730/1111111111",
+      dim_label: "연봉 결과 배너",
+      metric_key: "estimated_earnings",
+      value: 1.2,
+    });
+    expect(rows.find((r) => r.metric_key === "matched_requests")?.value).toBe(4500);
+  });
+
+  it("USD 가 아니면 세부도 던진다", () => {
+    expect(() =>
+      normalizeAdmobBreakdown([{ header: { localizationSettings: { currencyCode: "KRW" } } }], "app"),
+    ).toThrow(/USD/);
+  });
+});
+
+describe("buildAdmobBreakdownRequest", () => {
+  it("DATE 와 해당 차원, 세부 지표 다섯", () => {
+    const { reportSpec } = buildAdmobBreakdownRequest(new Date("2026-09-30T17:40:00Z"), 3, "format");
+    expect(reportSpec.dimensions).toEqual(["DATE", "FORMAT"]);
+    expect(reportSpec.metrics).toEqual([
+      "ESTIMATED_EARNINGS",
+      "IMPRESSIONS",
+      "CLICKS",
+      "AD_REQUESTS",
+      "MATCHED_REQUESTS",
+    ]);
+    expect(reportSpec.dateRange.endDate).toEqual({ year: 2026, month: 9, day: 30 });
   });
 });
