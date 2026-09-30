@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { type BreakdownTotal, pivotBreakdown } from "./breakdown";
+import type { SnsDraft } from "./sns";
 import type { CollectionRun, MetricRow, Source } from "./types";
 
 /** PostgREST 는 한 번에 1000행까지만 준다. 90일 × 두 기간이면 넘으므로 나눠 받는다. */
@@ -66,4 +67,21 @@ export async function settle<T>(promise: Promise<T>, fallback: T): Promise<{ val
   } catch (err) {
     return { value: fallback, error: err instanceof Error ? err.message : String(err) };
   }
+}
+
+/**
+ * SNS 승인함 — 최근 7일 초안. 대기·결정·게시를 한 번에 받아 화면에서 나눈다.
+ * 하루에 수십 건이라 200행이면 충분하다.
+ */
+export async function loadSnsDrafts(now: Date): Promise<SnsDraft[]> {
+  const supabase = await createServerSupabase();
+  const since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("sns_drafts")
+    .select("*")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as SnsDraft[];
 }
