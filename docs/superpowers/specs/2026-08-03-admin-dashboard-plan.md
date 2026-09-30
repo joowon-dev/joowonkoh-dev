@@ -81,7 +81,26 @@ curl "$SUPABASE_URL/rest/v1/metrics_daily?select=*" \
   -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY"
 ```
 
-## 2단계 — GA4
+## 2단계 — GA4 (완료, 2026-10-01)
+
+- GCP 프로젝트 `joowonkoh-site`, 서비스 계정 `admin-metrics@joowonkoh-site.iam.gserviceaccount.com`
+  (역할 없음). GA4 속성 `434494008`(joowonkoh.com 웹 스트림)에 **뷰어**로 추가.
+- Edge Function `collect-metrics` (`supabase/functions/collect-metrics/`), `verify_jwt=false`
+  — 대신 `x-collect-secret` 헤더를 Vault 값과 비교한다.
+- **자격증명은 Edge Function secrets 가 아니라 Vault 에 둔다.** secrets 는 CLI 로그인이
+  있어야 넣을 수 있고, Vault 는 SQL(MCP)만으로 넣고 바꿀 수 있다. 함수는
+  `public.collect_metrics_secret(name)` 으로 읽는데, 이 함수는 service_role 만 실행할 수 있고
+  허용된 이름 두 개(`collect_metrics_secret`, `ga4_service_account_json`) 외에는 돌려주지 않는다.
+- `pg_cron` `collect-metrics-ga4` — 매일 17:00 UTC(02:00 KST), 최근 3일 재수집.
+- 9/1~9/30 소급 수집 완료(90행). cron 과 같은 경로(pg_net → 함수)로 한 번 태워 200 확인.
+- 대시보드 날짜를 KST 로 고쳤다. UTC 로 "어제"를 잡아 00~09시(KST)에 하루 밀려 보였다.
+
+키를 바꿀 때: GCP 에서 새 키 발급 →
+`select vault.update_secret((select id from vault.secrets where name='ga4_service_account_json'), '<json>');`
+→ 옛 키 삭제.
+
+<details><summary>원래 계획</summary>
+
 
 1. GCP에서 서비스 계정 생성, JSON 키 발급
 2. GA4 속성 설정 → 속성 액세스 관리에서 그 서비스 계정을 뷰어로 추가
@@ -94,6 +113,8 @@ curl "$SUPABASE_URL/rest/v1/metrics_daily?select=*" \
 6. 최초 1회는 지난 30일을 소급 수집해 차트를 채운다
 
 **필요한 정보**: GA4 property id 목록
+
+</details>
 
 ## 3단계 — AdMob
 

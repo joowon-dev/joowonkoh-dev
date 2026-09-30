@@ -33,6 +33,18 @@ export function buildSeries(
   }));
 }
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/**
+ * 한국 날짜(YYYY-MM-DD). GA4 속성이 KST라 metric_date 도 KST 날짜다.
+ * toISOString()은 UTC라 00~09시(KST)에는 하루 전 날짜가 나온다.
+ */
+export function kstDate(now: Date, offsetDays = 0): string {
+  return new Date(now.getTime() + KST_OFFSET_MS + offsetDays * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+}
+
 /** endDate로 끝나는 days일치 날짜를 오름차순으로 만든다. */
 export function dateRange(endDate: string, days: number): string[] {
   const end = Date.parse(`${endDate}T00:00:00Z`);

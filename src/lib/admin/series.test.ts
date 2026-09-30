@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSeries, computeDelta, dateRange } from "./series";
+import { buildSeries, computeDelta, dateRange, kstDate } from "./series";
 import type { MetricRow } from "./types";
 
 function row(overrides: Partial<MetricRow>): MetricRow {
@@ -133,5 +133,20 @@ describe("computeDelta", () => {
       previous: null,
       changeRatio: null,
     });
+  });
+});
+
+describe("kstDate", () => {
+  it("KST 자정을 넘긴 새벽(UTC로는 전날)에도 한국 날짜를 낸다", () => {
+    // 2026-10-01 02:20 KST
+    const now = new Date("2026-09-30T17:20:00Z");
+    expect(kstDate(now)).toBe("2026-10-01");
+    expect(kstDate(now, -1)).toBe("2026-09-30");
+  });
+
+  it("KST 오후(UTC와 날짜가 같은 때)도 그대로", () => {
+    const now = new Date("2026-10-01T05:00:00Z"); // 14:00 KST
+    expect(kstDate(now)).toBe("2026-10-01");
+    expect(kstDate(now, -1)).toBe("2026-09-30");
   });
 });

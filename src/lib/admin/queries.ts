@@ -1,6 +1,6 @@
 import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { dateRange } from "./series";
+import { dateRange, kstDate } from "./series";
 import type { CollectionRun, MetricRow } from "./types";
 
 export const WINDOW_DAYS = 30;
@@ -14,7 +14,7 @@ export type DashboardData = {
 };
 
 export async function loadDashboard(now: Date): Promise<DashboardData> {
-  const endDate = toDateString(now);
+  const endDate = dashboardEndDate(now);
   const dates = dateRange(endDate, WINDOW_DAYS);
   const startDate = dates[0];
 
@@ -41,11 +41,10 @@ export async function loadDashboard(now: Date): Promise<DashboardData> {
   };
 }
 
-/** 대시보드는 어제까지를 완성된 하루로 본다. 오늘 값은 수집 중이라 불완전하다. */
-export function yesterdayOf(now: Date): Date {
-  return new Date(now.getTime() - 86_400_000);
-}
-
-function toDateString(date: Date): string {
-  return date.toISOString().slice(0, 10);
+/**
+ * 대시보드는 어제(KST)까지를 완성된 하루로 본다. 오늘 값은 수집 중이라 불완전하다.
+ * 조회 범위와 화면 범위가 같은 끝 날짜를 써야 차트 첫날이 비지 않는다.
+ */
+export function dashboardEndDate(now: Date): string {
+  return kstDate(now, -1);
 }

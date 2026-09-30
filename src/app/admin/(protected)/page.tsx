@@ -2,7 +2,7 @@ import FreshnessBanner from "@/components/admin/FreshnessBanner";
 import Sparkline from "@/components/admin/Sparkline";
 import StatCard from "@/components/admin/StatCard";
 import { findFreshnessProblems } from "@/lib/admin/freshness";
-import { loadDashboard, WINDOW_DAYS, yesterdayOf } from "@/lib/admin/queries";
+import { loadDashboard, WINDOW_DAYS } from "@/lib/admin/queries";
 import { buildSeries, computeDelta } from "@/lib/admin/series";
 import { SOURCE_LABELS, type Source } from "@/lib/admin/types";
 
@@ -40,10 +40,7 @@ const PANELS: {
 
 export default async function AdminDashboardPage() {
   const now = new Date();
-  const { rows, runs, unavailable } = await loadDashboard(now);
-
-  // 오늘 값은 수집 중이라 불완전하다. 어제를 마지막 날로 놓는다.
-  const endDate = yesterdayOf(now).toISOString().slice(0, 10);
+  const { rows, runs, endDate, unavailable } = await loadDashboard(now);
 
   const panels = PANELS.map((panel) => {
     const series = buildSeries(rows, {
