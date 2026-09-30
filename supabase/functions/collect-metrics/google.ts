@@ -67,6 +67,35 @@ export async function fetchAccessToken(
   return body.access_token;
 }
 
+/**
+ * OAuth 리프레시 토큰으로 액세스 토큰을 받는다. AdMob API 는 서비스 계정을
+ * 받지 않아서 주원 계정으로 한 번 동의해 받은 리프레시 토큰을 쓴다.
+ * OAuth 앱이 "프로덕션" 상태라 토큰은 만료되지 않는다(테스트 상태면 7일).
+ */
+export async function refreshAccessToken(creds: {
+  clientId: string;
+  clientSecret: string;
+  refreshToken: string;
+}): Promise<string> {
+  const res = await fetch(TOKEN_URL, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      client_id: creds.clientId,
+      client_secret: creds.clientSecret,
+      refresh_token: creds.refreshToken,
+    }),
+  });
+
+  const body = await res.json();
+  if (!res.ok || typeof body.access_token !== "string") {
+    // invalid_grant = 토큰이 취소됐거나 만료됐다. 다시 동의받아야 한다.
+    throw new Error(`Google 토큰 갱신 실패 (${res.status}): ${JSON.stringify(body)}`);
+  }
+  return body.access_token;
+}
+
 function pemToDer(pem: string): ArrayBuffer {
   const b64 = pem
     .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, "")
