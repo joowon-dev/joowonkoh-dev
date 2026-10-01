@@ -24,7 +24,7 @@ export default async function SnsPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">SNS 승인</h1>
         <p className="mt-1 text-sm text-[var(--ink-soft)]">
-          Claude 가 쓴 댓글·답글이에요. 승인한 것만 Claude 가 다음 확인 때 올려요. 2시간이 지나면 만료돼요.
+          Claude 가 쓴 댓글·답글이에요. 칸에서 바로 고칠 수 있고, 승인한 것만 Claude 가 다음 확인 때 올려요.
         </p>
       </header>
 
@@ -34,7 +34,7 @@ export default async function SnsPage() {
         {pending.length === 0 ? (
           <p className="text-sm text-[var(--ink-faint)]">지금은 결정할 게 없어요.</p>
         ) : (
-          <ul className="grid gap-3 lg:grid-cols-2">
+          <ul className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
             {pending.map((d) => (
               <DraftCard key={d.id} draft={d} href={safeHref(d.target_url)} left={timeLeft(d.expires_at, now)} />
             ))}
@@ -46,7 +46,7 @@ export default async function SnsPage() {
         {done.length === 0 ? (
           <p className="text-sm text-[var(--ink-faint)]">아직 기록이 없어요.</p>
         ) : (
-          <ul className="divide-y divide-[var(--rule)] border-y border-[var(--rule)]">
+          <ul className="grid gap-x-6 md:grid-cols-2 xl:grid-cols-3">
             {done.map((d) => (
               <DoneRow key={d.id} draft={d} now={now} />
             ))}
@@ -64,7 +64,7 @@ function DoneRow({ draft, now }: { draft: SnsDraft; now: Date }) {
     status === "posted" ? "text-[var(--up)]" : status === "failed" ? "text-[var(--down)]" : "text-[var(--ink-faint)]";
 
   return (
-    <li className="py-3 text-sm">
+    <li className="border-b border-[var(--rule)] py-3 text-sm">
       <div className="flex flex-wrap items-center gap-x-2 text-xs text-[var(--ink-soft)]">
         <span className={`font-semibold ${tone}`}>{STATUS_LABEL[status]}</span>
         <span>{CHANNEL_LABEL[draft.channel]}</span>

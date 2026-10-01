@@ -29,7 +29,7 @@ export async function decideDraft(_prev: DecideState, formData: FormData): Promi
   const { error } = await supabase.rpc("sns_decide", {
     p_id: decision.id,
     p_action: decision.action,
-    p_text: decision.action === "edit" ? decision.text : null,
+    p_text: decision.text,
   });
   if (error) return { error: decisionErrorMessage(error.message), done: null };
 
