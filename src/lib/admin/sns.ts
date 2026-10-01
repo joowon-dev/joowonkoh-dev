@@ -16,7 +16,8 @@ export type SnsStatus = "pending" | "approved" | "edited" | "rejected" | "posted
 export type SnsDraft = {
   id: string;
   created_at: string;
-  expires_at: string;
+  /** 비어 있으면 만료 없음. Claude 가 일부러 넣을 때만 값이 있다. */
+  expires_at: string | null;
   channel: SnsChannel;
   kind: SnsKind;
   target_url: string;
@@ -61,26 +62,28 @@ export const MAX_TEXT = 500;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type Decision =
-  | { ok: true; id: string; action: "approve" | "reject" }
-  | { ok: true; id: string; action: "edit"; text: string }
+  | { ok: true; id: string; action: "approve" | "edit" | "reject"; text: string | null }
   | { ok: false; error: string };
 
-/** 폼 값 → 결정. 모르는 값은 전부 거절한다. */
+/**
+ * 폼 값 → 결정. 모르는 값은 전부 거절한다.
+ * 승인에는 카드에서 고친 문구가 같이 온다. 초안과 다른지는 DB 함수가 판단해 "고쳐서 승인" 으로 적는다.
+ */
 export function parseDecision(input: { id: unknown; action: unknown; text?: unknown }): Decision {
   const id = typeof input.id === "string" ? input.id.trim() : "";
   if (!UUID.test(id)) return { ok: false, error: "잘못된 초안이에요." };
 
   const action = input.action;
-  if (action === "approve" || action === "reject") return { ok: true, id, action };
+  if (action === "reject") return { ok: true, id, action, text: null };
+  if (action !== "approve" && action !== "edit") return { ok: false, error: "알 수 없는 동작이에요." };
 
-  if (action === "edit") {
-    const text = typeof input.text === "string" ? input.text.trim() : "";
-    if (!text) return { ok: false, error: "고친 문구가 비어 있어요." };
-    if ([...text].length > MAX_TEXT) return { ok: false, error: `문구는 ${MAX_TEXT}자까지예요.` };
-    return { ok: true, id, action, text };
+  const text = typeof input.text === "string" ? input.text.trim() : "";
+  if (!text) {
+    if (action === "edit") return { ok: false, error: "고친 문구가 비어 있어요." };
+    return { ok: false, error: "문구가 비어 있어요. 지웠다면 다시 써 주세요." };
   }
-
-  return { ok: false, error: "알 수 없는 동작이에요." };
+  if ([...text].length > MAX_TEXT) return { ok: false, error: `문구는 ${MAX_TEXT}자까지예요.` };
+  return { ok: true, id, action, text };
 }
 
 /** DB 함수가 던지는 영문 사유를 화면 말로 바꾼다. 모르는 오류는 그대로 둔다. */
@@ -95,7 +98,9 @@ export function decisionErrorMessage(message: string): string {
 
 /** 대기 중이어도 만료 시각이 지났으면 결정할 수 없다. 화면에서는 만료로 보여 준다. */
 export function effectiveStatus(draft: Pick<SnsDraft, "status" | "expires_at">, now: Date): SnsStatus {
-  if (draft.status === "pending" && new Date(draft.expires_at).getTime() <= now.getTime()) return "expired";
+  if (draft.status === "pending" && draft.expires_at && new Date(draft.expires_at).getTime() <= now.getTime()) {
+    return "expired";
+  }
   return draft.status;
 }
 
@@ -115,8 +120,9 @@ function latestAt(d: SnsDraft): string {
   return d.posted_at ?? d.decided_at ?? d.created_at;
 }
 
-/** 남은 시간 "1시간 12분" / "8분". 지났으면 null. */
-export function timeLeft(expiresAt: string, now: Date): string | null {
+/** 남은 시간 "1시간 12분" / "8분". 만료가 없거나 지났으면 null. */
+export function timeLeft(expiresAt: string | null, now: Date): string | null {
+  if (!expiresAt) return null;
   const ms = new Date(expiresAt).getTime() - now.getTime();
   if (ms <= 0) return null;
   const minutes = Math.ceil(ms / 60000);

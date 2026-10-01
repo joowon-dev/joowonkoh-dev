@@ -36,36 +36,39 @@ function draft(over: Partial<SnsDraft>): SnsDraft {
 }
 
 describe("parseDecision", () => {
-  it("승인과 거절은 id 와 동작만 받는다", () => {
-    expect(parseDecision({ id: ID, action: "approve" })).toEqual({ ok: true, id: ID, action: "approve" });
-    expect(parseDecision({ id: ID, action: "reject", text: "무시됨" })).toEqual({ ok: true, id: ID, action: "reject" });
+  it("거절은 문구를 버린다", () => {
+    expect(parseDecision({ id: ID, action: "reject", text: "무시됨" })).toEqual({ ok: true, id: ID, action: "reject", text: null });
   });
 
-  it("고쳐서 승인은 앞뒤 공백을 지운 문구를 받는다", () => {
-    expect(parseDecision({ id: ID, action: "edit", text: "  긍정 신호다!!  " })).toEqual({
+  it("승인은 카드의 문구를 앞뒤 공백 지워 같이 보낸다", () => {
+    expect(parseDecision({ id: ID, action: "approve", text: "  긍정 신호다!!  " })).toEqual({
       ok: true,
       id: ID,
-      action: "edit",
+      action: "approve",
       text: "긍정 신호다!!",
     });
   });
 
-  it("고친 문구가 비었거나 500자를 넘으면 막는다", () => {
-    expect(parseDecision({ id: ID, action: "edit", text: "   " }).ok).toBe(false);
-    expect(parseDecision({ id: ID, action: "edit" }).ok).toBe(false);
-    expect(parseDecision({ id: ID, action: "edit", text: "가".repeat(501) }).ok).toBe(false);
-    expect(parseDecision({ id: ID, action: "edit", text: "가".repeat(500) }).ok).toBe(true);
+  it("문구를 다 지우고 승인하면 막는다", () => {
+    expect(parseDecision({ id: ID, action: "approve", text: "   " }).ok).toBe(false);
+    expect(parseDecision({ id: ID, action: "approve" }).ok).toBe(false);
+    expect(parseDecision({ id: ID, action: "edit", text: "" }).ok).toBe(false);
+  });
+
+  it("500자를 넘으면 막는다", () => {
+    expect(parseDecision({ id: ID, action: "approve", text: "가".repeat(501) }).ok).toBe(false);
+    expect(parseDecision({ id: ID, action: "approve", text: "가".repeat(500) }).ok).toBe(true);
   });
 
   it("이모지는 한 글자로 센다", () => {
-    expect(parseDecision({ id: ID, action: "edit", text: "👏".repeat(500) }).ok).toBe(true);
+    expect(parseDecision({ id: ID, action: "approve", text: "👏".repeat(500) }).ok).toBe(true);
   });
 
   it("모르는 동작과 잘못된 id 를 막는다", () => {
-    expect(parseDecision({ id: ID, action: "post" }).ok).toBe(false);
+    expect(parseDecision({ id: ID, action: "post", text: "x" }).ok).toBe(false);
     expect(parseDecision({ id: ID, action: null }).ok).toBe(false);
-    expect(parseDecision({ id: "1; drop table", action: "approve" }).ok).toBe(false);
-    expect(parseDecision({ id: undefined, action: "approve" }).ok).toBe(false);
+    expect(parseDecision({ id: "1; drop table", action: "approve", text: "x" }).ok).toBe(false);
+    expect(parseDecision({ id: undefined, action: "reject" }).ok).toBe(false);
   });
 });
 
@@ -85,6 +88,10 @@ describe("effectiveStatus", () => {
   it("만료 시각이 지난 대기는 만료로 본다", () => {
     expect(effectiveStatus(draft({ expires_at: "2026-10-01T03:00:00Z" }), NOW)).toBe("expired");
     expect(effectiveStatus(draft({}), NOW)).toBe("pending");
+  });
+
+  it("만료 시각이 없으면 계속 대기다", () => {
+    expect(effectiveStatus(draft({ expires_at: null }), NOW)).toBe("pending");
   });
 
   it("이미 결정된 건 만료와 상관없다", () => {
@@ -111,6 +118,7 @@ describe("timeLeft", () => {
     expect(timeLeft("2026-10-01T03:08:00Z", NOW)).toBe("8분");
     expect(timeLeft("2026-10-01T04:12:00Z", NOW)).toBe("1시간 12분");
     expect(timeLeft("2026-10-01T03:00:00Z", NOW)).toBeNull();
+    expect(timeLeft(null, NOW)).toBeNull();
   });
 });
 
