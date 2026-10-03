@@ -59,6 +59,7 @@ function Portrait({ kind, move, prop, phase }: { kind: string; move: string; pro
 
     let raf = 0;
     let last = performance.now();
+    let running = false;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const frame = (now: number) => {
       const dt = Math.min(0.1, (now - last) / 1000);
@@ -76,10 +77,27 @@ function Portrait({ kind, move, prop, phase }: { kind: string; move: string; pro
       ctx.fill();
       drawChar(ctx, ch);
       drawProp(ctx, ch);
-      if (!reduce) raf = requestAnimationFrame(frame);
+      if (!reduce && running) raf = requestAnimationFrame(frame);
     };
+    // 화면 밖에 있으면 쉰다 — 일곱 칸이 각자 초당 60번 그리면 스크롤해 지나간 뒤에도 배터리를 먹는다.
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !running) {
+        running = true;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      } else if (!entry.isIntersecting) {
+        running = false;
+        cancelAnimationFrame(raf);
+      }
+    });
+    io.observe(canvas);
+    // 첫 그림은 바로 — 움직임을 끈 사람에게도 정지 그림은 보여야 한다.
     raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+      io.disconnect();
+    };
   }, [kind, move, prop, phase]);
 
   return <canvas ref={ref} aria-hidden className="h-[112px] w-[132px]" />;
