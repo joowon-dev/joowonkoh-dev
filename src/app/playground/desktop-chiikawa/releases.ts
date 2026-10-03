@@ -24,9 +24,20 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
-    version: "1.0.0",
+    version: "1.0.1",
     date: "2026-10-03",
     latest: true,
+    notes: [
+      "배터리를 덜 씁니다. 친구들이 가만히 있을 때는 덜 자주 그리고, 창이 안 움직일 때는 창 위치를 덜 자주 확인합니다. 이 맥에서 잰 CPU 사용량이 3분의 1쯤 줄었습니다.",
+      "그림 폴더에 아주 큰 그림을 넣어도 켤 때 멈칫하지 않습니다.",
+    ],
+    mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "760KB" },
+    windows: { href: "/downloads/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/DesktopChiikawa-win-x64.zip", size: "675KB" },
+  },
+  {
+    version: "1.0.0",
+    date: "2026-10-03",
     notes: [
       "창을 열면 친구들이 화면 아래에서 뿅 튀어나와 그 창 위에 올라섭니다.",
       "창 위를 걷고, 앉고, 눕고, 옆 창으로 뛰어 건너갑니다. 창을 끌면 같이 실려 가고, 닫으면 떨어집니다.",
@@ -35,9 +46,9 @@ export const RELEASES: Release[] = [
       "크기는 아주 작게부터 아주 크게까지 다섯 단계. 캐릭터 그림을 직접 넣어 바꿀 수도 있습니다.",
       "새 버전이 나오면 메뉴가 알려 주고, 눌러야만 갈아 끼웁니다.",
     ],
-    mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "760KB" },
-    windows: { href: "/downloads/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
-    windowsZip: { href: "/downloads/DesktopChiikawa-win-x64.zip", size: "675KB" },
+    mac: { href: "/downloads/desktop-chiikawa/v1.0.0/DesktopChiikawa-mac.dmg", size: "760KB" },
+    windows: { href: "/downloads/desktop-chiikawa/v1.0.0/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/desktop-chiikawa/v1.0.0/DesktopChiikawa-win-x64.zip", size: "675KB" },
   },
 ];
 

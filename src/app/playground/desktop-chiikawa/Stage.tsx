@@ -10,6 +10,7 @@ import {
   createWorld,
   drainEvents,
   resize,
+  setKinds,
   setMouse,
   setWindows,
   step,
@@ -24,6 +25,7 @@ import {
   drawProp,
   drawZzz,
   setScale,
+  setSprite,
 } from "./kit/render/draw.js";
 import * as fx from "./kit/render/fx.js";
 
@@ -105,6 +107,8 @@ export default function Stage({ hero }: { hero: ReactNode }) {
   const [wins, setWins] = useState<Win[]>([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const nextId = useRef(4);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [mine, setMine] = useState(0);
   const extraIndex = useRef(0);
 
   // 처음 크기를 재고 창을 놓는다.
@@ -305,6 +309,37 @@ export default function Stage({ hero }: { hero: ReactNode }) {
     window.addEventListener("pointerup", onUp);
   };
 
+  /**
+   * 「내 그림으로 보기」 — 앱의 그림 폴더와 같은 규칙(파일 이름이 이름)으로 고른 그림을 쓴다.
+   * **그림은 이 브라우저 안에서만 쓴다.** 어디에도 올리지 않고, 새로고침하면 사라진다.
+   * 이미 나와 있는 친구들도 바로 그 그림으로 바꿔 입힌다.
+   */
+  const loadMyImages = async (files: FileList | null) => {
+    const world = worldRef.current;
+    if (!files || !world) return;
+    const kinds: string[] = [];
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      const kind = file.name.replace(/\.[^.]+$/, "").toLowerCase();
+      const image = new window.Image();
+      // decode() 는 탭이 뒤에 있으면 끝나지 않는다. onload 로 기다린다.
+      const ok = await new Promise<boolean>((resolve) => {
+        image.onload = () => resolve(true);
+        image.onerror = () => resolve(false);
+        image.src = URL.createObjectURL(file);
+      });
+      if (!ok) continue;
+      setSprite(kind, trimmed(image));
+      kinds.push(kind);
+    }
+    if (!kinds.length) return;
+    setKinds(world, kinds);
+    (world.chars as (Ch & { kind: string })[]).forEach((ch, i) => {
+      ch.kind = kinds[i % kinds.length];
+    });
+    setMine(kinds.length);
+  };
+
   const close = (id: number) => setWins((current) => current.filter((w) => w.id !== id));
 
   const open = () => {
@@ -370,6 +405,25 @@ export default function Stage({ hero }: { hero: ReactNode }) {
         className="pointer-events-none absolute inset-0 z-[200] h-full w-full"
       />
 
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/png,image/gif,image/webp"
+        multiple
+        hidden
+        onChange={(e) => {
+          void loadMyImages(e.target.files);
+          e.target.value = "";
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        title="고른 그림은 이 브라우저 안에서만 쓰고 어디에도 올리지 않아요"
+        className="absolute bottom-5 right-[168px] z-[300] rounded-full bg-white/90 px-4 py-2 text-[14px] font-semibold text-[#4b3a35] shadow-[0_6px_18px_-6px_rgba(75,58,53,0.4)] backdrop-blur transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff8fab] max-md:bottom-[68px] max-md:right-5"
+      >
+        {mine ? `내 그림 ${mine}장으로 보는 중` : "내 그림으로 보기"}
+      </button>
       <button
         type="button"
         onClick={open}
@@ -383,6 +437,43 @@ export default function Stage({ hero }: { hero: ReactNode }) {
       </p>
     </div>
   );
+}
+
+/**
+ * 그림 긴 변의 최대 길이. 화면에는 60px 남짓으로 그려지니 이보다 클 까닭이 없다 —
+ * 4000px 사진을 그대로 두면 여백 자르기가 픽셀 1200만 개를 훑느라 페이지가 멈칫한다.
+ */
+const SPRITE_MAX = 512;
+
+/** 줄이고(SPRITE_MAX) 둘레의 투명 여백을 잘라 낸다(앱 렌더러의 trimmed 와 같다). */
+function trimmed(image: HTMLImageElement): HTMLImageElement | HTMLCanvasElement {
+  const k = Math.min(1, SPRITE_MAX / Math.max(image.naturalWidth, image.naturalHeight));
+  const w = Math.max(1, Math.round(image.naturalWidth * k));
+  const h = Math.max(1, Math.round(image.naturalHeight * k));
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  if (!g) return image;
+  g.drawImage(image, 0, 0, w, h);
+  const data = g.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (data[(y * w + x) * 4 + 3] > 12) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+    }
+  }
+  if (x1 < 0) return image;
+  const out = document.createElement("canvas");
+  out.width = x1 - x0 + 1;
+  out.height = y1 - y0 + 1;
+  out.getContext("2d")?.drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+  return out;
 }
 
 /** 창 안쪽. 맨 앞 창(hero)만 진짜 내용이고 나머지는 분위기. */
