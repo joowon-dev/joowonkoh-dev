@@ -24,16 +24,26 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
-    version: "1.0.2",
+    version: "1.0.3",
     date: "2026-10-03",
     latest: true,
     notes: [
-      "친구 코드가 생겼습니다. 메뉴의 「친구 코드 입력…」에 받은 코드를 넣으면 주인이 올려 둔 그림으로 친구들이 나옵니다. 켤 때마다 최신 그림을 받아 옵니다.",
-      "그림을 받아 오는데 인터넷이 끊겨 있으면 「인터넷 연결이 필요해요」라고 알려 줍니다.",
+      "윈도우에서 켜 두면 화면 클릭과 키보드가 먹통이 되던 문제를 고쳤습니다. 이제 클릭과 타자가 밑의 창으로 그대로 갑니다.",
     ],
     mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "750KB" },
     windows: { href: "/downloads/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
     windowsZip: { href: "/downloads/DesktopChiikawa-win-x64.zip", size: "680KB" },
+  },
+  {
+    version: "1.0.2",
+    date: "2026-10-03",
+    notes: [
+      "친구 코드가 생겼습니다. 메뉴의 「친구 코드 입력…」에 받은 코드를 넣으면 주인이 올려 둔 그림으로 친구들이 나옵니다. 켤 때마다 최신 그림을 받아 옵니다.",
+      "그림을 받아 오는데 인터넷이 끊겨 있으면 「인터넷 연결이 필요해요」라고 알려 줍니다.",
+    ],
+    mac: { href: "/downloads/desktop-chiikawa/v1.0.2/DesktopChiikawa-mac.dmg", size: "750KB" },
+    windows: { href: "/downloads/desktop-chiikawa/v1.0.2/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/desktop-chiikawa/v1.0.2/DesktopChiikawa-win-x64.zip", size: "680KB" },
   },
   {
     version: "1.0.1",
