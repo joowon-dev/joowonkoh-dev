@@ -24,15 +24,26 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
-    version: "1.0.9",
+    version: "1.1.0",
     date: "2026-10-03",
     latest: true,
     notes: [
-      "전체 화면이나 최대화했던 창을 다시 창 모드로 줄이면 친구들이 그 창 위로 다시 올라갑니다. 작업 표시줄에 서 있던 친구가 옮겨 오기도 합니다.",
+      "친구 코드를 넣지 않아도 처음 켤 때부터 친구들이 그림으로 나옵니다. 켤 때 입력 창도 더는 뜨지 않습니다.",
+      "처음 켤 때는 그림을 받아 올 때까지 기다렸다가 친구들이 나옵니다 — 도형이 먼저 나왔다가 바뀌지 않아요.",
     ],
-    mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "760KB" },
+    mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "770KB" },
     windows: { href: "/downloads/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
     windowsZip: { href: "/downloads/DesktopChiikawa-win-x64.zip", size: "680KB" },
+  },
+  {
+    version: "1.0.9",
+    date: "2026-10-03",
+    notes: [
+      "전체 화면이나 최대화했던 창을 다시 창 모드로 줄이면 친구들이 그 창 위로 다시 올라갑니다. 작업 표시줄에 서 있던 친구가 옮겨 오기도 합니다.",
+    ],
+    mac: { href: "/downloads/desktop-chiikawa/v1.0.9/DesktopChiikawa-mac.dmg", size: "760KB" },
+    windows: { href: "/downloads/desktop-chiikawa/v1.0.9/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/desktop-chiikawa/v1.0.9/DesktopChiikawa-win-x64.zip", size: "680KB" },
   },
   {
     version: "1.0.8",
