@@ -66,7 +66,7 @@ type Win = {
 
 /**
  * 「창 하나 더 열기」로 차례로 뜨는 창. 사진 창의 그림은 **앱과 같은 그림 코드로 그린 장면**이다
- * (하늘 배경 위 창에 친구가 선 모습. 공식 그림이 아니라 앱과 같은 픽셀 그림(kit/render/pixel.js)으로 그렸다).
+ * (하늘 배경 위 창에 친구가 선 모습. 공식 그림이 아니라 앱과 같은 그림(kit/render/draw.js)으로 그렸다).
  */
 const EXTRA: { kind: Kind; title: string; w: number; img?: string }[] = [
   { kind: "photo", title: "스크린샷 — 우사기", w: 280, img: "/playground/desktop-chiikawa/capture-usagi.jpg" },
