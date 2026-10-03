@@ -28,6 +28,8 @@ import {
   setSprite,
 } from "./kit/render/draw.js";
 import * as fx from "./kit/render/fx.js";
+import { loadSprites, trimmed } from "./sprites";
+import type { Loaded } from "./sprites";
 
 /**
  * 페이지 맨 위 — **페이지 자체가 바탕화면이다.**
@@ -60,7 +62,9 @@ type Win = {
   h: number;
   title: string;
   closable: boolean;
-  /** 사진 창에 띄울 그림. 앱을 실제로 돌려 찍은 화면이다. */
+  /** 사진 창에 서 있는 친구(그림 이름). 그림을 받았으면 그 그림으로 장면을 꾸민다. */
+  who?: string;
+  /** 그림을 못 받았을 때 사진 창에 띄울 화면. 도형 그림으로 앱을 실제로 돌려 찍은 것이다. */
   img?: string;
 };
 
@@ -68,11 +72,11 @@ type Win = {
  * 「창 하나 더 열기」로 차례로 뜨는 창. 사진 창의 그림은 **앱과 같은 그림 코드로 그린 장면**이다
  * (하늘 배경 위 창에 친구가 선 모습. 공식 그림이 아니라 앱과 같은 그림(kit/render/draw.js)으로 그렸다).
  */
-const EXTRA: { kind: Kind; title: string; w: number; img?: string }[] = [
-  { kind: "photo", title: "스크린샷 — 우사기", w: 280, img: "/playground/desktop-chiikawa/capture-usagi.jpg" },
+const EXTRA: { kind: Kind; title: string; w: number; who?: string; img?: string }[] = [
+  { kind: "photo", title: "스크린샷 — 우사기", w: 280, who: "usagi", img: "/playground/desktop-chiikawa/capture-usagi.jpg" },
   { kind: "music", title: "노래", w: 280 },
   { kind: "memo", title: "할 일", w: 240 },
-  { kind: "photo", title: "스크린샷 — 치이카와", w: 280, img: "/playground/desktop-chiikawa/capture-chiikawa.jpg" },
+  { kind: "photo", title: "스크린샷 — 치이카와", w: 280, who: "chiikawa", img: "/playground/desktop-chiikawa/capture-chiikawa.jpg" },
 ];
 
 const MAX_WINDOWS = 7;
@@ -93,7 +97,7 @@ function initialWindows(width: number): Win[] {
     { id: 2, kind: "memo", x: Math.round(width * 0.64), y: 96, w: 290, h: 170, title: "메모", closable: true },
     {
       id: 3, kind: "photo", x: Math.round(width * 0.58), y: 340, w: 340, h: 170,
-      title: "스크린샷 — 치이카와", closable: true, img: "/playground/desktop-chiikawa/capture-chiikawa.jpg",
+      title: "스크린샷 — 치이카와", closable: true, who: "chiikawa", img: "/playground/desktop-chiikawa/capture-chiikawa.jpg",
     },
   ];
 }
@@ -110,6 +114,18 @@ export default function Stage({ hero }: { hero: ReactNode }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [mine, setMine] = useState(0);
   const extraIndex = useRef(0);
+  // Supabase 의 친구들 그림. 받기 전(null)에는 월드를 만들지 않는다 — 도형이 먼저 나오지 않게.
+  const [sprites, setSprites] = useState<Loaded | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void loadSprites().then((loaded) => {
+      if (alive) setSprites(loaded);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // 처음 크기를 재고 창을 놓는다.
   useLayoutEffect(() => {
@@ -152,13 +168,20 @@ export default function Stage({ hero }: { hero: ReactNode }) {
   useEffect(() => {
     const box = boxRef.current;
     const canvas = canvasRef.current;
-    if (!box || !canvas || size.w === 0) return;
+    if (!box || !canvas || size.w === 0 || !sprites) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const world: World =
       worldRef.current ??
-      (createWorld({ seed: 20261003, w: size.w, h: size.h, maxChars: 6 }) as unknown as World);
+      (createWorld({
+        seed: 20261003,
+        w: size.w,
+        h: size.h,
+        maxChars: 6,
+        // 그림이 있으면 그림 있는 아이들만(앱의 그림 폴더와 같은 규칙). 없으면 도형 일곱.
+        ...(sprites.kinds.length ? { kinds: sprites.kinds } : {}),
+      }) as unknown as World);
     worldRef.current = world;
     resize(world, size.w, size.h);
     setScale(size.w < 760 ? 0.95 : 1.15);
@@ -259,14 +282,14 @@ export default function Stage({ hero }: { hero: ReactNode }) {
       box.removeEventListener("pointermove", move);
       box.removeEventListener("pointerleave", leave);
     };
-  }, [size.w, size.h]);
+  }, [size.w, size.h, sprites]);
 
   // 처음 창 목록은 루프가 생긴 뒤에 넣어야 한다.
   useEffect(() => {
     if (worldRef.current && wins.length) {
       setWindows(worldRef.current, wins.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })));
     }
-  }, [size.w, wins]);
+  }, [size.w, wins, sprites]);
 
   const toFront = useCallback((id: number) => {
     setWins((current) => {
@@ -353,7 +376,7 @@ export default function Stage({ hero }: { hero: ReactNode }) {
     const x = Math.round(((n * 0.37) % 1) * Math.max(1, box.clientWidth - w - 32)) + 16;
     const y = Math.round(140 + ((n * 0.61) % 1) * Math.max(1, box.clientHeight - 360));
     setWins((current) => [
-      { id: n, kind: pick.kind, x, y, w, h: 140, title: pick.title, closable: true, img: pick.img },
+      { id: n, kind: pick.kind, x, y, w, h: 140, title: pick.title, closable: true, who: pick.who, img: pick.img },
       ...current,
     ]);
   };
@@ -393,7 +416,7 @@ export default function Stage({ hero }: { hero: ReactNode }) {
             <span className="h-3 w-3 rounded-full bg-[#28c840]" />
             <span className="ml-2 truncate text-[12px] text-[#8a7b78]">{win.title}</span>
           </div>
-          <WindowBody kind={win.kind} img={win.img}>
+          <WindowBody kind={win.kind} img={win.img} who={win.who} sprites={sprites}>
             {hero}
           </WindowBody>
         </div>
@@ -439,45 +462,20 @@ export default function Stage({ hero }: { hero: ReactNode }) {
   );
 }
 
-/**
- * 그림 긴 변의 최대 길이. 화면에는 60px 남짓으로 그려지니 이보다 클 까닭이 없다 —
- * 4000px 사진을 그대로 두면 여백 자르기가 픽셀 1200만 개를 훑느라 페이지가 멈칫한다.
- */
-const SPRITE_MAX = 512;
-
-/** 줄이고(SPRITE_MAX) 둘레의 투명 여백을 잘라 낸다(앱 렌더러의 trimmed 와 같다). */
-function trimmed(image: HTMLImageElement): HTMLImageElement | HTMLCanvasElement {
-  const k = Math.min(1, SPRITE_MAX / Math.max(image.naturalWidth, image.naturalHeight));
-  const w = Math.max(1, Math.round(image.naturalWidth * k));
-  const h = Math.max(1, Math.round(image.naturalHeight * k));
-  const c = document.createElement("canvas");
-  c.width = w;
-  c.height = h;
-  const g = c.getContext("2d", { willReadFrequently: true });
-  if (!g) return image;
-  g.drawImage(image, 0, 0, w, h);
-  const data = g.getImageData(0, 0, w, h).data;
-  let x0 = w, y0 = h, x1 = -1, y1 = -1;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (data[(y * w + x) * 4 + 3] > 12) {
-        if (x < x0) x0 = x;
-        if (x > x1) x1 = x;
-        if (y < y0) y0 = y;
-        if (y > y1) y1 = y;
-      }
-    }
-  }
-  if (x1 < 0) return image;
-  const out = document.createElement("canvas");
-  out.width = x1 - x0 + 1;
-  out.height = y1 - y0 + 1;
-  out.getContext("2d")?.drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
-  return out;
-}
-
 /** 창 안쪽. 맨 앞 창(hero)만 진짜 내용이고 나머지는 분위기. */
-function WindowBody({ kind, img, children }: { kind: Kind; img?: string; children: ReactNode }) {
+function WindowBody({
+  kind,
+  img,
+  who,
+  sprites,
+  children,
+}: {
+  kind: Kind;
+  img?: string;
+  who?: string;
+  sprites: Loaded | null;
+  children: ReactNode;
+}) {
   if (kind === "hero") return <div className="p-6 md:p-8">{children}</div>;
   if (kind === "memo") {
     return (
@@ -497,6 +495,27 @@ function WindowBody({ kind, img, children }: { kind: Kind; img?: string; childre
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#f1ecef]">
             <div className="h-full w-2/5 rounded-full bg-[#ff8fab]" />
           </div>
+        </div>
+      </div>
+    );
+  }
+  // 사진 창 — 그림을 받았으면 하늘 배경 위 창에 그 친구가 선 장면을 그림으로 꾸민다.
+  // 받기 전에는 빈 하늘(옛 스크린샷의 도형 친구가 먼저 보이지 않게), 못 받았으면 옛 스크린샷.
+  const photo = who ? sprites?.urls.get(who) : undefined;
+  if (!sprites || sprites.kinds.length) {
+    return (
+      <div className="p-2">
+        <div className="relative h-32 overflow-hidden rounded-lg bg-gradient-to-b from-[#cfe8ff] via-[#e6f4ff] to-[#bfe6a9]">
+          <div className="absolute bottom-3 left-1/2 h-7 w-3/5 -translate-x-1/2 rounded-t-md bg-white shadow-[0_0_0_1px_rgba(75,58,53,0.08)]" />
+          {photo && (
+            // eslint-disable-next-line @next/next/no-img-element -- 브라우저에서 만든 data URL 이다.
+            <img
+              src={photo}
+              alt=""
+              draggable={false}
+              className="absolute bottom-10 left-1/2 h-[68px] w-auto -translate-x-1/2 select-none"
+            />
+          )}
         </div>
       </div>
     );
