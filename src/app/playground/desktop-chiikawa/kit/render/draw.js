@@ -3,18 +3,23 @@
 // 발이 (0, 0) 이고 몸은 위로 CHAR_H(46) 만큼이다. 모든 종이 같은 뼈대(몸통·머리·팔·발·
 // 얼굴)를 쓰고, 귀·무늬·꼬리 같은 「그 아이다운 것」만 종마다 따로 얹는다.
 
-const LINE = '#4b3a35'
-const BLUSH = 'rgba(255, 140, 160, 0.55)'
-const PINK = '#ffc4cf'
+const LINE = '#4a3a36'
+const LW = 1.6
+const EYE = '#2b2220'
+const BLUSH = 'rgba(255, 150, 172, 0.6)'
+const BLUSH_LINE = 'rgba(226, 92, 124, 0.75)'
+const MOUTH = '#ef7f8f'
+const EAR_PINK = '#f7b8c4'
+const TEAR = 'rgba(120, 190, 240, 0.9)'
 
 const LOOKS = {
-  chiikawa: { body: '#ffffff', eye: 2.3 },
-  hachiware: { body: '#ffffff', eye: 2.3, cap: '#7f9fcc' },
-  usagi: { body: '#f9e7a4', eye: 1.7 },
-  momonga: { body: '#ffffff', eye: 3.1 },
-  kurimanju: { body: '#f4ddb6', eye: 2.0, cap: '#b7794a' },
-  rakko: { body: '#b8a294', eye: 1.9, muzzle: '#f1e8de' },
-  shisa: { body: '#f4c96f', eye: 2.4, mane: '#d98f3a' },
+  chiikawa: { body: '#fffdf9', eye: 2.9, lid: true },
+  hachiware: { body: '#fffdf9', eye: 3.1, lid: true, cap: '#7fa4d3' },
+  usagi: { body: '#fbefc3', eye: 2.3, brow: true },
+  momonga: { body: '#fffdf9', eye: 3.5, lid: true },
+  kurimanju: { body: '#fdedd0', eye: 1.9, cap: '#a9724e' },
+  rakko: { body: '#fbf1d3', eye: 1.9 },
+  shisa: { body: '#fdf3dc', eye: 2.7, mane: '#f19a50' },
 }
 
 /**
@@ -284,8 +289,8 @@ export function drawChar(ctx, ch) {
 
   // 그림자는 자세와 상관없이 창 윗변에 붙는다.
   if (ch.mode === 'ground') {
-    ellipse(ctx, 0, 0, 13 * p.sx, 2.6)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.14)'
+    ellipse(ctx, 0, 0, 14 * p.sx, 2.6)
+    ctx.fillStyle = 'rgba(40, 30, 30, 0.13)'
     ctx.fill()
   }
 
@@ -296,272 +301,516 @@ export function drawChar(ctx, ch) {
     return
   }
 
+  const f = ch.facing < 0 ? -1 : 1
+  if (p.lie > 0) {
+    // 누워 자기: 몸 가운데를 축으로 옆으로 눕고, 다 누우면 몸 너비의 절반 높이에 뜬다.
+    ctx.translate(0, -25 + 6 * p.lie)
+    ctx.rotate((Math.PI / 2) * p.lie * -f)
+    ctx.translate(0, 25)
+  }
   ctx.translate(0, -p.lift)
   ctx.rotate(p.rot)
-  ctx.scale(p.sx * (ch.facing < 0 ? -1 : 1), p.sy)
-  ctx.lineWidth = 1.5
+  ctx.scale(p.sx * f, p.sy)
+  ctx.lineWidth = LW
   ctx.strokeStyle = LINE
   ctx.lineJoin = 'round'
   ctx.lineCap = 'round'
 
   const sitting = ch.mode === 'ground' && (ch.action === 'sit' || ch.action === 'sleep')
+  const shape = SHAPES[ch.kind] || SHAPES.chiikawa
 
-  // 뒤에 있는 것: 꼬리, 귀.
-  if (ch.kind === 'momonga') drawMomongaTail(ctx, look, ch)
+  // 뒤에 있는 것: 꼬리·망토·귀·갈기·다리·팔. 몸이 그 위를 덮어서 뿌리가 숨는다.
+  if (ch.kind === 'momonga') drawMomongaTail(ctx, ch)
+  if (ch.kind === 'rakko') drawRakkoCape(ctx)
   drawEars(ctx, ch.kind, look, ch)
+  if (ch.kind === 'shisa') drawShisaMane(ctx, look)
+  drawLegs(ctx, shape, look, ch, p, sitting)
+  drawArms(ctx, shape, look, p.arms, ch)
 
-  // 발.
-  if (sitting) {
-    ellipse(ctx, -7, -2.5, 5, 3, -0.3)
-    fillStroke(ctx, look.body)
-    ellipse(ctx, 7, -2.5, 5, 3, 0.3)
-    fillStroke(ctx, look.body)
+  // 몸 — 머리와 몸이 나뉘지 않은 둥근 찹쌀떡 한 덩어리.
+  if (ch.kind === 'rakko') {
+    fluff(ctx, 0, -shape.h * 0.52, shape.w + 0.5, shape.h * 0.5, 34, 0.9)
   } else {
-    const a = ch.mode === 'air' ? 1.5 : p.step * 2
-    ellipse(ctx, -5.5, -2.2 - Math.max(0, a), 4.5, 2.6)
-    fillStroke(ctx, look.body)
-    ellipse(ctx, 5.5, -2.2 - Math.max(0, -a), 4.5, 2.6)
-    fillStroke(ctx, look.body)
+    silhouette(ctx, shape)
   }
-
-  // 몸통.
-  ellipse(ctx, 0, sitting ? -8 : -9.5, 12.5, sitting ? 8 : 9)
   fillStroke(ctx, look.body)
 
-  // 팔.
-  drawArms(ctx, look, p.arms, ch)
-
-  // 머리.
-  ellipse(ctx, 0, -27, 18.5, 15.5)
-  fillStroke(ctx, look.body)
-  if (ch.kind === 'hachiware') drawHachiwareCap(ctx, look)
-  if (ch.kind === 'kurimanju') drawKurimanjuTop(ctx, look)
-  if (ch.kind === 'rakko') drawRakkoFace(ctx, look)
+  if (ch.kind === 'hachiware') drawHachiwareCap(ctx, look, shape)
+  if (ch.kind === 'kurimanju') drawKurimanjuTop(ctx, look, shape)
+  if (ch.kind === 'rakko') drawRakkoMarks(ctx)
 
   drawFace(ctx, ch, look)
 
   ctx.restore()
 }
 
-function drawEars(ctx, kind, look, ch) {
-  switch (kind) {
-    case 'chiikawa':
-      // 작고 동그란 곰돌이 귀.
-      for (const s of [-1, 1]) {
-        ellipse(ctx, s * 10.5, -39.5, 5, 4.6)
-        fillStroke(ctx, look.body)
-      }
-      break
-    case 'hachiware':
-      // 뾰족한 고양이 귀, 파란색.
-      for (const s of [-1, 1]) {
-        ctx.beginPath()
-        ctx.moveTo(s * 16.5, -34)
-        ctx.lineTo(s * 13.5, -48.5)
-        ctx.lineTo(s * 4.5, -40)
-        ctx.closePath()
-        fillStroke(ctx, look.cap)
-      }
-      break
-    case 'usagi': {
-      // 긴 귀. 걸을 때 살짝 흔들린다.
-      const wob = Math.sin(ch.anim * 6) * 0.08
-      for (const s of [-1, 1]) {
-        ellipse(ctx, s * 6.5, -50, 4.6, 14, s * (0.12 + wob))
-        fillStroke(ctx, look.body)
-        ellipse(ctx, s * 6.5, -50, 2, 9, s * (0.12 + wob))
-        ctx.fillStyle = PINK
-        ctx.fill()
-      }
-      break
-    }
-    case 'kurimanju':
-      for (const s of [-1, 1]) {
-        ellipse(ctx, s * 11, -39, 4.6, 4.2)
-        fillStroke(ctx, look.cap)
-      }
-      break
-    case 'rakko':
-      for (const s of [-1, 1]) {
-        ellipse(ctx, s * 14, -36, 3.6, 3.4)
-        fillStroke(ctx, look.body)
-      }
-      break
-    case 'shisa':
-      // 머리를 둘러싼 곱슬 갈기.
-      for (let i = 0; i < 9; i++) {
-        const a = Math.PI * (0.95 + (i / 8) * 1.1)
-        ellipse(ctx, Math.cos(a) * 18, -27 + Math.sin(a) * 15.5, 5.2, 5.2)
-        fillStroke(ctx, look.mane)
-      }
-      break
-    case 'momonga':
-      // 옆으로 넓게 벌어진 귀.
-      for (const s of [-1, 1]) {
-        ctx.beginPath()
-        ctx.moveTo(s * 9, -38)
-        ctx.quadraticCurveTo(s * 24, -50, s * 22, -32)
-        ctx.closePath()
-        fillStroke(ctx, look.body)
-        ctx.beginPath()
-        ctx.moveTo(s * 11, -37)
-        ctx.quadraticCurveTo(s * 21, -45, s * 19.5, -34)
-        ctx.closePath()
-        ctx.fillStyle = PINK
-        ctx.fill()
-      }
-      break
-  }
+/** 몸의 크기. w 는 가장 넓은 곳의 절반, h 는 발바닥 위 몸 높이(다리 빼고). */
+const SHAPES = {
+  chiikawa: { w: 22.5, h: 41 },
+  hachiware: { w: 23.5, h: 42 },
+  usagi: { w: 20, h: 42 },
+  momonga: { w: 22.5, h: 40 },
+  kurimanju: { w: 22.5, h: 40 },
+  rakko: { w: 21.5, h: 42 },
+  shisa: { w: 23, h: 41 },
 }
+const BASE = -4.4 // 몸 밑면. 그 아래로 짧은 다리 둘이 나온다.
 
-/** 하치와레의 「팔(八)자로 갈린」 파란 머리 무늬. 머리 안쪽으로만 칠한다. */
-function drawHachiwareCap(ctx, look) {
-  ctx.save()
-  ellipse(ctx, 0, -27, 18.5, 15.5)
-  ctx.clip()
+/** 위가 넓고 둥근 한 덩어리. 가장 넓은 곳이 위에서 40% 쯤 — 머리가 몸이고 몸이 머리다. */
+function silhouette(ctx, { w, h }) {
+  const top = BASE - h
   ctx.beginPath()
-  ctx.moveTo(-20, -23)
-  ctx.quadraticCurveTo(-10, -26, -3, -36)
-  ctx.lineTo(0, -40)
-  ctx.lineTo(3, -36)
-  ctx.quadraticCurveTo(10, -26, 20, -23)
-  ctx.lineTo(20, -50)
-  ctx.lineTo(-20, -50)
+  ctx.moveTo(0, top)
+  // 위는 타원 반쪽 같은 둥근 돔(가장 넓은 곳은 위에서 38%), 아래는 살짝 좁아지며 둥글게 닫힌다.
+  const mid = top + h * 0.38
+  ctx.bezierCurveTo(w * 0.552, top, w, mid - h * 0.21, w, mid)
+  ctx.bezierCurveTo(w, mid + h * 0.36, w * 0.74, BASE + 0.6, 0, BASE + 0.8)
+  ctx.bezierCurveTo(-w * 0.74, BASE + 0.6, -w, mid + h * 0.36, -w, mid)
+  ctx.bezierCurveTo(-w, mid - h * 0.21, -w * 0.552, top, 0, top)
   ctx.closePath()
-  ctx.fillStyle = look.cap
-  ctx.fill()
-  ctx.restore()
-  // 테두리를 다시 그어 무늬 위로 선이 살게.
-  ellipse(ctx, 0, -27, 18.5, 15.5)
-  ctx.stroke()
 }
 
-/** 쿠리만쥬: 밤만쥬처럼 머리 위가 구운 갈색. */
-function drawKurimanjuTop(ctx, look) {
-  ctx.save()
-  ellipse(ctx, 0, -27, 18.5, 15.5)
-  ctx.clip()
-  ellipse(ctx, 0, -44, 26, 13)
-  ctx.fillStyle = look.cap
-  ctx.fill()
-  ctx.restore()
-  ellipse(ctx, 0, -27, 18.5, 15.5)
-  ctx.stroke()
-}
-
-/** 랏코: 입 둘레가 밝고, 눈썹이 진하다. */
-function drawRakkoFace(ctx, look) {
-  ellipse(ctx, 0, -21.5, 8, 5.5)
-  ctx.fillStyle = look.muzzle
-  ctx.fill()
-  ctx.lineWidth = 1.6
+/** 몸 밑으로 삐죽 나온 짧은 다리 둘. 걸을 때 번갈아 든다. */
+function drawLegs(ctx, { w }, look, ch, p, sitting) {
+  const a = ch.mode === 'air' ? 1.6 : p.step * 1.8
   for (const s of [-1, 1]) {
+    const lift = sitting ? 0 : Math.max(0, s < 0 ? a : -a)
+    const x = s * w * 0.32
     ctx.beginPath()
-    ctx.moveTo(s * 3.8, -32.5)
-    ctx.lineTo(s * 8.8, -31.5)
-    ctx.stroke()
-  }
-  ctx.lineWidth = 1.5
-}
-
-function drawMomongaTail(ctx, look, ch) {
-  const sway = Math.sin(ch.anim * 3) * 0.12
-  ellipse(ctx, -15, -20, 9, 16, -0.5 + sway)
-  fillStroke(ctx, look.body)
-  // 털 결.
-  ctx.beginPath()
-  ctx.moveTo(-18, -28)
-  ctx.quadraticCurveTo(-14, -22, -17, -15)
-  ctx.stroke()
-}
-
-function drawArms(ctx, look, arms, ch) {
-  for (const s of [-1, 1]) {
-    switch (arms) {
-      case 'up': {
-        const wave = Math.sin(ch.anim * 12 + s) * 0.25
-        ellipse(ctx, s * 15, -18, 3.6, 6, s * (-0.7 + wave))
-        break
-      }
-      case 'out':
-        ellipse(ctx, s * 15, -12, 3.4, 5.6, s * -1.3)
-        break
-      case 'sit':
-        ellipse(ctx, s * 9, -9, 3.4, 4.6, s * 0.4)
-        break
-      default:
-        ellipse(ctx, s * 12.5, -9.5, 3.4, 5.2, s * 0.35)
+    if (sitting) {
+      // 앉으면 발바닥이 앞으로.
+      ellipse(ctx, x * 1.2, -1.8, 4.2, 2.4, s * 0.2)
+    } else {
+      ctx.moveTo(x - 2.7, BASE - 2)
+      ctx.lineTo(x - 2.7, -1.6 - lift)
+      ctx.quadraticCurveTo(x - 2.7, 0 - lift, x, 0 - lift)
+      ctx.quadraticCurveTo(x + 2.7, 0 - lift, x + 2.7, -1.6 - lift)
+      ctx.lineTo(x + 2.7, BASE - 2)
+      ctx.closePath()
     }
     fillStroke(ctx, look.body)
   }
 }
 
-function drawFace(ctx, ch, look) {
-  const asleep = ch.mode === 'ground' && ch.action === 'sleep'
-  const closed = asleep || blinking(ch) || (ch.mode === 'ground' && ch.action === 'crouch')
-  const ex = 6.3
-  const ey = -27
-
-  // 볼터치.
-  for (const s of [-1, 1]) {
-    ellipse(ctx, s * 11.5, -22, 3.6, 2.1)
-    ctx.fillStyle = BLUSH
-    ctx.fill()
+/** 복슬복슬한 테두리의 타원 — 바깥으로 작은 털 뭉치가 n 개. */
+function fluff(ctx, cx, cy, rx, ry, n, amp) {
+  ctx.beginPath()
+  for (let i = 0; i <= n * 2; i++) {
+    const a = (i / (n * 2)) * Math.PI * 2
+    const r = i % 2 ? 1 : 1 + amp / Math.min(rx, ry)
+    const x = cx + Math.cos(a) * rx * r
+    const y = cy + Math.sin(a) * ry * r
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
   }
+  ctx.closePath()
+}
 
-  ctx.fillStyle = LINE
-  if (closed) {
-    ctx.lineWidth = 1.4
-    for (const s of [-1, 1]) {
-      ctx.beginPath()
-      if (asleep) ctx.arc(s * ex, ey - 0.5, 2.6, 0.15 * Math.PI, 0.85 * Math.PI)
-      else {
-        ctx.moveTo(s * ex - 2.6, ey)
-        ctx.lineTo(s * ex + 2.6, ey)
+function drawEars(ctx, kind, look, ch) {
+  switch (kind) {
+    case 'chiikawa':
+      // 머리 위에 반쯤 묻힌 작고 동그란 귀.
+      for (const s of [-1, 1]) {
+        ellipse(ctx, s * 13, -42.6, 4.8, 4.4)
+        fillStroke(ctx, look.body)
       }
-      ctx.stroke()
+      break
+    case 'hachiware':
+      // 뾰족한 고양이 귀. 파랗고 안쪽은 조금 밝다.
+      for (const s of [-1, 1]) {
+        ctx.beginPath()
+        ctx.moveTo(s * 22, -35)
+        ctx.quadraticCurveTo(s * 22, -45.5, s * 19, -50)
+        ctx.quadraticCurveTo(s * 14, -47.5, s * 8.5, -43.5)
+        ctx.closePath()
+        fillStroke(ctx, look.cap)
+      }
+      break
+    case 'usagi': {
+      // 가늘고 긴 귀가 쫑긋. 살짝 흔들린다.
+      const wob = Math.sin(ch.anim * 6) * 0.07
+      for (const s of [-1, 1]) {
+        ctx.save()
+        ctx.translate(s * 5.6, -41)
+        ctx.rotate(s * (0.04 + wob))
+        ctx.beginPath()
+        ctx.moveTo(-3.8, 2)
+        ctx.bezierCurveTo(-4.8, -12, -3.8, -22, 0, -24)
+        ctx.bezierCurveTo(3.8, -22, 4.8, -12, 3.8, 2)
+        ctx.closePath()
+        fillStroke(ctx, look.body)
+        ctx.beginPath()
+        ctx.moveTo(-1.6, 0)
+        ctx.bezierCurveTo(-2.2, -10, -1.6, -17, 0, -18.5)
+        ctx.bezierCurveTo(1.6, -17, 2.2, -10, 1.6, 0)
+        ctx.closePath()
+        ctx.fillStyle = EAR_PINK
+        ctx.fill()
+        ctx.restore()
+      }
+      break
     }
-  } else {
-    const r = look.eye
-    for (const s of [-1, 1]) {
-      ellipse(ctx, s * ex, ey, r, r * 1.25)
-      ctx.fillStyle = '#2d2321'
-      ctx.fill()
-      if (r > 1.9) {
-        ellipse(ctx, s * ex + r * 0.3, ey - r * 0.45, r * 0.38, r * 0.38)
-        ctx.fillStyle = '#ffffff'
+    case 'momonga':
+      // 동그랗고 큰 귀, 안쪽에 선 하나.
+      for (const s of [-1, 1]) {
+        ellipse(ctx, s * 13, -42.5, 5.8, 5.6, s * 0.3)
+        fillStroke(ctx, look.body)
+        ctx.beginPath()
+        ctx.arc(s * 13, -42, 2.8, Math.PI * 0.9, Math.PI * 2.1)
+        ctx.stroke()
+      }
+      break
+    case 'shisa':
+      // 작은 귀, 안쪽이 주황.
+      for (const s of [-1, 1]) {
+        ellipse(ctx, s * 10.5, -45, 4.6, 4.2)
+        fillStroke(ctx, look.body)
+        ellipse(ctx, s * 10.5, -45, 2.2, 2)
+        ctx.fillStyle = look.mane
         ctx.fill()
       }
+      break
+    // 쿠리만쥬는 귀가 없다 — 밤만쥬다.
+  }
+}
+
+/** 하치와레의 머리 무늬: 위는 파랗고, 이마 가운데에서 하얀 「八」자로 갈린다. */
+function drawHachiwareCap(ctx, look, shape) {
+  ctx.save()
+  silhouette(ctx, shape)
+  ctx.clip()
+  ctx.beginPath()
+  ctx.moveTo(-23, -34)
+  ctx.bezierCurveTo(-15, -34.5, -7, -37, -2, -41.5)
+  ctx.quadraticCurveTo(0, -43.5, 2, -41.5)
+  ctx.bezierCurveTo(7, -37, 15, -34.5, 23, -34)
+  ctx.lineTo(23, -56)
+  ctx.lineTo(-23, -56)
+  ctx.closePath()
+  ctx.fillStyle = look.cap
+  ctx.fill()
+  ctx.stroke()
+  ctx.restore()
+  // 테두리를 다시 그어 무늬 위로 선이 살게.
+  silhouette(ctx, shape)
+  ctx.stroke()
+}
+
+/** 쿠리만쥬: 밤만쥬처럼 머리 위가 구운 갈색이고, 경계가 살짝 울퉁불퉁하다. */
+function drawKurimanjuTop(ctx, look, shape) {
+  ctx.save()
+  silhouette(ctx, shape)
+  ctx.clip()
+  ctx.beginPath()
+  ctx.moveTo(-23, -34)
+  for (let i = 0; i <= 8; i++) {
+    const x = -23 + (46 * i) / 8
+    ctx.quadraticCurveTo(x - 2.9, -36.5 + (i % 2) * 1.2, x, -35 - Math.sin((i / 8) * Math.PI) * 2.5)
+  }
+  ctx.lineTo(23, -56)
+  ctx.lineTo(-23, -56)
+  ctx.closePath()
+  ctx.fillStyle = look.cap
+  ctx.fill()
+  ctx.stroke()
+  // 구운 윤기.
+  ellipse(ctx, -7, -41.5, 4, 1.4, -0.2)
+  ctx.fillStyle = 'rgba(255, 235, 210, 0.55)'
+  ctx.fill()
+  ctx.restore()
+  silhouette(ctx, shape)
+  ctx.stroke()
+}
+
+/** 랏코: 이마의 별 모양 흉터와 진한 눈썹. */
+function drawRakkoMarks(ctx) {
+  ctx.save()
+  ctx.lineWidth = 1.1
+  ctx.translate(-6.5, -38.5)
+  ctx.beginPath()
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 - Math.PI / 4
+    const r = i % 2 ? 1.1 : 3.4
+    ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r)
+  }
+  ctx.closePath()
+  ctx.stroke()
+  ctx.restore()
+  ctx.save()
+  ctx.lineWidth = 2
+  for (const s of [-1, 1]) {
+    ctx.beginPath()
+    ctx.moveTo(s * 4.5, -32)
+    ctx.lineTo(s * 10.5, -33)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+/** 랏코의 하얀 망토. 어깨에서 아래로 넓게 퍼진다. */
+function drawRakkoCape(ctx) {
+  ctx.beginPath()
+  ctx.moveTo(-14, -21)
+  ctx.quadraticCurveTo(-23, -12, -22, -1)
+  ctx.quadraticCurveTo(0, 1.5, 22, -1)
+  ctx.quadraticCurveTo(23, -12, 14, -21)
+  ctx.closePath()
+  fillStroke(ctx, '#ffffff')
+}
+
+/** 시사의 주황 곱슬 갈기 — 머리 양옆에 소용돌이 셋씩. */
+function drawShisaMane(ctx, look) {
+  for (const s of [-1, 1]) {
+    for (const [x, y, r] of [[18, -39, 5], [21.5, -30, 5.8], [20, -20.5, 5.2]]) {
+      ellipse(ctx, s * x, y, r, r)
+      fillStroke(ctx, look.mane)
+      ctx.beginPath()
+      ctx.arc(s * x, y, r * 0.45, 0, Math.PI * 1.4)
+      ctx.stroke()
     }
   }
+}
+
+/** 모몽가의 크고 복슬한 하늘색 꼬리. 등 뒤에서 살랑. */
+function drawMomongaTail(ctx, ch) {
+  const sway = Math.sin(ch.anim * 3) * 0.12
+  ctx.save()
+  ctx.translate(-14, -14)
+  ctx.rotate(-0.55 + sway)
+  fluff(ctx, 0, -10, 8.5, 15, 14, 2)
+  fillStroke(ctx, '#bfe6f7')
+  ctx.restore()
+}
+
+/** 옆구리에 붙은 작고 뾰족한 팔. 어깨를 축으로 돌려서 들고 벌린다. */
+function drawArms(ctx, { w, h }, look, arms, ch) {
+  for (const s of [-1, 1]) {
+    let angle = 0
+    switch (arms) {
+      case 'up':
+        angle = 2.3 + Math.sin(ch.anim * 12 + s) * 0.25
+        break
+      case 'out':
+        angle = 1.1
+        break
+      case 'sit':
+        angle = -0.35
+        break
+    }
+    ctx.save()
+    ctx.translate(s * (w - 2.6), BASE - h * 0.33)
+    ctx.rotate(-s * angle)
+    ctx.beginPath()
+    ctx.moveTo(-s * 1.2, -3.6)
+    ctx.quadraticCurveTo(s * 5.4, -1.2, s * 4.8, 7.4)
+    ctx.quadraticCurveTo(s * 1.8, 7.8, -s * 0.8, 4.2)
+    ctx.closePath()
+    fillStroke(ctx, look.body)
+    ctx.restore()
+  }
+}
+
+/** 지금 얼굴. 행동과 기분에서 고른다. */
+function expression(ch) {
+  const ground = ch.mode === 'ground'
+  if (ground && ch.action === 'sleep') return 'sleep'
+  if (ground && ch.action === 'cry') return 'cry'
+  if (ch.shake > 0) return 'squint'
+  if (ground && ch.action === 'crouch') return 'squint'
+  if (ground && ch.action === 'weed' && ((ch.actionAge || 0) * 0.9) % 1 < 0.75) return 'squint'
+  if (ch.exclaim > 0.5) return 'surprise'
+  if (ground && (ch.action === 'cheer' || ch.action === 'dance')) return 'joy'
+  if (ch.happy > 0) return 'joy'
+  if (ground && ch.action === 'sing') return 'sing'
+  if (blinking(ch)) return 'blink'
+  return 'open'
+}
+
+function drawFace(ctx, ch, look) {
+  const face = expression(ch)
+  const ex = 9.4
+  const ey = -28
+
+  // 볼터치 — 가로로 긴 분홍 타원에 짧은 빗금 넷. 눈 바깥 아래에.
+  for (const s of [-1, 1]) {
+    const bx = s * 15
+    const by = -24
+    ellipse(ctx, bx, by, 4.6, 2.7)
+    ctx.fillStyle = BLUSH
+    ctx.fill()
+    ctx.save()
+    ctx.lineWidth = 0.75
+    ctx.strokeStyle = BLUSH_LINE
+    for (let i = 0; i < 4; i++) {
+      const x = bx - 2.7 + i * 1.8
+      ctx.beginPath()
+      ctx.moveTo(x - 0.4, by + 1.2)
+      ctx.lineTo(x + 0.4, by - 1.2)
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+
+  ctx.save()
+  ctx.lineWidth = 1.4
+  const r = look.eye
+  switch (face) {
+    case 'sleep':
+      for (const s of [-1, 1]) {
+        ctx.beginPath()
+        ctx.arc(s * ex, ey - 1, 2.6, 0.15 * Math.PI, 0.85 * Math.PI)
+        ctx.stroke()
+      }
+      break
+    case 'blink':
+      for (const s of [-1, 1]) {
+        ctx.beginPath()
+        ctx.moveTo(s * ex - 2.4, ey)
+        ctx.lineTo(s * ex + 2.4, ey)
+        ctx.stroke()
+      }
+      break
+    case 'squint':
+      // > <
+      for (const s of [-1, 1]) {
+        ctx.beginPath()
+        ctx.moveTo(s * ex + s * 2.4, ey - 2.4)
+        ctx.lineTo(s * ex - s * 1.8, ey)
+        ctx.lineTo(s * ex + s * 2.4, ey + 2.4)
+        ctx.stroke()
+      }
+      break
+    case 'joy':
+      // ^ ^
+      for (const s of [-1, 1]) {
+        ctx.beginPath()
+        ctx.arc(s * ex, ey + 1.2, 2.6, 1.15 * Math.PI, 1.85 * Math.PI)
+        ctx.stroke()
+      }
+      break
+    case 'cry':
+      // 꾹 감은 눈에서 눈물이 줄줄.
+      for (const s of [-1, 1]) {
+        ctx.beginPath()
+        ctx.moveTo(s * ex - 2.6, ey - 0.6)
+        ctx.quadraticCurveTo(s * ex, ey + 1.4, s * ex + 2.6, ey - 0.6)
+        ctx.stroke()
+        const drip = (ch.anim * 2.2) % 1
+        ctx.fillStyle = TEAR
+        ctx.beginPath()
+        ctx.roundRect(s * ex - 1.3, ey + 0.8, 2.6, 4 + drip * 4, 1.3)
+        ctx.fill()
+      }
+      break
+    default:
+      drawEyes(ctx, r, ex, ey, face === 'surprise' ? 1.25 : 1)
+      if (look.lid) {
+        // 눈 위의 가는 눈꺼풀 선 — 살짝 걱정스러운 그 눈매.
+        ctx.lineWidth = 1.1
+        for (const s of [-1, 1]) {
+          ctx.beginPath()
+          ctx.arc(s * ex, ey + r * 0.15, r * 1.6, Math.PI * 1.18, Math.PI * 1.82)
+          ctx.stroke()
+        }
+      }
+  }
+  if (look.brow && face !== 'cry') {
+    // 우사기: 눈에서 멀리 떨어진 높은 눈썹.
+    ctx.lineWidth = 1.2
+    for (const s of [-1, 1]) {
+      ctx.beginPath()
+      ctx.arc(s * (ex + 0.6), ey - 3, 5.5, Math.PI * 1.25, Math.PI * 1.7)
+      ctx.stroke()
+    }
+  }
+  ctx.restore()
 
   // 입.
+  ctx.save()
   ctx.lineWidth = 1.3
-  const talking = ch.say || ch.action === 'cheer' || ch.happy > 0
+  const talking = ch.say || face === 'joy' || face === 'sing'
+  const my = -23.4
   ctx.beginPath()
-  if (ch.kind === 'usagi' && talking) {
-    // 우사기는 크게 벌린다.
-    ctx.ellipse(0, -20.5, 3.8, 3.2, 0, 0, Math.PI)
-    ctx.closePath()
-    ctx.fillStyle = '#e86a7a'
+  if (face === 'cry') {
+    // 울먹울먹 물결 입.
+    ctx.moveTo(-3, my)
+    for (let i = 1; i <= 4; i++) ctx.lineTo(-3 + i * 1.5, my + (i % 2 ? -1 : 0))
+    ctx.stroke()
+  } else if (face === 'surprise') {
+    ellipse(ctx, 0, my, 1.6, 1.9)
+    ctx.fillStyle = MOUTH
     ctx.fill()
     ctx.stroke()
   } else if (talking) {
-    ctx.ellipse(0, -21, 2.2, 2, 0, 0, Math.PI)
+    const w = ch.kind === 'usagi' ? 4.2 : 2.6
+    const h = ch.kind === 'usagi' ? 4.2 : 2.6
+    ctx.moveTo(-w, my - 0.6)
+    ctx.quadraticCurveTo(0, my - 1.4, w, my - 0.6)
+    ctx.quadraticCurveTo(w * 0.9, my + h, 0, my + h)
+    ctx.quadraticCurveTo(-w * 0.9, my + h, -w, my - 0.6)
     ctx.closePath()
-    ctx.fillStyle = '#e86a7a'
+    ctx.fillStyle = MOUTH
     ctx.fill()
     ctx.stroke()
-  } else if (ch.kind === 'hachiware') {
-    // ω
-    ctx.moveTo(-3, -21.5)
-    ctx.quadraticCurveTo(-1.5, -19, 0, -21.5)
-    ctx.quadraticCurveTo(1.5, -19, 3, -21.5)
+  } else if (ch.kind === 'rakko') {
+    ctx.moveTo(-1.8, my)
+    ctx.lineTo(1.8, my)
     ctx.stroke()
   } else {
-    ctx.moveTo(-1.6, -21)
-    ctx.quadraticCurveTo(0, -19.6, 1.6, -21)
+    // ω — 이 그림체의 입.
+    const w = ch.kind === 'chiikawa' || ch.kind === 'kurimanju' ? 2.4 : 3
+    ctx.moveTo(-w, my - 0.8)
+    ctx.quadraticCurveTo(-w / 2, my + 1.7, 0, my - 0.5)
+    ctx.quadraticCurveTo(w / 2, my + 1.7, w, my - 0.8)
     ctx.stroke()
+  }
+  ctx.restore()
+
+  if (ch.kind === 'momonga') {
+    // 수염.
+    ctx.save()
+    ctx.lineWidth = 0.8
+    for (const s of [-1, 1]) {
+      for (const dy of [-1.2, 1.2]) {
+        ctx.beginPath()
+        ctx.moveTo(s * 17, -26 + dy)
+        ctx.lineTo(s * 21, -26.6 + dy * 1.8)
+        ctx.stroke()
+      }
+    }
+    ctx.restore()
+  }
+  if (ch.kind === 'shisa') {
+    // 주황 소용돌이 눈썹.
+    ctx.save()
+    ctx.strokeStyle = LOOKS.shisa.mane
+    ctx.lineWidth = 2
+    for (const s of [-1, 1]) {
+      // 둥근 눈썹 끝이 바깥으로 살짝 말린다.
+      ctx.beginPath()
+      ctx.arc(s * ex, ey - 4.8, 3, Math.PI * 1.1, Math.PI * 1.9)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(s * (ex + 3.6), ey - 6.3, 1, s > 0 ? Math.PI * 1.2 : -Math.PI * 0.2, s > 0 ? Math.PI * 2.6 : -Math.PI * 1.6, s < 0)
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+}
+
+/** 동그란 눈. 큰 눈은 반짝이를 둘, 작은 눈은 점 하나. */
+function drawEyes(ctx, r, ex, ey, k) {
+  for (const s of [-1, 1]) {
+    ellipse(ctx, s * ex, ey, r * k, r * 1.3 * k)
+    ctx.fillStyle = EYE
+    ctx.fill()
+    if (r > 1.9) {
+      ellipse(ctx, s * ex + r * 0.28, ey - r * 0.42, r * 0.48 * k, r * 0.48 * k)
+      ctx.fillStyle = '#ffffff'
+      ctx.fill()
+      ellipse(ctx, s * ex - r * 0.35, ey + r * 0.55, r * 0.18 * k, r * 0.18 * k)
+      ctx.fill()
+    }
   }
 }
 

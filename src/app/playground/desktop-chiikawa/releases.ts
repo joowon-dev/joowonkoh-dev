@@ -24,15 +24,27 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
-    version: "1.0.3",
+    version: "1.0.5",
     date: "2026-10-03",
     latest: true,
     notes: [
-      "윈도우에서 켜 두면 화면 클릭과 키보드가 먹통이 되던 문제를 고쳤습니다. 이제 클릭과 타자가 밑의 창으로 그대로 갑니다.",
+      "친구들을 새로 그렸습니다. 머리와 몸이 붙은 둥근 찹쌀떡 모양에 짧은 다리, 큰 눈과 빗금 볼터치로 원작 그림체에 더 가까워졌습니다.",
+      "표정이 생겼습니다. 울 때는 눈물이 흐르고, 힘줄 때는 > <, 신날 때는 ^ ^, 놀라면 눈이 커집니다. 잘 때는 옆으로 눕습니다.",
+      "랏코는 복슬털에 이마의 별 흉터와 하얀 망토, 쿠리만쥬는 귀 없는 밤만쥬, 모몽가는 하늘색 복슬 꼬리로 바로잡았습니다.",
     ],
-    mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "750KB" },
+    mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "760KB" },
     windows: { href: "/downloads/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
     windowsZip: { href: "/downloads/DesktopChiikawa-win-x64.zip", size: "680KB" },
+  },
+  {
+    version: "1.0.3",
+    date: "2026-10-03",
+    notes: [
+      "윈도우에서 켜 두면 화면 클릭과 키보드가 먹통이 되던 문제를 고쳤습니다. 이제 클릭과 타자가 밑의 창으로 그대로 갑니다.",
+    ],
+    mac: { href: "/downloads/desktop-chiikawa/v1.0.3/DesktopChiikawa-mac.dmg", size: "750KB" },
+    windows: { href: "/downloads/desktop-chiikawa/v1.0.3/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/desktop-chiikawa/v1.0.3/DesktopChiikawa-win-x64.zip", size: "680KB" },
   },
   {
     version: "1.0.2",
