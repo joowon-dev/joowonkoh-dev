@@ -43,7 +43,7 @@ export const RELEASES: Release[] = [
     notes: [
       "윈도우에서 상어를 켜 두면 클릭과 타자가 먹통이 되던 문제를 한 번 더 고쳤습니다. 1.0.1 의 수정만으로는 모자란 PC 가 있었습니다.",
     ],
-    mac: { href: "/downloads/DesktopShark-mac.dmg", size: "640KB" },
+    mac: { href: "/downloads/DesktopShark-mac.dmg", size: "575KB" },
     windows: { href: "/downloads/DesktopShark-win-Setup.exe", size: "2.3MB" },
   },
   {
