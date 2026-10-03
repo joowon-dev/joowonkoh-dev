@@ -37,15 +37,24 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "1.0.2",
+    date: "2026-10-03",
+    latest: true,
+    notes: [
+      "윈도우에서 상어를 켜 두면 클릭과 타자가 먹통이 되던 문제를 한 번 더 고쳤습니다. 1.0.1 의 수정만으로는 모자란 PC 가 있었습니다.",
+    ],
+    mac: { href: "/downloads/DesktopShark-mac.dmg", size: "575KB" },
+    windows: { href: "/downloads/DesktopShark-win-Setup.exe", size: "2.3MB" },
+  },
+  {
     version: "1.0.1",
     date: "2026-09-23",
-    latest: true,
     notes: [
       "윈도우에서 상어가 얹힌 모니터의 클릭과 타자가 먹통이던 것을 고쳤습니다. 이제 상어가 떠 있어도 밑의 앱을 평소처럼 쓰면 됩니다.",
       "모니터가 여러 대일 때, 상어가 없는 화면에서 클릭해도 밥이 떨어집니다. 그쪽 가장자리로 들어옵니다.",
     ],
-    mac: { href: "/downloads/DesktopShark-mac.dmg", size: "575KB" },
-    windows: { href: "/downloads/DesktopShark-win-Setup.exe", size: "2.3MB" },
+    mac: { href: "/downloads/desktop-shark/v1.0.1/DesktopShark-mac.dmg", size: "575KB" },
+    windows: { href: "/downloads/desktop-shark/v1.0.1/DesktopShark-win-Setup.exe", size: "2.3MB" },
   },
   {
     version: "1.0.0",
