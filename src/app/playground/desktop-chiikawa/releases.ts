@@ -24,15 +24,26 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
-    version: "1.0.6",
+    version: "1.0.7",
     date: "2026-10-03",
     latest: true,
     notes: [
-      "친구 코드 입력 칸에 붙여넣기(맥 ⌘V, 윈도우 Ctrl+V)가 됩니다. 코드를 복사해 둔 채로 창을 열면 미리 채워져 있습니다.",
+      "친구들이 픽셀 아트가 됐습니다. 일곱 친구를 칸 하나하나 새로 그렸고, 표정(눈물·> <·^ ^·놀람)도 픽셀로 바뀝니다. 크게 키워도 칸이 또렷합니다.",
+      "친구 코드를 아직 안 넣었으면 앱을 켤 때 입력 창이 먼저 뜹니다. 한 번 넣고 나면 다시 뜨지 않습니다.",
     ],
     mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "760KB" },
     windows: { href: "/downloads/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
     windowsZip: { href: "/downloads/DesktopChiikawa-win-x64.zip", size: "680KB" },
+  },
+  {
+    version: "1.0.6",
+    date: "2026-10-03",
+    notes: [
+      "친구 코드 입력 칸에 붙여넣기(맥 ⌘V, 윈도우 Ctrl+V)가 됩니다. 코드를 복사해 둔 채로 창을 열면 미리 채워져 있습니다.",
+    ],
+    mac: { href: "/downloads/desktop-chiikawa/v1.0.6/DesktopChiikawa-mac.dmg", size: "760KB" },
+    windows: { href: "/downloads/desktop-chiikawa/v1.0.6/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/desktop-chiikawa/v1.0.6/DesktopChiikawa-win-x64.zip", size: "680KB" },
   },
   {
     version: "1.0.5",
