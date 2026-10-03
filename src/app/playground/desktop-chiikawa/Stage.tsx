@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -57,13 +58,19 @@ type Win = {
   h: number;
   title: string;
   closable: boolean;
+  /** 사진 창에 띄울 그림. 앱을 실제로 돌려 찍은 화면이다. */
+  img?: string;
 };
 
-const EXTRA: { kind: Kind; title: string; w: number }[] = [
-  { kind: "photo", title: "사진", w: 260 },
-  { kind: "memo", title: "할 일", w: 240 },
+/**
+ * 「창 하나 더 열기」로 차례로 뜨는 창. 사진 창의 그림은 **앱을 실제로 돌려 찍은 화면**이다
+ * (풀밭 배경 위 창에 친구가 선 모습. 공식 그림이 아니라 앱의 도형 그림으로 찍었다).
+ */
+const EXTRA: { kind: Kind; title: string; w: number; img?: string }[] = [
+  { kind: "photo", title: "스크린샷 — 우사기", w: 280, img: "/playground/desktop-chiikawa/capture-usagi.jpg" },
   { kind: "music", title: "노래", w: 280 },
-  { kind: "photo", title: "풀밭", w: 230 },
+  { kind: "memo", title: "할 일", w: 240 },
+  { kind: "photo", title: "스크린샷 — 치이카와", w: 280, img: "/playground/desktop-chiikawa/capture-chiikawa.jpg" },
 ];
 
 const MAX_WINDOWS = 7;
@@ -82,7 +89,10 @@ function initialWindows(width: number): Win[] {
   return [
     { id: 1, kind: "hero", x: Math.round(width * 0.06), y: 150, w: heroW, h: 340, title: "바탕화면 치이카와", closable: false },
     { id: 2, kind: "memo", x: Math.round(width * 0.64), y: 96, w: 290, h: 170, title: "메모", closable: true },
-    { id: 3, kind: "music", x: Math.round(width * 0.6), y: 360, w: 320, h: 150, title: "노래", closable: true },
+    {
+      id: 3, kind: "photo", x: Math.round(width * 0.58), y: 340, w: 340, h: 170,
+      title: "스크린샷 — 치이카와", closable: true, img: "/playground/desktop-chiikawa/capture-chiikawa.jpg",
+    },
   ];
 }
 
@@ -307,7 +317,10 @@ export default function Stage({ hero }: { hero: ReactNode }) {
     // 겹치게 두되 매번 조금씩 다른 자리에.
     const x = Math.round(((n * 0.37) % 1) * Math.max(1, box.clientWidth - w - 32)) + 16;
     const y = Math.round(140 + ((n * 0.61) % 1) * Math.max(1, box.clientHeight - 360));
-    setWins((current) => [{ id: n, kind: pick.kind, x, y, w, h: 140, title: pick.title, closable: true }, ...current]);
+    setWins((current) => [
+      { id: n, kind: pick.kind, x, y, w, h: 140, title: pick.title, closable: true, img: pick.img },
+      ...current,
+    ]);
   };
 
   return (
@@ -345,7 +358,9 @@ export default function Stage({ hero }: { hero: ReactNode }) {
             <span className="h-3 w-3 rounded-full bg-[#28c840]" />
             <span className="ml-2 truncate text-[12px] text-[#8a7b78]">{win.title}</span>
           </div>
-          <WindowBody kind={win.kind}>{hero}</WindowBody>
+          <WindowBody kind={win.kind} img={win.img}>
+            {hero}
+          </WindowBody>
         </div>
       ))}
 
@@ -371,7 +386,7 @@ export default function Stage({ hero }: { hero: ReactNode }) {
 }
 
 /** 창 안쪽. 맨 앞 창(hero)만 진짜 내용이고 나머지는 분위기. */
-function WindowBody({ kind, children }: { kind: Kind; children: ReactNode }) {
+function WindowBody({ kind, img, children }: { kind: Kind; img?: string; children: ReactNode }) {
   if (kind === "hero") return <div className="p-6 md:p-8">{children}</div>;
   if (kind === "memo") {
     return (
@@ -396,8 +411,19 @@ function WindowBody({ kind, children }: { kind: Kind; children: ReactNode }) {
     );
   }
   return (
-    <div className="p-3">
-      <div className="h-24 rounded-lg bg-gradient-to-b from-[#cfe8ff] via-[#e6f4ff] to-[#bfe6a9]" />
+    <div className="p-2">
+      {img ? (
+        <Image
+          src={img}
+          alt="바탕화면 치이카와를 실제로 켠 화면 — 창 윗변에 친구가 서 있다"
+          width={760}
+          height={337}
+          draggable={false}
+          className="h-auto w-full select-none rounded-lg"
+        />
+      ) : (
+        <div className="h-24 rounded-lg bg-gradient-to-b from-[#cfe8ff] via-[#e6f4ff] to-[#bfe6a9]" />
+      )}
     </div>
   );
 }
