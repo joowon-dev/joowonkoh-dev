@@ -96,7 +96,8 @@ export default function DesktopChiikawaPage() {
       <footer className="mt-20 space-y-3 border-t border-[#4b3a35]/10 pt-8 text-[13px] leading-relaxed text-[#4b3a35]/55 break-keep">
         <p>
           치이카와(ちいかわ)와 친구들은 나가노(ナガノ) 작가의 캐릭터예요. 이 앱은 팬이 만든 비공식
-          무료 앱이고, 공식 그림을 담고 있지 않아요. 친구들은 전부 코드로 따라 그렸어요.
+          무료 앱이에요. 친구들 그림은 앱이나 이 사이트에 들어 있지 않고, 켤 때 인터넷으로 받아 와요.
+          받지 못하면 코드로 따라 그린 친구들이 대신 나와요.
         </p>
         <p>
           소스는{" "}
