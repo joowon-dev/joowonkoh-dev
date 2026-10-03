@@ -59,6 +59,7 @@ module.exports = {
     "/playground/desktroy",
     "/playground/desktop-fireworks",
     "/playground/desktop-shark",
+    "/playground/desktop-chiikawa",
   ],
   robotsTxtOptions: {
     policies: [{ userAgent: "*", allow: "/", disallow: ["/admin"] }],

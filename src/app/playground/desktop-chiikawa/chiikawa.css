@@ -1,0 +1,29 @@
+/* 바탕화면 치이카와 페이지 전용. 이 페이지 밖에는 쓰지 않는다(이름에 ck- 를 붙였다). */
+
+/* 제목 글꼴 — 둥근 붓글씨 같은 Jua. 그림의 둥근 선과 맞춘다. */
+.ck-display {
+  font-family: "Jua", "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* 첫 화면의 바탕화면 — 하늘과 구름, 맨 아래 풀밭 언덕. 그림 파일 없이 그라데이션만. */
+.ck-desk {
+  background:
+    radial-gradient(60% 40% at 18% 22%, rgba(255, 255, 255, 0.9), transparent 70%),
+    radial-gradient(40% 26% at 78% 14%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(120% 34% at 50% 108%, #a9dc8c 0 58%, transparent 59%),
+    radial-gradient(90% 30% at 12% 104%, #c3e9a6 0 55%, transparent 56%),
+    linear-gradient(180deg, #bfe0ff 0%, #d8ecff 48%, #fbe3ec 100%);
+}
+
+.ck-page {
+  color: #4b3a35;
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ck-page * {
+    transition: none !important;
+  }
+}
