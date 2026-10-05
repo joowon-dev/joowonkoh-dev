@@ -24,16 +24,26 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
-    version: "1.1.1",
+    version: "1.1.2",
     date: "2026-10-05",
     latest: true,
+    notes: [
+      "켤 때 친구들 그림 중 바뀐 것만 받습니다. 그대로면 아무것도 받지 않아 더 빨리 뜹니다.",
+    ],
+    mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "790KB" },
+    windows: { href: "/downloads/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/DesktopChiikawa-win-x64.zip", size: "700KB" },
+  },
+  {
+    version: "1.1.1",
+    date: "2026-10-05",
     notes: [
       "친구들 그림을 받는 양이 6분의 1로 줄었습니다(화질은 그대로).",
       "그림이 바뀌면 지난번에 받은 옛 그림을 정리합니다 — 새 그림과 옛 그림이 섞여 나오지 않아요. 직접 넣은 그림은 건드리지 않습니다.",
     ],
-    mac: { href: "/downloads/DesktopChiikawa-mac.dmg", size: "770KB" },
-    windows: { href: "/downloads/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
-    windowsZip: { href: "/downloads/DesktopChiikawa-win-x64.zip", size: "700KB" },
+    mac: { href: "/downloads/desktop-chiikawa/v1.1.1/DesktopChiikawa-mac.dmg", size: "770KB" },
+    windows: { href: "/downloads/desktop-chiikawa/v1.1.1/DesktopChiikawa-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/desktop-chiikawa/v1.1.1/DesktopChiikawa-win-x64.zip", size: "700KB" },
   },
   {
     version: "1.1.0",
