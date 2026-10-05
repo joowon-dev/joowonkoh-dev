@@ -11,6 +11,8 @@
  * 있어서, 밥이 안 떨어질 때 무엇을 볼지도 단계에 적어 둔다.
  */
 
+import { LATEST } from "./releases";
+
 type Step = {
   title: string;
   body: React.ReactNode;
@@ -49,7 +51,9 @@ const STEPS: Step[] = [
       // 조금씩 쌓이던 다운로드 평판이 매번 0으로 돌아간다.
       href: "/downloads/DesktopShark-win-Setup.exe",
       label: "바탕화면 상어 설치 파일 (Windows) 내려받기",
-      note: "1.0.1 · 2.3MB · Windows 10 1809 이상 · 64비트 · 서명 없음",
+      // 버전과 크기는 releases.ts 에서 읽는다. 여기 따로 적어 두었다가 1.0.2 를 내고도
+      // 「1.0.1」로 남아 있었다.
+      note: `${LATEST.version} · ${LATEST.windows.size} · Windows 10 1809 이상 · 64비트 · 서명 없음`,
     },
   },
   {
@@ -62,7 +66,7 @@ const STEPS: Step[] = [
     link: {
       href: "/downloads/DesktopShark-win-x64.zip",
       label: "압축본 (설치 없이 쓰기)",
-      note: "1.0.1 · 624KB · 자동 업데이트 안 됨",
+      note: `${LATEST.version} · 624KB · 자동 업데이트 안 됨`,
     },
   },
   {
