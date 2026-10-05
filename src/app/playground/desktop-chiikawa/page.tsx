@@ -51,6 +51,10 @@ export default function DesktopChiikawaPage() {
       {/* 첫 화면은 본문 폭(3xl)을 벗어나 넓게 깐다 — 창 셋이 나란히 놓일 자리가 필요하다. */}
       <section className="relative left-1/2 w-[min(1180px,calc(100vw-24px))] -translate-x-1/2 pt-4">
         <Stage hero={<HeroContent />} />
+        <p className="mx-auto mt-4 max-w-[64ch] px-4 text-center text-[12.5px] leading-relaxed text-[#4b3a35]/55 break-keep">
+          본 프로그램은 팬이 만든 비공식 프로그램이며, 치이카와 IP의 모든 권리는 원작자 및 판권사에
+          있습니다. 저작권자의 요청이 있을 시 예고 없이 삭제될 수 있습니다.
+        </p>
       </section>
 
       <section className="mt-24">
