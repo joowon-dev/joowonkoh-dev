@@ -18,6 +18,7 @@ import DataTableCard from "./DataTableCard";
 import KeybindCard from "./KeybindCard";
 import DebugPhaseCard from "./DebugPhaseCard";
 import FlowStepsCard from "./FlowStepsCard";
+import GogiriScene from "./gogiri/GogiriScene";
 
 const components: MDXComponents = {
   h2: (props) => (
@@ -102,6 +103,7 @@ const components: MDXComponents = {
   KeybindCard,
   DebugPhaseCard,
   FlowStepsCard,
+  GogiriScene,
 };
 
 export default components;
