@@ -5,6 +5,7 @@ import { useEffect, useReducer, useRef, useState, type ReactNode } from "react";
 import BowlArt from "./BowlArt";
 import { BITES, eat, initialEat, type EatPhase } from "./eat";
 import { G, SERIF } from "./palette";
+import { WoodTable } from "./Hanok";
 import { Caption } from "./stage";
 
 const GUIDE: Record<EatPhase, string> = {
@@ -61,13 +62,14 @@ export default function EatScene({ children }: { children?: ReactNode }) {
 
   return (
     <section
-      className="relative flex min-h-svh flex-col items-center justify-center gap-6 px-5 pt-28 pb-16"
-      style={{ background: G.forest }}
+      className="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden px-5 pt-28 pb-16"
+      style={{ background: G.inkDeep }}
     >
+      <WoodTable />
       <p
         aria-live="polite"
-        className="max-w-md text-center text-xl font-bold leading-snug sm:text-2xl"
-        style={{ fontFamily: SERIF, color: G.mist }}
+        className="relative max-w-md rounded-2xl px-5 py-3 text-center text-xl font-bold leading-snug sm:text-2xl"
+        style={{ fontFamily: SERIF, color: G.mist, background: "rgba(26, 23, 20, 0.72)" }}
       >
         {GUIDE[state.phase]}
       </p>
@@ -164,12 +166,15 @@ export default function EatScene({ children }: { children?: ReactNode }) {
       </div>
 
       {/* 맛 */}
-      <div className="grid w-[min(86vw,360px)] grid-cols-2 gap-4 text-sm" style={{ color: G.mistDim }}>
+      <div
+        className="relative grid w-[min(86vw,360px)] grid-cols-2 gap-4 rounded-2xl px-4 py-3 text-sm"
+        style={{ color: G.mistDim, background: "rgba(26, 23, 20, 0.72)" }}
+      >
         <Meter label="고소함" value={tasteSavory} color={G.oil} />
         <Meter label="시원함" value={tasteCool} color={G.broth} />
       </div>
 
-      <div className="flex gap-3">
+      <div className="relative flex gap-3">
         {state.phase !== "done" ? (
           <button
             type="button"
@@ -192,7 +197,7 @@ export default function EatScene({ children }: { children?: ReactNode }) {
         )}
       </div>
 
-      <Caption>{children}</Caption>
+      <Caption className="relative">{children}</Caption>
     </section>
   );
 }
@@ -201,7 +206,7 @@ function Meter({ label, value, color }: { label: string; value: number; color: s
   return (
     <div>
       <span>{label}</span>
-      <div className="mt-1.5 h-2 overflow-hidden rounded-full" style={{ background: G.moss }}>
+      <div className="mt-1.5 h-2 overflow-hidden rounded-full" style={{ background: G.line }}>
         <div
           className="h-full rounded-full transition-[width] duration-300"
           style={{ width: `${Math.round(value * 100)}%`, background: color }}

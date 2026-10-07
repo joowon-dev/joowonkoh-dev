@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { LINKS, PLACE, SOURCES } from "./info";
 import { G, SERIF } from "./palette";
+import { LATTICE_BG } from "./stage";
 
 const ROWS: [string, string][] = [
   ["주소", PLACE.address],
@@ -13,7 +14,7 @@ const ROWS: [string, string][] = [
 /** 마지막 장면: 찾아가는 데 필요한 것만 */
 export default function InfoScene({ children }: { children?: ReactNode }) {
   return (
-    <section className="flex min-h-svh flex-col items-center justify-center px-5 pt-28 pb-20" style={{ background: G.forestDeep }}>
+    <section className="flex min-h-svh flex-col items-center justify-center px-5 pt-28 pb-20" style={LATTICE_BG}>
       <div className="w-full max-w-xl">
         <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: SERIF, color: G.mist }}>
           {PLACE.name}
@@ -22,9 +23,9 @@ export default function InfoScene({ children }: { children?: ReactNode }) {
           {PLACE.since}
         </p>
 
-        <dl className="mt-8 divide-y" style={{ borderColor: G.moss }}>
+        <dl className="mt-8 divide-y" style={{ borderColor: G.line }}>
           {ROWS.map(([k, v]) => (
-            <div key={k} className="grid grid-cols-[5rem_1fr] gap-3 py-3.5" style={{ borderColor: G.moss }}>
+            <div key={k} className="grid grid-cols-[5rem_1fr] gap-3 py-3.5" style={{ borderColor: G.line }}>
               <dt className="text-sm" style={{ color: G.mistDim }}>
                 {k}
               </dt>
@@ -47,7 +48,7 @@ export default function InfoScene({ children }: { children?: ReactNode }) {
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full px-4 py-2.5 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F3CD72]"
-              style={i === 0 ? { background: G.oil, color: G.gim } : { color: G.mist, boxShadow: `inset 0 0 0 1.5px ${G.moss}` }}
+              style={i === 0 ? { background: G.oil, color: G.gim } : { color: G.mist, boxShadow: `inset 0 0 0 1.5px ${G.line}` }}
             >
               {label}
             </a>
@@ -55,7 +56,7 @@ export default function InfoScene({ children }: { children?: ReactNode }) {
         </div>
 
         {children && (
-          <div className="mt-10 [&_p]:max-w-none [&_p]:text-[15px] [&_p]:text-[#C9D6CD]">{children}</div>
+          <div className="mt-10 [&_p]:max-w-none [&_p]:text-[15px] [&_p]:text-[#D9CFBE]">{children}</div>
         )}
 
         <p className="mt-10 text-xs leading-relaxed" style={{ color: G.mistDim }}>

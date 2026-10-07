@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import BowlArt from "./BowlArt";
 import { MENU, type MenuKey } from "./info";
 import { G, SERIF } from "./palette";
+import { WoodTable } from "./Hanok";
 import { Caption } from "./stage";
 
 /** 메뉴판. 이름을 누르면 가운데 그릇이 바뀐다. */
@@ -15,10 +16,11 @@ export default function MenuScene({ children }: { children?: ReactNode }) {
 
   return (
     <section
-      className="relative flex min-h-svh flex-col items-center justify-center gap-8 px-5 pt-28 pb-16"
-      style={{ background: G.moss }}
+      className="relative flex min-h-svh flex-col items-center justify-center gap-8 overflow-hidden px-5 pt-28 pb-16"
+      style={{ background: G.inkDeep }}
     >
-      <div className="grid w-full max-w-4xl items-center gap-8 md:grid-cols-[1fr_1.1fr]">
+      <WoodTable />
+      <div className="relative grid w-full max-w-4xl items-center gap-8 md:grid-cols-[1fr_1.1fr]">
         {/* 나무 메뉴판 */}
         <div className="rounded-3xl p-6 sm:p-8" style={{ background: "#3A2A1B", boxShadow: "inset 0 0 0 6px #4C3825" }}>
           <p className="text-center text-xl font-bold" style={{ fontFamily: SERIF, color: G.oilLight }}>
@@ -67,13 +69,13 @@ export default function MenuScene({ children }: { children?: ReactNode }) {
               </motion.div>
             </AnimatePresence>
           </div>
-          <p className="mt-4 max-w-xs text-[15px] leading-[1.7]" style={{ color: G.mist }}>
+          <p className="mt-4 max-w-xs rounded-xl px-4 py-2 text-[15px] leading-[1.7]" style={{ color: G.mist, background: "rgba(26, 23, 20, 0.7)" }}>
             {item.note}
           </p>
         </div>
       </div>
 
-      <Caption>{children}</Caption>
+      <Caption className="relative">{children}</Caption>
     </section>
   );
 }

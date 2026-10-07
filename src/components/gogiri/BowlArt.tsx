@@ -1,8 +1,12 @@
+import { useId } from "react";
 import type { MenuKey } from "./info";
 import { G } from "./palette";
 
 /**
  * 위에서 내려다본 막국수 한 그릇.
+ *
+ * 고기리 들기름막국수는 은색 스테인리스 대접에 나온다. 메밀면 위를 고운
+ * 김가루와 깨가루가 담요처럼 덮고, 가장자리로 면이 조금 비친다.
  *
  * 면·육수·들기름·김가루의 양을 0–1 로 받아 그린다. 장면마다 이 값만
  * 바꿔서 «그릇이 나온다», «먹는다», «육수를 붓는다» 를 보여 준다.
@@ -20,12 +24,12 @@ function seeded(seed: number) {
 const rand = seeded(20121);
 
 /** 면 가닥: 중심이 조금씩 어긋난 호를 겹쳐 엉킨 메밀면처럼 */
-const STRANDS = Array.from({ length: 84 }, () => {
-  const cx = 100 + (rand() - 0.5) * 22;
-  const cy = 100 + (rand() - 0.5) * 22;
-  const r = 6 + rand() * 40;
+const STRANDS = Array.from({ length: 130 }, () => {
+  const cx = 100 + (rand() - 0.5) * 16;
+  const cy = 100 + (rand() - 0.5) * 16;
+  const r = 30 + rand() * 30;
   const a0 = rand() * Math.PI * 2;
-  const a1 = a0 + 0.6 + rand() * 1.4;
+  const a1 = a0 + 0.5 + rand() * 1.3;
   const x0 = cx + r * Math.cos(a0);
   const y0 = cy + r * Math.sin(a0);
   const x1 = cx + r * Math.cos(a1);
@@ -36,23 +40,37 @@ const STRANDS = Array.from({ length: 84 }, () => {
   };
 });
 
-/** 김가루 조각: 면 더미 위에 흩어진다 */
-export const FLAKES = Array.from({ length: 34 }, () => {
-  const r = rand() * 40;
+/** 김가루 더미의 울퉁불퉁한 가장자리 */
+const GIM_EDGE = (() => {
+  const n = 28;
+  const pts = Array.from({ length: n }, (_, i) => {
+    const a = (i / n) * Math.PI * 2;
+    const r = 50 + rand() * 6;
+    return [100 + r * Math.cos(a), 100 + r * Math.sin(a)];
+  });
+  // 점 사이를 곡선으로 잇는다(중점을 지나는 2차 곡선)
+  const mid = (p: number[], q: number[]) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+  const start = mid(pts[n - 1], pts[0]);
+  let d = `M${start[0].toFixed(1)} ${start[1].toFixed(1)}`;
+  for (let i = 0; i < n; i++) {
+    const m = mid(pts[i], pts[(i + 1) % n]);
+    d += ` Q${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)}`;
+  }
+  return d + " Z";
+})();
+
+/** 위에서 흩날려 떨어지는 김가루(장면 연출용) */
+export const FLAKES = Array.from({ length: 60 }, () => {
+  const r = rand() * 42;
   const a = rand() * Math.PI * 2;
   return {
     x: 100 + r * Math.cos(a),
     y: 100 + r * Math.sin(a),
-    w: 3 + rand() * 5,
-    h: 1.6 + rand() * 2.4,
+    w: 1.2 + rand() * 2.4,
+    h: 1 + rand() * 1.6,
     rot: rand() * 180,
+    sesame: rand() > 0.72,
   };
-});
-
-const SESAME = Array.from({ length: 22 }, () => {
-  const r = rand() * 38;
-  const a = rand() * Math.PI * 2;
-  return { x: 100 + r * Math.cos(a), y: 100 + r * Math.sin(a), rot: rand() * 180 };
 });
 
 interface Props {
@@ -78,41 +96,88 @@ export default function BowlArt({
   className,
   title,
 }: Props) {
+  // 한 화면에 그릇이 여럿 겹치므로 그라디언트·필터 id 가 겹치면 안 된다
+  const uid = useId().replace(/:/g, "");
   if (kind === "suyuk") return <SuyukArt className={className} title={title} />;
 
   const mound = 0.25 + 0.75 * Math.max(0, Math.min(1, noodles));
   const brothLevel = kind === "mul" ? 1 : broth;
-  const flakeCount = kind === "deulgireum" ? Math.round(FLAKES.length * gim) : 0;
   const empty = noodles <= 0;
+  const id = (name: string) => `${name}-${uid}`;
 
   return (
     <svg viewBox="0 0 200 200" className={className} role="img" aria-label={title ?? "막국수 한 그릇"}>
-      {/* 그림자와 그릇 */}
-      <ellipse cx="104" cy="108" rx="92" ry="90" fill={G.forestDeep} opacity="0.45" />
-      <circle cx="100" cy="100" r="92" fill={G.bowl} />
-      <circle cx="100" cy="100" r="92" fill="none" stroke={G.bowlShade} strokeWidth="3" />
-      <circle cx="100" cy="100" r="76" fill="#EDEDE6" />
-      <circle cx="100" cy="100" r="76" fill="none" stroke={G.bowlShade} strokeWidth="1.5" />
+      <defs>
+        {/* 스테인리스: 테두리는 밝고, 안쪽 벽은 둥글게 어두워졌다 밝아진다 */}
+        <radialGradient id={id("rim")} cx="38%" cy="32%" r="75%">
+          <stop offset="0" stopColor="#F1F3F4" />
+          <stop offset="0.55" stopColor="#B9BFC4" />
+          <stop offset="1" stopColor="#868D93" />
+        </radialGradient>
+        <radialGradient id={id("well")} cx="60%" cy="64%" r="70%">
+          <stop offset="0" stopColor="#C9CED2" />
+          <stop offset="0.6" stopColor="#9EA5AB" />
+          <stop offset="1" stopColor="#6E767C" />
+        </radialGradient>
+        <radialGradient id={id("noodlebed")} cx="50%" cy="50%" r="50%">
+          <stop offset="0.6" stopColor={G.noodleDark} />
+          <stop offset="1" stopColor={G.noodleDark} stopOpacity="0" />
+        </radialGradient>
+        {/* 고운 김가루: 노이즈를 점으로 끊어 낸다 */}
+        <filter id={id("gim")} x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.25  0 0 0 0 0.32  0 0 0 0 0.24  0 0 0 11 -5.6" />
+          <feComposite in2="SourceGraphic" operator="in" />
+        </filter>
+        {/* 깨가루 */}
+        <filter id={id("sesame")} x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="1" seed="21" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.88  0 0 0 0 0.8  0 0 0 0 0.62  0 0 0 16 -9.4" />
+          <feComposite in2="SourceGraphic" operator="in" />
+        </filter>
+      </defs>
+
+      {/* 나무 상 위의 그림자와 대접 */}
+      <ellipse cx="106" cy="110" rx="94" ry="92" fill="#000" opacity="0.32" />
+      <circle cx="100" cy="100" r="94" fill={`url(#${id("rim")})`} />
+      <circle cx="100" cy="100" r="94" fill="none" stroke="#7B8288" strokeWidth="1.2" />
+      <circle cx="100" cy="100" r="80" fill={`url(#${id("well")})`} />
+      <circle cx="100" cy="100" r="80" fill="none" stroke="#E8EBED" strokeWidth="1.4" opacity="0.8" />
+      {/* 금속 반사 */}
+      <path d="M44 58 A70 70 0 0 1 86 26" fill="none" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" opacity="0.55" />
 
       {/* 동치미 육수 */}
       {brothLevel > 0 && (
-        <circle cx="100" cy="100" r={40 + 35 * brothLevel} fill={G.broth} opacity={0.35 + 0.5 * brothLevel} />
+        <circle cx="100" cy="100" r={44 + 34 * brothLevel} fill={G.broth} opacity={0.3 + 0.45 * brothLevel} />
       )}
 
-      {/* 면 더미 */}
       {!empty && (
         <g transform={`translate(100 100) scale(${mound}) translate(-100 -100)`}>
-          <circle cx="100" cy="100" r="50" fill={kind === "bibim" ? "#B9876B" : G.noodleDark} />
+          <circle cx="100" cy="100" r="62" fill={kind === "bibim" ? "#B9876B" : `url(#${id("noodlebed")})`} />
           {STRANDS.map((s, i) => (
             <path
               key={i}
               d={s.d}
               fill="none"
               stroke={kind === "bibim" ? (s.shade ? "#A5523A" : "#C7795A") : s.shade ? G.noodleDark : G.noodle}
-              strokeWidth="3.4"
+              strokeWidth="1.7"
               strokeLinecap="round"
             />
           ))}
+
+          {kind === "deulgireum" && (
+            <g>
+              {/* 들기름이 배어 면이 윤기 나는 자리 */}
+              <circle cx="100" cy="100" r="60" fill={G.oil} opacity={0.22 * oil} />
+              {/* 김가루 담요 */}
+              <g opacity={gim}>
+                <path d={GIM_EDGE} fill="#18201A" />
+                <path d={GIM_EDGE} fill="#000" filter={`url(#${id("gim")})`} />
+                <path d={GIM_EDGE} fill="#000" filter={`url(#${id("sesame")})`} />
+              </g>
+            </g>
+          )}
+
           {kind === "bibim" && <ellipse cx="96" cy="94" rx="22" ry="17" fill="#B3301F" />}
           {(kind === "mul" || kind === "bibim") && (
             <g>
@@ -120,28 +185,6 @@ export default function BowlArt({
               <circle cx="122" cy="84" r="7" fill={G.oilLight} />
               <ellipse cx="78" cy="118" rx="9" ry="5" fill="#7FA35E" transform="rotate(-25 78 118)" />
               <ellipse cx="88" cy="128" rx="9" ry="5" fill="#93B872" transform="rotate(10 88 128)" />
-            </g>
-          )}
-          {kind === "deulgireum" && (
-            <g>
-              {/* 들기름 윤기 */}
-              <ellipse cx="92" cy="90" rx="34" ry="26" fill={G.oil} opacity={0.32 * oil} />
-              <ellipse cx="84" cy="82" rx="12" ry="6" fill={G.oilLight} opacity={0.7 * oil} transform="rotate(-30 84 82)" />
-              {SESAME.slice(0, Math.round(SESAME.length * gim)).map((s, i) => (
-                <ellipse key={i} cx={s.x} cy={s.y} rx="1.6" ry="0.9" fill="#F3E6C4" transform={`rotate(${s.rot} ${s.x} ${s.y})`} />
-              ))}
-              {FLAKES.slice(0, flakeCount).map((f, i) => (
-                <rect
-                  key={i}
-                  x={f.x - f.w / 2}
-                  y={f.y - f.h / 2}
-                  width={f.w}
-                  height={f.h}
-                  rx="0.6"
-                  fill={G.gim}
-                  transform={`rotate(${f.rot} ${f.x} ${f.y})`}
-                />
-              ))}
             </g>
           )}
         </g>
@@ -154,7 +197,7 @@ function SuyukArt({ className, title }: { className?: string; title?: string }) 
   const slices = Array.from({ length: 7 }, (_, i) => i);
   return (
     <svg viewBox="0 0 200 200" className={className} role="img" aria-label={title ?? "수육 한 접시"}>
-      <ellipse cx="104" cy="110" rx="94" ry="74" fill={G.forestDeep} opacity="0.45" />
+      <ellipse cx="106" cy="112" rx="94" ry="74" fill="#000" opacity="0.32" />
       <ellipse cx="100" cy="102" rx="94" ry="72" fill={G.bowl} />
       <ellipse cx="100" cy="102" rx="78" ry="58" fill="#EDEDE6" />
       {slices.map((i) => {

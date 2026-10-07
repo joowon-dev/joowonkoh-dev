@@ -1,79 +1,64 @@
 "use client";
 
-import { motion, useReducedMotion, useTransform, type MotionValue } from "motion/react";
-import type { ReactNode } from "react";
+import { animate, motion, useMotionValue, useReducedMotion, useTransform, type MotionValue } from "motion/react";
+import { useEffect, type ReactNode } from "react";
 import BowlArt, { FLAKES } from "./BowlArt";
+import { HanokFacade, WoodTable } from "./Hanok";
 import { PLACE } from "./info";
 import { G, SERIF } from "./palette";
-import { Caption, ScrollStage } from "./stage";
-
-const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+import { Caption, LATTICE_BG, ScrollStage } from "./stage";
 
 /* ───────────── 표지 ───────────── */
 
 export function CoverScene({ title, date, children }: { title: string; date?: string; children?: ReactNode }) {
   const reduce = useReducedMotion();
+  const glow = useMotionValue(reduce ? 1 : 0);
+
+  // 창살 문에 불이 들어온다 — 이 페이지의 첫 움직임. 한 번 깜빡이고 켜진다.
+  useEffect(() => {
+    if (reduce) {
+      glow.set(1);
+      return;
+    }
+    const run = animate(glow, [0, 0.5, 0.15, 1], { duration: 1.6, delay: 0.6, times: [0, 0.18, 0.32, 1] });
+    return () => run.stop();
+  }, [reduce, glow]);
+
   return (
-    <section
-      className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-6 pt-28 pb-16 text-center"
-      style={{ background: G.forest }}
-    >
-      <div className="relative w-[min(72vw,380px)]">
-        <motion.div
-          initial={reduce ? false : { scale: 0.86, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.1, ease: EASE }}
+    <section className="relative flex h-svh min-h-[560px] flex-col items-center justify-end overflow-hidden px-6 pb-14 text-center">
+      <HanokFacade glow={glow} />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%]"
+        style={{ background: `linear-gradient(transparent, ${G.inkDeep} 70%)` }}
+        aria-hidden
+      />
+
+      <div className="relative">
+        <h1
+          className="text-[clamp(2.4rem,8vw,4.6rem)] font-bold leading-[1.15] tracking-tight"
+          style={{ fontFamily: SERIF, color: G.mist }}
         >
-          <BowlArt className="w-full" title="위에서 본 들기름막국수 한 그릇" />
-        </motion.div>
-        {/* 김가루가 한 번 내려앉는다 — 이 페이지의 첫 움직임 */}
-        {!reduce && (
-          <div className="pointer-events-none absolute inset-0" aria-hidden>
-            {FLAKES.slice(0, 18).map((f, i) => (
-              <motion.span
-                key={i}
-                className="absolute block rounded-[1px]"
-                style={{
-                  left: `${(f.x / 200) * 100}%`,
-                  top: `${(f.y / 200) * 100}%`,
-                  width: f.w * 1.6,
-                  height: f.h * 1.6,
-                  background: G.gim,
-                  rotate: f.rot,
-                }}
-                initial={{ y: -260 - i * 14, opacity: 0 }}
-                animate={{ y: 0, opacity: [0, 1, 1, 0] }}
-                transition={{ duration: 1.4, delay: 0.5 + i * 0.05, ease: "easeIn" }}
-              />
-            ))}
+          {title}
+        </h1>
+        {date && (
+          <p className="mt-3 text-sm" style={{ color: G.mistDim }}>
+            {date.replace(/-/g, ".")}
+          </p>
+        )}
+        {children && (
+          <div className="mx-auto mt-5 max-w-lg [&_p]:mx-auto [&_p]:text-base [&_p]:leading-[1.8] [&_p]:text-[#D9CFBE]">
+            {children}
           </div>
         )}
+        <motion.p
+          className="mt-6 text-xs"
+          style={{ color: G.mistDim }}
+          animate={reduce ? undefined : { y: [0, 6, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          아래로 내려서 들어가기
+        </motion.p>
       </div>
-
-      <h1
-        className="mt-10 text-[clamp(2.4rem,8vw,4.6rem)] font-bold leading-[1.15] tracking-tight"
-        style={{ fontFamily: SERIF, color: G.mist }}
-      >
-        {title}
-      </h1>
-      {date && (
-        <p className="mt-3 text-sm" style={{ color: G.mistDim }}>
-          {date.replace(/-/g, ".")}
-        </p>
-      )}
-      {children && (
-        <div className="mt-6 max-w-lg [&_p]:mx-auto [&_p]:text-base [&_p]:leading-[1.8] [&_p]:text-[#C9D6CD]">
-          {children}
-        </div>
-      )}
-      <motion.p
-        className="absolute bottom-8 text-xs"
-        style={{ color: G.mistDim }}
-        animate={reduce ? undefined : { y: [0, 6, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        아래로 내려서 들어가기
-      </motion.p>
     </section>
   );
 }
@@ -103,7 +88,7 @@ function RouteArt({ p, caption }: { p: MotionValue<number>; caption?: ReactNode 
         style={{ scale, transformOrigin: "51.25% 68.3%" }}
       >
         <svg viewBox="0 0 400 300" className="w-full" role="img" aria-label="서울에서 판교를 지나 고기리로 가는 그림 지도">
-          <rect width="400" height="300" fill={G.forest} />
+          <rect width="400" height="300" fill={G.ink} />
           {/* 산 */}
           {[
             [150, 262, 46],
@@ -113,7 +98,7 @@ function RouteArt({ p, caption }: { p: MotionValue<number>; caption?: ReactNode 
             [300, 230, 36],
             [330, 140, 28],
           ].map(([x, y, s], i) => (
-            <path key={i} d={`M${x - s} ${y} L${x} ${y - s * 0.9} L${x + s} ${y} Z`} fill={G.moss} />
+            <path key={i} d={`M${x - s} ${y} L${x} ${y - s * 0.9} L${x + s} ${y} Z`} fill={G.line} />
           ))}
           {/* 한강 */}
           <path
@@ -124,8 +109,8 @@ function RouteArt({ p, caption }: { p: MotionValue<number>; caption?: ReactNode 
             strokeLinecap="round"
           />
           {/* 큰길 */}
-          <path d="M200 60 L252 300" stroke={G.moss} strokeWidth="3" />
-          <path d="M60 180 L400 150" stroke={G.moss} strokeWidth="3" />
+          <path d="M200 60 L252 300" stroke={G.line} strokeWidth="3" />
+          <path d="M60 180 L400 150" stroke={G.line} strokeWidth="3" />
 
           <motion.g style={{ opacity: cityOpacity }}>
             <circle cx="200" cy="52" r="5" fill={G.mist} />
@@ -155,7 +140,7 @@ function RouteArt({ p, caption }: { p: MotionValue<number>; caption?: ReactNode 
           {/* 핀 */}
           <motion.g style={{ y: pinY, opacity: pinOpacity }}>
             <path d="M205 205 C199 196 197 192 197 188 a8 8 0 1 1 16 0 C213 192 211 196 205 205 Z" fill={G.oil} />
-            <circle cx="205" cy="188" r="3" fill={G.forest} />
+            <circle cx="205" cy="188" r="3" fill={G.ink} />
           </motion.g>
           <motion.text
             x="205"
@@ -182,7 +167,7 @@ function RouteArt({ p, caption }: { p: MotionValue<number>; caption?: ReactNode 
 
 export function WaitingScene({ from = 47, children }: { from?: number; children?: ReactNode }) {
   return (
-    <ScrollStage screens={2.6} background={G.forestDeep}>
+    <ScrollStage screens={2.6} background={G.inkDeep}>
       {(p) => <WaitingArt p={p} from={from} caption={children} />}
     </ScrollStage>
   );
@@ -198,13 +183,15 @@ function WaitingArt({ p, from, caption }: { p: MotionValue<number>; from: number
 
   return (
     <div className="relative flex h-full flex-col items-center justify-center gap-8 px-6 pt-20">
-      <div className="flex items-center gap-8 sm:gap-14">
+      <HanokFacade />
+      <div className="absolute inset-0" style={{ background: "rgba(26, 23, 20, 0.62)" }} aria-hidden />
+      <div className="relative flex items-center gap-8 sm:gap-14">
         {/* 벽시계 */}
         <svg viewBox="0 0 100 100" className="w-20 sm:w-28" aria-hidden>
           <circle cx="50" cy="50" r="46" fill={G.bowl} />
-          <circle cx="50" cy="50" r="46" fill="none" stroke={G.moss} strokeWidth="4" />
+          <circle cx="50" cy="50" r="46" fill="none" stroke={G.line} strokeWidth="4" />
           {Array.from({ length: 12 }, (_, i) => (
-            <rect key={i} x="49" y="8" width="2" height="6" fill={G.moss} transform={`rotate(${i * 30} 50 50)`} />
+            <rect key={i} x="49" y="8" width="2" height="6" fill={G.line} transform={`rotate(${i * 30} 50 50)`} />
           ))}
           <motion.rect x="48" y="26" width="4" height="26" rx="2" fill={G.gim} style={{ rotate: hour, originX: "50%", originY: "92%" }} />
           <motion.rect x="49" y="14" width="2" height="38" rx="1" fill={G.oil} style={{ rotate: minute, originX: "50%", originY: "95%" }} />
@@ -213,7 +200,7 @@ function WaitingArt({ p, from, caption }: { p: MotionValue<number>; from: number
 
         {/* 대기 번호표 */}
         <div className="rounded-2xl px-7 py-5 text-center" style={{ background: G.bowl, color: G.gim }}>
-          <p className="text-xs" style={{ color: G.moss }}>
+          <p className="text-xs" style={{ color: G.line }}>
             내 앞 대기
           </p>
           <p className="mt-1 text-6xl font-bold tabular-nums sm:text-7xl" style={{ fontFamily: SERIF }}>
@@ -227,18 +214,18 @@ function WaitingArt({ p, from, caption }: { p: MotionValue<number>; from: number
       </div>
 
       {/* 줄 선 사람들 */}
-      <div className="w-[min(90vw,560px)] overflow-hidden" aria-hidden>
+      <div className="relative w-[min(90vw,560px)] overflow-hidden" aria-hidden>
         <motion.div className="flex w-[200%] gap-5" style={{ x: queueX }}>
           {Array.from({ length: 16 }, (_, i) => (
             <svg key={i} viewBox="0 0 20 34" className="h-12 w-7 shrink-0">
               <circle cx="10" cy="7" r="6" fill={i % 3 === 0 ? G.noodle : G.mistDim} />
-              <rect x="2" y="15" width="16" height="19" rx="7" fill={i % 3 === 0 ? G.noodleDark : G.moss} />
+              <rect x="2" y="15" width="16" height="19" rx="7" fill={i % 3 === 0 ? G.noodleDark : G.line} />
             </svg>
           ))}
         </motion.div>
       </div>
 
-      <p className="text-xs" style={{ color: G.mistDim }}>
+      <p className="relative text-xs" style={{ color: G.mistDim }}>
         {PLACE.waiting} · {PLACE.quietHours}
       </p>
 
@@ -269,7 +256,8 @@ function BowlArrive({ p, caption }: { p: MotionValue<number>; caption?: ReactNod
   const layer = "absolute inset-0 w-full";
   return (
     <div className="relative flex h-full items-center justify-center px-6">
-      <motion.div className="relative w-[min(78vw,460px)] aspect-square" style={{ y, rotate }}>
+      <WoodTable />
+      <motion.div className="relative w-[min(78vw,460px,70svh)] aspect-square" style={{ y, rotate }}>
         <BowlArt className={layer} oil={0} gim={0} title="갓 나온 들기름막국수" />
         <motion.div className={layer} style={{ opacity: oil }}>
           <BowlArt className="w-full" gim={0} title="" />
@@ -301,7 +289,7 @@ function BowlArrive({ p, caption }: { p: MotionValue<number>; caption?: ReactNod
                 top: `${(f.y / 200) * 100 - (i % 5) * 4}%`,
                 width: f.w * 2,
                 height: f.h * 2,
-                background: G.gim,
+                background: f.sesame ? "#DCC79A" : G.gim,
                 transform: `rotate(${f.rot}deg)`,
               }}
             />
@@ -325,9 +313,9 @@ export interface Score {
 
 export function VerdictScene({ scores, children }: { scores: Score[]; children?: ReactNode }) {
   return (
-    <ScrollStage screens={2} background={G.forestDeep}>
+    <ScrollStage screens={2} background={G.inkDeep}>
       {(p) => (
-        <div className="flex h-full flex-col items-center justify-center gap-10 px-6 pt-16">
+        <div className="flex h-full flex-col items-center justify-center gap-10 px-6 pt-16" style={LATTICE_BG}>
           <ul className="w-[min(90vw,520px)] space-y-6">
             {scores.map((s, i) => (
               <ScoreBar key={s.label} p={p} score={s} index={i} count={scores.length} />
@@ -353,7 +341,7 @@ function ScoreBar({ p, score, index, count }: { p: MotionValue<number>; score: S
           {score.value} / 5
         </span>
       </div>
-      <div className="mt-2 h-3 overflow-hidden rounded-full" style={{ background: G.moss }}>
+      <div className="mt-2 h-3 overflow-hidden rounded-full" style={{ background: G.line }}>
         <motion.div className="h-full rounded-full" style={{ scaleX: fill, originX: 0, background: G.oil }} />
       </div>
       {score.note && (
