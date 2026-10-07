@@ -3,7 +3,7 @@ import EatScene from "./EatScene";
 import InfoScene from "./InfoScene";
 import MenuScene from "./MenuScene";
 import { SERIF_HREF } from "./palette";
-import { BowlScene, CoverScene, RouteScene, VerdictScene, WaitingScene, type Score } from "./scenes";
+import { BowlScene, CoverScene, DoorScene, LiftScene, RouteScene, SidesScene, VerdictScene, type Score } from "./scenes";
 
 /**
  * 고기리막국수 글의 장면 하나. MDX 에서 이렇게 쓴다.
@@ -17,8 +17,8 @@ import { BowlScene, CoverScene, RouteScene, VerdictScene, WaitingScene, type Sco
  */
 type Props =
   | { kind: "cover"; title: string; date?: string; children?: ReactNode }
-  | { kind: "route" | "bowl" | "menu" | "eat" | "info"; children?: ReactNode }
-  | { kind: "waiting"; from?: number; children?: ReactNode }
+  | { kind: "route" | "menu" | "bowl" | "lift" | "eat" | "sides" | "info"; children?: ReactNode }
+  | { kind: "door"; from?: number; children?: ReactNode }
   | { kind: "verdict"; scores: Score[]; children?: ReactNode };
 
 export default function GogiriScene(props: Props) {
@@ -37,12 +37,16 @@ function Scene(props: Props) {
       return <CoverScene title={props.title} date={props.date}>{props.children}</CoverScene>;
     case "route":
       return <RouteScene>{props.children}</RouteScene>;
-    case "waiting":
-      return <WaitingScene from={props.from}>{props.children}</WaitingScene>;
+    case "door":
+      return <DoorScene from={props.from}>{props.children}</DoorScene>;
     case "menu":
       return <MenuScene>{props.children}</MenuScene>;
     case "bowl":
       return <BowlScene>{props.children}</BowlScene>;
+    case "lift":
+      return <LiftScene>{props.children}</LiftScene>;
+    case "sides":
+      return <SidesScene>{props.children}</SidesScene>;
     case "eat":
       return <EatScene>{props.children}</EatScene>;
     case "verdict":

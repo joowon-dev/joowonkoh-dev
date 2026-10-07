@@ -1,7 +1,8 @@
 /**
  * 고기리막국수 가게 정보.
  *
- * 2026-10-05 에 식신·캐치테이블·다이닝코드 등에 올라온 내용을 모은 것이다.
+ * 2026-10-05 에 식신·캐치테이블·다이닝코드 등에 올라온 내용을 모았고,
+ * 메뉴 가격은 주원이 찍은 매장 차림표 사진으로 맞췄다(2026-10-07).
  * 값이 바뀌면 여기만 고친다. 페이지에는 «방문 전 확인» 을 함께 띄운다.
  */
 
@@ -23,39 +24,46 @@ export const LINKS = {
   catchtable: "https://app.catchtable.co.kr/ct/shop/goggilr",
 } as const;
 
-export type MenuKey = "deulgireum" | "mul" | "bibim" | "suyuk";
+export type MenuKey = "deulgireum" | "mul" | "suyuk" | "extra";
 
 export interface MenuItem {
   key: MenuKey;
   name: string;
   price: string;
   note: string;
+  /** 옆에 띄울 사진(public/blog/2026100501-gogiri/*.webp) */
+  photo: string;
 }
 
+/** 가격은 매장 벽 차림표 사진 기준 */
 export const MENU: MenuItem[] = [
   {
     key: "deulgireum",
-    name: "원조 들기름막국수",
+    name: "들기름막국수",
     price: "12,000원",
-    note: "들기름·간장에 버무린 면 위로 김가루와 깨. 비비지 않고 나온 그대로.",
+    note: "들기름·간장에 버무린 메밀면 위로 김가루와 깨가 수북하다. 비비지 않고 나온 그대로.",
+    photo: "deul_hero",
   },
   {
     key: "mul",
-    name: "물막국수",
+    name: "막국수 (물·비빔)",
     price: "12,000원",
-    note: "차가운 동치미 육수에 만 메밀면. 새콤하고 맑다.",
-  },
-  {
-    key: "bibim",
-    name: "비빔막국수",
-    price: "12,000원",
-    note: "빨간 양념에 비벼 먹는 쪽. 매콤달콤.",
+    note: "살얼음 낀 동치미 육수에 말거나, 양념에 비벼서.",
+    photo: "mul",
   },
   {
     key: "suyuk",
     name: "수육",
-    price: "소 17,000원 · 중 25,000원",
-    note: "막국수 옆에 곁들이는 삶은 고기.",
+    price: "소 18,000원 · 중 27,000원",
+    note: "국내산 돼지고기. 막국수 옆에 곁들이는 한 접시.",
+    photo: "suyuk",
+  },
+  {
+    key: "extra",
+    name: "추가 막국수",
+    price: "6,000원",
+    note: "한 그릇으로 모자랄 때 추가로 시키는 막국수(물·비빔).",
+    photo: "lift",
   },
 ];
 

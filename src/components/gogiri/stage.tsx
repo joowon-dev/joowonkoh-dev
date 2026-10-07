@@ -1,8 +1,15 @@
 "use client";
 
-import { useMotionValue, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
-import { useRef, type ReactNode } from "react";
-import { G } from "./palette";
+import {
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "motion/react";
+import { useRef, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import { G, IMG } from "./palette";
 
 /**
  * 스크롤로 진행되는 장면의 틀.
@@ -32,28 +39,97 @@ export function ScrollStage({
 
   return (
     <section ref={ref} className="relative" style={{ height: `${screens * 100}svh`, background }}>
-      <div className="sticky top-0 h-svh overflow-hidden">{children(reduce ? done : progress)}</div>
+      <div className="sticky top-0 h-svh overflow-hidden">
+        {children(reduce ? done : progress)}
+        <Grain />
+      </div>
     </section>
   );
 }
 
-/** 장면 위에 얹는 후기 글. MDX 에서 넘어온 문단을 그대로 받는다. */
-/** 어두운 나무 바탕에 은은한 창살 무늬 */
-export const LATTICE_BG = {
-  backgroundColor: G.inkDeep,
-  backgroundImage:
-    "linear-gradient(rgba(246,221,166,0.05) 2px, transparent 2px), linear-gradient(90deg, rgba(246,221,166,0.05) 2px, transparent 2px)",
-  backgroundSize: "44px 44px",
-} as const;
+/** 사진 한 장. 글 안의 사진은 next/image 를 쓰지 않는다(MDXComponents 의 img 와 같은 이유). */
+export function Photo({
+  name,
+  alt,
+  className = "",
+  style,
+  eager = false,
+}: {
+  name: string;
+  alt: string;
+  className?: string;
+  style?: CSSProperties;
+  eager?: boolean;
+}) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`${IMG}/${name}.webp`}
+      alt={alt}
+      className={`block h-full w-full object-cover ${className}`}
+      style={style}
+      loading={eager ? "eager" : "lazy"}
+      decoding="async"
+      draggable={false}
+    />
+  );
+}
 
-export function Caption({ children, className = "" }: { children: ReactNode; className?: string }) {
+/** 필름 입자. 사진들이 한 롤에서 나온 것처럼 보이게 장면마다 얹는다. */
+const GRAIN_SVG =
+  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")";
+
+export function Grain() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 opacity-[0.09] mix-blend-overlay"
+      style={{ backgroundImage: GRAIN_SVG }}
+    />
+  );
+}
+
+/** 장면 위에 얹는 후기 글. MDX 에서 넘어온 문단을 그대로 받는다. */
+export function Caption({ children, className = "" }: { children?: ReactNode; className?: string }) {
   if (!children) return null;
   return (
     <div
       className={`max-w-md rounded-2xl px-5 py-4 backdrop-blur-md [&_p]:my-2 [&_p]:max-w-none [&_p]:text-[15px] [&_p]:leading-[1.75] [&_p]:text-[#EFE9DC] [&_strong]:text-[#F3CD72] ${className}`}
-      style={{ background: "rgba(26, 23, 20, 0.8)" }}
+      style={{ background: "rgba(20, 18, 16, 0.62)" }}
     >
       {children}
     </div>
   );
+}
+
+/**
+ * 포인터를 따라 살짝 기우는 값. 손을 떼면 제자리로 돌아온다.
+ * 이벤트 핸들러에서 모션 값만 바꾸므로 다시 그리지 않는다.
+ */
+export function useTilt(max = 10) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-max, max]), { stiffness: 120, damping: 14 });
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [max, -max]), { stiffness: 120, damping: 14 });
+
+  function onPointerMove(e: PointerEvent<HTMLElement>) {
+    const r = e.currentTarget.getBoundingClientRect();
+    x.set((e.clientX - r.left) / r.width - 0.5);
+    y.set((e.clientY - r.top) / r.height - 0.5);
+  }
+  function onPointerLeave() {
+    x.set(0);
+    y.set(0);
+  }
+
+  return { rotateX, rotateY, x, y, handlers: { onPointerMove, onPointerLeave } };
+}
+
+/** 항상 같은 값을 내는 난수(렌더 중에 Math.random 을 쓰지 않으려고) */
+export function seeded(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) % 4294967296;
+    return s / 4294967296;
+  };
 }
