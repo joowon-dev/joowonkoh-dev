@@ -23,6 +23,48 @@ export default function SectionPostView({
   next,
   related,
 }: Props) {
+  const body = (
+    <MDXRemote
+      source={content}
+      components={mdxComponents}
+      options={{
+        // next-mdx-remote 6부터 기본으로 켜지는 blockJS가 MDX 안의 JS 표현식을
+        // 전부 제거한다. 그러면 <DataTableCard rows={[...]} />에서 rows가 사라져
+        // 컴포넌트는 호출되는데 props만 비어 있는 상태가 된다. 에러도 안 나고
+        // 표만 조용히 없어져서, 글 열한 편의 표가 한동안 안 보이고 있었다.
+        //
+        // 이 옵션은 남의 MDX를 렌더할 때를 위한 것이다. 여기서 읽는 건 내가 쓴
+        // content/ 폴더뿐이라 끈다. 위험한 호출을 막는 blockDangerousJS는
+        // 기본값 그대로 켜 둔다.
+        blockJS: false,
+        mdxOptions: {
+          rehypePlugins: [[rehypePrettyCode, { theme: "github-light" }]],
+        },
+      }}
+    />
+  );
+
+  // 몰입형 글: 본문 폭(max-w-3xl)과 위 여백·스티키 헤더 자리까지 빠져나와
+  // 화면 전체를 쓴다. 제목(h1)은 본문 첫 장면이 직접 낸다.
+  if (meta.immersive) {
+    return (
+      <>
+        <article
+          data-immersive
+          data-mdx-body
+          className="relative -mt-[144px] ml-[calc(50%-50vw)] w-screen"
+        >
+          {body}
+        </article>
+        <div className="mt-16">
+          <AdSense />
+          <RelatedPosts posts={related} />
+          <PostNavigation prev={prev} next={next} />
+        </div>
+      </>
+    );
+  }
+
   return (
     <div className="relative flex gap-0">
       <aside className="hidden xl:block w-0">
@@ -52,24 +94,7 @@ export default function SectionPostView({
 
         {/* data-mdx-body: 목차가 여기 안의 제목만 읽는다 (TableOfContents 참고) */}
         <div data-mdx-body>
-          <MDXRemote
-            source={content}
-            components={mdxComponents}
-            options={{
-            // next-mdx-remote 6부터 기본으로 켜지는 blockJS가 MDX 안의 JS 표현식을
-            // 전부 제거한다. 그러면 <DataTableCard rows={[...]} />에서 rows가 사라져
-            // 컴포넌트는 호출되는데 props만 비어 있는 상태가 된다. 에러도 안 나고
-            // 표만 조용히 없어져서, 글 열한 편의 표가 한동안 안 보이고 있었다.
-            //
-            // 이 옵션은 남의 MDX를 렌더할 때를 위한 것이다. 여기서 읽는 건 내가 쓴
-            // content/ 폴더뿐이라 끈다. 위험한 호출을 막는 blockDangerousJS는
-            // 기본값 그대로 켜 둔다.
-              blockJS: false,
-              mdxOptions: {
-                rehypePlugins: [[rehypePrettyCode, { theme: "github-light" }]],
-              },
-            }}
-          />
+          {body}
         </div>
         <AdSense />
         <RelatedPosts posts={related} />

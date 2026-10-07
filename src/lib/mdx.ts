@@ -38,6 +38,7 @@ function readPostMeta(section: Section, filename: string): PostMeta {
     tags: data.tags ?? [],
     section,
     noindex: data.noindex === true,
+    immersive: data.immersive === true,
   };
 }
 
@@ -74,6 +75,7 @@ export function getPostBySlugFromSection(section: Section, slug: string) {
       tags: data.tags ?? [],
       section,
       noindex: data.noindex === true,
+      immersive: data.immersive === true,
     } satisfies PostMeta,
     content,
   };

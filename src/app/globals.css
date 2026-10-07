@@ -132,3 +132,10 @@ html {
   background-color: var(--color-accent);
   color: white;
 }
+
+/* 몰입형 글은 본문이 100vw 로 빠져나온다. 스크롤바가 자리를 먹는 OS 에서
+   그만큼 가로 스크롤이 생기지 않게 자른다. */
+html:has([data-immersive]),
+html:has([data-immersive]) body {
+  overflow-x: clip;
+}

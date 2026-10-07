@@ -16,6 +16,8 @@ export interface PostMeta {
   section: Section;
   /** When true, the post is excluded from search indexing (robots noindex + sitemap). */
   noindex?: boolean;
+  /** When true, the post body breaks out of the column and runs full screen (no header/TOC). */
+  immersive?: boolean;
 }
 
 export function postHref(post: Pick<PostMeta, "section" | "slug">): string {
