@@ -1,304 +1,438 @@
 "use client";
 
-import { animate, motion, useMotionValue, useReducedMotion, useTransform, type MotionValue } from "motion/react";
-import { useEffect, type ReactNode } from "react";
-import BowlArt, { FLAKES } from "./BowlArt";
-import { HanokFacade, WoodTable } from "./Hanok";
+import { motion, useMotionValue, useReducedMotion, useTransform, type MotionValue } from "motion/react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { PLACE } from "./info";
 import { G, SERIF } from "./palette";
-import { Caption, LATTICE_BG, ScrollStage } from "./stage";
+import { Caption, Photo, ScrollStage, seeded, useTilt } from "./stage";
 
-/* ───────────── 표지 ───────────── */
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+/** 화면을 덮는 사진 층 */
+const FILL = "absolute inset-0";
+
+/* ───────────── 표지: 해 질 녘 돌담 앞 ───────────── */
 
 export function CoverScene({ title, date, children }: { title: string; date?: string; children?: ReactNode }) {
-  const reduce = useReducedMotion();
-  const glow = useMotionValue(reduce ? 1 : 0);
-
-  // 창살 문에 불이 들어온다 — 이 페이지의 첫 움직임. 한 번 깜빡이고 켜진다.
-  useEffect(() => {
-    if (reduce) {
-      glow.set(1);
-      return;
-    }
-    const run = animate(glow, [0, 0.5, 0.15, 1], { duration: 1.6, delay: 0.6, times: [0, 0.18, 0.32, 1] });
-    return () => run.stop();
-  }, [reduce, glow]);
-
   return (
-    <section className="relative flex h-svh min-h-[560px] flex-col items-center justify-end overflow-hidden px-6 pb-14 text-center">
-      <HanokFacade glow={glow} />
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%]"
-        style={{ background: `linear-gradient(transparent, ${G.inkDeep} 70%)` }}
-        aria-hidden
-      />
-
-      <div className="relative">
-        <h1
-          className="text-[clamp(2.4rem,8vw,4.6rem)] font-bold leading-[1.15] tracking-tight"
-          style={{ fontFamily: SERIF, color: G.mist }}
-        >
-          {title}
-        </h1>
-        {date && (
-          <p className="mt-3 text-sm" style={{ color: G.mistDim }}>
-            {date.replace(/-/g, ".")}
-          </p>
-        )}
-        {children && (
-          <div className="mx-auto mt-5 max-w-lg [&_p]:mx-auto [&_p]:text-base [&_p]:leading-[1.8] [&_p]:text-[#D9CFBE]">
-            {children}
-          </div>
-        )}
-        <motion.p
-          className="mt-6 text-xs"
-          style={{ color: G.mistDim }}
-          animate={reduce ? undefined : { y: [0, 6, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          아래로 내려서 들어가기
-        </motion.p>
-      </div>
-    </section>
-  );
-}
-
-/* ───────────── 가는 길 ───────────── */
-
-export function RouteScene({ children }: { children?: ReactNode }) {
-  return (
-    <ScrollStage screens={3}>
-      {(p) => <RouteArt p={p} caption={children} />}
+    <ScrollStage screens={1.7} background={G.inkDeep}>
+      {(p) => <Cover p={p} title={title} date={date} caption={children} />}
     </ScrollStage>
   );
 }
 
-function RouteArt({ p, caption }: { p: MotionValue<number>; caption?: ReactNode }) {
-  const scale = useTransform(p, [0.3, 0.85], [1, 2.5]);
-  const path = useTransform(p, [0.02, 0.6], [0, 1]);
-  const pinY = useTransform(p, [0.78, 0.9], [-60, 0]);
-  const pinOpacity = useTransform(p, [0.78, 0.82], [0, 1]);
-  const labelOpacity = useTransform(p, [0.86, 0.94], [0, 1]);
-  const cityOpacity = useTransform(p, [0.45, 0.7], [1, 0]);
+function Cover({ p, title, date, caption }: { p: MotionValue<number>; title: string; date?: string; caption?: ReactNode }) {
+  const reduce = useReducedMotion();
+  const zoom = useTransform(p, [0, 1], [1, 1.22]);
+  const dim = useTransform(p, [0, 1], [0.15, 0.7]);
+  const lift = useTransform(p, [0, 1], ["0%", "-35%"]);
+  const fade = useTransform(p, [0.2, 0.75], [1, 0]);
 
   return (
-    <div className="relative flex h-full items-center justify-center">
-      <motion.div
-        className="w-[min(100vw,calc((100svh-5rem)*1.333))]"
-        style={{ scale, transformOrigin: "51.25% 68.3%" }}
-      >
-        <svg viewBox="0 0 400 300" className="w-full" role="img" aria-label="서울에서 판교를 지나 고기리로 가는 그림 지도">
-          <rect width="400" height="300" fill={G.ink} />
-          {/* 산 */}
-          {[
-            [150, 262, 46],
-            [196, 250, 40],
-            [238, 262, 50],
-            [120, 150, 30],
-            [300, 230, 36],
-            [330, 140, 28],
-          ].map(([x, y, s], i) => (
-            <path key={i} d={`M${x - s} ${y} L${x} ${y - s * 0.9} L${x + s} ${y} Z`} fill={G.line} />
-          ))}
-          {/* 한강 */}
-          <path
-            d="M0 74 C60 62 110 98 170 84 S290 60 400 80"
-            fill="none"
-            stroke="#3C6B6A"
-            strokeWidth="9"
-            strokeLinecap="round"
-          />
-          {/* 큰길 */}
-          <path d="M200 60 L252 300" stroke={G.line} strokeWidth="3" />
-          <path d="M60 180 L400 150" stroke={G.line} strokeWidth="3" />
-
-          <motion.g style={{ opacity: cityOpacity }}>
-            <circle cx="200" cy="52" r="5" fill={G.mist} />
-            <text x="200" y="38" textAnchor="middle" fontSize="13" fill={G.mist} style={{ fontFamily: SERIF }}>
-              서울
-            </text>
-            <circle cx="252" cy="168" r="4" fill={G.mistDim} />
-            <text x="262" y="166" fontSize="10" fill={G.mistDim}>
-              판교
-            </text>
-            <circle cx="150" cy="214" r="4" fill={G.mistDim} />
-            <text x="118" y="230" fontSize="10" fill={G.mistDim}>
-              수지
-            </text>
-          </motion.g>
-
-          {/* 가는 길 */}
-          <motion.path
-            d="M200 56 C204 108 242 128 250 166 C254 186 226 192 205 205"
-            fill="none"
-            stroke={G.oil}
-            strokeWidth="3"
-            strokeLinecap="round"
-            style={{ pathLength: path }}
-          />
-
-          {/* 핀 */}
-          <motion.g style={{ y: pinY, opacity: pinOpacity }}>
-            <path d="M205 205 C199 196 197 192 197 188 a8 8 0 1 1 16 0 C213 192 211 196 205 205 Z" fill={G.oil} />
-            <circle cx="205" cy="188" r="3" fill={G.ink} />
-          </motion.g>
-          <motion.text
-            x="205"
-            y="216"
-            textAnchor="middle"
-            fontSize="6.5"
-            fill={G.mist}
-            style={{ opacity: labelOpacity, fontFamily: SERIF }}
-          >
-            고기리막국수
-          </motion.text>
-        </svg>
+    <div className="relative h-full">
+      <motion.div className={FILL} style={{ scale: zoom }}>
+        <motion.div
+          className={FILL}
+          initial={reduce ? false : { scale: 1.12, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 2.2, ease: EASE }}
+        >
+          <Photo name="dusk" alt="해 질 녘, 불이 켜진 고기리막국수 돌담과 157 번지 표지" eager />
+        </motion.div>
       </motion.div>
+      <motion.div className={FILL} style={{ background: G.inkDeep, opacity: dim }} />
+      <div className="absolute inset-x-0 bottom-0 h-2/3" style={{ background: `linear-gradient(transparent, ${G.inkDeep})` }} />
 
-      <p className="absolute top-24 right-5 text-[11px]" style={{ color: G.mistDim }}>
-        그림 지도라 거리와 방향은 대략이에요
-      </p>
+      <motion.div className="absolute inset-x-0 bottom-0 px-6 pb-16 text-center" style={{ y: lift, opacity: fade }}>
+        <h1
+          className="text-[clamp(2.6rem,9vw,5.6rem)] font-bold leading-[1.1] tracking-tight"
+          style={{ fontFamily: SERIF, color: G.mist }}
+          aria-label={title}
+        >
+          {/* 글자마다 떠오르되, 낱말 가운데서 줄이 바뀌지 않게 낱말로 묶는다 */}
+          {title.split(" ").map((word, w, words) => {
+            const before = words.slice(0, w).join(" ").length + (w > 0 ? 1 : 0);
+            return (
+              <span key={w} className="inline-block whitespace-nowrap">
+                {Array.from(word).map((ch, i) => (
+                  <motion.span
+                    key={i}
+                    aria-hidden
+                    className="inline-block"
+                    initial={reduce ? false : { y: "0.6em", opacity: 0, filter: "blur(8px)" }}
+                    animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                    transition={{ duration: 1.1, delay: 0.5 + (before + i) * 0.07, ease: EASE }}
+                  >
+                    {ch}
+                  </motion.span>
+                ))}
+                {w < words.length - 1 && <span aria-hidden>&nbsp;</span>}
+              </span>
+            );
+          })}
+        </h1>
+        {date && (
+          <motion.p
+            className="mt-4 text-sm tracking-wide"
+            style={{ color: G.mistDim }}
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.6, duration: 1 }}
+          >
+            {date.replace(/-/g, ".")} · {PLACE.address}
+          </motion.p>
+        )}
+        {caption && (
+          <motion.div
+            className="mx-auto mt-6 max-w-lg [&_p]:mx-auto [&_p]:text-base [&_p]:leading-[1.8] [&_p]:text-[#D9CFBE]"
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.9, duration: 1 }}
+          >
+            {caption}
+          </motion.div>
+        )}
+        <motion.p
+          className="mt-8 text-xs"
+          style={{ color: G.mistDim }}
+          animate={reduce ? undefined : { y: [0, 6, 0], opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2.4, repeat: Infinity }}
+        >
+          천천히 내려 보세요
+        </motion.p>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ───────────── 가는 길: 비 갠 길 → 한옥 정면 ───────────── */
+
+export function RouteScene({ children }: { children?: ReactNode }) {
+  return <ScrollStage screens={3}>{(p) => <Route p={p} caption={children} />}</ScrollStage>;
+}
+
+function Route({ p, caption }: { p: MotionValue<number>; caption?: ReactNode }) {
+  // 길을 따라 앞으로 나아가듯 길 사진이 커지고, 그 끝에서 가게 정면이 나타난다
+  const roadScale = useTransform(p, [0, 0.62], [1, 1.7]);
+  const roadOpacity = useTransform(p, [0.48, 0.66], [1, 0]);
+  const roadBlur = useTransform(p, [0.4, 0.66], ["blur(0px)", "blur(10px)"]);
+  const facadeScale = useTransform(p, [0.48, 1], [1.18, 1]);
+  const facadeOpacity = useTransform(p, [0.48, 0.66], [0, 1]);
+  const word1 = useTransform(p, [0.05, 0.14, 0.36, 0.46], [0, 1, 1, 0]);
+  const word1Y = useTransform(p, [0.05, 0.46], [40, -40]);
+  const word2 = useTransform(p, [0.68, 0.78, 1], [0, 1, 1]);
+  const word2Y = useTransform(p, [0.68, 1], [40, 0]);
+
+  return (
+    <div className="relative h-full">
+      <motion.div className={FILL} style={{ scale: roadScale, opacity: roadOpacity, filter: roadBlur }}>
+        <Photo name="road" alt="비 갠 뒤 젖은 길 끝에 보이는 한옥 가게와 안개 낀 산" />
+      </motion.div>
+      <motion.div className={FILL} style={{ scale: facadeScale, opacity: facadeOpacity }}>
+        <Photo name="facade" alt="기와지붕과 흰 회벽, 돌망태 담이 이어진 고기리막국수 정면" />
+      </motion.div>
+      <div
+        className={FILL}
+        style={{ background: "linear-gradient(rgba(20,18,16,0.35), transparent 30%, transparent 55%, rgba(20,18,16,0.75))" }}
+      />
+
+      <motion.p
+        className="absolute inset-x-0 top-[30%] text-center text-[clamp(2.2rem,7vw,4.8rem)] font-bold"
+        style={{ fontFamily: SERIF, color: G.mist, opacity: word1, y: word1Y, textShadow: "0 2px 30px rgba(0,0,0,0.5)" }}
+      >
+        고기리 계곡 쪽으로
+      </motion.p>
+      <motion.p
+        className="absolute inset-x-0 top-[18%] text-center text-[clamp(2.2rem,7vw,4.8rem)] font-bold"
+        style={{ fontFamily: SERIF, color: G.mist, opacity: word2, y: word2Y, textShadow: "0 2px 30px rgba(0,0,0,0.5)" }}
+      >
+        이종무로 157
+      </motion.p>
+
       <Caption className="absolute bottom-6 left-4 right-4 sm:left-8 sm:right-auto">{caption}</Caption>
     </div>
   );
 }
 
-/* ───────────── 웨이팅 ───────────── */
+/* ───────────── 문 앞: 대기 번호가 0 이 되면 문이 열린다 ───────────── */
 
-export function WaitingScene({ from = 47, children }: { from?: number; children?: ReactNode }) {
+export function DoorScene({ from = 47, children }: { from?: number; children?: ReactNode }) {
+  return <ScrollStage screens={3}>{(p) => <Door p={p} from={from} caption={children} />}</ScrollStage>;
+}
+
+function Door({ p, from, caption }: { p: MotionValue<number>; from: number; caption?: ReactNode }) {
+  const left = useTransform(p, [0.04, 0.42], [from, 0]);
+  const shown = useTransform(left, (v) => String(Math.round(v)));
+  const ticketOpacity = useTransform(p, [0, 0.04, 0.48, 0.54], [0, 1, 1, 0]);
+  const ticketScale = useTransform(p, [0.42, 0.48], [1, 1.08]);
+  const called = useTransform(p, [0.41, 0.44], [0, 1]);
+  const scrim = useTransform(p, [0, 0.48, 0.56], [0.55, 0.55, 0]);
+
+  // 문이 좌우로 열리고, 안쪽 주방이 다가온다
+  const leftDoor = useTransform(p, [0.55, 0.9], ["0%", "-102%"]);
+  const rightDoor = useTransform(p, [0.55, 0.9], ["0%", "102%"]);
+  const insideScale = useTransform(p, [0.55, 1], [1.25, 1]);
+  const captionOpacity = useTransform(p, [0.86, 0.95], [0, 1]);
+
+  const half = "absolute inset-0 overflow-hidden";
   return (
-    <ScrollStage screens={2.6} background={G.inkDeep}>
-      {(p) => <WaitingArt p={p} from={from} caption={children} />}
+    <div className="relative h-full">
+      <motion.div className={FILL} style={{ scale: insideScale }}>
+        <Photo name="kitchen" alt="‘고기리막국수’ 나무 간판 아래 열린 주방과 놋쇠 장식 반닫이" style={{ objectPosition: "50% 18%" }} />
+      </motion.div>
+
+      <motion.div className={half} style={{ x: leftDoor, clipPath: "inset(0 50% 0 0)" }}>
+        <Photo name="entrance" alt="‘고기리막국수’ 간판이 걸린 나무 출입문" />
+      </motion.div>
+      <motion.div className={half} style={{ x: rightDoor, clipPath: "inset(0 0 0 50%)" }}>
+        <Photo name="entrance" alt="" />
+      </motion.div>
+      <motion.div className={FILL} style={{ background: G.inkDeep, opacity: scrim }} />
+
+      {/* 대기 번호표 */}
+      <motion.div
+        className="absolute left-1/2 top-1/2 w-[min(78vw,300px)] -translate-x-1/2 -translate-y-1/2 rounded-3xl px-8 py-7 text-center shadow-2xl"
+        style={{ opacity: ticketOpacity, scale: ticketScale, background: G.mist, color: G.gim }}
+      >
+        <p className="text-xs tracking-wide" style={{ color: "#7A6A55" }}>
+          캐치테이블 원격 줄서기
+        </p>
+        <p className="mt-2 text-sm">내 앞 대기</p>
+        <p className="mt-1 text-7xl font-bold tabular-nums" style={{ fontFamily: SERIF }}>
+          <motion.span>{shown}</motion.span>
+          <span className="ml-1 text-2xl">팀</span>
+        </p>
+        <motion.p className="mt-3 text-base font-bold" style={{ opacity: called, color: "#B9781A" }}>
+          입장하세요
+        </motion.p>
+      </motion.div>
+
+      <motion.div className="absolute bottom-6 left-4 right-4 sm:left-auto sm:right-8" style={{ opacity: captionOpacity }}>
+        <Caption>{caption}</Caption>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ───────────── 한 그릇: 작은 액자가 화면을 채우고, 그릇 안으로 다가간다 ───────────── */
+
+const rand = seeded(2012);
+/** 떨어지는 김가루·깨. 세 겹으로 나눠 다른 속도로 떨어뜨려 깊이를 낸다. */
+const FLAKES = Array.from({ length: 54 }, (_, i) => ({
+  layer: i % 3,
+  x: rand() * 100,
+  y: rand() * 100,
+  w: 2 + rand() * 7,
+  h: 1.5 + rand() * 4,
+  rot: rand() * 180,
+  sesame: rand() > 0.68,
+}));
+
+const WORDS = [
+  { label: "메밀면", at: [0.36, 0.44, 0.54, 0.6] },
+  { label: "들기름", at: [0.56, 0.64, 0.72, 0.78] },
+  { label: "김가루와 깨", at: [0.74, 0.82, 1, 1.01] },
+];
+
+export function BowlScene({ children }: { children?: ReactNode }) {
+  return (
+    <ScrollStage screens={3.2} background={G.inkDeep}>
+      {(p) => <Bowl p={p} caption={children} />}
     </ScrollStage>
   );
 }
 
-function WaitingArt({ p, from, caption }: { p: MotionValue<number>; from: number; caption?: ReactNode }) {
-  const left = useTransform(p, [0.05, 0.8], [from, 0]);
-  const shown = useTransform(left, (v) => String(Math.round(v)));
-  const minute = useTransform(p, [0.05, 0.8], [0, 540]);
-  const hour = useTransform(p, [0.05, 0.8], [0, 45]);
-  const queueX = useTransform(p, [0.05, 0.8], ["0%", "-50%"]);
-  const calledOpacity = useTransform(p, [0.78, 0.84], [0, 1]);
+function Bowl({ p, caption }: { p: MotionValue<number>; caption?: ReactNode }) {
+  const clipPath = useTransform(p, (v) => {
+    const t = Math.min(1, v / 0.32);
+    const e = 1 - Math.pow(1 - t, 3);
+    const a = 22 * (1 - e);
+    const b = 32 * (1 - e);
+    return `inset(${a}% ${b}% ${a}% ${b}% round ${28 * (1 - e)}px)`;
+  });
+  const zoom = useTransform(p, [0.32, 1], [1, 1.55]);
+  const fall0 = useTransform(p, [0.3, 1], ["-40%", "130%"]);
+  const fall1 = useTransform(p, [0.3, 1], ["-70%", "160%"]);
+  const fall2 = useTransform(p, [0.3, 1], ["-100%", "190%"]);
+  const fall = [fall0, fall1, fall2];
+  const flakeOpacity = useTransform(p, [0.3, 0.4, 0.9, 1], [0, 1, 1, 0]);
 
   return (
-    <div className="relative flex h-full flex-col items-center justify-center gap-8 px-6 pt-20">
-      <HanokFacade />
-      <div className="absolute inset-0" style={{ background: "rgba(26, 23, 20, 0.62)" }} aria-hidden />
-      <div className="relative flex items-center gap-8 sm:gap-14">
-        {/* 벽시계 */}
-        <svg viewBox="0 0 100 100" className="w-20 sm:w-28" aria-hidden>
-          <circle cx="50" cy="50" r="46" fill={G.bowl} />
-          <circle cx="50" cy="50" r="46" fill="none" stroke={G.line} strokeWidth="4" />
-          {Array.from({ length: 12 }, (_, i) => (
-            <rect key={i} x="49" y="8" width="2" height="6" fill={G.line} transform={`rotate(${i * 30} 50 50)`} />
-          ))}
-          <motion.rect x="48" y="26" width="4" height="26" rx="2" fill={G.gim} style={{ rotate: hour, originX: "50%", originY: "92%" }} />
-          <motion.rect x="49" y="14" width="2" height="38" rx="1" fill={G.oil} style={{ rotate: minute, originX: "50%", originY: "95%" }} />
-          <circle cx="50" cy="50" r="3" fill={G.gim} />
-        </svg>
-
-        {/* 대기 번호표 */}
-        <div className="rounded-2xl px-7 py-5 text-center" style={{ background: G.bowl, color: G.gim }}>
-          <p className="text-xs" style={{ color: G.line }}>
-            내 앞 대기
-          </p>
-          <p className="mt-1 text-6xl font-bold tabular-nums sm:text-7xl" style={{ fontFamily: SERIF }}>
-            <motion.span>{shown}</motion.span>
-            <span className="ml-1 text-xl">팀</span>
-          </p>
-          <motion.p className="mt-2 text-sm font-semibold" style={{ opacity: calledOpacity, color: G.oil }}>
-            입장하세요
-          </motion.p>
-        </div>
-      </div>
-
-      {/* 줄 선 사람들 */}
-      <div className="relative w-[min(90vw,560px)] overflow-hidden" aria-hidden>
-        <motion.div className="flex w-[200%] gap-5" style={{ x: queueX }}>
-          {Array.from({ length: 16 }, (_, i) => (
-            <svg key={i} viewBox="0 0 20 34" className="h-12 w-7 shrink-0">
-              <circle cx="10" cy="7" r="6" fill={i % 3 === 0 ? G.noodle : G.mistDim} />
-              <rect x="2" y="15" width="16" height="19" rx="7" fill={i % 3 === 0 ? G.noodleDark : G.line} />
-            </svg>
-          ))}
+    <div className="relative h-full">
+      <motion.div className={FILL} style={{ clipPath }}>
+        <motion.div className={FILL} style={{ scale: zoom, transformOrigin: "50% 42%" }}>
+          <Photo name="deul_hero" alt="스테인리스 대접에 담긴 들기름막국수, 김가루와 깨가 수북하다" />
         </motion.div>
-      </div>
+        <div className={FILL} style={{ background: "radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(20,18,16,0.6))" }} />
+      </motion.div>
 
-      <p className="relative text-xs" style={{ color: G.mistDim }}>
-        {PLACE.waiting} · {PLACE.quietHours}
-      </p>
+      <motion.div className="pointer-events-none absolute inset-0" style={{ opacity: flakeOpacity }} aria-hidden>
+        {fall.map((y, layer) => (
+          <motion.div key={layer} className={FILL} style={{ y }}>
+            {FLAKES.filter((f) => f.layer === layer).map((f, i) => (
+              <span
+                key={i}
+                className="absolute block rounded-[1px]"
+                style={{
+                  left: `${f.x}%`,
+                  top: `${f.y}%`,
+                  width: f.w * (1 + layer * 0.5),
+                  height: f.h * (1 + layer * 0.5),
+                  background: f.sesame ? "#E2CB98" : G.gim,
+                  transform: `rotate(${f.rot}deg)`,
+                  filter: layer === 2 ? "blur(1.5px)" : undefined,
+                }}
+              />
+            ))}
+          </motion.div>
+        ))}
+      </motion.div>
 
+      {WORDS.map((w) => (
+        <Word key={w.label} p={p} at={w.at}>
+          {w.label}
+        </Word>
+      ))}
+
+      <Caption className="absolute bottom-6 left-4 right-4 sm:left-8 sm:right-auto">{caption}</Caption>
+    </div>
+  );
+}
+
+function Word({ p, at, children }: { p: MotionValue<number>; at: number[]; children: ReactNode }) {
+  const opacity = useTransform(p, at, [0, 1, 1, 0]);
+  const y = useTransform(p, [at[0], at[3]], [30, -30]);
+  const spacing = useTransform(p, [at[0], at[1]], ["0.4em", "0.02em"]);
+  return (
+    <motion.p
+      className="pointer-events-none absolute inset-x-0 top-[16%] text-center text-[clamp(2.4rem,8vw,5.4rem)] font-bold"
+      style={{ fontFamily: SERIF, color: G.mist, opacity, y, letterSpacing: spacing, textShadow: "0 2px 6px rgba(0,0,0,0.7), 0 6px 60px rgba(0,0,0,0.85)" }}
+    >
+      {children}
+    </motion.p>
+  );
+}
+
+/* ───────────── 들어 올리기: 포인터를 따라 기우는 사진 ───────────── */
+
+export function LiftScene({ children }: { children?: ReactNode }) {
+  return (
+    <ScrollStage screens={2} background={G.inkDeep}>
+      {(p) => <Lift p={p} caption={children} />}
+    </ScrollStage>
+  );
+}
+
+function Lift({ p, caption }: { p: MotionValue<number>; caption?: ReactNode }) {
+  const { rotateX, rotateY, handlers } = useTilt(9);
+  const photoY = useTransform(p, [0, 1], ["8%", "-8%"]);
+  const line1X = useTransform(p, [0, 1], ["-12%", "6%"]);
+  const line2X = useTransform(p, [0, 1], ["12%", "-6%"]);
+  const textOpacity = useTransform(p, [0, 0.15, 0.85, 1], [0, 1, 1, 0.4]);
+
+  return (
+    <div className="relative flex h-full items-center justify-center" style={{ perspective: 1200 }} {...handlers}>
+      <motion.p
+        className="pointer-events-none absolute left-0 right-0 top-[14%] whitespace-nowrap text-center text-[clamp(3rem,13vw,10rem)] font-bold leading-none"
+        style={{ fontFamily: SERIF, color: "transparent", WebkitTextStroke: `1px ${G.mistDim}`, x: line1X, opacity: textOpacity }}
+        aria-hidden
+      >
+        비비지 말고
+      </motion.p>
+      <motion.div
+        className="relative aspect-[3/4] w-[min(72vw,440px,62svh)] overflow-hidden rounded-[28px] shadow-[0_40px_120px_rgba(0,0,0,0.6)]"
+        style={{ rotateX, rotateY, y: photoY }}
+      >
+        <Photo name="lift" alt="젓가락으로 김가루 묻은 메밀면을 높이 들어 올린 모습" />
+      </motion.div>
+      <motion.p
+        className="pointer-events-none absolute bottom-[14%] left-0 right-0 whitespace-nowrap text-center text-[clamp(3rem,13vw,10rem)] font-bold leading-none"
+        style={{ fontFamily: SERIF, color: G.oilLight, x: line2X, opacity: textOpacity }}
+      >
+        나온 그대로
+      </motion.p>
       <Caption className="absolute bottom-6 left-4 right-4 sm:left-auto sm:right-8">{caption}</Caption>
     </div>
   );
 }
 
-/* ───────────── 한 그릇이 나온다 ───────────── */
+/* ───────────── 곁들임: 세로 스크롤로 옆으로 넘어가는 사진들 ───────────── */
 
-export function BowlScene({ children }: { children?: ReactNode }) {
+const SIDES = [
+  { name: "mul", title: "물막국수", note: "살얼음 낀 동치미 육수에 만 메밀면. 새콤하고 맑다." },
+  { name: "suyuk", title: "수육", note: "국내산 돼지고기. 막국수 옆에 한 접시." },
+  { name: "spread", title: "한 상", note: "들기름막국수와 수육, 김치, 따끈한 면수." },
+];
+
+export function SidesScene({ children }: { children?: ReactNode }) {
   return (
-    <ScrollStage screens={2.8}>
-      {(p) => <BowlArrive p={p} caption={children} />}
+    <ScrollStage screens={3} background={G.inkDeep}>
+      {(p) => <Sides p={p} caption={children} />}
     </ScrollStage>
   );
 }
 
-function BowlArrive({ p, caption }: { p: MotionValue<number>; caption?: ReactNode }) {
-  const y = useTransform(p, [0, 0.28], ["70svh", "0svh"]);
-  const rotate = useTransform(p, [0, 0.28], [-18, 0]);
-  const stream = useTransform(p, [0.3, 0.38, 0.52, 0.6], [0, 1, 1, 0]);
-  const oil = useTransform(p, [0.34, 0.6], [0, 1]);
-  const fall = useTransform(p, [0.58, 0.88], ["-55svh", "0svh"]);
-  const fallOpacity = useTransform(p, [0.58, 0.62, 0.84, 0.9], [0, 1, 1, 0]);
-  const gim = useTransform(p, [0.8, 0.9], [0, 1]);
+function Sides({ p, caption }: { p: MotionValue<number>; caption?: ReactNode }) {
+  // 마지막 카드가 오른쪽 끝에 닿을 때까지 민다. 거리는 화면 폭에 따라 달라서 재서 쓴다.
+  const track = useRef<HTMLDivElement>(null);
+  const travel = useMotionValue(0);
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const measure = () => travel.set(Math.max(0, el.scrollWidth - window.innerWidth + window.innerWidth * 0.06));
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [travel]);
+  const x = useTransform(() => -Math.min(1, Math.max(0, (p.get() - 0.08) / 0.84)) * travel.get());
 
-  const layer = "absolute inset-0 w-full";
   return (
-    <div className="relative flex h-full items-center justify-center px-6">
-      <WoodTable />
-      <motion.div className="relative w-[min(78vw,460px,70svh)] aspect-square" style={{ y, rotate }}>
-        <BowlArt className={layer} oil={0} gim={0} title="갓 나온 들기름막국수" />
-        <motion.div className={layer} style={{ opacity: oil }}>
-          <BowlArt className="w-full" gim={0} title="" />
-        </motion.div>
-        <motion.div className={layer} style={{ opacity: gim }}>
-          <BowlArt className="w-full" title="" />
-        </motion.div>
-
-        {/* 들기름 줄기 */}
-        <motion.div
-          className="absolute left-[46%] bottom-[50%] w-[6px] rounded-full"
-          style={{
-            height: "60svh",
-            background: `linear-gradient(${G.oilLight}, ${G.oil})`,
-            scaleY: stream,
-            originY: 0,
-          }}
-          aria-hidden
-        />
-
-        {/* 떨어지는 김가루 */}
-        <motion.div className="pointer-events-none absolute inset-0" style={{ y: fall, opacity: fallOpacity }} aria-hidden>
-          {FLAKES.map((f, i) => (
-            <span
-              key={i}
-              className="absolute block rounded-[1px]"
-              style={{
-                left: `${(f.x / 200) * 100}%`,
-                top: `${(f.y / 200) * 100 - (i % 5) * 4}%`,
-                width: f.w * 2,
-                height: f.h * 2,
-                background: f.sesame ? "#DCC79A" : G.gim,
-                transform: `rotate(${f.rot}deg)`,
-              }}
-            />
-          ))}
-        </motion.div>
+    <div className="relative flex h-full flex-col justify-center gap-8 pt-16">
+      <p className="px-6 text-sm sm:px-12" style={{ color: G.mistDim }}>
+        같이 시키면 좋은 것
+      </p>
+      <motion.div ref={track} className="flex w-max gap-[4vw] pl-[6vw]" style={{ x }}>
+        {SIDES.map((s, i) => (
+          <SideCard key={s.name} p={p} index={i} {...s} />
+        ))}
       </motion.div>
-
-      <Caption className="absolute bottom-6 left-4 right-4 sm:left-8 sm:right-auto">{caption}</Caption>
+      <Caption className="mx-6 sm:mx-12">{caption}</Caption>
     </div>
+  );
+}
+
+function SideCard({
+  p,
+  index,
+  name,
+  title,
+  note,
+}: {
+  p: MotionValue<number>;
+  index: number;
+  name: string;
+  title: string;
+  note: string;
+}) {
+  const center = 0.08 + (0.84 * index) / (SIDES.length - 1);
+  const scale = useTransform(p, [center - 0.35, center, center + 0.35], [0.9, 1, 0.9]);
+  const inner = useTransform(p, [center - 0.4, center + 0.4], ["-6%", "6%"]);
+  return (
+    <motion.figure className="relative w-[66vw] shrink-0 sm:w-[56vw]" style={{ scale }}>
+      <div className="relative aspect-[4/3] max-h-[58svh] overflow-hidden rounded-3xl">
+        <motion.div className="absolute inset-[-8%]" style={{ x: inner }}>
+          <Photo name={name} alt={title} />
+        </motion.div>
+      </div>
+      <figcaption className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <span className="text-2xl font-bold sm:text-3xl" style={{ fontFamily: SERIF, color: G.mist }}>
+          {title}
+        </span>
+        <span className="text-sm" style={{ color: G.mistDim }}>
+          {note}
+        </span>
+      </figcaption>
+    </motion.figure>
   );
 }
 
@@ -315,13 +449,17 @@ export function VerdictScene({ scores, children }: { scores: Score[]; children?:
   return (
     <ScrollStage screens={2} background={G.inkDeep}>
       {(p) => (
-        <div className="flex h-full flex-col items-center justify-center gap-10 px-6 pt-16" style={LATTICE_BG}>
-          <ul className="w-[min(90vw,520px)] space-y-6">
+        <div className="relative flex h-full flex-col items-center justify-center gap-10 px-6 pt-16">
+          <div className={FILL} aria-hidden>
+            <Photo name="spread" alt="" className="scale-110 blur-2xl" />
+            <div className={FILL} style={{ background: "rgba(20,18,16,0.78)" }} />
+          </div>
+          <ul className="relative w-[min(90vw,520px)] space-y-7">
             {scores.map((s, i) => (
               <ScoreBar key={s.label} p={p} score={s} index={i} count={scores.length} />
             ))}
           </ul>
-          <Caption>{children}</Caption>
+          <Caption className="relative">{children}</Caption>
         </div>
       )}
     </ScrollStage>
@@ -334,14 +472,14 @@ function ScoreBar({ p, score, index, count }: { p: MotionValue<number>; score: S
   return (
     <li>
       <div className="flex items-baseline justify-between" style={{ color: G.mist }}>
-        <span className="text-lg font-bold" style={{ fontFamily: SERIF }}>
+        <span className="text-xl font-bold" style={{ fontFamily: SERIF }}>
           {score.label}
         </span>
         <span className="text-sm tabular-nums" style={{ color: G.oilLight }}>
           {score.value} / 5
         </span>
       </div>
-      <div className="mt-2 h-3 overflow-hidden rounded-full" style={{ background: G.line }}>
+      <div className="mt-2 h-2 overflow-hidden rounded-full" style={{ background: G.line }}>
         <motion.div className="h-full rounded-full" style={{ scaleX: fill, originX: 0, background: G.oil }} />
       </div>
       {score.note && (
