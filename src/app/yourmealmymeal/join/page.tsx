@@ -9,6 +9,29 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://joowonkoh.com/yourmealmymeal/join" },
   // 초대 링크마다 코드만 다른 같은 페이지다. 검색에 걸릴 이유가 없다.
   robots: { index: false, follow: false },
+  // 카톡·문자로 가장 많이 퍼지는 주소라 미리보기가 곧 첫인상이다. 사이트 공통(Joowon Koh 로고)을 물려받지 않고 앱의 얼굴로 바꾼다.
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: "네밥내밥",
+    title: "밥상에 초대받았어요 🍚",
+    description: "네밥내밥 모임 초대 — 눌러서 초대코드를 확인하고 앱에서 바로 참여하세요.",
+    url: "https://joowonkoh.com/yourmealmymeal/join",
+    images: [
+      {
+        url: "https://joowonkoh.com/yourmealmymeal/og-join.jpg",
+        width: 1200,
+        height: 630,
+        alt: "민트 식판에 아침·점심·저녁이 차려져 있고 빈 칸 하나가 '내 자리'로 비어 있는 네밥내밥 초대 이미지",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "밥상에 초대받았어요 🍚",
+    description: "네밥내밥 모임 초대 — 눌러서 초대코드를 확인하고 앱에서 바로 참여하세요.",
+    images: ["https://joowonkoh.com/yourmealmymeal/og-join.jpg"],
+  },
 };
 
 /**

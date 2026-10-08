@@ -17,6 +17,28 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://joowonkoh.com/yourmealmymeal",
   },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: "네밥내밥",
+    title: "네밥내밥 — 밥 먹었냐고 묻는 대신",
+    description: "아침·점심·저녁을 식판 한 칸씩 사진으로 채우고, 가족이나 친구와 서로 챙기는 앱.",
+    url: "https://joowonkoh.com/yourmealmymeal",
+    images: [
+      {
+        url: "https://joowonkoh.com/yourmealmymeal/og-main.jpg",
+        width: 1200,
+        height: 630,
+        alt: "민트 식판에 아침·점심·저녁·간식이 차려진 네밥내밥 소개 이미지",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "네밥내밥 — 밥 먹었냐고 묻는 대신",
+    description: "아침·점심·저녁을 식판 한 칸씩 사진으로 채우고, 가족이나 친구와 서로 챙기는 앱.",
+    images: ["https://joowonkoh.com/yourmealmymeal/og-main.jpg"],
+  },
 };
 
 const CONTACT = "contact@joowonkoh.com";
