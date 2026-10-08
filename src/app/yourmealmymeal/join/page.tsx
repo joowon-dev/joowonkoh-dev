@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import Wallpaper from "../Wallpaper";
 import InviteCode from "./InviteCode";
 
 export const metadata: Metadata = {
@@ -18,17 +20,8 @@ export const metadata: Metadata = {
  */
 export default function YourMealMyMealJoinPage() {
   return (
-    <div className="animate-fade-in-up">
-      <span className="mb-4 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-accent">
-        네밥내밥 · 초대
-      </span>
-      <h1 className="font-display text-3xl font-bold leading-snug tracking-tight md:text-4xl">
-        밥상에 초대받았어요
-      </h1>
-      <p className="mt-3 leading-[1.85] text-text-secondary">
-        네밥내밥은 아침·점심·저녁을 식판 한 칸씩 사진으로 채우고, 2~6명이 서로 챙기는 앱이에요.
-      </p>
+    <Wallpaper>
       <InviteCode />
-    </div>
+    </Wallpaper>
   );
 }
