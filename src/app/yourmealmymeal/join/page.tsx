@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import Wallpaper from "../Wallpaper";
 import InviteCode from "./InviteCode";
 
 export const metadata: Metadata = {
@@ -43,8 +42,6 @@ export const metadata: Metadata = {
  */
 export default function YourMealMyMealJoinPage() {
   return (
-    <Wallpaper>
-      <InviteCode />
-    </Wallpaper>
+    <InviteCode />
   );
 }

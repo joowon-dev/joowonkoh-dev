@@ -91,21 +91,16 @@ function Spot({ s, progress }: { s: (typeof SCATTER)[number]; progress: ReturnTy
 }
 
 /**
- * 크림 바탕에 수저를 흩뿌린 벽지. 앱의 배경과 같다.
+ * 크림 바탕에 수저를 흩뿌린 벽지. 앱의 배경과 같고, 네밥내밥 페이지 전체를 덮는다.
  * 스크롤하면 도형마다 다른 속도로 흘러 깊이가 생긴다. 움직임 줄이기를 켠 사람에게는 멈춰 있다.
  */
-export default function Wallpaper({ children, className = "" }: { children: ReactNode; className?: string }) {
+export default function Wallpaper({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const still = useReducedMotion();
 
   return (
-    <div
-      ref={ref}
-      // 휴대폰에서는 화면 끝까지 깔고 위아래 테두리만, 넓은 화면에서는 둥근 상 하나로 놓는다.
-      className={`relative -mx-6 overflow-hidden border-y-[3px] px-6 py-10 sm:mx-0 sm:rounded-[32px] sm:border-[3px] sm:px-8 md:px-10 ${className}`}
-      style={{ background: C.bg, color: C.ink, borderColor: C.ink }}
-    >
+    <div ref={ref} className="relative min-h-dvh overflow-hidden" style={{ background: C.bg, color: C.ink }}>
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         {SCATTER.map((s, i) =>
           still ? (

@@ -8,7 +8,6 @@ import Hero from "./Hero";
 import { Reveal } from "./motion";
 import { BODY, C, DISPLAY, STICKER, YOLK_SHADOW } from "./palette";
 import Table from "./Table";
-import Wallpaper from "./Wallpaper";
 
 export const metadata: Metadata = {
   title: "네밥내밥",
@@ -54,7 +53,7 @@ function Heading({ children }: { children: React.ReactNode }) {
 
 export default function YourMealMyMealPage() {
   return (
-    <Wallpaper>
+    <>
       <Hero
         icon={
           <Image
@@ -153,6 +152,6 @@ export default function YourMealMyMealPage() {
           </div>
         </Reveal>
       </section>
-    </Wallpaper>
+    </>
   );
 }
