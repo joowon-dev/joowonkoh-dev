@@ -13,13 +13,14 @@ import Ticker from "./Ticker";
 export const metadata: Metadata = {
   title: "이게내연봉",
   description:
-    "연봉을 넣으면 지금 이 순간 쌓이는 내 돈이 1초 단위로 보이는 iOS 앱. 홈 위젯·잠금화면·StandBy에서도 확인할 수 있고, 궁금한 사람의 연봉을 넣어 나란히 달리는 비교 레이스가 있습니다. 이게내연봉 소개 및 지원 페이지입니다.",
+    "연봉을 넣으면 지금 이 순간 쌓이는 내 돈이 1초 단위로 보이는 iPhone·Android 앱. 홈 위젯·잠금화면·StandBy에서도 확인할 수 있고, 궁금한 사람의 연봉을 넣어 나란히 달리는 비교 레이스가 있습니다. 이게내연봉 소개 및 지원 페이지입니다.",
   alternates: {
     canonical: "https://joowonkoh.com/moneytick",
   },
 };
 
 const APP_STORE_URL = "https://apps.apple.com/kr/app/id6795989020";
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=dev.joowon.moneytick";
 
 /** 앱과 같은 글꼴 — iOS 에서는 SF Pro / Apple SD Gothic Neo 로 떨어진다. */
 const APP_FONT =
@@ -37,7 +38,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 export default function MoneyTickPage() {
   return (
     <div style={{ fontFamily: APP_FONT }}>
-      <Hero appStoreUrl={APP_STORE_URL}>
+      <Hero appStoreUrl={APP_STORE_URL} playStoreUrl={PLAY_STORE_URL}>
         <Image
           src="/moneytick-icon.png"
           alt="이게내연봉 앱 아이콘"
@@ -103,6 +104,14 @@ export default function MoneyTickPage() {
               className="text-[15px] font-semibold tracking-[-0.24px] text-[#248A3D] spring-transition hover:opacity-70"
             >
               App Store →
+            </a>
+            <a
+              href={PLAY_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[15px] font-semibold tracking-[-0.24px] text-[#248A3D] spring-transition hover:opacity-70"
+            >
+              Google Play →
             </a>
             <a
               href="mailto:contact@joowonkoh.com"

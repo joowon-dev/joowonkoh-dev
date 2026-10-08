@@ -19,9 +19,11 @@ const RISE = {
 
 export default function Hero({
   appStoreUrl,
+  playStoreUrl,
   children,
 }: {
   appStoreUrl: string;
+  playStoreUrl: string;
   /** 앱 아이콘 — next/image 는 서버에서 넘겨받는다. */
   children: ReactNode;
 }) {
@@ -36,7 +38,7 @@ export default function Hero({
         transition={{ duration: 0.6, ease: EASE }}
         className="mb-4 inline-block rounded-full bg-[rgba(52,199,89,0.12)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#248A3D]"
       >
-        iOS App
+        iOS · Android
       </motion.span>
 
       <motion.div
@@ -73,8 +75,19 @@ export default function Hero({
         >
           App Store에서 받기
         </motion.a>
+        <motion.a
+          href={playStoreUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.035 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 420, damping: 24 }}
+          className="rounded-full border border-[#34C759] px-6 py-3 text-[17px] font-semibold tracking-[-0.408px] text-[#248A3D]"
+        >
+          Google Play에서 받기
+        </motion.a>
         <span className="text-[13px] leading-[18px] text-[rgba(60,60,67,0.6)]">
-          iPhone · iOS 17 이상 · 무료
+          iOS 17 · Android 7.0 이상 · 무료
         </span>
       </motion.div>
     </motion.div>
