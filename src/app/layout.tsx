@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import HideOnAdmin from "@/components/HideOnAdmin";
+import HideOnAdmin, { SiteMain } from "@/components/HideOnAdmin";
 import ScrollToTop from "@/components/ScrollToTop";
 import Script from "next/script";
 import { ADSENSE_CLIENT } from "@/lib/adsense";
@@ -74,16 +74,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <HideOnAdmin>
           <Header />
         </HideOnAdmin>
-        <main className="mx-auto max-w-3xl px-6 py-16">{children}</main>
+        <SiteMain>{children}</SiteMain>
         <HideOnAdmin>
           <Footer />
         </HideOnAdmin>
-        <Script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
+        {/* 자체 셸 경로(어드민·네밥내밥)에는 사이트 광고를 싣지 않는다. */}
+        <HideOnAdmin>
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        </HideOnAdmin>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-924W0S77PX"
           strategy="afterInteractive"

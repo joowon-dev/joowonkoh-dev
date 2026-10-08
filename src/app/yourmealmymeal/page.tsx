@@ -8,7 +8,6 @@ import Hero from "./Hero";
 import { Reveal } from "./motion";
 import { BODY, C, DISPLAY, STICKER, YOLK_SHADOW } from "./palette";
 import Table from "./Table";
-import Wallpaper from "./Wallpaper";
 
 export const metadata: Metadata = {
   title: "네밥내밥",
@@ -16,6 +15,28 @@ export const metadata: Metadata = {
     "아침·점심·저녁을 식판 한 칸씩 사진으로 채우고, 가족이나 친구와 서로 챙기는 앱. iOS·안드로이드 앱 네밥내밥 소개 및 지원 페이지입니다.",
   alternates: {
     canonical: "https://joowonkoh.com/yourmealmymeal",
+  },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: "네밥내밥",
+    title: "네밥내밥 — 밥 먹었냐고 묻는 대신",
+    description: "아침·점심·저녁을 식판 한 칸씩 사진으로 채우고, 가족이나 친구와 서로 챙기는 앱.",
+    url: "https://joowonkoh.com/yourmealmymeal",
+    images: [
+      {
+        url: "https://joowonkoh.com/yourmealmymeal/og-main.jpg",
+        width: 1200,
+        height: 630,
+        alt: "민트 식판에 아침·점심·저녁·간식이 차려진 네밥내밥 소개 이미지",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "네밥내밥 — 밥 먹었냐고 묻는 대신",
+    description: "아침·점심·저녁을 식판 한 칸씩 사진으로 채우고, 가족이나 친구와 서로 챙기는 앱.",
+    images: ["https://joowonkoh.com/yourmealmymeal/og-main.jpg"],
   },
 };
 
@@ -32,7 +53,7 @@ function Heading({ children }: { children: React.ReactNode }) {
 
 export default function YourMealMyMealPage() {
   return (
-    <Wallpaper>
+    <>
       <Hero
         icon={
           <Image
@@ -131,6 +152,6 @@ export default function YourMealMyMealPage() {
           </div>
         </Reveal>
       </section>
-    </Wallpaper>
+    </>
   );
 }

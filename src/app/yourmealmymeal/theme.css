@@ -1,0 +1,32 @@
+/*
+ * 네밥내밥 셸 안에서는 사이트 공통 색·글꼴을 앱 것으로 갈아 끼운다.
+ * 개인정보처리방침·계정 삭제처럼 사이트 유틸리티로 쓴 글도 앱 페이지처럼 보이게 하려는 것이다.
+ * 사이트 테마는 @theme inline 이라 변수만 바꿔서는 안 바뀐다 — 그래서 셸 아래 클래스를 직접 덮는다.
+ */
+.nemeal {
+  font-family: var(--nm-body);
+}
+.nemeal .font-display,
+.nemeal h1,
+.nemeal h2,
+.nemeal h3 {
+  font-family: var(--nm-display);
+  font-weight: 400;
+}
+.nemeal .text-text-primary { color: #3b2416; }
+.nemeal .text-text-secondary { color: #6b4a30; }
+.nemeal .text-text-muted { color: #816a4e; }
+.nemeal .text-accent { color: #e8452f; }
+.nemeal .bg-accent-soft {
+  background: #fffdf7;
+  box-shadow: inset 0 0 0 2px #3b2416;
+}
+.nemeal .bg-accent { background: #ffc531; color: #3b2416; }
+.nemeal .bg-card-bg { background: #fffdf7; }
+.nemeal .border-border { border-color: #3b2416; }
+.nemeal .hover\:text-accent:hover { color: #e8452f; }
+
+/* 사이트의 은은한 노이즈 막도 네밥내밥에서는 걷는다. */
+body:has(.nemeal)::after {
+  display: none;
+}
