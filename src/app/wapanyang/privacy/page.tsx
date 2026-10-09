@@ -132,8 +132,8 @@ export default function WapanyangPrivacyPage() {
               기기의 이름이나 주소는 저장하지 않습니다.
             </li>
             <li>
-              <strong className={STRONG}>앱 추적(iOS)</strong> — 맞춤형 광고를 위한 허용 여부를 첫
-              진단을 마친 뒤 한 번 묻습니다. 허용하지 않아도 모든 기능을 그대로 쓸 수
+              <strong className={STRONG}>앱 추적(iOS)</strong> — 맞춤형 광고를 위한 허용 여부를 앱을
+              처음 켤 때 한 번 묻습니다. 답하기 전에는 광고를 불러오지 않습니다. 허용하지 않아도 모든 기능을 그대로 쓸 수
               있습니다.
             </li>
           </ul>
