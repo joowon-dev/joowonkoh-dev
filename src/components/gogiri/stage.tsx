@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  motion,
   useMotionValue,
   useReducedMotion,
   useScroll,
@@ -8,20 +9,81 @@ import {
   useTransform,
   type MotionValue,
 } from "motion/react";
-import { useRef, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { G, IMG } from "./palette";
+
+/**
+ * 장면과 장면이 겹치는 길이(화면 높이의 몇 배).
+ *
+ * 앞 장면은 끝난 모습 그대로 이만큼 더 붙어 있고, 그동안 다음 장면이 그 위에서
+ * 서서히 나타난다. 장면마다 끊겨 넘어가지 않고 한 롤의 필름처럼 이어지게 하려고.
+ */
+export const SEAM = 0.8;
+
+/**
+ * 다음 장면을 앞 장면 위로 겹쳐 올린다.
+ *
+ * 화면 한 장 + SEAM 만큼 위로 당겨 두면, 이 장면의 머리가 화면 위에 닿는 순간
+ * 앞 장면은 아직 붙어 있다. 그때부터 SEAM 만큼 내리는 동안 0 → 1 로 짙어진다.
+ * 머리가 아래에서 올라오는 동안에는 보이지 않으니 눌리지도 않게 한다.
+ */
+export function Seam({ children }: { children: ReactNode }) {
+  const mark = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: mark, offset: ["start start", "end start"] });
+  // 함수로 거친다. ScrollStage 의 progress 와 같은 이유(ViewTimeline 으로 넘어가면 0 에 멈춘다)
+  const opacity = useTransform(() => scrollYProgress.get());
+  const pointerEvents = useTransform(() => (scrollYProgress.get() < 0.6 ? "none" : "auto"));
+  const reduce = useReducedMotion();
+
+  return (
+    <motion.div
+      className="relative"
+      style={{ marginTop: `-${(1 + SEAM) * 100}svh`, opacity: reduce ? 1 : opacity, pointerEvents }}
+    >
+      <div ref={mark} aria-hidden className="pointer-events-none absolute inset-x-0 top-0" style={{ height: `${SEAM * 100}svh` }} />
+      {children}
+    </motion.div>
+  );
+}
+
+/**
+ * 스크롤로 진행되지 않는 장면(메뉴판, 먹기, 정보)을 끝난 모습 그대로 SEAM 만큼 붙잡아 둔다.
+ * 장면이 화면보다 길 수 있어서, 아래 끝이 화면 아래에 닿았을 때 붙도록 top 을 재서 준다.
+ */
+export function Hold({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      el.style.top = `min(0px, calc(100svh - ${el.offsetHeight}px))`;
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div>
+      <div ref={ref} className="sticky top-0">
+        {children}
+      </div>
+      <div aria-hidden style={{ height: `${SEAM * 100}svh` }} />
+    </div>
+  );
+}
 
 /**
  * 스크롤로 진행되는 장면의 틀.
  *
  * 바깥 섹션은 화면 몇 장 높이로 길고, 안쪽 무대는 화면에 붙어 있다.
- * 섹션을 지나가는 동안 progress 가 0 → 1 로 간다. 움직임을 줄이라는
+ * 섹션을 지나가는 동안 progress 가 0 → 1 로 간다. 끝에는 SEAM 만큼 더 붙어 있어
+ * 다음 장면이 겹쳐 올라올 자리를 낸다(그동안 progress 는 1). 움직임을 줄이라는
  * 설정이면 처음부터 1(다 그려진 모습)을 준다.
  */
 export function ScrollStage({
   screens = 2.6,
   children,
-  background = G.ink,
+  background = G.inkDeep,
 }: {
   /** 섹션 길이, 화면 높이의 몇 배인지 */
   screens?: number;
@@ -33,12 +95,13 @@ export function ScrollStage({
   // 함수로 한 번 거쳐서 JS 로만 계산하게 한다. 그대로 넘기면 motion 이 opacity 를
   // 브라우저 ViewTimeline 으로 넘기는데, sticky 섹션에서 구간을 잘못 잡아
   // 0 에 멈춘다(그릇 장면의 들기름·김가루가 끝까지 안 나왔다).
-  const progress = useTransform(() => scrollYProgress.get());
+  // 붙어 있는 구간 (screens - 1 + SEAM) 가운데 앞의 (screens - 1) 동안 0 → 1, 나머지는 1
+  const progress = useTransform(() => Math.min(1, (scrollYProgress.get() * (screens - 1 + SEAM)) / (screens - 1)));
   const done = useMotionValue(1);
   const reduce = useReducedMotion();
 
   return (
-    <section ref={ref} className="relative" style={{ height: `${screens * 100}svh`, background }}>
+    <section ref={ref} className="relative" style={{ height: `${(screens + SEAM) * 100}svh`, background }}>
       <div className="sticky top-0 h-svh overflow-hidden">
         {children(reduce ? done : progress)}
         <Grain />

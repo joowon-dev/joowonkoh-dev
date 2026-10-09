@@ -325,33 +325,35 @@ export function LiftScene({ children }: { children?: ReactNode }) {
 
 function Lift({ p, caption }: { p: MotionValue<number>; caption?: ReactNode }) {
   const { rotateX, rotateY, handlers } = useTilt(9);
-  const photoY = useTransform(p, [0, 1], ["8%", "-8%"]);
+  const photoY = useTransform(p, [0, 1], ["4%", "-4%"]);
   const line1X = useTransform(p, [0, 1], ["-12%", "6%"]);
   const line2X = useTransform(p, [0, 1], ["12%", "-6%"]);
   const textOpacity = useTransform(p, [0, 0.15, 0.85, 1], [0, 1, 1, 0.4]);
 
+  // 큰 글씨 두 줄, 사진, 후기를 한 줄로 세운다. 글씨는 사진 위아래 끝에 살짝 걸치되
+  // 후기 상자와는 겹치지 않게(예전엔 "나온 그대로"가 후기 밑에 깔려 안 보였다).
   return (
-    <div className="relative flex h-full items-center justify-center" style={{ perspective: 1200 }} {...handlers}>
+    <div className="relative flex h-full flex-col items-center justify-center px-4 pt-16 pb-6" style={{ perspective: 1200 }} {...handlers}>
       <motion.p
-        className="pointer-events-none absolute left-0 right-0 top-[14%] whitespace-nowrap text-center text-[clamp(3rem,13vw,10rem)] font-bold leading-none"
+        className="pointer-events-none relative -mb-[0.32em] whitespace-nowrap text-center text-[clamp(2.6rem,11vw,7.5rem)] font-bold leading-none"
         style={{ fontFamily: SERIF, color: "transparent", WebkitTextStroke: `1px ${G.mistDim}`, x: line1X, opacity: textOpacity }}
         aria-hidden
       >
         비비지 말고
       </motion.p>
       <motion.div
-        className="relative aspect-[3/4] w-[min(72vw,440px,62svh)] overflow-hidden rounded-[28px] shadow-[0_40px_120px_rgba(0,0,0,0.6)]"
+        className="relative aspect-[3/4] w-[min(66vw,400px,40svh)] shrink-0 overflow-hidden rounded-[28px] shadow-[0_40px_120px_rgba(0,0,0,0.6)]"
         style={{ rotateX, rotateY, y: photoY }}
       >
         <Photo name="lift" alt="젓가락으로 김가루 묻은 메밀면을 높이 들어 올린 모습" />
       </motion.div>
       <motion.p
-        className="pointer-events-none absolute bottom-[14%] left-0 right-0 whitespace-nowrap text-center text-[clamp(3rem,13vw,10rem)] font-bold leading-none"
-        style={{ fontFamily: SERIF, color: G.oilLight, x: line2X, opacity: textOpacity }}
+        className="pointer-events-none relative -mt-[0.32em] whitespace-nowrap text-center text-[clamp(2.6rem,11vw,7.5rem)] font-bold leading-none"
+        style={{ fontFamily: SERIF, color: G.oilLight, x: line2X, opacity: textOpacity, textShadow: "0 4px 30px rgba(0,0,0,0.6)" }}
       >
         나온 그대로
       </motion.p>
-      <Caption className="absolute bottom-6 left-4 right-4 sm:left-auto sm:right-8">{caption}</Caption>
+      <Caption className="relative mt-6">{caption}</Caption>
     </div>
   );
 }
