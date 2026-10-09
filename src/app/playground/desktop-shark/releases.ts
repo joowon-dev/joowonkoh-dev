@@ -37,14 +37,23 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
-    version: "1.0.2",
-    date: "2026-10-03",
+    version: "1.0.3",
+    date: "2026-10-09",
     latest: true,
     notes: [
-      "윈도우에서 상어를 켜 두면 클릭과 타자가 먹통이 되던 문제를 한 번 더 고쳤습니다. 1.0.1 의 수정만으로는 모자란 PC 가 있었습니다.",
+      "윈도우에서 패널(⌥⇧R)에 마우스를 올리면 「Parameter count mismatch」 오류 창이 뜨고 도감·랭킹이 눌리지 않던 것을 고쳤습니다.",
     ],
     mac: { href: "/downloads/DesktopShark-mac.dmg", size: "575KB" },
     windows: { href: "/downloads/DesktopShark-win-Setup.exe", size: "2.3MB" },
+  },
+  {
+    version: "1.0.2",
+    date: "2026-10-03",
+    notes: [
+      "윈도우에서 상어를 켜 두면 클릭과 타자가 먹통이 되던 문제를 한 번 더 고쳤습니다. 1.0.1 의 수정만으로는 모자란 PC 가 있었습니다.",
+    ],
+    mac: { href: "/downloads/desktop-shark/v1.0.2/DesktopShark-mac.dmg", size: "575KB" },
+    windows: { href: "/downloads/desktop-shark/v1.0.2/DesktopShark-win-Setup.exe", size: "2.3MB" },
   },
   {
     version: "1.0.1",
