@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import Faq from "./Faq";
@@ -11,7 +12,7 @@ import { C, CUTE, STICKER } from "./palette";
 export const metadata: Metadata = {
   title: "와파냥",
   description:
-    "지금 연결된 와이파이의 속도와 보안을 한 번에 진단하는 앱. 암호 방식, HTTPS 가로채기, DNS 변조, 로그인 페이지, 기기 수와 다운로드·업로드·핑을 재고, 빠를수록 고양이가 꼬리를 세웁니다. 와파냥 소개 및 지원 페이지입니다.",
+    "지금 연결된 와이파이의 속도와 보안을 한 번에 진단하는 앱. 암호 방식, HTTPS 가로채기, DNS 변조, 로그인 페이지, 기기 수와 다운로드·업로드·핑을 재고, 고양이 표정으로 보안 등급을 알려 줍니다. 와파냥 소개 및 지원 페이지입니다.",
   alternates: {
     canonical: "https://joowonkoh.com/wapanyang",
   },
@@ -19,10 +20,17 @@ export const metadata: Metadata = {
 
 const CONTACT = "contact@joowonkoh.com";
 
+const SHOTS = [
+  { src: "/wapanyang/result.jpg", alt: "웃는 고양이와 보안 안전 등급, 보안 항목 다섯 개가 보이는 진단 결과 화면", caption: "안전해요" },
+  { src: "/wapanyang/cafe.jpg", alt: "물음표를 띄운 고양이와 암호 없는 와이파이 경고, 할 일이 보이는 화면", caption: "공용 와이파이 주의" },
+  { src: "/wapanyang/measuring.jpg", alt: "실시간 다운로드 속도와 진행 단계가 보이는 측정 화면", caption: "속도 재는 중" },
+  { src: "/wapanyang/speed.jpg", alt: "다운로드·업로드·핑·지터와 용도별 판정이 보이는 화면", caption: "이걸로 뭘 할 수 있나" },
+];
+
 const STEPS = [
   { big: "1", small: "확인하고 싶은 와이파이에 붙어요" },
   { big: "2", small: "진단 버튼을 한 번 눌러요" },
-  { big: "3", small: "꼬리 높이와 표정을 봐요" },
+  { big: "3", small: "고양이 표정과 결과를 봐요" },
 ];
 
 const GRADES = [
@@ -78,7 +86,7 @@ export default function WapanyangPage() {
             <Reveal key={g.label} delay={i * 0.06}>
               <div className="h-full rounded-[20px] p-4" style={{ background: C.card, ...STICKER }}>
                 <div className="flex justify-center">
-                  <Mascot spread={0.55} mood={g.mood} width={180} />
+                  <Mascot mood={g.mood} width={170} />
                 </div>
                 <p className="mt-2 text-center text-[22px]" style={{ fontFamily: CUTE, color: g.color }}>
                   {g.label}
@@ -87,6 +95,26 @@ export default function WapanyangPage() {
                   {g.line}
                 </p>
               </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-20">
+        <Reveal>
+          <Eyebrow>화면</Eyebrow>
+        </Reveal>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">
+          {SHOTS.map((s, i) => (
+            <Reveal key={s.src} delay={i * 0.06}>
+              <figure>
+                <div className="overflow-hidden rounded-[22px] p-1" style={{ background: C.card, ...STICKER }}>
+                  <Image src={s.src} alt={s.alt} width={414} height={900} className="h-auto w-full rounded-[18px]" />
+                </div>
+                <figcaption className="mt-3 text-center text-[17px] leading-tight" style={{ fontFamily: CUTE }}>
+                  {s.caption}
+                </figcaption>
+              </figure>
             </Reveal>
           ))}
         </div>

@@ -10,8 +10,8 @@ import { C, CUTE, STICKER } from "./palette";
 /**
  * 첫 화면 — 설명보다 고양이를 먼저 만져 보게 한다.
  *
- * 왼쪽은 이름과 한 줄, 오른쪽은 속도·보안을 바꿔 볼 수 있는 고양이. 꼬리 높이는 앱과 같은 로그 눈금
- * (1Mbps 0%, 10Mbps 33%, 100Mbps 67%, 1000Mbps 100%)이다.
+ * 왼쪽은 이름과 한 줄, 오른쪽은 속도·보안을 바꿔 볼 수 있는 고양이. 표정은 보안 등급, 속도는 앱과 같은
+ * 용도 판정 한 줄(src/core/mascot.ts 의 headline, 기준은 usageVerdict.ts)로 보여 준다.
  */
 
 const RISE = {
@@ -19,15 +19,19 @@ const RISE = {
   show: { opacity: 1, y: 0, filter: "blur(0px)" },
 };
 
-const SPEEDS = [2, 20, 100, 500];
+const SPEEDS = [2, 4, 20, 300];
 const GRADES: { mood: Mood; label: string; color: string; soft: string }[] = [
   { mood: "happy", label: "안전", color: C.good, soft: C.goodSoft },
   { mood: "puzzled", label: "주의", color: C.fair, soft: C.fairSoft },
   { mood: "shocked", label: "위험", color: C.poor, soft: C.poorSoft },
 ];
 
-function spreadFor(mbps: number): number {
-  return Math.max(0.08, Math.min(1, Math.log10(Math.max(mbps, 1)) / 3));
+/** 앱의 headline 과 같다: 넷플릭스 4K 25Mbps, 유튜브 HD 5Mbps, 웹서핑 3Mbps 이상. */
+function headline(mbps: number): string {
+  if (mbps >= 25) return "넷플릭스 4K 거뜬해요";
+  if (mbps >= 5) return "유튜브 HD는 괜찮아요";
+  if (mbps >= 3) return "웹서핑 정도는 돼요";
+  return "많이 느려요";
 }
 
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -52,14 +56,13 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 function CatDemo() {
   const [mbps, setMbps] = useState(100);
   const [grade, setGrade] = useState(0);
-  const spread = spreadFor(mbps);
   const g = GRADES[grade];
 
   return (
     <div className="w-full max-w-[340px] rounded-[24px] p-5" style={{ background: C.card, ...STICKER }}>
       <div className="flex items-center justify-between">
         <span className="text-[15px]" style={{ fontFamily: CUTE }}>
-          꼬리 {Math.round(spread * 100)}% 세웠어요
+          {mbps}Mbps · {headline(mbps)}
         </span>
         <span
           className="rounded-full px-2.5 py-0.5 text-[14px]"
@@ -69,12 +72,7 @@ function CatDemo() {
         </span>
       </div>
       <div className="mt-2 flex justify-center">
-        <Mascot
-          spread={spread}
-          mood={g.mood}
-          width={260}
-          tailStyle={{ transition: "transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)" }}
-        />
+        <Mascot mood={g.mood} width={240} />
       </div>
       <p className="mt-3 text-[13px]" style={{ color: C.inkSoft }}>
         다운로드 속도
@@ -142,9 +140,9 @@ export default function Hero() {
           className="mt-5 max-w-[40ch] text-[15px] leading-[1.8] break-keep"
           style={{ color: C.inkSoft }}
         >
-          지금 붙은 와이파이를 한 번 눌러 속도와 보안을 함께 진단합니다. 빠를수록
-          고양이가 꼬리를 높이 세우고, 위험하면 깜짝 놀란 얼굴로 바로 할 일을
-          알려 드려요. 카페 공용 와이파이도, 집 와이파이도요.
+          지금 붙은 와이파이를 한 번 눌러 속도와 보안을 함께 진단합니다. 안전하면
+          고양이가 웃고, 위험하면 깜짝 놀란 얼굴로 바로 할 일을 알려 드려요. 카페
+          공용 와이파이도, 집 와이파이도요.
         </motion.p>
 
         <motion.div
