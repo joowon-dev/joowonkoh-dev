@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  // 개인 사이트의 글이 아니라 앱 심사용 문서다. 주소는 스토어에서 걸어 두므로 살려 두되 색인에서는 뺀다.
+  robots: { index: false, follow: true },
   title: "JIGUMIA 이용약관",
   description:
     "모바일 앱 JIGUMIA(지구미아) 서비스의 이용 조건 및 절차, 회사와 회원 간의 권리·의무 및 책임사항에 관한 안내입니다.",

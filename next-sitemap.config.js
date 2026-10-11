@@ -60,6 +60,13 @@ module.exports = {
     "/playground/desktop-fireworks",
     "/playground/desktop-shark",
     "/playground/desktop-chiikawa",
+    // 정체를 숨긴 장난감이라 읽을 글이 없다. 페이지에도 noindex를 걸었다.
+    "/playground/gaegang-gift",
+    // 앱마다 스토어 심사용으로 둔 문서. 주소는 살려 두고 색인에서만 뺀다.
+    // 사이트 자체의 /privacy 는 남긴다 — 한 단계 아래만 걸린다.
+    "/*/privacy",
+    "/*/terms",
+    "/*/delete-account",
   ],
   robotsTxtOptions: {
     policies: [{ userAgent: "*", allow: "/", disallow: ["/admin"] }],

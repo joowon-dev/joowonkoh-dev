@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  // 개인 사이트의 글이 아니라 앱 심사용 문서다. 주소는 스토어에서 걸어 두므로 살려 두되 색인에서는 뺀다.
+  robots: { index: false, follow: true },
   title: "파스타 한 줌 개인정보처리방침",
   description:
     "파스타 계량·타이머 앱 파스타 한 줌이 기기에 저장하는 정보와 광고(Google AdMob)를 위해 처리되는 정보, 이용자의 선택권에 대한 안내입니다.",

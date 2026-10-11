@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import HideOnAdmin, { SiteMain } from "@/components/HideOnAdmin";
 import ScrollToTop from "@/components/ScrollToTop";
 import Script from "next/script";
-import { ADSENSE_CLIENT } from "@/lib/adsense";
+import AdSenseLoader from "@/components/AdSenseLoader";
 
 export const metadata: Metadata = {
   title: {
@@ -78,15 +78,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <HideOnAdmin>
           <Footer />
         </HideOnAdmin>
-        {/* 자체 셸 경로(어드민·네밥내밥)에는 사이트 광고를 싣지 않는다. */}
-        <HideOnAdmin>
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        </HideOnAdmin>
+        {/* 광고는 글이 있는 경로에만 싣는다. 목록은 AdSenseLoader에. */}
+        <AdSenseLoader />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-924W0S77PX"
           strategy="afterInteractive"

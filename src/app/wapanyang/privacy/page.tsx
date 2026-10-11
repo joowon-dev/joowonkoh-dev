@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  // 개인 사이트의 글이 아니라 앱 심사용 문서다. 주소는 스토어에서 걸어 두므로 살려 두되 색인에서는 뺀다.
+  robots: { index: false, follow: true },
   title: "와파냥 개인정보처리방침",
   description:
     "와이파이 진단 앱 와파냥이 기기에 저장하는 정보, 진단을 위해 접속하는 서버, 광고(Google AdMob)와 사용 통계(Google Analytics for Firebase)를 위해 처리되는 정보와 이용자의 선택권에 대한 안내입니다.",

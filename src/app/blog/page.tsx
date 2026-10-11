@@ -1,7 +1,7 @@
 import Link from "next/link";
 import PostItem from "@/components/PostItem";
 import {
-  getAllPostsBySection,
+  getListedPostsBySection,
   SECTION_LABELS,
   type Section,
 } from "@/lib/mdx";
@@ -15,7 +15,7 @@ export default function BlogHomePage() {
   const sections: Section[] = ["dev", "life"];
   const postsBySection = sections.map((section) => ({
     section,
-    posts: getAllPostsBySection(section),
+    posts: getListedPostsBySection(section),
   }));
 
   return (
@@ -48,7 +48,7 @@ export default function BlogHomePage() {
               {HERO_COPY[section]}
             </p>
             <span className="mt-4 inline-block text-xs font-medium text-text-muted">
-              {getAllPostsBySection(section).length}개 글 →
+              {getListedPostsBySection(section).length}개 글 →
             </span>
           </Link>
         ))}
