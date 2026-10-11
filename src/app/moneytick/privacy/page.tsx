@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  // 개인 사이트의 글이 아니라 앱 심사용 문서다. 주소는 스토어에서 걸어 두므로 살려 두되 색인에서는 뺀다.
+  robots: { index: false, follow: true },
   title: "이게내연봉 개인정보처리방침",
   description:
     "iOS · Android 앱 이게내연봉이 처리하는 정보, 광고와 이용 통계에 쓰이는 제3자 서비스, 이용자의 선택권에 대한 안내입니다.",

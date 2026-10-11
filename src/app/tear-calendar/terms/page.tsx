@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  // 개인 사이트의 글이 아니라 앱 심사용 문서다. 주소는 스토어에서 걸어 두므로 살려 두되 색인에서는 뺀다.
+  robots: { index: false, follow: true },
   title: "뜯어쓰는 달력 이용약관",
   description:
     "커플 일력 앱 뜯어쓰는 달력의 이용 조건, 이용자의 콘텐츠와 의무, 책임의 범위에 관한 안내입니다.",

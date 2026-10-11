@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
+  // 개인 사이트의 글이 아니라 앱 심사용 문서다. 주소는 스토어에서 걸어 두므로 살려 두되 색인에서는 뺀다.
+  robots: { index: false, follow: true },
   title: "네밥내밥 계정 삭제",
   description:
     "네밥내밥 계정과 올린 사진·끼니 기록을 지우는 방법입니다. 앱 안에서 바로 지울 수 있고, 앱이 없으면 메일로 요청할 수 있습니다.",

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  // 개인 사이트의 글이 아니라 앱 심사용 문서다. 주소는 스토어에서 걸어 두므로 살려 두되 색인에서는 뺀다.
+  robots: { index: false, follow: true },
   title: "JIGUMIA 계정 및 데이터 삭제",
   description:
     "모바일 앱 JIGUMIA(지구미아)에서 계정과 관련 데이터를 삭제하는 방법, 삭제되는 데이터 항목 및 보관 기간에 대한 안내입니다.",

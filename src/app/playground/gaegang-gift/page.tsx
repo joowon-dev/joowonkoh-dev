@@ -19,6 +19,8 @@ const URL = "https://joowonkoh.com/playground/gaegang-gift";
 const OG_IMAGE = "/og/gaegang-gift.jpg";
 
 export const metadata: Metadata = {
+  // 열기 전까지 정체를 숨기는 장난감이라 읽을 글이 없다. 공유 링크로만 들어오면 된다.
+  robots: { index: false, follow: true },
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: URL },
