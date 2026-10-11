@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "와파냥 개인정보처리방침",
   description:
-    "와이파이 진단 앱 와파냥이 기기에 저장하는 정보, 진단을 위해 접속하는 서버, 광고(Google AdMob)를 위해 처리되는 정보와 이용자의 선택권에 대한 안내입니다.",
+    "와이파이 진단 앱 와파냥이 기기에 저장하는 정보, 진단을 위해 접속하는 서버, 광고(Google AdMob)와 사용 통계(Google Analytics for Firebase)를 위해 처리되는 정보와 이용자의 선택권에 대한 안내입니다.",
   alternates: {
     canonical: "https://joowonkoh.com/wapanyang/privacy",
   },
 };
 
-const UPDATED_AT = "2026년 10월 9일";
+const UPDATED_AT = "2026년 10월 11일";
 const CONTACT = "contact@joowonkoh.com";
 
 const H2 = "mb-3 font-display text-xl font-semibold text-text-primary";
@@ -53,6 +53,11 @@ export default function WapanyangPrivacyPage() {
               5번).
             </li>
             <li>
+              앱을 더 낫게 만들려고 <strong className={STRONG}>Google Analytics for Firebase</strong>로
+              어떤 화면을 열고 진단 결과가 어떤 등급이었는지 같은 사용 통계를 모읍니다.{" "}
+              <strong className={STRONG}>와이파이 이름, 공인 IP 주소, 통신사 이름은 보내지 않습니다</strong>(아래 6번).
+            </li>
+            <li>
               와이파이 이름을 읽으려고 위치 권한을 요청하지만,{" "}
               <strong className={STRONG}>위치 좌표는 읽거나 저장하거나 보내지 않습니다.</strong>
             </li>
@@ -83,8 +88,7 @@ export default function WapanyangPrivacyPage() {
           <p className="mt-3">
             기록은 기록 화면에서 하나씩, 설정 화면에서 한꺼번에 지울 수 있고, 앱을 삭제하면 모두 함께 삭제됩니다.
             기기에 백업이 설정되어 있으면 운영체제의 기본 동작에 따라 iCloud 또는 Google
-            백업에 앱 데이터가 포함될 수 있습니다. 결과를 공유 카드로 내보낼 때는 공인 IP
-            주소를 넣지 않으며, 공유는 이용자가 직접 고른 앱으로만 이루어집니다.
+            백업에 앱 데이터가 포함될 수 있습니다.
           </p>
         </section>
 
@@ -112,10 +116,6 @@ export default function WapanyangPrivacyPage() {
               <strong className={STRONG}>ipify</strong>(api6.ipify.org) — IPv6 로 접속되는지 확인
             </li>
           </ul>
-          <p className="mt-3">
-            모바일 데이터와 비교 기능을 쓰면 같은 Cloudflare 서버에 모바일 데이터로 한 번 더
-            접속하며, 이때 요금제에 따라 데이터 요금이 들 수 있습니다.
-          </p>
         </section>
 
         <section>
@@ -183,7 +183,32 @@ export default function WapanyangPrivacyPage() {
         </section>
 
         <section>
-          <h2 className={H2}>6. 접근하지 않는 정보</h2>
+          <h2 className={H2}>6. 사용 통계 (Google Analytics for Firebase)</h2>
+          <p className="mb-3">
+            어떤 기능이 쓰이고 진단이 잘 끝나는지 알기 위해 Google LLC 의 Google Analytics for
+            Firebase 로 다음 사용 통계를 보냅니다.
+          </p>
+          <ul className="ml-5 list-disc space-y-1.5">
+            <li>본 앱을 설치할 때 정해지는 앱 인스턴스 ID(무작위 값)</li>
+            <li>
+              앱 사용 기록 — 연 화면(진단·기록·설정), 진단 시작, 진단 결과의 보안 등급·점수·속도
+              등급·암호 방식 종류, 진단이 멈춘 까닭, 자세히 펼친 항목, 전면 광고 노출
+            </li>
+            <li>기기 종류, 운영체제 버전, 언어, 앱 버전과 IP 주소로 추정한 대략적인 위치(국가·도시 수준)</li>
+          </ul>
+          <p className="mt-3">
+            <strong className={STRONG}>와이파이 이름, 공인 IP 주소, 통신사 이름, 속도 수치는 보내지 않습니다.</strong>{" "}
+            개발자는 Google 로부터 모아진 통계만 보며 이용자 개인을 알아볼 수 있는 정보는 받지
+            않습니다. Google 이 정보를 처리하는 방식은{" "}
+            <a className={LINK} href="https://policies.google.com/privacy?hl=ko" target="_blank" rel="noreferrer">
+              Google 개인정보처리방침
+            </a>
+            에서 확인할 수 있습니다.
+          </p>
+        </section>
+
+        <section>
+          <h2 className={H2}>7. 접근하지 않는 정보</h2>
           <p>
             본 앱은 연락처, 사진, 카메라, 마이크, 정밀 위치 좌표, 전화번호, 결제 정보, 건강
             정보에 접근하지 않습니다. 와이파이 비밀번호를 읽거나 저장하지 않으며, 다른
@@ -192,16 +217,17 @@ export default function WapanyangPrivacyPage() {
         </section>
 
         <section>
-          <h2 className={H2}>7. 정보의 보관 및 파기</h2>
+          <h2 className={H2}>8. 정보의 보관 및 파기</h2>
           <p>
             기기에 저장된 내용은 기록 화면에서 지우거나 앱을 삭제하면 함께 삭제되며,
-            개발자가 보관하는 사본은 없습니다. Google 이 광고를 위해 처리한 정보의 보관
-            기간은 Google 의 정책을 따릅니다.
+            개발자가 보관하는 사본은 없습니다. Google 이 광고와 사용 통계를 위해 처리한 정보의
+            보관 기간은 Google 의 정책을 따르며, 사용 통계의 이벤트 기록은 Google Analytics 에서
+            2개월 뒤 지워지도록 두었습니다.
           </p>
         </section>
 
         <section>
-          <h2 className={H2}>8. 아동의 개인정보</h2>
+          <h2 className={H2}>9. 아동의 개인정보</h2>
           <p>
             본 앱은 만 14세 미만 아동을 주된 대상으로 하지 않으며, 개발자는 아동을
             포함한 어떤 이용자의 개인정보도 직접 수집하지 않습니다.
@@ -209,7 +235,7 @@ export default function WapanyangPrivacyPage() {
         </section>
 
         <section>
-          <h2 className={H2}>9. 방침의 변경</h2>
+          <h2 className={H2}>10. 방침의 변경</h2>
           <p>
             본 방침은 법령이나 서비스 변경 사항을 반영하기 위해 수정될 수 있습니다.
             처리 항목에 변화가 생기는 경우 해당 기능이 포함된 버전이 배포되기 전에 본
