@@ -48,6 +48,18 @@ export function getAllPostsBySection(section: Section): PostMeta[] {
   return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
 }
 
+/**
+ * 목록·홈·이전/다음 글에 보이는 글. noindex 글은 주소로만 열린다.
+ *
+ * 색인에서만 빼고 목록에 남겨 두면 검색으로는 안 와도 사이트를 둘러보는
+ * 사람(애드센스 심사자 포함)은 그대로 읽는다. 뺀 까닭이 «믿을 수 없다»라면
+ * 목록에서도 빠져야 한다. 페이지 생성(generateStaticParams)은 계속
+ * getAllPostsBySection을 써서 예전 링크가 404가 되지 않게 한다.
+ */
+export function getListedPostsBySection(section: Section): PostMeta[] {
+  return getAllPostsBySection(section).filter((p) => !p.noindex);
+}
+
 export function getAllPosts(): PostMeta[] {
   const all = SECTIONS.flatMap((s) => getAllPostsBySection(s));
   return all.sort((a, b) => (a.date > b.date ? -1 : 1));
@@ -97,8 +109,8 @@ export function getRelatedPosts(
   const tags = new Set(post.tags);
   if (tags.size === 0) return [];
 
-  return getAllPostsBySection(post.section)
-    .filter((p) => p.slug !== post.slug && !p.noindex)
+  return getListedPostsBySection(post.section)
+    .filter((p) => p.slug !== post.slug)
     .map((p) => ({ post: p, shared: p.tags.filter((t) => tags.has(t)).length }))
     .filter((entry) => entry.shared > 0)
     // 많이 겹치는 순, 같으면 최신 순. 매번 같은 목록이 나와야 하므로
@@ -109,7 +121,7 @@ export function getRelatedPosts(
 }
 
 export function getAllTagsBySection(section: Section): string[] {
-  const posts = getAllPostsBySection(section);
+  const posts = getListedPostsBySection(section);
   const tagSet = new Set<string>();
   posts.forEach((post) => post.tags.forEach((tag) => tagSet.add(tag)));
   return Array.from(tagSet);
@@ -124,7 +136,7 @@ export function getPopularTagsBySection(
   section: Section,
   minCount = 2,
 ): string[] {
-  const posts = getAllPostsBySection(section);
+  const posts = getListedPostsBySection(section);
   const counts = new Map<string, number>();
   posts.forEach((post) =>
     post.tags.forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1)),

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import SectionList from "@/components/SectionList";
-import { getAllPostsBySection, getPopularTagsBySection } from "@/lib/mdx";
+import { getListedPostsBySection, getPopularTagsBySection } from "@/lib/mdx";
 
 export const metadata: Metadata = {
   title: "Blog · Life",
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 /** 정적으로 그려야 하는 이유와 ?tag=를 서버에서 안 읽는 이유는 dev 쪽에 적어 두었다. */
 export default function LifeSectionPage() {
-  const posts = getAllPostsBySection("life");
+  const posts = getListedPostsBySection("life");
   const tags = getPopularTagsBySection("life");
 
   return <SectionList section="life" posts={posts} tags={tags} />;

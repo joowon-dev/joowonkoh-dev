@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  getAllPostsBySection,
+  getListedPostsBySection,
   getPopularTagsBySection,
   SECTION_LABELS,
 } from "@/lib/mdx";
@@ -21,25 +21,25 @@ export const metadata: Metadata = {
  */
 const TOPICS: { title: string; body: string; href: string }[] = [
   {
+    title: "게임과 시각화를 직접 짜며 배운 것",
+    body: "코인 밀기 추첨기가 공정한지 300판을 돌려 카이제곱으로 재 보고, 포수 시점 공은 구종마다 곡선을 깎는 대신 중력·항력·마그누스를 적분했습니다. 물리 라이브러리를 얹지 않고 왜 그렇게 움직이는지까지 남깁니다.",
+    href: "/blog/dev?tag=게임",
+  },
+  {
+    title: "데스크톱 앱과 브라우저 입력 다루기",
+    body: "일하는 화면 위에 얹히는 야구 게임이 전역 단축키를 시스템에 빼앗긴 일, 두 번째 모니터로 창이 못 넘어가던 좌표계, 자리를 비우면 창을 점령하는 맥 앱. 출시한 앱에서 실제로 막혔던 지점들입니다.",
+    href: "/blog/dev?tag=데스크톱",
+  },
+  {
     title: "AI 코딩 도구를 실무에 붙이기",
-    body: "Claude Code, Agent SDK, MCP 서버, 서브에이전트와 스킬. 튜토리얼을 옮겨 적는 대신 매일 쓰는 흐름에 직접 넣어 보고, 어디서 토큰이 새는지·어느 지점에서 사람이 다시 붙어야 하는지까지 적습니다.",
+    body: "Claude Code의 Plan Mode, Hooks, CLAUDE.md, statusline, /compact와 /clear. 문서를 옮겨 적는 대신 매일 쓰는 흐름에 넣어 보고, 어디서 토큰이 새는지·어느 지점에서 사람이 다시 붙어야 하는지 적습니다.",
     href: "/blog/dev?tag=Claude+Code",
-  },
-  {
-    title: "터미널과 개발 환경 다듬기",
-    body: "tmux와 cmux, zsh에서 fish로 갔다가 돌아온 이야기, mise로 버전 관리, GNU Stow로 dotfiles 옮기기. 설정 파일을 그대로 붙여 두어서 따라 하면 같은 화면이 나옵니다.",
-    href: "/blog/dev?tag=터미널",
-  },
-  {
-    title: "직접 만들고 운영하며 배운 것",
-    body: "이 블로그를 Next.js와 MDX로 짓고 Cloudflare에 올리기까지, 이미지 압축 파이프라인부터 빌드 캐시가 말썽부린 기록까지. 잘된 것보다 막혔던 지점을 더 자세히 남깁니다.",
-    href: "/blog/dev?tag=Next.js",
   },
 ];
 
 export default function Home() {
-  const devPosts = getAllPostsBySection("dev");
-  const lifePosts = getAllPostsBySection("life");
+  const devPosts = getListedPostsBySection("dev");
+  const lifePosts = getListedPostsBySection("life");
   const recentDev = devPosts.slice(0, 5);
   const recentLife = lifePosts.slice(0, 3);
   const devTags = getPopularTagsBySection("dev").slice(0, 12);
@@ -62,8 +62,9 @@ export default function Home() {
           공간입니다.
         </p>
         <p className="mt-3 max-w-[58ch] leading-[1.85] break-keep text-text-secondary">
-          지금까지 {totalPosts}개의 글을 썼습니다. 대부분은 AI 코딩 도구와
-          터미널 워크플로우 이야기이고, 나머지는 직접 가 보고 남긴 맛집
+          지금까지 {totalPosts}개의 글을 썼습니다. 대부분은 직접 만든 게임과
+          데스크톱 앱을 짜면서 부딪힌 문제, 그리고 AI 코딩 도구를 실무에 붙인
+          기록이고, 나머지는 직접 가 보고 남긴 맛집
           기록입니다. 어느 쪽이든 남이 쓴 소개를 옮기지 않고, 제가 켜 보고
           막히고 고친 순서 그대로 적습니다. 검색해서 들어오신 분이 한 줄이라도
           시간을 아끼셨다면 그걸로 충분하다고 생각합니다.

@@ -4,6 +4,7 @@ import SectionPostView from "@/components/SectionPostView";
 import ArticleJsonLd from "@/components/ArticleJsonLd";
 import {
   getAllPostsBySection,
+  getListedPostsBySection,
   getPostBySlugFromSection,
   getRelatedPosts,
 } from "@/lib/mdx";
@@ -60,10 +61,13 @@ export default async function DevPostPage({ params }: Props) {
     notFound();
   }
 
-  const allPosts = getAllPostsBySection("dev");
+  // 목록에서 뺀 글끼리는 잇지 않는다. 뺀 글 자신을 열면 앞뒤 글이 없다.
+  const allPosts = getListedPostsBySection("dev");
   const currentIndex = allPosts.findIndex((p) => p.slug === slug);
   const prev =
-    currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+    currentIndex >= 0 && currentIndex < allPosts.length - 1
+      ? allPosts[currentIndex + 1]
+      : null;
   const next = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
 
   return (
