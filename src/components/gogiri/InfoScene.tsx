@@ -68,8 +68,7 @@ export default function InfoScene({ children }: { children?: ReactNode }) {
         {children && <div className="mt-10 [&_p]:max-w-none [&_p]:text-[15px] [&_p]:text-[#D9CFBE]">{children}</div>}
 
         <p className="mt-10 text-xs leading-relaxed" style={{ color: G.mistDim }}>
-          사진은 직접 찍은 것을 Higgsfield 로 보정했어요. 영업시간은 2026년 10월에 모은 정보라 바뀔 수 있으니 가기 전에 한 번
-          확인하세요. 정보 출처:{" "}
+          영업시간은 2026년 10월에 모은 정보라 바뀔 수 있으니 가기 전에 한 번 확인하세요. 정보 출처:{" "}
           {SOURCES.map((s, i) => (
             <span key={s.href}>
               {i > 0 && ", "}
