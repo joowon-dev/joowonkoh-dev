@@ -7,6 +7,9 @@ import Mascot, { type Mood } from "./Mascot";
 import { EASE } from "./motion";
 import { C, CUTE, STICKER } from "./palette";
 
+/** 앱스토어 와파냥(ASC 앱 ID 6820956430). 2026-10-10 출시 */
+const APP_STORE_URL = "https://apps.apple.com/kr/app/id6820956430";
+
 /**
  * 첫 화면 — 설명보다 고양이를 먼저 만져 보게 한다.
  *
@@ -150,14 +153,17 @@ export default function Hero() {
           transition={{ duration: 0.6, ease: EASE }}
           className="mt-7 flex flex-wrap items-center gap-3"
         >
-          <span
-            className="rounded-[18px] px-6 py-3 text-[19px]"
+          <a
+            href={APP_STORE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-[18px] px-6 py-3 text-[19px] transition-transform hover:-translate-y-0.5"
             style={{ fontFamily: CUTE, background: C.gold, color: C.ink, ...STICKER }}
           >
-            App Store 출시 준비 중
-          </span>
+            App Store에서 받기
+          </a>
           <span className="text-[13px]" style={{ color: C.inkSoft }}>
-            iPhone · Android · 무료
+            iPhone · 무료 · Android 준비 중
           </span>
         </motion.div>
       </div>
