@@ -24,7 +24,7 @@ const TECH_STACK = [
 const FOCUS_AREAS = [
   {
     title: "AI 코딩 워크플로우",
-    body: "Claude Code, Codex, Gemini CLI 같은 에이전트 기반 도구를 실무 흐름에 녹여내는 방법을 연구하고 정리합니다. oh-my-claudecode 프로젝트도 이 관심사의 연장선입니다.",
+    body: "Claude Code, Codex, Gemini CLI 같은 에이전트 기반 도구를 실무 흐름에 녹여내는 방법을 연구하고 정리합니다.",
   },
   {
     title: "터미널과 개발자 생산성",
@@ -45,11 +45,6 @@ const TIMELINE = [
     period: "2026 —",
     title: "joowonkoh.com 운영",
     body: "개인 블로그와 실험 공간을 직접 설계·개발하여 운영 중입니다. MDX 기반의 콘텐츠 파이프라인과 자동화된 빌드 흐름을 갖추고 있습니다.",
-  },
-  {
-    period: "2025 —",
-    title: "oh-my-claudecode 메인테이너",
-    body: "Claude Code를 중심으로 한 에이전트 워크플로우 도구 모음을 만들고 공개합니다. 슬래시 커맨드, 스킬, MCP 서버 통합을 다룹니다.",
   },
   {
     period: "이전",

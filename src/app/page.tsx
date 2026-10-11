@@ -168,7 +168,8 @@ export default function Home() {
           </div>
           <p className="mb-5 max-w-[58ch] text-sm leading-relaxed break-keep text-text-secondary">
             직접 가서 먹고 찍은 것만 올립니다. 협찬이나 초대를 받은 적은 아직
-            없고, 사진도 전부 그날 제가 찍은 것입니다.
+            없고, 사진도 전부 그날 제가 찍은 것입니다. 보정한 사진을 쓴 글은
+            본문에 그렇게 적어 둡니다.
           </p>
           <div className="space-y-3">
             {recentLife.map((post) => (
