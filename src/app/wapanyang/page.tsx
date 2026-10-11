@@ -137,8 +137,7 @@ export default function WapanyangPage() {
           <p className="mt-5 max-w-[50ch] text-[15px] leading-[1.8] break-keep" style={{ color: C.inkSoft }}>
             광고도 데이터를 씁니다. 측정하는 동안 광고가 내려받아지면 속도가 실제보다
             느리게 나오기 때문에, 진단 중에는 배너를 내리고 전면 광고도 띄우지
-            않습니다. 진단 기록은 기기 안에만 남고, 결과를 공유할 때는 공인 IP 를
-            카드에서 뺍니다.
+            않습니다. 진단 기록은 기기 안에만 남습니다.
           </p>
         </Reveal>
       </section>
