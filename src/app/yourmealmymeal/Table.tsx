@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import { DROP, EASE } from "./motion";
-import { BODY, C, DISPLAY, SLOT_LABEL, SLOTS, STICKER, type Slot } from "./palette";
+import { BODY, C, DISPLAY, SLOT_LABEL, SLOTS, CARD, type Slot } from "./palette";
 import { TrayFrame, Well, type Dish } from "./Tray";
 
 type Member = {
@@ -82,9 +82,9 @@ export default function Table() {
   }
 
   return (
-    <div className="relative rounded-[22px] p-4 sm:p-5" style={{ ...STICKER, background: C.cloth }}>
+    <div className="relative rounded-[28px] p-4 sm:p-6" style={{ ...CARD, background: C.surface }}>
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-[20px]" style={{ fontFamily: DISPLAY }}>
+        <span className="text-[19px] font-bold tracking-[-0.02em]" style={{ fontFamily: DISPLAY }}>
           🏠 우리 가족
         </span>
         <span className="text-[14px]" style={{ fontFamily: BODY, color: C.sub }}>
@@ -118,11 +118,11 @@ export default function Table() {
               <div className="flex items-center gap-1.5">
                 <span
                   className="flex h-7 w-7 items-center justify-center rounded-full text-[15px]"
-                  style={{ background: m.faceTint, border: `2px solid ${C.ink}` }}
+                  style={{ background: m.faceTint, border: `1px solid ${C.hairline}` }}
                 >
                   {m.face}
                 </span>
-                <span className="text-[15px]" style={{ fontFamily: BODY }}>
+                <span className="text-[14px] font-medium" style={{ fontFamily: BODY, color: C.body }}>
                   {m.name}
                 </span>
               </div>
@@ -146,9 +146,8 @@ export default function Table() {
               transition={{ duration: 0.35 }}
               className="flex items-center gap-1 rounded-full px-3 py-1 text-[17px]"
               style={{
-                background: on ? C.yolk : C.surface,
-                border: `2px solid ${C.ink}`,
-                boxShadow: `0 1px 0 ${C.ink}`,
+                background: on ? C.yolkSoft : C.bg,
+                border: `1px solid ${on ? C.yolk : C.hairline}`,
                 fontFamily: BODY,
               }}
             >
@@ -171,8 +170,8 @@ export default function Table() {
             exit={{ opacity: 0, y: -10, x: "-50%", transition: { duration: 0.2, ease: EASE } }}
             transition={DROP}
             role="status"
-            className="pointer-events-none absolute left-1/2 -top-5 whitespace-nowrap rounded-full px-4 py-1.5 text-[15px] text-white"
-            style={{ background: C.tomato, border: `2px solid ${C.ink}`, fontFamily: BODY }}
+            className="pointer-events-none absolute left-1/2 -top-5 whitespace-nowrap rounded-full px-4 py-1.5 text-[15px] font-semibold text-white"
+            style={{ background: C.tomato, boxShadow: "0 8px 20px rgba(232,69,47,0.28)", fontFamily: BODY }}
           >
             {toast}
           </motion.div>

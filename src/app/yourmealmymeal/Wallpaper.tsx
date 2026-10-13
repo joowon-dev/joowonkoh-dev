@@ -1,13 +1,10 @@
-"use client";
-
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import { useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { C } from "./palette";
 
 /**
- * 수저·포크·그릇·반짝이. 앱처럼 선으로 그리지 않고 통째로 채운다 — 90년대 문구류 포장지처럼.
- * 앱의 `Motif.tsx` 와 같은 도형이다.
+ * 수저·포크·그릇·반짝이. 선으로 그리지 않고 통째로 채운다.
+ * 바탕에 흩뿌리지는 않고, 식판을 다 채웠을 때 튀어 오르는 반짝이로만 쓴다.
  */
 export type MotifKind = "spoon" | "fork" | "bowl" | "star";
 
@@ -58,59 +55,22 @@ export function Motif({
   );
 }
 
-const TOMATO = { color: C.tomato, opacity: 0.2 };
-const MINT = { color: C.tray, opacity: 0.5 };
-const YOLK = { color: C.yolk, opacity: 0.32 };
-
-/** 퍼센트 좌표. 손으로 놓은 자리라 규칙이 없다. depth 가 클수록 스크롤에 더 늦게 따라온다. */
-const SCATTER = [
-  { x: -3, y: 2, kind: "spoon", size: 84, rotate: -18, paint: TOMATO, depth: 0.5 },
-  { x: 86, y: 1, kind: "fork", size: 78, rotate: 22, paint: MINT, depth: 0.8 },
-  { x: 40, y: 6, kind: "star", size: 30, rotate: 0, paint: YOLK, depth: 1.2 },
-  { x: 92, y: 14, kind: "bowl", size: 46, rotate: -10, paint: TOMATO, depth: 0.6 },
-  { x: 3, y: 22, kind: "star", size: 26, rotate: 12, paint: MINT, depth: 1.1 },
-  { x: 90, y: 30, kind: "spoon", size: 88, rotate: 14, paint: YOLK, depth: 0.7 },
-  { x: -4, y: 40, kind: "fork", size: 84, rotate: -24, paint: MINT, depth: 0.9 },
-  { x: 55, y: 47, kind: "star", size: 28, rotate: -8, paint: TOMATO, depth: 1.3 },
-  { x: 93, y: 54, kind: "bowl", size: 44, rotate: 12, paint: MINT, depth: 0.5 },
-  { x: 2, y: 62, kind: "spoon", size: 78, rotate: 20, paint: TOMATO, depth: 0.8 },
-  { x: 84, y: 71, kind: "fork", size: 90, rotate: -16, paint: YOLK, depth: 1 },
-  { x: -2, y: 82, kind: "bowl", size: 50, rotate: -8, paint: MINT, depth: 0.6 },
-  { x: 48, y: 90, kind: "star", size: 30, rotate: 10, paint: TOMATO, depth: 1.2 },
-  { x: 90, y: 93, kind: "spoon", size: 74, rotate: -22, paint: TOMATO, depth: 0.7 },
-] as const;
-
-function Spot({ s, progress }: { s: (typeof SCATTER)[number]; progress: ReturnType<typeof useScroll>["scrollYProgress"] }) {
-  const y = useTransform(progress, [0, 1], [0, -160 * s.depth]);
-  const rotate = useTransform(progress, [0, 1], [s.rotate, s.rotate + 40 * (s.depth - 0.85)]);
-  return (
-    <motion.div className="absolute" style={{ left: `${s.x}%`, top: `${s.y}%`, y, rotate }}>
-      <Motif kind={s.kind} size={s.size} color={s.paint.color} opacity={s.paint.opacity} />
-    </motion.div>
-  );
-}
-
 /**
- * 크림 바탕에 수저를 흩뿌린 벽지. 앱의 배경과 같고, 네밥내밥 페이지 전체를 덮는다.
- * 스크롤하면 도형마다 다른 속도로 흘러 깊이가 생긴다. 움직임 줄이기를 켠 사람에게는 멈춰 있다.
+ * 밝은 회색 바탕. 앱의 배경과 같고, 네밥내밥 페이지 전체를 덮는다.
+ * 위쪽에만 노른자·민트 빛이 아주 옅게 번진다 — 유리 머리막대 뒤로 색이 비쳐 보이게.
  */
 export default function Wallpaper({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
-  const still = useReducedMotion();
-
   return (
-    <div ref={ref} className="relative min-h-dvh overflow-hidden" style={{ background: C.bg, color: C.ink }}>
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        {SCATTER.map((s, i) =>
-          still ? (
-            <div key={i} className="absolute" style={{ left: `${s.x}%`, top: `${s.y}%`, transform: `rotate(${s.rotate}deg)` }}>
-              <Motif kind={s.kind} size={s.size} color={s.paint.color} opacity={s.paint.opacity} />
-            </div>
-          ) : (
-            <Spot key={i} s={s} progress={scrollYProgress} />
-          ),
-        )}
+    <div className="relative min-h-dvh overflow-clip" style={{ background: C.bg, color: C.ink }}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px]" aria-hidden>
+        <div
+          className="absolute -left-24 -top-32 h-[380px] w-[380px] rounded-full"
+          style={{ background: C.yolk, opacity: 0.18, filter: "blur(90px)" }}
+        />
+        <div
+          className="absolute -right-24 -top-16 h-[340px] w-[340px] rounded-full"
+          style={{ background: C.tray, opacity: 0.3, filter: "blur(90px)" }}
+        />
       </div>
       <div className="relative">{children}</div>
     </div>

@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { DROP, EASE } from "./motion";
-import { BODY, C, DISPLAY, SLOTS, YOLK_SHADOW, type Slot } from "./palette";
+import { BODY, C, CARD, DISPLAY, SLOTS, WORDMARK, type Slot } from "./palette";
 import { TrayFrame, Well, type Dish } from "./Tray";
 import { Motif } from "./Wallpaper";
 
@@ -80,8 +80,8 @@ export default function Hero({ icon }: { icon: ReactNode }) {
     <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.09 } } }}>
       <motion.span
         variants={RISE}
-        className="mb-5 inline-block rounded-full px-3 py-[3px] text-[13px]"
-        style={{ background: C.surface, border: `2px solid ${C.ink}`, fontFamily: BODY }}
+        className="mb-6 inline-block rounded-full px-3.5 py-1 text-[13px] font-medium"
+        style={{ ...CARD, background: C.surface, color: C.body, fontFamily: BODY }}
       >
         iOS · Android · 출시 준비 중
       </motion.span>
@@ -96,12 +96,12 @@ export default function Hero({ icon }: { icon: ReactNode }) {
         </motion.div>
         <div>
           <h1
-            className="text-[44px] leading-[1.05] md:text-[56px]"
-            style={{ fontFamily: DISPLAY, textShadow: YOLK_SHADOW }}
+            className="text-[46px] leading-[1.05] md:text-[58px]"
+            style={{ fontFamily: WORDMARK, color: C.mint, fontWeight: 400, letterSpacing: 0 }}
           >
             네밥내밥
           </h1>
-          <p className="mt-2 text-[18px]" style={{ fontFamily: BODY, color: C.body }}>
+          <p className="mt-2 text-[18px] font-semibold tracking-[-0.01em]" style={{ fontFamily: BODY, color: C.ink }}>
             밥 먹었냐고 묻는 대신
           </p>
         </div>
@@ -118,7 +118,7 @@ export default function Hero({ icon }: { icon: ReactNode }) {
 
       <motion.div variants={RISE} className="relative mx-auto mt-10 max-w-[420px]">
         <div className="mb-3 flex items-end justify-between">
-          <span className="text-[20px]" style={{ fontFamily: DISPLAY }}>
+          <span className="text-[19px] font-bold tracking-[-0.02em]" style={{ fontFamily: DISPLAY }}>
             오늘 내 식판
           </span>
           <motion.span
@@ -126,11 +126,11 @@ export default function Hero({ icon }: { icon: ReactNode }) {
             initial={{ scale: 0.6, rotate: -8 }}
             animate={{ scale: 1, rotate: done ? -3 : 0 }}
             transition={DROP}
-            className="rounded-full px-3 py-[2px] text-[14px]"
+            className="rounded-full px-3 py-[3px] text-[14px] font-semibold"
             style={{
+              ...CARD,
               fontFamily: BODY,
               background: done ? C.yolk : C.surface,
-              border: `2px solid ${C.ink}`,
             }}
           >
             {done ? "세 끼 다 먹었어요!" : `세 끼 중 ${eaten}끼`}

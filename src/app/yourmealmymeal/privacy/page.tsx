@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { CARD } from "../palette";
+
 export const metadata: Metadata = {
   title: "네밥내밥 개인정보처리방침",
   description:
@@ -16,7 +18,7 @@ const CONTACT = "contact@joowonkoh.com";
 export default function YourMealMyMealPrivacyPage() {
   return (
     <div className="animate-fade-in-up">
-      <span className="mb-4 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-accent">
+      <span className="mb-4 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-accent">
         네밥내밥 · Legal
       </span>
       <h1 className="font-display text-3xl font-bold leading-snug tracking-tight md:text-4xl">
@@ -24,7 +26,10 @@ export default function YourMealMyMealPrivacyPage() {
       </h1>
       <p className="mt-3 text-sm text-text-muted">최종 업데이트: {UPDATED_AT}</p>
 
-      <div className="mt-10 space-y-10 leading-[1.85] text-text-secondary">
+      <div
+        className="mt-8 space-y-10 rounded-[28px] bg-white p-6 leading-[1.85] text-text-secondary sm:p-10"
+        style={CARD}
+      >
         <section>
           <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
             1. 개요

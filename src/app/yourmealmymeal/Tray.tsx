@@ -4,11 +4,11 @@ import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { useEffect, type ReactNode } from "react";
 
 import { DROP } from "./motion";
-import { BODY, C, DISPLAY, SLOT_LABEL, WELL_CARVE, type Slot } from "./palette";
+import { BODY, C, SLOT_LABEL, WELL_CARVE, type Slot } from "./palette";
 
 /**
- * 급식판. 앱과 규칙이 같다 — 칸에는 테두리가 없고, 칸 사이의 간격이 곧 식판의 몸이다.
- * 민트 판, 양옆 손잡이 홈, 안쪽 흰 테.
+ * 급식판. 앱 아이콘과 규칙이 같다 — 칸에는 테두리가 없고, 칸 사이의 간격이 곧 식판의 몸이다.
+ * 민트 판, 둥근 모서리, 크림색 빈 칸. 테두리 대신 아주 옅은 그림자로 떠 있다.
  */
 export function TrayFrame({
   children,
@@ -24,18 +24,11 @@ export function TrayFrame({
       className={`relative ${className}`}
       style={{
         background: C.tray,
-        border: `3px solid ${C.ink}`,
-        borderRadius: 18,
+        borderRadius: gap * 2,
         padding: gap,
-        boxShadow: `inset 0 0 0 3px rgba(255,255,255,0.5), 2px 2px 0 ${C.ink}`,
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 1px 2px rgba(46,30,20,0.05), 0 12px 28px rgba(61,184,154,0.18)",
       }}
     >
-      {/* 손잡이 홈 */}
-      <span
-        aria-hidden
-        className="absolute left-1/2 top-[5px] h-[5px] w-[22%] -translate-x-1/2 rounded-full"
-        style={{ background: "rgba(59,36,22,0.18)" }}
-      />
       {children}
     </div>
   );
@@ -81,7 +74,7 @@ export function Well({
       whileTap={onClick ? { scale: 0.95 } : undefined}
       className="relative flex aspect-square items-center justify-center overflow-hidden"
       style={{
-        borderRadius: big ? 12 : 8,
+        borderRadius: big ? 20 : 9,
         background: dish ? C.wellOn : C.wellOff,
         boxShadow: dish ? "none" : WELL_CARVE,
         cursor: onClick ? "pointer" : "default",
@@ -100,7 +93,7 @@ export function Well({
               width: big ? "72%" : "78%",
               height: big ? "72%" : "78%",
               background: dish.tint,
-              border: `${big ? 3 : 2}px solid ${C.ink}`,
+              boxShadow: "0 1px 2px rgba(46,30,20,0.08), 0 4px 12px rgba(46,30,20,0.08)",
               fontSize: big ? "clamp(28px, 9vw, 52px)" : "clamp(14px, 4vw, 22px)",
               lineHeight: 1,
             }}
@@ -120,9 +113,10 @@ export function Well({
               style={{
                 width: "clamp(44px, 14vw, 74px)",
                 height: "clamp(44px, 14vw, 74px)",
-                border: `2.5px dashed ${extra ? C.faint : C.placeholder}`,
+                border: `2px dashed ${extra ? C.faint : C.placeholder}`,
                 color: extra ? C.faint : C.placeholder,
-                fontFamily: DISPLAY,
+                fontFamily: BODY,
+                fontWeight: 300,
                 fontSize: extra ? 24 : 30,
               }}
             >
@@ -140,8 +134,8 @@ export function Well({
 
       {big ? (
         <span
-          className="absolute left-[7px] top-[6px] rounded-full px-[7px] text-[13px] leading-[18px]"
-          style={{ background: C.wellOff, border: `1.5px solid ${C.ink}`, fontFamily: DISPLAY }}
+          className="absolute left-[8px] top-[8px] rounded-full px-[8px] text-[12px] font-semibold leading-[20px]"
+          style={{ background: C.surface, border: `1px solid ${C.hairline}`, color: C.body, fontFamily: BODY }}
         >
           {SLOT_LABEL[slot]}
         </span>
