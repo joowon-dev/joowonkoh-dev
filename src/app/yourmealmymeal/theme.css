@@ -5,26 +5,25 @@
  */
 .nemeal {
   font-family: var(--nm-body);
+  -webkit-font-smoothing: antialiased;
 }
 .nemeal .font-display,
 .nemeal h1,
 .nemeal h2,
 .nemeal h3 {
   font-family: var(--nm-display);
-  font-weight: 400;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
-.nemeal .text-text-primary { color: #3b2416; }
-.nemeal .text-text-secondary { color: #6b4a30; }
-.nemeal .text-text-muted { color: #816a4e; }
-.nemeal .text-accent { color: #e8452f; }
-.nemeal .bg-accent-soft {
-  background: #fffdf7;
-  box-shadow: inset 0 0 0 2px #3b2416;
-}
-.nemeal .bg-accent { background: #ffc531; color: #3b2416; }
-.nemeal .bg-card-bg { background: #fffdf7; }
-.nemeal .border-border { border-color: #3b2416; }
-.nemeal .hover\:text-accent:hover { color: #e8452f; }
+.nemeal .text-text-primary { color: #2e1e14; }
+.nemeal .text-text-secondary { color: #5a4636; }
+.nemeal .text-text-muted { color: #6e5a48; }
+.nemeal .text-accent { color: #23866e; }
+.nemeal .bg-accent-soft { background: #e3f5ed; }
+.nemeal .bg-accent { background: #ffc531; color: #2e1e14; }
+.nemeal .bg-card-bg { background: #ffffff; }
+.nemeal .border-border { border-color: rgba(59, 36, 22, 0.08); }
+.nemeal .hover\:text-accent:hover { color: #23866e; }
 
 /* 사이트의 은은한 노이즈 막도 네밥내밥에서는 걷는다. */
 body:has(.nemeal)::after {

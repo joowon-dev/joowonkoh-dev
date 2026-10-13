@@ -6,7 +6,7 @@ import Faq from "./Faq";
 import Features from "./Features";
 import Hero from "./Hero";
 import { Reveal } from "./motion";
-import { BODY, C, DISPLAY, STICKER, YOLK_SHADOW } from "./palette";
+import { BODY, C, CARD, DISPLAY, GLASS } from "./palette";
 import Table from "./Table";
 
 export const metadata: Metadata = {
@@ -42,10 +42,10 @@ export const metadata: Metadata = {
 
 const CONTACT = "contact@joowonkoh.com";
 
-/** 섹션 머리말. 앱의 큰 제목처럼 노른자 한 겹을 깐다. */
+/** 섹션 머리말. 앱의 큰 제목처럼 기기 글꼴을 굵게 쓴다. */
 function Heading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-5 text-[28px] leading-[1.2]" style={{ fontFamily: DISPLAY, textShadow: YOLK_SHADOW }}>
+    <h2 className="mb-5 text-[26px] leading-[1.2]" style={{ fontFamily: DISPLAY }}>
       {children}
     </h2>
   );
@@ -57,12 +57,13 @@ export default function YourMealMyMealPage() {
       <Hero
         icon={
           <Image
-            src="/yourmealmymeal-icon.png"
+            src="/yourmealmymeal/icon.svg"
             alt="네밥내밥 앱 아이콘"
-            width={84}
-            height={84}
-            className="rounded-[20px]"
-            style={STICKER}
+            width={88}
+            height={88}
+            unoptimized
+            className="rounded-[24px]"
+            style={{ boxShadow: "0 1px 2px rgba(46,30,20,0.06), 0 14px 32px rgba(255,197,49,0.35)" }}
             priority
           />
         }
@@ -89,7 +90,7 @@ export default function YourMealMyMealPage() {
 
       <section className="mt-24">
         <Reveal>
-          <p className="max-w-[18ch] text-[30px] leading-[1.3] break-keep md:text-[36px]" style={{ fontFamily: DISPLAY }}>
+          <p className="max-w-[18ch] text-[30px] font-bold leading-[1.3] tracking-[-0.02em] break-keep md:text-[36px]" style={{ fontFamily: DISPLAY }}>
             &ldquo;밥 먹었어?&rdquo; 대신, <span style={{ color: C.tomato }}>빈 칸</span>이 먼저 말해 줘요.
           </p>
         </Reveal>
@@ -118,7 +119,7 @@ export default function YourMealMyMealPage() {
 
       <section className="mt-24">
         <Reveal>
-          <div className="rounded-[22px] p-6" style={{ ...STICKER, background: C.tray }}>
+          <div className="rounded-[30px] p-6 sm:p-8" style={{ ...CARD, background: C.tray }}>
             <h2 className="text-[24px]" style={{ fontFamily: DISPLAY }}>
               곧 만나요 🍚
             </h2>
@@ -129,22 +130,22 @@ export default function YourMealMyMealPage() {
             <div className="mt-5 flex flex-wrap gap-3" style={{ fontFamily: BODY }}>
               <a
                 href={`mailto:${CONTACT}`}
-                className="rounded-full px-5 py-2 text-[15px] transition-transform hover:-translate-y-0.5 active:translate-y-0"
-                style={{ background: C.yolk, border: `2.5px solid ${C.ink}`, boxShadow: `0 2px 0 ${C.ink}` }}
+                className="rounded-full px-5 py-2.5 text-[15px] font-semibold transition-transform hover:-translate-y-0.5 active:translate-y-0"
+                style={{ background: C.yolk, color: C.ink, boxShadow: "0 6px 16px rgba(255,197,49,0.4)" }}
               >
                 {CONTACT}
               </a>
               <Link
                 href="/yourmealmymeal/privacy"
-                className="rounded-full px-5 py-2 text-[15px] transition-transform hover:-translate-y-0.5 active:translate-y-0"
-                style={{ background: C.surface, border: `2.5px solid ${C.ink}`, boxShadow: `0 2px 0 ${C.ink}` }}
+                className="rounded-full px-5 py-2.5 text-[15px] font-medium transition-transform hover:-translate-y-0.5 active:translate-y-0"
+                style={{ ...GLASS, color: C.ink }}
               >
                 개인정보처리방침
               </Link>
               <Link
                 href="/yourmealmymeal/delete-account"
-                className="rounded-full px-5 py-2 text-[15px] transition-transform hover:-translate-y-0.5 active:translate-y-0"
-                style={{ background: C.surface, border: `2.5px solid ${C.ink}`, boxShadow: `0 2px 0 ${C.ink}` }}
+                className="rounded-full px-5 py-2.5 text-[15px] font-medium transition-transform hover:-translate-y-0.5 active:translate-y-0"
+                style={{ ...GLASS, color: C.ink }}
               >
                 계정 삭제 안내
               </Link>

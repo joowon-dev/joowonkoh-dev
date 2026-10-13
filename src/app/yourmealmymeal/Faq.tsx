@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
 import { EASE } from "./motion";
-import { BODY, C, DISPLAY, STICKER } from "./palette";
+import { BODY, C, CARD, DISPLAY } from "./palette";
 
 const QA = [
   {
@@ -41,8 +41,8 @@ export default function Faq() {
           <motion.div
             key={item.q}
             layout
-            className="overflow-hidden rounded-[18px]"
-            style={{ ...STICKER, background: on ? C.surface : C.cloth }}
+            className="overflow-hidden rounded-[22px]"
+            style={{ ...CARD, background: on ? C.surface : C.cloth }}
           >
             <button
               type="button"
@@ -50,14 +50,14 @@ export default function Faq() {
               onClick={() => setOpen(on ? null : i)}
               className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
             >
-              <span className="text-[17px] leading-[1.35] break-keep" style={{ fontFamily: DISPLAY }}>
+              <span className="text-[16px] font-semibold leading-[1.4] tracking-[-0.01em] break-keep" style={{ fontFamily: DISPLAY }}>
                 {item.q}
               </span>
               <motion.span
-                animate={{ rotate: on ? 45 : 0, background: on ? C.yolk : C.surface }}
+                animate={{ rotate: on ? 45 : 0, backgroundColor: on ? C.yolk : C.surface }}
                 transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[20px]"
-                style={{ border: `2px solid ${C.ink}`, fontFamily: DISPLAY }}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[20px] font-light"
+                style={{ border: `1px solid ${C.hairline}`, fontFamily: DISPLAY }}
                 aria-hidden
               >
                 +

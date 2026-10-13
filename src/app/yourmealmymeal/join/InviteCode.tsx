@@ -1,11 +1,12 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { EASE } from "../motion";
-import { BODY, HAND } from "../palette";
+import { BODY, C, CARD, GLASS, HAND, WORDMARK } from "../palette";
 
 /** 앱의 src/lib/groups/inviteCode.ts와 같은 알파벳·길이. 이상한 값은 화면에도 앱 주소에도 넣지 않는다. */
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -19,18 +20,18 @@ const APP_STORE_URL = "https://apps.apple.com/kr/app/id6812959704";
 const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.joowonkoh.yourmealmymeal";
 
 /**
- * 초대 페이지는 앱의 크림·누룽지 색 대신 밝은 회색 종이에 까만 펜으로 끄적인 느낌이다.
- * 카톡 미리보기를 누르고 들어온 사람이 "코드 복사 → 설치 → 입력" 순서만 보면 되게 한다.
+ * 초대 페이지도 앱의 새 디자인 시스템을 따른다 — 밝은 회색 바탕, 흰 카드, 진한 갈색 글자.
+ * 펜으로 끄적인 손글씨 메모와 화살표만 남겨, 카톡 미리보기를 누르고 들어온 사람이
+ * "코드 복사 → 설치 → 입력" 순서를 한눈에 따라가게 한다.
  */
 const P = {
-  paper: "#F5F5F5",
-  ink: "#1A1A1A",
-  grey: "#8A8A8A",
-  faint: "#B5B5B5",
-  lime: "#E8FF52",
-  cheek: "#FFB4A8",
-  pill: "#D8F6FB",
-  pillLine: "#5CD3EE",
+  paper: C.bg,
+  card: C.surface,
+  ink: C.ink,
+  body: C.body,
+  grey: C.sub,
+  pill: C.pill,
+  pillLine: C.pillLine,
 } as const;
 
 function readCode(search: string): string | null {
@@ -46,41 +47,25 @@ const RISE = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 };
 
-/** 라임색 동그라미 얼굴. 선이 살짝 삐뚤어서 펜으로 그린 것처럼 보인다. */
-function Smiley({ still }: { still: boolean }) {
+/** 앱 아이콘(노른자 바탕의 빈 민트 급식판). 천천히 떠 있다가 가끔 기우뚱한다. */
+function AppIcon({ still }: { still: boolean }) {
   return (
-    <motion.svg
-      viewBox="0 0 200 200"
-      className="h-[168px] w-[168px] sm:h-[196px] sm:w-[196px]"
+    <motion.div
       animate={still ? undefined : { y: [0, -6, 0], rotate: [-2, 2, -2] }}
-      transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-      aria-hidden
+      transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+      className="overflow-hidden rounded-[30px] sm:rounded-[34px]"
+      style={{ boxShadow: "0 1px 2px rgba(46,30,20,0.06), 0 18px 40px rgba(255,197,49,0.38)" }}
     >
-      <path
-        d="M101 14C152 12 189 52 187 102C185 151 148 189 98 187C48 185 12 149 14 99C16 50 51 16 101 14Z"
-        fill={P.lime}
-        stroke={P.ink}
-        strokeWidth={7}
-        strokeLinejoin="round"
+      <Image
+        src="/yourmealmymeal/icon.svg"
+        alt="네밥내밥 앱 아이콘"
+        width={132}
+        height={132}
+        unoptimized
+        priority
+        className="block h-[120px] w-[120px] sm:h-[132px] sm:w-[132px]"
       />
-      <ellipse cx={52} cy={122} rx={14} ry={8} fill={P.cheek} opacity={0.7} />
-      <ellipse cx={150} cy={122} rx={14} ry={8} fill={P.cheek} opacity={0.7} />
-      <motion.g
-        style={{ originY: "84px" }}
-        animate={still ? undefined : { scaleY: [1, 1, 0.1, 1, 1] }}
-        transition={{ duration: 4, repeat: Infinity, times: [0, 0.9, 0.94, 0.98, 1] }}
-      >
-        <path d="M74 70C73 79 74 89 76 97" fill="none" stroke={P.ink} strokeWidth={10} strokeLinecap="round" />
-        <path d="M127 69C128 78 127 88 125 96" fill="none" stroke={P.ink} strokeWidth={10} strokeLinecap="round" />
-      </motion.g>
-      <path
-        d="M64 124C78 147 120 152 138 122"
-        fill="none"
-        stroke={P.ink}
-        strokeWidth={8}
-        strokeLinecap="round"
-      />
-    </motion.svg>
+    </motion.div>
   );
 }
 
@@ -147,8 +132,8 @@ function StoreButton({ href, glyph, store }: { href: string; glyph: React.ReactN
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="flex h-[54px] flex-1 items-center justify-center gap-2.5 rounded-[14px] px-3 transition-transform hover:-translate-y-0.5 active:translate-y-0"
-      style={{ background: P.ink, color: "#fff" }}
+      className="flex h-[56px] flex-1 items-center justify-center gap-2.5 rounded-[18px] px-3 transition-transform hover:-translate-y-0.5 active:translate-y-0"
+      style={{ background: P.ink, color: "#fff", boxShadow: "0 8px 20px rgba(46,30,20,0.18)" }}
     >
       {glyph}
       <span className="flex flex-col items-start leading-none">
@@ -188,107 +173,137 @@ export default function InviteCode() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col" style={{ background: P.paper, color: P.ink, fontFamily: BODY }}>
+    <div className="relative flex min-h-dvh flex-col overflow-clip" style={{ background: P.paper, color: P.ink, fontFamily: BODY }}>
+      {/* 아이콘 뒤로 노른자·민트 빛이 아주 옅게 번진다. 유리 버튼이 비칠 색이기도 하다. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[560px]" aria-hidden>
+        <div
+          className="absolute left-1/2 top-[-120px] h-[360px] w-[360px] -translate-x-[70%] rounded-full"
+          style={{ background: C.yolk, opacity: 0.22, filter: "blur(90px)" }}
+        />
+        <div
+          className="absolute left-1/2 top-[-60px] h-[320px] w-[320px] -translate-x-[10%] rounded-full"
+          style={{ background: C.tray, opacity: 0.32, filter: "blur(90px)" }}
+        />
+      </div>
       <motion.main
         initial="hidden"
         animate="show"
         variants={{ show: { transition: { staggerChildren: 0.08 } } }}
-        className="mx-auto flex w-full max-w-[400px] flex-1 flex-col items-center px-4 pb-10 pt-12 text-center"
+        className="relative mx-auto flex w-full max-w-[420px] flex-1 flex-col items-center px-4 pb-10 pt-14 text-center"
       >
         <motion.div variants={RISE}>
-          <Smiley still={still} />
+          <AppIcon still={still} />
         </motion.div>
 
-        <motion.h1 variants={RISE} className="mt-5 text-[24px] leading-[1.3]" style={{ fontFamily: BODY }}>
+        <motion.h1
+          variants={RISE}
+          className="mt-7 text-[26px] font-bold leading-[1.3] tracking-[-0.02em]"
+          style={{ fontFamily: BODY }}
+        >
           밥상에 초대받았어요
         </motion.h1>
-        <motion.p variants={RISE} className="mt-1.5 text-[15px] break-keep" style={{ color: P.grey }}>
-          네밥내밥 · 가까운 친구끼리 끼니를 나누는 곳
+        <motion.p variants={RISE} className="mt-2 text-[15px] break-keep" style={{ color: P.grey }}>
+          <span className="text-[17px]" style={{ fontFamily: WORDMARK, color: C.mint }}>
+            네밥내밥
+          </span>
+          {" · "}가까운 친구끼리 끼니를 나누는 곳
         </motion.p>
 
-        {/* 1. 코드 복사 */}
-        <motion.div variants={RISE} className="mt-9 flex w-full flex-col items-center">
-          <div className="relative flex w-full justify-center">
-            <p className="-rotate-2 text-[30px] leading-none" style={{ fontFamily: HAND }}>
-              초대코드를 복사하고
-            </p>
-            <Arrow className="absolute -bottom-[46px] right-[6%] rotate-[8deg]" />
-          </div>
+        <motion.div
+          variants={RISE}
+          className="mt-8 flex w-full flex-col items-center rounded-[30px] px-4 pb-6 pt-7 sm:px-6"
+          style={{ ...CARD, background: P.card }}
+        >
+          {/* 1. 코드 복사 */}
+          <div className="flex w-full flex-col items-center">
+            <div className="relative flex w-full justify-center">
+              <p className="-rotate-2 text-[30px] leading-none" style={{ fontFamily: HAND }}>
+                초대코드를 복사하고
+              </p>
+              <Arrow className="absolute -bottom-[46px] right-[6%] rotate-[8deg]" />
+            </div>
 
-          <motion.button
-            type="button"
-            onClick={copy}
-            disabled={!code}
-            whileTap={code ? { scale: 0.95 } : undefined}
-            className="mt-6 inline-flex items-center gap-3 rounded-full px-7 py-3.5 disabled:cursor-default"
-            style={{ background: P.pill, border: `2.5px solid ${P.pillLine}`, opacity: code === null ? 0.55 : 1 }}
-            aria-label={code ? `초대코드 ${code} 복사하기` : "초대코드 없음"}
-          >
-            <span className="text-[28px] leading-none tracking-[0.08em]" style={{ color: P.ink }}>
-              # {code ?? (code === null ? "------" : "······")}
-            </span>
-            {code ? <CopyIcon done={copied} /> : null}
-          </motion.button>
-
-          <div className="mt-2 h-[26px]" aria-live="polite">
-            <AnimatePresence>
-              {copied ? (
-                <motion.p
-                  initial={{ y: 6, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -6, opacity: 0 }}
-                  transition={{ duration: 0.18 }}
-                  className="text-[22px] leading-none"
-                  style={{ fontFamily: HAND, color: "#1497B8" }}
-                >
-                  복사했어요!
-                </motion.p>
-              ) : null}
-            </AnimatePresence>
-          </div>
-
-          {code === null ? (
-            <p className="text-[15px] leading-[1.7] break-keep" style={{ color: P.grey }}>
-              링크에 초대코드가 없거나 잘렸어요.
-              <br />
-              초대한 사람에게 코드를 다시 받아 주세요.
-            </p>
-          ) : null}
-        </motion.div>
-
-        {/* 2. 설치 후 입력 */}
-        <motion.div variants={RISE} className="mt-6 flex w-full flex-col items-center">
-          <div className="relative flex w-full justify-center">
-            <p className="rotate-1 text-[30px] leading-none" style={{ fontFamily: HAND }}>
-              앱 설치 후 입력해주세요
-            </p>
-            <Arrow flip className="absolute -bottom-[46px] left-[6%] rotate-[-8deg]" />
-          </div>
-
-          <div className="mt-[52px] flex w-full gap-2.5">
-            <StoreButton href={APP_STORE_URL} glyph={<AppleGlyph />} store="App Store" />
-            <StoreButton href={PLAY_STORE_URL} glyph={<PlayGlyph />} store="Google Play" />
-          </div>
-
-          <p className="mt-3 text-[13px] leading-[1.6] break-keep" style={{ color: P.grey }}>
-            앱 아래 <b style={{ color: P.ink, fontWeight: 400 }}>모임</b> 탭 → 모임 추가 → 초대코드로 참여하기
-          </p>
-
-          {code ? (
-            <motion.a
-              href={`yourmealmymeal://group/join?code=${code}`}
-              whileTap={{ scale: 0.96 }}
-              className="mt-6 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[16px]"
-              style={{ border: `2px solid ${P.ink}`, background: "#fff" }}
+            <motion.button
+              type="button"
+              onClick={copy}
+              disabled={!code}
+              whileTap={code ? { scale: 0.95 } : undefined}
+              className="mt-6 inline-flex items-center gap-3 rounded-full px-7 py-3.5 disabled:cursor-default"
+              style={{
+                background: P.pill,
+                border: `2px solid ${P.pillLine}`,
+                boxShadow: "0 8px 22px rgba(95,212,238,0.28)",
+                opacity: code === null ? 0.55 : 1,
+              }}
+              aria-label={code ? `초대코드 ${code} 복사하기` : "초대코드 없음"}
             >
-              이미 앱이 있다면 · 앱에서 열기
-              <span aria-hidden>→</span>
-            </motion.a>
-          ) : null}
+              <span className="text-[28px] font-bold leading-none tracking-[0.08em] tabular-nums" style={{ color: P.ink }}>
+                # {code ?? (code === null ? "------" : "······")}
+              </span>
+              {code ? <CopyIcon done={copied} /> : null}
+            </motion.button>
+
+            <div className="mt-2 h-[26px]" aria-live="polite">
+              <AnimatePresence>
+                {copied ? (
+                  <motion.p
+                    initial={{ y: 6, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -6, opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    className="text-[22px] leading-none"
+                    style={{ fontFamily: HAND, color: "#1497B8" }}
+                  >
+                    복사했어요!
+                  </motion.p>
+                ) : null}
+              </AnimatePresence>
+            </div>
+
+            {code === null ? (
+              <p className="text-[15px] leading-[1.7] break-keep" style={{ color: P.grey }}>
+                링크에 초대코드가 없거나 잘렸어요.
+                <br />
+                초대한 사람에게 코드를 다시 받아 주세요.
+              </p>
+            ) : null}
+          </div>
+
+          {/* 2. 설치 후 입력 */}
+          <div className="mt-6 flex w-full flex-col items-center">
+            <div className="relative flex w-full justify-center">
+              <p className="rotate-1 text-[30px] leading-none" style={{ fontFamily: HAND }}>
+                앱 설치 후 입력해주세요
+              </p>
+              <Arrow flip className="absolute -bottom-[46px] left-[6%] rotate-[-8deg]" />
+            </div>
+
+            <div className="mt-[52px] flex w-full gap-2.5">
+              <StoreButton href={APP_STORE_URL} glyph={<AppleGlyph />} store="App Store" />
+              <StoreButton href={PLAY_STORE_URL} glyph={<PlayGlyph />} store="Google Play" />
+            </div>
+
+            <p className="mt-3 text-[13px] leading-[1.6] break-keep" style={{ color: P.grey }}>
+              앱 아래 <b style={{ color: P.ink, fontWeight: 600 }}>모임</b> 탭 → 모임 추가 → 초대코드로 참여하기
+            </p>
+          </div>
         </motion.div>
+
+        {code ? (
+          <motion.a
+            variants={RISE}
+            href={`yourmealmymeal://group/join?code=${code}`}
+            whileTap={{ scale: 0.96 }}
+            className="mt-6 inline-flex items-center gap-1.5 rounded-full px-5 py-3 text-[15px] font-semibold"
+            style={{ ...GLASS, color: P.ink }}
+          >
+            이미 앱이 있다면 · 앱에서 열기
+            <span aria-hidden>→</span>
+          </motion.a>
+        ) : null}
       </motion.main>
 
-      <footer className="px-4 pb-8 text-center text-[12px] leading-[1.8]" style={{ color: P.faint }}>
+      <footer className="relative px-4 pb-8 text-center text-[12px] leading-[1.8]" style={{ color: P.grey }}>
         <p>한 모임은 6명까지예요. 자리가 다 찼으면 참여할 수 없어요.</p>
         <p>
           <Link href="/yourmealmymeal" className="hover:underline">네밥내밥 소개</Link>
