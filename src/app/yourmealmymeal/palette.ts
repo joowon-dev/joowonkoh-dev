@@ -1,4 +1,4 @@
-import { Black_Han_Sans, Jua } from "next/font/google";
+import { Black_Han_Sans, Jua, Nanum_Pen_Script } from "next/font/google";
 
 /**
  * 네밥내밥 앱과 같은 색 — 앱의 `src/theme/tokens.ts` 에서 그대로 옮겼다.
@@ -28,6 +28,10 @@ const body = Jua({ weight: "400", subsets: ["latin"], display: "swap" });
 
 export const DISPLAY = `${display.style.fontFamily}, "Pretendard", sans-serif`;
 export const BODY = `${body.style.fontFamily}, "Pretendard", sans-serif`;
+
+/** 초대 페이지의 손글씨 메모(나눔손글씨 펜). 코드 옆에 펜으로 끄적인 것처럼 보이게 한다. */
+const hand = Nanum_Pen_Script({ weight: "400", subsets: ["latin"], display: "swap" });
+export const HAND = `${hand.style.fontFamily}, ${body.style.fontFamily}, sans-serif`;
 
 /** 앱의 카드 — 굵은 누룽지 테두리에 번지지 않는 얇은 그림자. */
 export const STICKER = {

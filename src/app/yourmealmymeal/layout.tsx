@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
 import { BODY, C, DISPLAY } from "./palette";
-import Wallpaper from "./Wallpaper";
+import Shell from "./Shell";
 import "./theme.css";
 
 /**
@@ -28,37 +28,40 @@ const CONTACT = "contact@joowonkoh.com";
 export default function YourMealMyMealLayout({ children }: { children: ReactNode }) {
   return (
     <div className="nemeal" style={{ "--nm-display": DISPLAY, "--nm-body": BODY } as CSSProperties}>
-      <Wallpaper>
-        <header className="mx-auto flex max-w-3xl items-center px-6 pt-6">
-          <Link href="/yourmealmymeal" className="flex items-center gap-2.5" aria-label="네밥내밥 처음으로">
-            <Image
-              src="/yourmealmymeal-icon.png"
-              alt=""
-              width={36}
-              height={36}
-              className="rounded-[10px]"
-              style={{ border: `2.5px solid ${C.ink}` }}
-            />
-            <span className="text-[22px]" style={{ fontFamily: DISPLAY, color: C.ink }}>
-              네밥내밥
-            </span>
-          </Link>
-        </header>
-
-        <div className="mx-auto max-w-3xl px-6 pb-16 pt-10">{children}</div>
-
-        <footer className="mx-auto max-w-3xl px-6 pb-12">
-          <div className="flex flex-wrap gap-x-5 gap-y-2 border-t-[2.5px] pt-6 text-[14px]" style={{ borderColor: C.ink, color: C.body }}>
-            <Link href="/yourmealmymeal" className="hover:underline">소개</Link>
-            <Link href="/yourmealmymeal/privacy" className="hover:underline">개인정보처리방침</Link>
-            <Link href="/yourmealmymeal/delete-account" className="hover:underline">계정 삭제</Link>
-            <a href={`mailto:${CONTACT}`} className="hover:underline">{CONTACT}</a>
-          </div>
-          <p className="mt-3 text-[13px]" style={{ color: C.sub }}>
-            © 2026 네밥내밥
-          </p>
-        </footer>
-      </Wallpaper>
+      <Shell
+        header={
+          <header className="mx-auto flex max-w-3xl items-center px-6 pt-6">
+            <Link href="/yourmealmymeal" className="flex items-center gap-2.5" aria-label="네밥내밥 처음으로">
+              <Image
+                src="/yourmealmymeal-icon.png"
+                alt=""
+                width={36}
+                height={36}
+                className="rounded-[10px]"
+                style={{ border: `2.5px solid ${C.ink}` }}
+              />
+              <span className="text-[22px]" style={{ fontFamily: DISPLAY, color: C.ink }}>
+                네밥내밥
+              </span>
+            </Link>
+          </header>
+        }
+        footer={
+          <footer className="mx-auto max-w-3xl px-6 pb-12">
+            <div className="flex flex-wrap gap-x-5 gap-y-2 border-t-[2.5px] pt-6 text-[14px]" style={{ borderColor: C.ink, color: C.body }}>
+              <Link href="/yourmealmymeal" className="hover:underline">소개</Link>
+              <Link href="/yourmealmymeal/privacy" className="hover:underline">개인정보처리방침</Link>
+              <Link href="/yourmealmymeal/delete-account" className="hover:underline">계정 삭제</Link>
+              <a href={`mailto:${CONTACT}`} className="hover:underline">{CONTACT}</a>
+            </div>
+            <p className="mt-3 text-[13px]" style={{ color: C.sub }}>
+              © 2026 네밥내밥
+            </p>
+          </footer>
+        }
+      >
+        {children}
+      </Shell>
     </div>
   );
 }
