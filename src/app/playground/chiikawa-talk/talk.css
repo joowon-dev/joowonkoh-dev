@@ -161,3 +161,37 @@
     transition: none !important;
   }
 }
+
+/* 통역 방향 스위치 — 알약 둘. */
+.ct-switch {
+  display: flex;
+  width: fit-content;
+  gap: 4px;
+  padding: 4px;
+  border: 3px solid #4b3a35;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 4px 0 #4b3a35;
+}
+.ct-switch button {
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.ct-switch button[data-on] {
+  background: #ff9fbd;
+  color: #fff;
+  text-shadow: 0 1px 0 #d36b8b;
+}
+
+/* 놀이터로 돌아가는 단추 — 전체 화면이라 사이트 헤더가 없다. */
+.ct-back {
+  border: 2px solid #4b3a35;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 12px;
+  font-size: 13px;
+  box-shadow: 0 2px 0 #4b3a35;
+}
