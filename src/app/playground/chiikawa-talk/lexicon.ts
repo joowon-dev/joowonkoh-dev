@@ -26,7 +26,7 @@ export const SOUNDS: Record<"chiikawa" | "usagi", Record<Mood, string[]>> = {
   chiikawa: {
     joy: ["와아!", "야다…!", "헤헤…", "후훗…"],
     sad: ["와…", "흐에에…", "아…", "우…"],
-    scared: ["히익…!", "으…", "와앗…"],
+    scared: ["히익…!", "으…", "히이이…"],
     hungry: ["냠…", "꼬르륵…", "와아…"],
     surprised: ["앗…!", "와앗!", "엣…"],
     angry: ["으으…!", "뭇…!"],
@@ -50,9 +50,21 @@ export const HACHIWARE: Record<Mood, { before: string[]; after: string[] }> = {
   joy: { before: ["와아~", "헤헤"], after: ["최고야~", "헤헤"] },
   sad: { before: ["에잇…"], after: ["괜찮아 괜찮아…", "울어도 돼…"] },
   scared: { before: ["으앗"], after: ["어떻게든 되라─!", "괜찮을 거야!"] },
-  hungry: { before: ["냠…"], after: ["같이 먹자~", "맛있겠다아"] },
+  hungry: { before: ["꿀꺽…"], after: ["같이 먹자~", "맛있겠다아"] },
   surprised: { before: ["엣?!", "우와"], after: ["굉장해~"] },
   angry: { before: ["으으"], after: ["진정 진정~"] },
   question: { before: ["음~"], after: ["어때?"] },
   plain: { before: ["저기 저기"], after: ["헤헤", "그치~"] },
+};
+
+/** 거꾸로 통역 — 소리만 있을 때 감정마다 짐작해 내놓는 한글. */
+export const MEANINGS: Record<Mood, string[]> = {
+  joy: ["너무 좋아! 신난다!", "행복해~", "최고야!"],
+  sad: ["너무 속상해…", "울고 싶어…", "힘들어…"],
+  scared: ["무서워… 어떡해", "살려 줘…!", "떨려…"],
+  hungry: ["배고파! 맛있는 거 먹고 싶어", "간식 먹을래", "밥 먹자!"],
+  surprised: ["헉, 깜짝이야!", "진짜?!", "말도 안 돼!"],
+  angry: ["으, 화나!", "짜증 나!", "그만해!"],
+  question: ["이게 뭐야?", "뭐라고?", "어떻게 된 거야?"],
+  plain: ["응, 그렇구나", "음…", "알겠어"],
 };
