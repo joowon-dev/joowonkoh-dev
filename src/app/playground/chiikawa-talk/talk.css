@@ -1,0 +1,163 @@
+/* 먼작귀 통역기 페이지 전용. 이 페이지 밖에는 쓰지 않는다(이름에 ct- 를 붙였다). */
+
+.ct-page {
+  color: #4b3a35;
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
+}
+
+/* 둥근 붓글씨 같은 Jua — 친구들 그림의 둥근 선과 맞춘다. */
+.ct-display {
+  font-family: "Jua", "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* 하늘·구름·분홍 노을, 맨 아래 풀밭 언덕. 그림 파일 없이 그라데이션만. */
+.ct-sky {
+  background:
+    radial-gradient(50% 30% at 15% 12%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(36% 22% at 85% 8%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(120% 22% at 50% 104%, #a9dc8c 0 58%, transparent 59%),
+    radial-gradient(90% 18% at 8% 102%, #c3e9a6 0 55%, transparent 56%),
+    linear-gradient(180deg, #bfe0ff 0%, #dcefff 40%, #ffe6ef 100%);
+}
+
+/* 반짝이 — 제목 둘레에 떠 있는 별. */
+.ct-star {
+  position: absolute;
+  color: #ffd75e;
+  text-shadow: 0 0 6px #fff;
+  animation: ct-twinkle 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.ct-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  border: 3px solid #4b3a35;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 4px 0 #4b3a35;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.2s;
+  cursor: pointer;
+}
+.ct-tab:hover {
+  transform: translateY(-2px);
+}
+.ct-tab:active,
+.ct-btn:active,
+.ct-chip:active {
+  transform: translateY(3px) scale(0.96);
+  box-shadow: 0 1px 0 #4b3a35;
+}
+
+.ct-card {
+  border: 3px solid #4b3a35;
+  border-radius: 28px;
+  background: #fffaf0;
+  box-shadow: 0 5px 0 #4b3a35;
+  padding: 16px 18px 14px;
+}
+
+.ct-btn {
+  border: 3px solid #4b3a35;
+  border-radius: 999px;
+  background: #ff9fbd;
+  color: #fff;
+  font-size: 18px;
+  padding: 6px 20px;
+  box-shadow: 0 4px 0 #4b3a35;
+  text-shadow: 0 1px 0 #d36b8b;
+  transition: transform 0.12s, box-shadow 0.12s;
+  cursor: pointer;
+}
+
+.ct-chip {
+  border: 2px solid #4b3a35;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12.5px;
+  padding: 2px 12px;
+  box-shadow: 0 2px 0 #4b3a35;
+  cursor: pointer;
+}
+
+/* 말풍선 — 왼쪽 친구를 가리키는 꼬리. */
+.ct-bubble {
+  position: relative;
+  border: 3px solid #4b3a35;
+  border-radius: 28px;
+  padding: 14px 18px 12px;
+  box-shadow: 0 5px 0 #4b3a35;
+}
+.ct-bubble::before,
+.ct-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: 22px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+.ct-bubble::before {
+  left: -17px;
+  border-width: 9px 16px 9px 0;
+  border-color: transparent #4b3a35 transparent transparent;
+}
+.ct-bubble::after {
+  left: -11px;
+  border-width: 6px 11px 6px 0;
+  /* 꼬리 안쪽은 말풍선 색 — Bubble 이 --ct-fill 로 넘긴다 */
+  border-color: transparent var(--ct-fill, #fff) transparent transparent;
+}
+
+.ct-pop {
+  animation: ct-pop 0.32s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.ct-bob {
+  animation: ct-bob 1.6s ease-in-out infinite;
+}
+
+@keyframes ct-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes ct-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes ct-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-page * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

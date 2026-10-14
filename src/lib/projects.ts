@@ -21,7 +21,8 @@ export type IconName =
   | "mitt"
   | "gift"
   | "firework"
-  | "shark";
+  | "shark"
+  | "bubble";
 
 export interface Project {
   title: string;
@@ -42,6 +43,15 @@ export interface Project {
 }
 
 export const projects: Project[] = [
+  {
+    title: "먼작귀 통역기",
+    description: "한글로 적으면 치이카와 친구들 말로 바꿔 줘요 💬",
+    tags: ["Web", "Text", "Fan"],
+    href: "/playground/chiikawa-talk",
+    icon: "bubble",
+    tile: ["#ffe3ec", "#bfe0ff"],
+    hidden: true,
+  },
   {
     title: "부캉이의 기록",
     description: "북항 수로에 들어온 상어 부캉이의 하루하루 🦈",
