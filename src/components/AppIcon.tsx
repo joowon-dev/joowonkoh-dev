@@ -445,6 +445,25 @@ function Firework() {
   );
 }
 
+/** 먼작귀 통역기 — 둥근 말풍선 안의 「…!」 */
+function Bubble() {
+  return (
+    <>
+      <path
+        d="M10 30 C10 17 20 10 32 10 C44 10 54 17 54 30 C54 43 44 50 32 50 C28 50 25 49 22 48 L12 54 L15 44 C12 40 10 35 10 30 Z"
+        fill="#fffaf0"
+        stroke="#4b3a35"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <circle cx="23" cy="31" r="2.6" fill="#4b3a35" />
+      <circle cx="31" cy="31" r="2.6" fill="#4b3a35" />
+      <path d="M41 22 L41 32" stroke="#ff8fb1" strokeWidth="3.4" strokeLinecap="round" />
+      <circle cx="41" cy="38" r="2" fill="#ff8fb1" />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -465,6 +484,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   gift: Gift,
   firework: Firework,
   shark: Shark,
+  bubble: Bubble,
 };
 
 /**
