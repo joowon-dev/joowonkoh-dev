@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     images: [
       {
         // 그림을 바꾸면 파일 이름도 바꾼다. 카톡은 같은 주소의 그림을 오래 붙들고 있다.
-        url: "https://joowonkoh.com/yourmealmymeal/og-join-v3.png",
+        url: "https://joowonkoh.com/yourmealmymeal/og-join-v4.png",
         width: 1200,
         height: 630,
         alt: "밝은 회색 바탕에 노른자색 네밥내밥 앱 아이콘(빈 민트 급식판)과 \"밥상에 초대받았어요\" 글자가 있는 초대 이미지",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "밥상에 초대받았어요",
     description: "가까운 친구끼리 끼니를 나누는 곳",
-    images: ["https://joowonkoh.com/yourmealmymeal/og-join-v3.png"],
+    images: ["https://joowonkoh.com/yourmealmymeal/og-join-v4.png"],
   },
 };
 

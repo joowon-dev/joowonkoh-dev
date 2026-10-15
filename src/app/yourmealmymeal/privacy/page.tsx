@@ -21,17 +21,17 @@ export default function YourMealMyMealPrivacyPage() {
       <span className="mb-4 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-accent">
         네밥내밥 · Legal
       </span>
-      <h1 className="font-display text-3xl font-bold leading-snug tracking-tight md:text-4xl">
+      <h1 className="font-display text-[28px] font-bold leading-[1.3] tracking-[-0.02em] md:text-[32px]">
         네밥내밥 개인정보처리방침
       </h1>
       <p className="mt-3 text-sm text-text-muted">최종 업데이트: {UPDATED_AT}</p>
 
       <div
-        className="mt-8 space-y-10 rounded-[28px] bg-white p-6 leading-[1.85] text-text-secondary sm:p-10"
+        className="mt-8 space-y-10 rounded-[28px] bg-white p-6 text-[15.5px] leading-[1.85] text-text-secondary sm:p-10"
         style={CARD}
       >
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             1. 개요
           </h2>
           <p className="mb-3">
@@ -75,7 +75,7 @@ export default function YourMealMyMealPrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             2. 수집하는 정보
           </h2>
           <ul className="ml-5 list-disc space-y-1.5">
@@ -141,7 +141,7 @@ export default function YourMealMyMealPrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             3. 누가 볼 수 있나
           </h2>
           <p className="mb-3">
@@ -168,7 +168,7 @@ export default function YourMealMyMealPrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             4. 제3자 서비스
           </h2>
           <p className="mb-3">
@@ -217,7 +217,7 @@ export default function YourMealMyMealPrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             5. 보관 기간
           </h2>
           <p>
@@ -228,7 +228,7 @@ export default function YourMealMyMealPrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             6. 계정 삭제
           </h2>
           <p className="mb-3">
@@ -248,7 +248,7 @@ export default function YourMealMyMealPrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             7. 이용자의 권리
           </h2>
           <ul className="ml-5 list-disc space-y-1.5">
@@ -279,7 +279,7 @@ export default function YourMealMyMealPrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             8. 아동의 개인정보
           </h2>
           <p>
@@ -289,7 +289,7 @@ export default function YourMealMyMealPrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             9. 방침의 변경
           </h2>
           <p>

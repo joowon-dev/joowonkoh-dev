@@ -1,52 +1,34 @@
-"use client";
-
-import { motion } from "motion/react";
-
-import { EASE } from "./motion";
-import { BODY, C, CARD, DISPLAY } from "./palette";
+import { C, CARD } from "./palette";
+import { Motif, type MotifKind } from "./Wallpaper";
 
 /**
- * 기능 카드. 한 장씩 살짝 비뚤게 놓여 있다가 커서를 얹으면 똑바로 서며 들린다.
- * 문단으로 설명하지 않는다 — 위의 식판과 밥상이 이미 보여 줬다.
+ * 기능 카드. 흰 카드에 작은 수저 무늬 하나와 두 줄 — 앱처럼 조용하게 둔다.
  */
-const FEATURES = [
-  { icon: "📸", title: "식판 한 칸씩", tail: "찍거나 앨범에서 골라 칸에 쏙", bg: C.surface, tilt: -1 },
-  { icon: "✂️", title: "담을 자리는 직접", tail: "밀고 키워서 밥이 안 잘리게", bg: "#E6F6EE", tilt: 0.8 },
-  { icon: "👉", title: "빈 칸엔 콕", tail: "아직 안 먹었으면 살짝 찔러요", bg: "#FFE9E4", tilt: -0.6 },
-  { icon: "🍽️", title: "식판은 하나", tail: "한 번 올리면 모든 모임에", bg: C.yolkSoft, tilt: 1 },
-  { icon: "💬", title: "반응 · 댓글", tail: "맛있겠다 한마디면 충분", bg: C.surface, tilt: -0.8 },
-  { icon: "🖼️", title: "하루를 한 장으로", tail: "그날 식판을 사진첩에 저장", bg: "#E6F6EE", tilt: 0.6 },
+const FEATURES: { title: string; tail: string; kind: MotifKind; color: string; soft: string }[] = [
+  { title: "식판 한 칸씩", tail: "찍거나 앨범에서 골라 칸에 쏙", kind: "bowl", color: C.mint, soft: C.mintSoft },
+  { title: "담을 자리는 직접", tail: "밀고 키워서 밥이 안 잘리게", kind: "spoon", color: C.yolk, soft: C.yolkSoft },
+  { title: "빈 칸엔 콕", tail: "아직 안 먹었으면 살짝 찔러요", kind: "fork", color: C.tomato, soft: C.tomatoSoft },
+  { title: "식판은 하나", tail: "한 번 올리면 모든 모임에", kind: "bowl", color: C.yolk, soft: C.yolkSoft },
+  { title: "반응 · 댓글", tail: "맛있겠다 한마디면 충분", kind: "star", color: C.tomato, soft: C.tomatoSoft },
+  { title: "하루를 한 장으로", tail: "그날 식판을 사진첩에 저장", kind: "spoon", color: C.mint, soft: C.mintSoft },
 ];
 
 export default function Features() {
   return (
-    <motion.div
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4"
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: "-60px" }}
-      variants={{ show: { transition: { staggerChildren: 0.07 } } }}
-    >
+    <div className="grid grid-cols-2 gap-3 text-left sm:grid-cols-3">
       {FEATURES.map((f) => (
-        <motion.div
-          key={f.title}
-          variants={{
-            hidden: { opacity: 0, y: 30, rotate: f.tilt * 4, scale: 0.9 },
-            show: { opacity: 1, y: 0, rotate: f.tilt, scale: 1, transition: { duration: 0.7, ease: EASE } },
-          }}
-          whileHover={{ rotate: 0, y: -6, scale: 1.04, transition: { type: "spring", stiffness: 380, damping: 18 } }}
-          className="rounded-[24px] p-4 sm:p-5"
-          style={{ ...CARD, background: f.bg }}
-        >
-          <span className="text-[28px] leading-none">{f.icon}</span>
-          <h3 className="mt-3 text-[17px] leading-[1.25]" style={{ fontFamily: DISPLAY }}>
+        <div key={f.title} className="rounded-[22px] bg-white p-4 sm:p-5" style={CARD}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: f.soft }}>
+            <Motif kind={f.kind} size={f.kind === "bowl" || f.kind === "star" ? 13 : 20} color={f.color} />
+          </span>
+          <h3 className="mt-3 text-[16px] leading-[1.3]" style={{ color: C.ink }}>
             {f.title}
           </h3>
-          <p className="mt-1 text-[14px] leading-[1.45] break-keep" style={{ fontFamily: BODY, color: C.body }}>
+          <p className="mt-1 text-[14px] leading-[1.5] break-keep" style={{ color: C.sub }}>
             {f.tail}
           </p>
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 }
