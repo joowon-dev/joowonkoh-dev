@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
-import { loadSprites } from "../desktop-chiikawa/sprites";
 import { CHARACTERS, type Character } from "./lexicon";
 import { toText, translate } from "./translate";
 import { untranslate } from "./untranslate";
@@ -30,17 +30,6 @@ export default function Translator() {
   const [draft, setDraft] = useState(EXAMPLE.to);
   const [said, setSaid] = useState(EXAMPLE.to);
   const [who, setWho] = useState<Character>("chiikawa");
-  const [urls, setUrls] = useState<Map<string, string>>(new Map());
-
-  useEffect(() => {
-    let alive = true;
-    void loadSprites().then((r) => {
-      if (alive) setUrls(r.urls);
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   /** 모드를 바꾸면서 입력도 같이 채운다. */
   const switchTo = (next: Mode, text = EXAMPLE[next]) => {
@@ -99,7 +88,7 @@ export default function Translator() {
               className="ct-tab"
               style={{ background: who === c.id ? TINT[c.id] : undefined }}
             >
-              <Face id={c.id} url={urls.get(c.id)} className={who === c.id ? "ct-bob" : ""} />
+              <Face id={c.id} className={who === c.id ? "ct-bob" : ""} />
               <span className="ct-display text-[17px]">{c.name}</span>
             </button>
           ))}
@@ -148,7 +137,6 @@ export default function Translator() {
       <Bubble
         key={`${mode}:${who}:${said}`}
         face={bubble.face}
-        url={bubble.face ? urls.get(bubble.face) : undefined}
         label={bubble.label}
         tokens={bubble.tokens}
         footnote={bubble.footnote}
@@ -161,7 +149,6 @@ export default function Translator() {
 
 function Bubble({
   face,
-  url,
   label,
   tokens,
   footnote,
@@ -169,7 +156,6 @@ function Bubble({
   onReverse,
 }: {
   face: Character | null;
-  url?: string;
   label: string;
   tokens: string[];
   footnote: string;
@@ -196,7 +182,7 @@ function Bubble({
 
   return (
     <section aria-live="polite" className="mt-7 flex items-end gap-3">
-      <Face id={face} url={url} className="ct-bob shrink-0" big />
+      <Face id={face} className="ct-bob shrink-0" big />
       <div className="ct-bubble min-w-0 flex-1" style={{ background: tint, ["--ct-fill" as string]: tint }}>
         <p className="ct-display text-[12px] opacity-55">{label}</p>
         <p className="ct-display mt-1 min-h-[1.6em] text-[24px] leading-snug break-keep">
@@ -239,29 +225,36 @@ function Bubble({
   );
 }
 
-/** 친구 그림. 아직 못 받았거나 못 받으면 이름 첫 글자 동그라미, 누군지 모르면 「?」. */
+/** 친구 그림(public/playground/chiikawa-talk). 누군지 모르면 「?」 동그라미. */
 function Face({
   id,
-  url,
   className = "",
   big,
 }: {
   id: Character | null;
-  url?: string;
   className?: string;
   big?: boolean;
 }) {
   const size = big ? "h-[92px] w-[92px]" : "h-[64px] w-[64px]";
-  if (url) {
-    // eslint-disable-next-line @next/next/no-img-element -- 런타임에 받은 data URL 이라 next/image 를 못 쓴다.
-    return <img src={url} alt="" className={`${size} object-contain ${className}`} draggable={false} />;
+  if (id) {
+    return (
+      <Image
+        src={`/playground/chiikawa-talk/${id}.webp`}
+        alt=""
+        width={220}
+        height={220}
+        priority
+        className={`${size} object-contain ${className}`}
+        draggable={false}
+      />
+    );
   }
   return (
     <span
       aria-hidden
       className={`${size} ct-display grid place-items-center rounded-full border-[3px] border-[#4b3a35] bg-white text-[22px] ${className}`}
     >
-      {id ? nameOf(id)[0] : "?"}
+      ?
     </span>
   );
 }
