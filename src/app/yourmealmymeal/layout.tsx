@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
-import { BODY, C, DISPLAY, GLASS, WORDMARK } from "./palette";
+import TrayMark from "./Mark";
+import { BODY, C, DISPLAY } from "./palette";
 import Shell from "./Shell";
 import "./theme.css";
 
@@ -30,32 +30,31 @@ export default function YourMealMyMealLayout({ children }: { children: ReactNode
     <div className="nemeal" style={{ "--nm-display": DISPLAY, "--nm-body": BODY } as CSSProperties}>
       <Shell
         header={
-          <header className="sticky top-3 z-30 mx-auto flex max-w-3xl px-4 pt-3 sm:px-6">
+          <header className="mx-auto flex max-w-3xl px-5 pt-6 sm:px-6">
             <Link
               href="/yourmealmymeal"
-              className="flex items-center gap-2.5 rounded-full py-1.5 pl-1.5 pr-4 transition-transform active:scale-[0.97]"
-              style={GLASS}
+              className="flex items-center gap-2 rounded-full py-1 pr-2 transition-opacity hover:opacity-80"
               aria-label="네밥내밥 처음으로"
             >
-              <Image src="/yourmealmymeal/icon.svg" alt="" width={34} height={34} unoptimized className="rounded-full" />
-              <span className="text-[20px] leading-none" style={{ fontFamily: WORDMARK, color: C.mint }}>
+              <TrayMark size={34} />
+              <span className="text-[19px] font-bold leading-none tracking-[-0.02em]" style={{ color: C.ink }}>
                 네밥내밥
               </span>
             </Link>
           </header>
         }
         footer={
-          <footer className="mx-auto max-w-3xl px-6 pb-12">
+          <footer className="mx-auto max-w-3xl px-5 pb-12 sm:px-6">
             <div
-              className="flex flex-wrap gap-x-5 gap-y-2 border-t pt-6 text-[14px]"
-              style={{ borderColor: C.hairline, color: C.body }}
+              className="flex flex-wrap justify-center gap-x-5 gap-y-2 border-t pt-6 text-[14px]"
+              style={{ borderColor: C.hairline, color: C.sub }}
             >
               <Link href="/yourmealmymeal" className="hover:underline">소개</Link>
               <Link href="/yourmealmymeal/privacy" className="hover:underline">개인정보처리방침</Link>
               <Link href="/yourmealmymeal/delete-account" className="hover:underline">계정 삭제</Link>
               <a href={`mailto:${CONTACT}`} className="hover:underline">{CONTACT}</a>
             </div>
-            <p className="mt-3 text-[13px]" style={{ color: C.sub }}>
+            <p className="mt-3 text-center text-[13px]" style={{ color: C.sub }}>
               © 2026 네밥내밥
             </p>
           </footer>

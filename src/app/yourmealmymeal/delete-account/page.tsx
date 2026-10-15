@@ -21,17 +21,17 @@ export default function YourMealMyMealDeleteAccountPage() {
       <span className="mb-4 inline-block rounded-full bg-accent-soft px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-accent">
         네밥내밥 · Legal
       </span>
-      <h1 className="font-display text-3xl font-bold leading-snug tracking-tight md:text-4xl">
+      <h1 className="font-display text-[28px] font-bold leading-[1.3] tracking-[-0.02em] md:text-[32px]">
         네밥내밥 계정 삭제
       </h1>
       <p className="mt-3 text-sm text-text-muted">최종 업데이트: {UPDATED_AT}</p>
 
       <div
-        className="mt-8 space-y-10 rounded-[28px] bg-white p-6 leading-[1.85] text-text-secondary sm:p-10"
+        className="mt-8 space-y-10 rounded-[28px] bg-white p-6 text-[15.5px] leading-[1.85] text-text-secondary sm:p-10"
         style={CARD}
       >
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             앱에서 바로 지우기
           </h2>
           <p className="mb-3">
@@ -52,7 +52,7 @@ export default function YourMealMyMealDeleteAccountPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             앱이 없을 때
           </h2>
           <p className="mb-3">
@@ -72,7 +72,7 @@ export default function YourMealMyMealDeleteAccountPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             무엇이 지워지나
           </h2>
           <p className="mb-3">
@@ -96,7 +96,7 @@ export default function YourMealMyMealDeleteAccountPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             얼마나 남나
           </h2>
           <p>
@@ -106,7 +106,7 @@ export default function YourMealMyMealDeleteAccountPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-display text-xl font-semibold text-text-primary">
+          <h2 className="mb-3 font-display text-[19px] font-bold text-text-primary">
             함께 보기
           </h2>
           <p>

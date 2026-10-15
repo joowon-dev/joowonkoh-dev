@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
 import { EASE } from "./motion";
-import { BODY, C, CARD, DISPLAY } from "./palette";
+import { C, CARD } from "./palette";
 
 const QA = [
   {
@@ -41,8 +41,8 @@ export default function Faq() {
           <motion.div
             key={item.q}
             layout
-            className="overflow-hidden rounded-[22px]"
-            style={{ ...CARD, background: on ? C.surface : C.cloth }}
+            className="overflow-hidden rounded-[22px] text-left"
+            style={{ ...CARD, background: C.surface }}
           >
             <button
               type="button"
@@ -50,14 +50,14 @@ export default function Faq() {
               onClick={() => setOpen(on ? null : i)}
               className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
             >
-              <span className="text-[16px] font-semibold leading-[1.4] tracking-[-0.01em] break-keep" style={{ fontFamily: DISPLAY }}>
+              <span className="text-[16px] font-semibold leading-[1.4] tracking-[-0.01em] break-keep" style={{ color: C.ink }}>
                 {item.q}
               </span>
               <motion.span
-                animate={{ rotate: on ? 45 : 0, backgroundColor: on ? C.yolk : C.surface }}
+                animate={{ rotate: on ? 45 : 0, backgroundColor: on ? C.mint : C.surface, color: on ? "#FFFFFF" : C.ink }}
                 transition={{ type: "spring", stiffness: 400, damping: 22 }}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[20px] font-light"
-                style={{ border: `1px solid ${C.hairline}`, fontFamily: DISPLAY }}
+                style={{ border: `1px solid ${on ? C.mint : C.hairline}` }}
                 aria-hidden
               >
                 +
@@ -74,7 +74,7 @@ export default function Faq() {
                 >
                   <p
                     className="px-5 pb-5 text-[15px] leading-[1.8] break-keep"
-                    style={{ fontFamily: BODY, color: C.body }}
+                    style={{ color: C.body }}
                   >
                     {item.a}
                   </p>
