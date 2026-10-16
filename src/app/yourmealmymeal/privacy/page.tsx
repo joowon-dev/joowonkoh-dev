@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-const UPDATED_AT = "2026년 9월 27일";
+const UPDATED_AT = "2026년 10월 16일";
 const CONTACT = "contact@joowonkoh.com";
 
 export default function YourMealMyMealPrivacyPage() {
@@ -49,13 +49,15 @@ export default function YourMealMyMealPrivacyPage() {
               보입니다.
             </li>
             <li>
-              본 앱은 화면 아래에{" "}
-              <strong className="text-text-primary">Google AdMob 배너 광고</strong>를
-              싣고, 이용 통계를 위해 Google Analytics for Firebase를 씁니다. 이름·이메일·
-              사진·끼니 기록은 이 서비스들에 넘기지 않습니다.
+              본 앱은{" "}
+              <strong className="text-text-primary">Google AdMob 전면 광고와 보상형 광고</strong>를
+              싣습니다. 전면 광고는 사진을 보고 나오거나 올리기를 마친 뒤 가끔 한 화면 전체에
+              뜨고, 보상형 광고는 콕을 다 썼을 때 이용자가 직접 골라서 봅니다. 화면에 늘 떠 있는
+              배너 광고는 없습니다. 이용 통계를 위해 Google Analytics for Firebase를 씁니다.
+              이름·이메일·사진·끼니 기록은 이 서비스들에 넘기지 않습니다.
             </li>
             <li>
-              iOS에서는 광고 추적을{" "}
+              iOS에서는 로그인한 뒤 광고 추적을{" "}
               <strong className="text-text-primary">허용할지 먼저 묻고</strong>,
               거절해도 앱의 모든 기능을 그대로 쓸 수 있습니다.
             </li>
@@ -196,7 +198,7 @@ export default function YourMealMyMealPrivacyPage() {
               이메일 주소를 전달받습니다.
             </li>
             <li>
-              <strong className="text-text-primary">Google AdMob</strong> — 배너 광고.
+              <strong className="text-text-primary">Google AdMob</strong> — 전면 광고와 보상형 광고.
               광고 식별자, 광고 노출·클릭 정보, 기기 정보가 전달됩니다.
             </li>
             <li>
