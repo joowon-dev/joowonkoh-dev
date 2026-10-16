@@ -21,10 +21,10 @@ export const metadata: Metadata = {
 const CONTACT = "contact@joowonkoh.com";
 
 const SHOTS = [
-  { src: "/wapanyang/result.jpg", alt: "웃는 고양이와 보안 안전 등급, 보안 항목 다섯 개가 보이는 진단 결과 화면", caption: "안전해요" },
-  { src: "/wapanyang/cafe.jpg", alt: "물음표를 띄운 고양이와 암호 없는 와이파이 경고, 할 일이 보이는 화면", caption: "공용 와이파이 주의" },
-  { src: "/wapanyang/measuring.jpg", alt: "실시간 다운로드 속도와 진행 단계가 보이는 측정 화면", caption: "속도 재는 중" },
-  { src: "/wapanyang/speed.jpg", alt: "다운로드·업로드·핑·지터와 용도별 판정이 보이는 화면", caption: "이걸로 뭘 할 수 있나" },
+  { src: "/wapanyang/home.jpg", alt: "와이파이 이름 아래 머리에 와이파이 막대를 단 고양이와 진단하기 버튼이 보이는 첫 화면", caption: "한 번 누르면 끝" },
+  { src: "/wapanyang/measuring.jpg", alt: "고양이가 돋보기를 들고 검사하는 동안 진행 단계와 진행 막대가 보이는 화면", caption: "검사 중이에요" },
+  { src: "/wapanyang/result.jpg", alt: "막대 세 칸을 단 웃는 고양이와 넷플릭스 4K 거뜬해요, 용도별 판정과 보안 안전 등급이 보이는 결과 화면", caption: "안전하고 빨라요" },
+  { src: "/wapanyang/cafe.jpg", alt: "물음표를 띄운 고양이와 보안 주의 등급, 비밀번호 잠금 없음 경고가 보이는 카페 와이파이 결과 화면", caption: "공용 와이파이 주의" },
 ];
 
 const STEPS = [
@@ -155,9 +155,8 @@ export default function WapanyangPage() {
         <Reveal>
           <Eyebrow>문의 및 지원</Eyebrow>
           <p className="max-w-[52ch] text-[15px] leading-[1.8] break-keep" style={{ color: C.inkSoft }}>
-            아직 스토어에 올라가지 않았고, 출시를 준비하고 있습니다. 올라가면 이
-            페이지에 내려받는 곳을 답니다. 결과가 이상하거나 궁금한 점이 있으면 아래
-            이메일로 알려 주세요. 휴대폰 기종과 운영체제 버전을 함께 적어 주시면 더
+            iPhone 은 App Store 에서 무료로 받을 수 있고, Android 는 출시를 준비하고
+            있습니다. 결과가 이상하거나 궁금한 점이 있으면 아래 이메일로 알려 주세요. 휴대폰 기종과 운영체제 버전을 함께 적어 주시면 더
             빨리 고칠 수 있습니다.
           </p>
           <div className="mt-5 flex flex-wrap gap-2.5">

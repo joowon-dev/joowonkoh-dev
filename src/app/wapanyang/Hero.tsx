@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import { useState } from "react";
 
-import Mascot, { type Mood } from "./Mascot";
+import Mascot, { type Bars, type Mood } from "./Mascot";
 import { EASE } from "./motion";
 import { C, CUTE, STICKER } from "./palette";
 
@@ -35,6 +35,11 @@ function headline(mbps: number): string {
   if (mbps >= 5) return "유튜브 HD는 괜찮아요";
   if (mbps >= 3) return "웹서핑 정도는 돼요";
   return "많이 느려요";
+}
+
+/** 앱의 signalBars 와 같다: 넷플릭스 4K 3칸, 유튜브 HD 2칸, 그 아래 1칸. */
+function bars(mbps: number): Bars {
+  return mbps >= 25 ? 3 : mbps >= 5 ? 2 : 1;
 }
 
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -75,7 +80,7 @@ function CatDemo() {
         </span>
       </div>
       <div className="mt-2 flex justify-center">
-        <Mascot mood={g.mood} width={240} />
+        <Mascot mood={g.mood} bars={bars(mbps)} width={240} />
       </div>
       <p className="mt-3 text-[13px]" style={{ color: C.inkSoft }}>
         다운로드 속도
