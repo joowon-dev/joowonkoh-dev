@@ -20,6 +20,7 @@ export type IconName =
   | "ball"
   | "mitt"
   | "gift"
+  | "car"
   | "firework"
   | "shark"
   | "bubble";
@@ -212,6 +213,16 @@ export const projects: Project[] = [
     icon: "code",
     tile: ["#f6f6f8", "#e0e0e6"],
     hidden: true,
+  },
+  {
+    title: "로드스터 택배",
+    description: "적어 보낸 말이 로드스터 상자에 실려 착륙합니다 🚀",
+    tags: ["Interactive", "SVG", "CSS Animation"],
+    href: "/playground/roadster-box",
+    icon: "car",
+    tile: ["#23184a", "#05060f"],
+    blurb:
+      "로드스터 패러디 영상을 보고 만든 링크 편지입니다. 보내는 사람이 한마디 적으면 그 글이 링크 주소의 # 뒤에 실리고, 받는 사람이 열면 빨간 로드스터가 역분사하며 착륙장에 내려앉습니다. 지붕이 상자 뚜껑처럼 뒤로 젖혀지면 글자가 화면 곳곳으로 튀어 나갔다가 하나씩 날아와 제자리에 앉습니다. 글은 주소 안에만 있어서 서버에도 카톡 미리보기에도 남지 않고, 대화방에는 «로드스터 택배가 도착했어요»까지만 보입니다.",
   },
   {
     title: "개강 선물",

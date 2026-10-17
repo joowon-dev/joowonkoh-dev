@@ -1,0 +1,210 @@
+/* ── 하늘 ─────────────────────────────────────────── */
+
+.sky {
+  background:
+    radial-gradient(120% 70% at 50% 110%, #3b1d4a 0%, transparent 60%),
+    linear-gradient(#05060f 0%, #0c1030 55%, #23184a 100%);
+}
+
+.twinkle {
+  animation: twinkle 3.2s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.display {
+  font-family: "Jua", var(--font-sans, system-ui), sans-serif;
+}
+
+/* ── 로드스터가 내려온다 ─────────────────────────── */
+
+/* 떨어지다가 거꾸로 분사해 속도를 죽이고 패드 위에 선다(팰컨 부스터 착륙 흉내). */
+.drop {
+  animation: drop 1.4s cubic-bezier(0.25, 0.1, 0.35, 1) both;
+}
+
+@keyframes drop {
+  0% {
+    transform: translateY(-120vh) rotate(-14deg);
+  }
+  55% {
+    transform: translateY(-26vh) rotate(4deg);
+  }
+  80% {
+    transform: translateY(-5vh) rotate(-1.5deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+}
+
+.squash {
+  transform-origin: 50% 100%;
+  animation: squash 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+@keyframes squash {
+  0% {
+    transform: scale(1.08, 0.86);
+  }
+  55% {
+    transform: scale(0.97, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+.shake {
+  animation: shake 0.42s linear both;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-5px, 4px);
+  }
+  40% {
+    transform: translate(4px, -3px);
+  }
+  60% {
+    transform: translate(-3px, 2px);
+  }
+  80% {
+    transform: translate(2px, -1px);
+  }
+}
+
+/* 아래로 뿜는 불꽃. 내려오는 동안만 깜빡인다 */
+.flame {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  animation: flame 0.09s linear infinite alternate;
+}
+
+@keyframes flame {
+  from {
+    transform: scaleY(0.75) scaleX(0.9);
+    opacity: 0.8;
+  }
+  to {
+    transform: scaleY(1.15) scaleX(1.05);
+    opacity: 1;
+  }
+}
+
+.puff {
+  animation: puff 0.9s ease-out both;
+}
+
+@keyframes puff {
+  0% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--px), -18px) scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* ── 상자(로드스터 지붕)가 열린다 ───────────────────── */
+
+/* 뒤쪽 경첩을 축으로 지붕째 뒤로 젖혀진다. 값은 SVG viewBox 좌표다 */
+.lid {
+  transform-box: view-box;
+  transform-origin: 62px 66px;
+  transition: transform 0.65s cubic-bezier(0.3, 1.45, 0.5, 1);
+}
+
+.opened .lid {
+  transform: rotate(-118deg);
+}
+
+.glow {
+  opacity: 0;
+  transition: opacity 0.4s ease-out 0.15s;
+}
+
+.opened .glow {
+  opacity: 1;
+}
+
+/* ── 글자들: 숨음 → 흩어짐 → 제자리 ─────────────────── */
+
+.ch {
+  display: inline-block;
+  white-space: pre;
+  transition:
+    transform var(--t, 0.6s) var(--ease, ease) var(--d, 0s),
+    opacity 0.25s ease var(--d, 0s);
+  will-change: transform;
+}
+
+/* 상자 입구(--ox, --oy)에 작게 웅크려 있다 */
+.hidden .ch {
+  opacity: 0;
+  transform: translate(var(--ox, 0), var(--oy, 0)) scale(0.1);
+  transition: none;
+}
+
+/* 펑 — 화면 여기저기로 튀어 나간다 */
+.scatter .ch {
+  opacity: 1;
+  transform: translate(var(--sx), var(--sy)) rotate(var(--sr)) scale(1.2);
+  --t: 0.75s;
+  --ease: cubic-bezier(0.12, 0.85, 0.3, 1);
+  --d: calc(var(--i) * 14ms);
+}
+
+/* 하나씩 날아와 제자리에 탁 앉는다 */
+.settle .ch {
+  opacity: 1;
+  transform: none;
+  --t: 0.85s;
+  --ease: cubic-bezier(0.34, 1.5, 0.6, 1);
+  --d: calc(var(--j) * 45ms);
+}
+
+.rise {
+  animation: rise 0.55s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop,
+  .squash,
+  .shake,
+  .puff,
+  .rise,
+  .twinkle,
+  .flame {
+    animation: none;
+  }
+  .lid,
+  .glow,
+  .ch {
+    transition: none;
+  }
+}

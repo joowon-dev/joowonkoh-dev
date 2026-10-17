@@ -402,6 +402,21 @@ function Gift() {
   );
 }
 
+/** 로드스터 택배 — 지붕이 열린 빨간 로드스터와 솟는 빛 */
+function Car() {
+  return (
+    <>
+      <path d="M22 38 L42 38 L52 12 L12 12 Z" fill="#ffe9a8" opacity="0.45" />
+      <path d="M17 38 L10 22 L14 20 L23 37 Z" fill="#b5101a" />
+      <path d="M6 48 L6 42 Q7 38 14 38 L50 38 Q58 39 59 44 L58 48 Z" fill="#e31b23" />
+      <circle cx="17" cy="49" r="6" fill="#141418" />
+      <circle cx="47" cy="49" r="6" fill="#141418" />
+      <circle cx="17" cy="49" r="2.5" fill="#a9b0bd" />
+      <circle cx="47" cy="49" r="2.5" fill="#a9b0bd" />
+    </>
+  );
+}
+
 /** 불꽃놀이 — 밤하늘에 터진 불꽃과 올라가는 불꽃탄 */
 function Shark() {
   return (
@@ -482,6 +497,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   ball: Ball,
   mitt: Mitt,
   gift: Gift,
+  car: Car,
   firework: Firework,
   shark: Shark,
   bubble: Bubble,
