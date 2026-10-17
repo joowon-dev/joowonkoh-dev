@@ -24,43 +24,106 @@
   font-family: "Jua", var(--font-sans, system-ui), sans-serif;
 }
 
-/* ── 로드스터가 내려온다 ─────────────────────────── */
+/* ── 상자가 달려와 차를 넘는다 ─────────────────────── */
 
-/* 떨어지다가 거꾸로 분사해 속도를 죽이고 패드 위에 선다(팰컨 부스터 착륙 흉내). */
-.drop {
-  animation: drop 1.4s cubic-bezier(0.25, 0.1, 0.35, 1) both;
+/* 바깥은 가로(left), 안쪽 hop 은 높이, 그 안 flip 은 킥플립 — 셋을 나눠야 포물선 위에서 돈다 */
+.mover {
+  position: absolute;
+  bottom: 0;
+  left: -20%;
+  width: var(--bw);
+  transform: translateX(-50%);
+  perspective: 600px;
 }
 
-@keyframes drop {
+.run {
+  animation: run 0.7s cubic-bezier(0.5, 0, 1, 1) both;
+}
+
+@keyframes run {
+  from {
+    left: -20%;
+  }
+  to {
+    left: 15%;
+  }
+}
+
+.jump {
+  animation: jumpX 1.25s linear both;
+}
+
+@keyframes jumpX {
+  from {
+    left: 15%;
+  }
+  to {
+    left: 85%;
+  }
+}
+
+.jump .hop {
+  animation: hop 1.25s both;
+}
+
+@keyframes hop {
   0% {
-    transform: translateY(-120vh) rotate(-14deg);
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.15, 0.7, 0.4, 1);
   }
-  55% {
-    transform: translateY(-26vh) rotate(4deg);
-  }
-  80% {
-    transform: translateY(-5vh) rotate(-1.5deg);
+  50% {
+    transform: translateY(-200%);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.85, 0.3);
   }
   100% {
-    transform: translateY(0) rotate(0);
+    transform: translateY(0);
   }
 }
 
-.squash {
+/* 진행 방향을 축으로 한 바퀴 — 옆에서 보면 상자가 납작해졌다 뒤집혀 돌아온다 */
+.jump .flip {
+  animation: flip 1.25s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+@keyframes flip {
+  0%,
+  18% {
+    transform: rotateX(0) rotate(0);
+  }
+  50% {
+    transform: rotateX(180deg) rotate(-8deg);
+  }
+  82%,
+  100% {
+    transform: rotateX(360deg) rotate(0);
+  }
+}
+
+.landed {
+  left: 85%;
+}
+
+.landed .hop {
   transform-origin: 50% 100%;
   animation: squash 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
 }
 
 @keyframes squash {
   0% {
-    transform: scale(1.08, 0.86);
+    transform: scale(1.12, 0.82);
   }
   55% {
-    transform: scale(0.97, 1.05);
+    transform: scale(0.96, 1.06);
   }
   100% {
     transform: scale(1, 1);
   }
+}
+
+/* 착지한 뒤 무대 가운데로 미끄러져 온다 */
+.center {
+  left: 50%;
+  transition: left 0.8s cubic-bezier(0.5, 0, 0.3, 1);
 }
 
 .shake {
@@ -86,21 +149,19 @@
   }
 }
 
-/* 아래로 뿜는 불꽃. 내려오는 동안만 깜빡인다 */
-.flame {
-  transform-box: fill-box;
+.jet {
   transform-origin: 50% 0%;
-  animation: flame 0.09s linear infinite alternate;
+  animation: jet 0.5s ease-out both;
 }
 
-@keyframes flame {
-  from {
-    transform: scaleY(0.75) scaleX(0.9);
-    opacity: 0.8;
-  }
-  to {
-    transform: scaleY(1.15) scaleX(1.05);
+@keyframes jet {
+  0% {
+    transform: scaleY(0.2);
     opacity: 1;
+  }
+  100% {
+    transform: scaleY(1.6) scaleX(2.2);
+    opacity: 0;
   }
 }
 
@@ -119,17 +180,30 @@
   }
 }
 
-/* ── 상자(로드스터 지붕)가 열린다 ───────────────────── */
+/* ── 상자가 열린다 ─────────────────────────────── */
 
-/* 뒤쪽 경첩을 축으로 지붕째 뒤로 젖혀진다. 값은 SVG viewBox 좌표다 */
-.lid {
+/* 덮개는 바깥쪽 끝을 축으로 양쪽으로 젖혀진다. 값은 SVG viewBox 좌표다 */
+.flapL,
+.flapR {
   transform-box: view-box;
-  transform-origin: 62px 66px;
-  transition: transform 0.65s cubic-bezier(0.3, 1.45, 0.5, 1);
+  transition: transform 0.6s cubic-bezier(0.3, 1.45, 0.5, 1);
 }
 
-.opened .lid {
-  transform: rotate(-118deg);
+.flapL {
+  transform-origin: 3px 15px;
+}
+
+.flapR {
+  transform-origin: 97px 15px;
+  transition-delay: 0.08s;
+}
+
+.opened .flapL {
+  transform: rotate(-125deg);
+}
+
+.opened .flapR {
+  transform: rotate(125deg);
 }
 
 .glow {
@@ -193,16 +267,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drop,
-  .squash,
   .shake,
   .puff,
+  .jet,
   .rise,
-  .twinkle,
-  .flame {
+  .twinkle {
     animation: none;
   }
-  .lid,
+  .center,
+  .flapL,
+  .flapR,
   .glow,
   .ch {
     transition: none;

@@ -2,7 +2,7 @@
 
 import { useCallback, useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { MAX_CHARS, decodeHash, encodeHash, splitChars, tidy } from "./message";
-import Roadster from "./Roadster";
+import Box, { Cars } from "./Box";
 import styles from "./roadster.module.css";
 
 /* ── 주소 뒤(#) 읽기 ────────────────────────────────
@@ -76,12 +76,13 @@ export default function RoadsterBox() {
 
 /* ── 받는 쪽: 착륙 → 열림 → 흩어짐 → 제자리 ───────────── */
 
-type Phase = "drop" | "land" | "open" | "scatter" | "settle" | "done";
+type Phase = "run" | "jump" | "land" | "center" | "open" | "scatter" | "settle" | "done";
 
-const AT = { land: 1400, open: 1950, scatter: 2550, settle: 3550 };
+/** 로드스터 공개 영상 순서 그대로: 달려와서 → 분사해 떠올라 킥플립 → 착지. 그다음 상자가 열린다 */
+const AT = { jump: 700, land: 1950, center: 2500, open: 3350, scatter: 3950, settle: 4950 };
 
 function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
-  const [phase, setPhase] = useState<Phase>(() => (prefersReducedMotion() ? "done" : "drop"));
+  const [phase, setPhase] = useState<Phase>(() => (prefersReducedMotion() ? "done" : "run"));
   const boxRef = useRef<HTMLDivElement>(null);
 
   const chars = splitChars(text);
@@ -97,10 +98,9 @@ function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
     if (phase === "done") return;
     const settleEnd = AT.settle + visible * 45 + 900;
     const timers = [
-      window.setTimeout(() => setPhase("land"), AT.land),
-      window.setTimeout(() => setPhase("open"), AT.open),
-      window.setTimeout(() => setPhase("scatter"), AT.scatter),
-      window.setTimeout(() => setPhase("settle"), AT.settle),
+      ...(Object.entries(AT) as [Phase, number][]).map(([p, ms]) =>
+        window.setTimeout(() => setPhase(p), ms),
+      ),
       window.setTimeout(() => setPhase("done"), settleEnd),
     ];
     return () => timers.forEach((t) => window.clearTimeout(t));
@@ -135,33 +135,37 @@ function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
     return () => window.removeEventListener("resize", place);
   }, []);
 
-  const letters =
-    phase === "drop" || phase === "land" || phase === "open"
-      ? styles.hidden
-      : phase === "scatter"
-        ? styles.scatter
-        : styles.settle;
-  const opened = phase !== "drop" && phase !== "land";
+  const before = phase === "run" || phase === "jump" || phase === "land" || phase === "center";
+  const letters = before || phase === "open" ? styles.hidden : phase === "scatter" ? styles.scatter : styles.settle;
+  const mover =
+    phase === "run" ? styles.run : phase === "jump" ? styles.jump : phase === "land" ? styles.landed : styles.center;
 
   return (
-    <div className={`${phase === "land" ? styles.shake : ""} relative flex min-h-full flex-col items-center justify-end overflow-hidden px-4 pb-[12vh]`}>
+    <div className={`${phase === "land" ? styles.shake : ""} relative flex min-h-full flex-col items-center justify-end overflow-hidden px-2 pb-[14vh]`}>
       <p
-        className={`${styles.display} absolute left-0 right-0 top-[7vh] text-center text-[15px] text-white/60 transition-opacity duration-500 ${
-          phase === "done" ? "opacity-0" : "opacity-100"
+        className={`${styles.display} absolute left-0 right-0 top-[7vh] text-center text-[16px] text-white/65 transition-opacity duration-500 ${
+          before ? "opacity-100" : "opacity-0"
         }`}
       >
-        {phase === "drop" ? "🚀 로드스터 택배가 내려오고 있어요…" : "📦 착륙 완료! 상자를 엽니다"}
+        {phase === "run" || phase === "jump" ? "Do a kickflip! 📦" : "착지 성공! 상자를 엽니다"}
       </p>
 
-      {/* 무대: 글자 + 차 + 착륙장. 너비가 차 크기를 정한다 */}
-      <div className={`relative w-[min(84vw,520px)] ${opened ? styles.opened : ""}`}>
-        {/* 글자 상자. 바닥이 차 지붕 높이에 딱 맞아서 거기서 글자가 솟는다 */}
+      {/* 무대: 바닥 위에 차 다섯 대, 그 위를 상자가 넘는다. --bw 가 상자 너비다 */}
+      <div
+        className={`relative w-[min(96vw,1100px)] ${before ? "" : styles.opened}`}
+        style={{ "--bw": "clamp(80px, 15vw, 170px)", height: "calc(var(--bw) * 0.84)" } as React.CSSProperties}
+      >
+        {/* 글자 상자. 바닥이 상자 덮개 높이에 맞아서 거기서 글자가 솟는다 */}
         <div
           ref={boxRef}
           role="status"
           aria-label={text}
-          className={`${letters} ${styles.display} absolute bottom-[47%] left-1/2 w-[min(92vw,600px)] -translate-x-1/2 pb-8 text-center leading-[1.25] break-keep`}
-          style={{ fontSize: size, textShadow: "0 0 18px rgba(255,214,120,.55), 0 2px 0 rgba(0,0,0,.35)" }}
+          className={`${letters} ${styles.display} absolute left-1/2 w-[min(92vw,600px)] -translate-x-1/2 pb-6 text-center leading-[1.25] break-keep`}
+          style={{
+            bottom: "calc(var(--bw) * 0.72)",
+            fontSize: size,
+            textShadow: "0 0 18px rgba(255,214,120,.55), 0 2px 0 rgba(0,0,0,.35)",
+          }}
         >
           {lines.map((line, n) => (
             <div key={n} className="min-h-[1em]">
@@ -180,15 +184,29 @@ function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
           ))}
         </div>
 
-        <div className={phase === "drop" ? styles.drop : phase === "land" ? styles.squash : ""}>
-          <Roadster flame={phase === "drop"} />
+        <div
+          className={`absolute bottom-0 left-[24%] w-[52%] transition-all duration-700 ${
+            phase === "run" || phase === "jump" || phase === "land" ? "" : "translate-y-3 opacity-0"
+          }`}
+        >
+          <Cars />
         </div>
 
-        {phase === "land" && <Dust />}
-        <LandingPad />
+        <div className={`${styles.mover} ${mover}`}>
+          <div className={styles.hop}>
+            <div className={styles.flip}>
+              <Box />
+            </div>
+          </div>
+          {phase === "run" && <SpeedLines />}
+          {phase === "jump" && <Jets />}
+          {phase === "land" && <Dust />}
+        </div>
+
+        <div aria-hidden className="absolute -bottom-[3px] left-[-4vw] right-[-4vw] h-[3px] rounded-full bg-white/15" />
       </div>
 
-      <div className="relative mt-8 flex h-[52px] w-full max-w-sm gap-3">
+      <div className="relative mt-10 flex h-[52px] w-full max-w-sm gap-3 px-2">
         {phase === "done" && (
           <>
             <button
@@ -196,7 +214,7 @@ function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
               onClick={onReplay}
               className={`${styles.rise} flex-1 rounded-2xl border border-white/15 bg-white/5 text-[14px] font-medium text-white/85 transition hover:bg-white/10 active:scale-[0.98]`}
             >
-              다시 열어 보기
+              다시 보기
             </button>
             <button
               type="button"
@@ -212,27 +230,38 @@ function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
   );
 }
 
-/** 착륙장. 드론십 갑판의 X 표시를 흉내 냈다 */
-function LandingPad() {
+/** 달려올 때 상자 뒤로 끌리는 바람 줄 */
+function SpeedLines() {
   return (
-    <svg viewBox="0 0 320 30" className="-mt-[4%] block w-[118%] -translate-x-[8%]" aria-hidden>
-      <ellipse cx="160" cy="12" rx="156" ry="11" fill="#1c1f33" />
-      <ellipse cx="160" cy="11" rx="148" ry="9" fill="#2a2e48" />
-      <path d="M128 5 L192 17 M192 5 L128 17" stroke="#f2d16b" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
-    </svg>
+    <div aria-hidden className="pointer-events-none absolute right-full top-[30%] mr-2 flex w-16 flex-col items-end gap-2.5">
+      {[100, 70, 85].map((w) => (
+        <span key={w} className="block h-[3px] rounded-full bg-white/50" style={{ width: `${w}%` }} />
+      ))}
+    </div>
   );
 }
 
-/** 착륙하는 순간 바퀴 옆으로 퍼지는 먼지 */
-function Dust() {
-  const puffs = [-90, -60, -30, 30, 60, 90];
+/** 떠오르는 순간 바닥 분사구에서 뿜는 냉가스 */
+function Jets() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[6%] flex justify-center">
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-full flex justify-around px-[8%]">
+      {[0, 1].map((n) => (
+        <span key={n} className={`${styles.jet} block h-10 w-5 rounded-full bg-gradient-to-b from-white to-white/0`} />
+      ))}
+    </div>
+  );
+}
+
+/** 착지하는 순간 양옆으로 퍼지는 먼지 */
+function Dust() {
+  const puffs = [-60, -36, -14, 14, 36, 60];
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center">
       {puffs.map((px, n) => (
         <span
           key={px}
-          className={`${styles.puff} absolute h-7 w-7 rounded-full bg-[#c9c3d9]/60 blur-[3px]`}
-          style={{ "--px": `${px}px`, left: `${50 + px / 6}%`, animationDelay: `${n * 25}ms` } as React.CSSProperties}
+          className={`${styles.puff} absolute bottom-0 h-7 w-7 rounded-full bg-[#c9c3d9]/60 blur-[3px]`}
+          style={{ "--px": `${px}px`, left: `calc(50% + ${px / 2}px - 14px)`, animationDelay: `${n * 25}ms` } as React.CSSProperties}
         />
       ))}
     </div>
@@ -287,17 +316,17 @@ function Composer() {
   return (
     <div className="relative mx-auto flex min-h-full max-w-md flex-col justify-center px-5 py-12">
       <header className="text-center">
-        <p className={`${styles.display} text-[14px] text-[#ff8a8a]`}>하늘에서 내려오는 상자</p>
+        <p className={`${styles.display} text-[14px] text-[#ff8a8a]`}>Do a kickflip! 📦</p>
         <h1 className={`${styles.display} mt-1 text-[42px] leading-tight`}>로드스터 택배</h1>
         <p className="mt-2 text-[14px] text-white/60 break-keep">
-          적어서 보내면 로드스터가 받는 사람 화면에 착륙해서, 상자를 열고 글을 꺼내 줘요.
+          적어서 보내면 택배 상자가 로드스터처럼 차 다섯 대를 킥플립으로 넘어 착지하고, 열리면서 글을 꺼내 줘요.
         </p>
       </header>
 
-      <div className="mx-auto mt-8 w-[min(78vw,300px)]">
-        <Roadster />
-        <LandingPad />
+      <div className="mx-auto mt-8 w-[120px]">
+        <Box />
       </div>
+      <div aria-hidden className="mx-auto h-[3px] w-[min(70vw,280px)] rounded-full bg-white/15" />
 
       <label className="mt-8 block">
         <span className="sr-only">상자에 넣을 말</span>

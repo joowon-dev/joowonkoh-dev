@@ -402,17 +402,19 @@ function Gift() {
   );
 }
 
-/** 로드스터 택배 — 지붕이 열린 빨간 로드스터와 솟는 빛 */
+/** 로드스터 택배 — 차 위를 킥플립으로 넘는 택배 상자 */
 function Car() {
   return (
     <>
-      <path d="M22 38 L42 38 L52 12 L12 12 Z" fill="#ffe9a8" opacity="0.45" />
-      <path d="M17 38 L10 22 L14 20 L23 37 Z" fill="#b5101a" />
-      <path d="M6 48 L6 42 Q7 38 14 38 L50 38 Q58 39 59 44 L58 48 Z" fill="#e31b23" />
-      <circle cx="17" cy="49" r="6" fill="#141418" />
-      <circle cx="47" cy="49" r="6" fill="#141418" />
-      <circle cx="17" cy="49" r="2.5" fill="#a9b0bd" />
-      <circle cx="47" cy="49" r="2.5" fill="#a9b0bd" />
+      <path d="M8 22 Q20 6 34 10" stroke="#ffffff" strokeOpacity="0.5" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeDasharray="3 4" />
+      <g transform="rotate(-18 42 20)">
+        <rect x="31" y="10" width="22" height="18" rx="2" fill="#c98f4c" />
+        <rect x="31" y="10" width="22" height="4" fill="#b37a3b" />
+        <rect x="39.5" y="10" width="5" height="18" fill="#e2c08a" />
+      </g>
+      <path d="M8 54 L8 48 Q9 44 14 43 L20 37 L40 37 L48 43 Q56 44 56 49 L56 54 Z" fill="#e31b23" />
+      <circle cx="18" cy="54" r="5" fill="#141418" />
+      <circle cx="46" cy="54" r="5" fill="#141418" />
     </>
   );
 }

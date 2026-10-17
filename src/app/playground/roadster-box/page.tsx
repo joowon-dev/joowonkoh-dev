@@ -13,7 +13,7 @@ export const viewport: Viewport = {
   대화방에는 «택배가 도착했다»까지만 보이고, 내용은 열어야 보인다.
 */
 const TITLE = "🚀 로드스터 택배가 도착했어요";
-const DESCRIPTION = "착륙하면 상자가 열려요. 눌러서 받아 보세요.";
+const DESCRIPTION = "킥플립으로 날아온 상자를 열어 보세요.";
 const URL = "https://joowonkoh.com/playground/roadster-box";
 
 export const metadata: Metadata = {
