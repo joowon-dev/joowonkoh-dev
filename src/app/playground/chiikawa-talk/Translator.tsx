@@ -20,6 +20,10 @@ const TINT: Record<Character | "unknown", string> = {
   chiikawa: "#ffd9e4",
   hachiware: "#d4e8ff",
   usagi: "#fff0b3",
+  momonga: "#ebe4ff",
+  kurimanju: "#f5e1c8",
+  rakko: "#dcf2e6",
+  shisa: "#ffe2cc",
   unknown: "#fffaf0",
 };
 
@@ -78,7 +82,7 @@ export default function Translator() {
 
       {/* 누가 말할까 — 거꾸로 통역에서는 말한 친구를 짐작하니 고르지 않는다 */}
       {mode === "to" && (
-        <div role="tablist" aria-label="통역할 친구" className="grid grid-cols-3 gap-3">
+        <div role="tablist" aria-label="통역할 친구" className="grid grid-cols-4 gap-2 sm:grid-cols-7">
           {CHARACTERS.map((c) => (
             <button
               key={c.id}
@@ -89,7 +93,7 @@ export default function Translator() {
               style={{ background: who === c.id ? TINT[c.id] : undefined }}
             >
               <Face id={c.id} className={who === c.id ? "ct-bob" : ""} />
-              <span className="ct-display text-[17px]">{c.name}</span>
+              <span className="ct-display text-[15px] whitespace-nowrap sm:text-[14px]">{c.name}</span>
             </button>
           ))}
         </div>
@@ -235,7 +239,7 @@ function Face({
   className?: string;
   big?: boolean;
 }) {
-  const size = big ? "h-[92px] w-[92px]" : "h-[64px] w-[64px]";
+  const size = big ? "h-[92px] w-[92px]" : "h-[52px] w-[52px]";
   if (id) {
     return (
       <Image

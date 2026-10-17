@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HACHIWARE, SOUNDS } from "./lexicon";
+import { CHARACTERS, SOUNDERS, SOUNDS, TALK, type Talker } from "./lexicon";
 import { detectMood, toText, translate } from "./translate";
 
 describe("detectMood", () => {
@@ -54,8 +54,8 @@ describe("translate", () => {
     ]);
   });
 
-  it("치이카와·우사기 토막은 각자 사전 안의 소리다(끝 문장부호 빼고)", () => {
-    for (const who of ["chiikawa", "usagi"] as const) {
+  it("소리만 내는 친구들의 토막은 각자 사전 안의 소리다(끝 문장부호 빼고)", () => {
+    for (const who of SOUNDERS) {
       const all = new Set(Object.values(SOUNDS[who]).flat().map(bare));
       for (const s of translate("배고파! 무서워ㅠ 좋아 ㅋㅋ 왜?", who)) {
         for (const t of s.tokens) expect(all.has(bare(t))).toBe(true);
@@ -86,13 +86,39 @@ describe("translate", () => {
     expect(body("배고파요")).not.toContain("요");
   });
 
-  it("하치와레 감탄사는 사전 안에 있다", () => {
-    const pool = new Set(
-      Object.values(HACHIWARE).flatMap((m) => [...m.before, ...m.after]),
-    );
-    const [s] = translate("완전 신나!", "hachiware");
-    const extras = s.tokens.filter((t) => !t.includes("신나"));
-    for (const t of extras) expect(pool.has(t)).toBe(true);
+  it("말하는 친구들의 말버릇은 각자 사전 안에 있다", () => {
+    for (const who of Object.keys(TALK) as Talker[]) {
+      const pool = new Set(Object.values(TALK[who].phrases).flatMap((m) => [...m.before, ...m.after]));
+      const [s] = translate("완전 신나!", who);
+      const extras = s.tokens.filter((t) => !t.includes("신나"));
+      for (const t of extras) expect(pool.has(t)).toBe(true);
+    }
+  });
+
+  it("일곱 친구 모두 통역된다", () => {
+    expect(CHARACTERS).toHaveLength(7);
+    for (const { id } of CHARACTERS) expect(translate("오늘 너무 배고파요", id)[0].tokens.length).toBeGreaterThan(0);
+  });
+
+  it("밤만쥬는 말수가 적다 — 토막 3개까지", () => {
+    expect(translate("가".repeat(100), "kurimanju")[0].tokens.length).toBeLessThanOrEqual(3);
+  });
+
+  it("모몽가·랏코도 존댓말을 반말로", () => {
+    const body = (s: string, who: Talker) => translate(s, who)[0].tokens.find((t) => t.includes(s.slice(0, 2)))!;
+    expect(body("간식 주세요", "momonga")).toContain("간식 주셔");
+    expect(body("감사합니다", "rakko")).toContain("감사해.");
+  });
+
+  it.each([
+    ["배고파", "배고파요—!"],
+    ["먹고 싶다", "먹고 싶어요—!"],
+    ["오늘 갔다", "오늘 갔어요—!"],
+    ["이건 사과야", "이건 사과예요—!"],
+    ["감사합니다", "감사합니다—!"],
+    ["뭐 해?", "뭐 해요—?"],
+  ])("시사 — 반말을 존댓말로, 끝은 늘인다: %s → %s", (s, want) => {
+    expect(translate(s, "shisa")[0].tokens).toContain(want);
   });
 });
 
