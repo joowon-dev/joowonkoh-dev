@@ -1,9 +1,10 @@
-import { HACHIWARE, MOOD_RULES, SOUNDS, type Character, type Mood } from "./lexicon";
+import { MOOD_RULES, SOUNDS, TALK, isSounder, type Character, type Mood, type Sounder, type Talker } from "./lexicon";
 
 export type { Character, Mood };
 export type Sentence = { source: string; mood: Mood; tokens: string[] };
 
-const MAX_TOKENS = 6;
+/** 소리 토막 수 상한. 밤만쥬는 말수가 적다. */
+const MAX_TOKENS: Record<Sounder, number> = { chiikawa: 6, usagi: 6, kurimanju: 3 };
 /** 글자 몇 개마다 소리 하나. */
 const CHARS_PER_TOKEN = 4;
 const END_PUNCT = /[!?…~.]+$/u;
@@ -26,7 +27,7 @@ export function translate(text: string, who: Character): Sentence[] {
   return splitSentences(text).map((source) => {
     const mood = detectMood(source);
     const rand = rng(hash(`${who}:${source}`));
-    const tokens = who === "hachiware" ? hachiware(source, mood, rand) : sounds(source, mood, who, rand);
+    const tokens = isSounder(who) ? sounds(source, mood, who, rand) : talk(source, mood, who, rand);
     return { source, mood, tokens };
   });
 }
@@ -35,9 +36,9 @@ export function toText(sentences: Sentence[]): string {
   return sentences.map((s) => s.tokens.join(" ")).join(" ");
 }
 
-function sounds(source: string, mood: Mood, who: "chiikawa" | "usagi", rand: () => number): string[] {
+function sounds(source: string, mood: Mood, who: Sounder, rand: () => number): string[] {
   const letters = source.replace(/[^\p{L}\p{N}]/gu, "").length;
-  const count = Math.min(MAX_TOKENS, Math.max(1, Math.ceil(letters / CHARS_PER_TOKEN)));
+  const count = Math.min(MAX_TOKENS[who], Math.max(1, Math.ceil(letters / CHARS_PER_TOKEN)));
   const pool = SOUNDS[who][mood];
   const tokens = Array.from({ length: count }, () => pick(pool, rand));
   return withEnding(tokens, source);
@@ -51,31 +52,23 @@ function withEnding(tokens: string[], source: string): string[] {
   return tokens.map((t, i) => (i === last ? t.replace(END_PUNCT, "") + end : t));
 }
 
-/** 존댓말 어미 → 하치와레 반말. 위에서부터 하나만 바꾼다. */
-const ENDINGS: [RegExp, string][] = [
-  [/합니다$/u, "해"],
-  [/입니다$/u, "이야"],
-  [/이에요$/u, "이야"],
-  [/예요$/u, "야"],
-  [/에요$/u, "야"],
-  [/세요$/u, "셔"],
-  [/요$/u, ""],
-];
-
-function hachiware(source: string, mood: Mood, rand: () => number): string[] {
+/** 말하는 친구 — 뜻은 두고 어미만 그 친구 말투로 바꾼 뒤 말버릇을 앞뒤에 붙인다. */
+function talk(source: string, mood: Mood, who: Talker, rand: () => number): string[] {
+  const { endings, end: defaultEnd, stretch, phrases } = TALK[who];
   // 끝의 기호와 ㅠㅠ 를 떼어 두고 어미를 바꾼 뒤 다시 붙인다.
   const end = source.match(/[\sㅠㅜㅋㅎ!?…~.]*$/u)?.[0] ?? "";
   const jamo = end.replace(/[^ㅠㅜㅋㅎ]/gu, "");
   let body = source.slice(0, source.length - end.length).trim();
-  for (const [re, to] of ENDINGS) {
+  for (const [re, to] of endings) {
     if (re.test(body)) {
-      body = body.replace(re, to);
+      body = typeof to === "string" ? body.replace(re, to) : body.replace(re, to);
       break;
     }
   }
-  const punct = end.replace(/[^!?…~]/gu, "") || (jamo ? "" : "~");
+  if (stretch) body = body.replace(stretch, "$1—");
+  const punct = end.replace(/[^!?…~]/gu, "") || (jamo ? "" : defaultEnd);
   const said = [body + punct, jamo].filter(Boolean).join(" ");
-  const { before, after } = HACHIWARE[mood];
+  const { before, after } = phrases[mood];
   const tokens: string[] = [];
   if (rand() < 0.5) tokens.push(pick(before, rand));
   tokens.push(said);
