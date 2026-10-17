@@ -2,7 +2,6 @@
 
 import { useCallback, useLayoutEffect, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { MAX_CHARS, decodeHash, encodeHash, splitChars, tidy } from "./message";
-import Box, { Cars } from "./Box";
 import styles from "./roadster.module.css";
 
 /* ── 주소 뒤(#) 읽기 ────────────────────────────────
@@ -55,15 +54,18 @@ export default function RoadsterBox() {
         href="https://fonts.googleapis.com/css2?family=Jua&display=swap"
         precedence="default"
       />
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        {STARS.map(([x, y, s, d]) => (
-          <span
-            key={`${x}-${y}`}
-            className={`${styles.twinkle} absolute rounded-full bg-white`}
-            style={{ left: `${x}%`, top: `${y}%`, width: s, height: s, animationDelay: `${d}s` }}
-          />
-        ))}
-      </div>
+      {/* 별은 쓰는 화면에만. 받는 화면은 영상이 다 덮는다 */}
+      {text === null && (
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          {STARS.map(([x, y, s, d]) => (
+            <span
+              key={`${x}-${y}`}
+              className={`${styles.twinkle} absolute rounded-full bg-white`}
+              style={{ left: `${x}%`, top: `${y}%`, width: s, height: s, animationDelay: `${d}s` }}
+            />
+          ))}
+        </div>
+      )}
 
       {hash === null ? null : text === null ? (
         <Composer />
@@ -74,16 +76,27 @@ export default function RoadsterBox() {
   );
 }
 
-/* ── 받는 쪽: 착륙 → 열림 → 흩어짐 → 제자리 ───────────── */
+/* ── 받는 쪽: 영상 → 열린 상자에서 글자가 흩어졌다 모인다 ─────
+   영상은 힉스필드로 뽑은 세 컷을 이어 붙인 것이다: 상자가 램프를 타고 벽을
+   올라가 킥플립 → 연기 속 착지 → 덮개가 열리며 빛. 글은 사람마다 다르니
+   영상에 넣지 않고, 마지막 컷 위에 DOM 글자로 얹는다. */
 
-type Phase = "run" | "jump" | "land" | "center" | "open" | "scatter" | "settle" | "done";
+const CLIP = "/playground/roadster-box/delivery.mp4";
+const POSTER = "/playground/roadster-box/poster.jpg";
+/** 영상 마지막 프레임. 움직임 줄이기 설정이면 영상 대신 이걸 띄운다 */
+const FINAL = "/playground/roadster-box/final.jpg";
+/** 영상 끝에서 몇 초 전에 글자가 튀어나오나. 덮개가 다 열리고 빛이 솟는 때에 맞췄다 */
+const LETTERS_BEFORE_END = 2.6;
+/** 마지막 프레임에서 열린 상자 입구의 높이(위에서부터, 프레임 높이 비율) */
+const BOX_MOUTH = 0.53;
 
-/** 로드스터 공개 영상 순서 그대로: 달려와서 → 분사해 떠올라 킥플립 → 착지. 그다음 상자가 열린다 */
-const AT = { jump: 700, land: 1950, center: 2500, open: 3350, scatter: 3950, settle: 4950 };
+type Phase = "ready" | "play" | "scatter" | "settle" | "done";
 
 function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
-  const [phase, setPhase] = useState<Phase>(() => (prefersReducedMotion() ? "done" : "run"));
+  const [phase, setPhase] = useState<Phase>(() => (prefersReducedMotion() ? "done" : "play"));
+  const calm = phase === "done" && prefersReducedMotion();
   const boxRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const chars = splitChars(text);
   const lines: { ch: string; i: number }[][] = [[]];
@@ -92,21 +105,32 @@ function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
     else lines[lines.length - 1].push({ ch, i });
   });
   const visible = chars.filter((c) => c !== "\n").length;
-  const size = visible <= 10 ? 58 : visible <= 24 ? 44 : visible <= 40 ? 34 : 27;
+  const size = visible <= 10 ? 58 : visible <= 24 ? 46 : visible <= 40 ? 37 : 30;
+  /* 가장 긴 줄이 프레임 폭(cqw)을 넘지 않게 줄인다. 폰에서는 프레임이 화면보다 좁아진다 */
+  const longest = Math.max(1, ...lines.map((l) => l.length));
+  const fontSize = `min(${size}px, ${Math.floor(96 / Math.min(longest, 12))}cqw)`;
+
+  /* 소리 없는 영상이라 대부분 바로 돈다. 막히면(저전력 모드 등) 눌러서 시작한다 */
+  useEffect(() => {
+    videoRef.current?.play().catch(() => setPhase("ready"));
+  }, []);
 
   useEffect(() => {
-    if (phase === "done") return;
-    const settleEnd = AT.settle + visible * 45 + 900;
-    const timers = [
-      ...(Object.entries(AT) as [Phase, number][]).map(([p, ms]) =>
-        window.setTimeout(() => setPhase(p), ms),
-      ),
-      window.setTimeout(() => setPhase("done"), settleEnd),
-    ];
-    return () => timers.forEach((t) => window.clearTimeout(t));
-    // 한 번 시작하면 끝까지 간다. 다시 보기는 key 를 바꿔 처음부터 탄다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (phase === "scatter") {
+      const t = window.setTimeout(() => setPhase("settle"), 1000);
+      return () => window.clearTimeout(t);
+    }
+    if (phase === "settle") {
+      const t = window.setTimeout(() => setPhase("done"), visible * 45 + 900);
+      return () => window.clearTimeout(t);
+    }
+  }, [phase, visible]);
+
+  const onTime = () => {
+    const v = videoRef.current;
+    if (!v || phase !== "play" || !v.duration) return;
+    if (v.currentTime >= v.duration - LETTERS_BEFORE_END) setPhase("scatter");
+  };
 
   /*
     글자마다 «상자 입구에서 내 자리까지»의 거리(--ox, --oy)와 흩어질 곳(--sx, --sy)을
@@ -119,14 +143,14 @@ function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
     const place = () => {
       const w = box.offsetWidth;
       const h = box.offsetHeight;
-      const spread = Math.min(window.innerWidth * 0.95, 760);
+      const spread = Math.min(window.innerWidth * 0.95, 560);
       box.querySelectorAll<HTMLElement>("[data-ch]").forEach((el) => {
         const cx = el.offsetLeft + el.offsetWidth / 2;
         const cy = el.offsetTop + el.offsetHeight / 2;
         el.style.setProperty("--ox", `${w / 2 - cx}px`);
         el.style.setProperty("--oy", `${h - cy}px`);
         el.style.setProperty("--sx", `${(Math.random() - 0.5) * spread + (w / 2 - cx) * 0.3}px`);
-        el.style.setProperty("--sy", `${-60 - Math.random() * 240 + (h - cy) * 0.4}px`);
+        el.style.setProperty("--sy", `${-60 - Math.random() * 260 + (h - cy) * 0.4}px`);
         el.style.setProperty("--sr", `${(Math.random() - 0.5) * 540}deg`);
       });
     };
@@ -135,36 +159,60 @@ function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
     return () => window.removeEventListener("resize", place);
   }, []);
 
-  const before = phase === "run" || phase === "jump" || phase === "land" || phase === "center";
-  const letters = before || phase === "open" ? styles.hidden : phase === "scatter" ? styles.scatter : styles.settle;
-  const mover =
-    phase === "run" ? styles.run : phase === "jump" ? styles.jump : phase === "land" ? styles.landed : styles.center;
+  const letters =
+    phase === "ready" || phase === "play" ? styles.hidden : phase === "scatter" ? styles.scatter : styles.settle;
 
   return (
-    <div className={`${phase === "land" ? styles.shake : ""} relative flex min-h-full flex-col items-center justify-end overflow-hidden px-2 pb-[14vh]`}>
-      <p
-        className={`${styles.display} absolute left-0 right-0 top-[7vh] text-center text-[16px] text-white/65 transition-opacity duration-500 ${
-          before ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        {phase === "run" || phase === "jump" ? "Do a kickflip! 📦" : "착지 성공! 상자를 엽니다"}
-      </p>
+    <div className="flex min-h-full items-center justify-center bg-black">
+      {/*
+        영상 프레임(9:16). 폰에서는 화면 높이를 다 채우고 옆이 잘린다 — 상자가
+        가운데라 잘려도 괜찮다. 넓은 화면에서는 세로 프레임이 가운데 선다.
+        글자 위치는 이 프레임 높이 기준이라 어느 쪽이든 상자 입구에 맞는다.
+      */}
+      <div className="relative aspect-[9/16] h-[100dvh] max-w-full overflow-hidden [container-type:inline-size]">
+        {calm ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={FINAL} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <video
+            ref={videoRef}
+            src={CLIP}
+            poster={POSTER}
+            muted
+            playsInline
+            preload="auto"
+            onTimeUpdate={onTime}
+            onEnded={() => setPhase((p) => (p === "play" ? "scatter" : p))}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
 
-      {/* 무대: 바닥 위에 차 다섯 대, 그 위를 상자가 넘는다. --bw 가 상자 너비다 */}
-      <div
-        className={`relative w-[min(96vw,1100px)] ${before ? "" : styles.opened}`}
-        style={{ "--bw": "clamp(80px, 15vw, 170px)", height: "calc(var(--bw) * 0.84)" } as React.CSSProperties}
-      >
-        {/* 글자 상자. 바닥이 상자 덮개 높이에 맞아서 거기서 글자가 솟는다 */}
+        {phase === "ready" && (
+          <button
+            type="button"
+            onClick={() => {
+              setPhase("play");
+              void videoRef.current?.play();
+            }}
+            className="absolute inset-0 flex flex-col items-center justify-end bg-black/30 pb-[18vh]"
+          >
+            <span className={`${styles.display} animate-pulse rounded-full bg-white/15 px-6 py-3 text-[18px] backdrop-blur`}>
+              📦 눌러서 택배 받기
+            </span>
+          </button>
+        )}
+
+        {/* 글자 상자. 바닥이 열린 상자 입구 높이에 맞아서 거기서 글자가 솟는다 */}
         <div
           ref={boxRef}
           role="status"
           aria-label={text}
-          className={`${letters} ${styles.display} absolute left-1/2 w-[min(92vw,600px)] -translate-x-1/2 pb-6 text-center leading-[1.25] break-keep`}
+          className={`${letters} ${styles.display} pointer-events-none absolute left-1/2 w-[min(92%,520px)] -translate-x-1/2 pb-5 text-center leading-[1.25] break-keep`}
           style={{
-            bottom: "calc(var(--bw) * 0.72)",
-            fontSize: size,
-            textShadow: "0 0 18px rgba(255,214,120,.55), 0 2px 0 rgba(0,0,0,.35)",
+            bottom: `${(1 - BOX_MOUTH) * 100}%`,
+            fontSize,
+            // 뒤가 금빛 기둥이라 밝다. 어두운 테두리를 먼저 둘러야 흰 글자가 읽힌다
+            textShadow: "0 0 3px rgba(60,30,0,.9), 0 2px 14px rgba(0,0,0,.65), 0 0 28px rgba(255,200,90,.6)",
           }}
         >
           {lines.map((line, n) => (
@@ -184,86 +232,27 @@ function Delivery({ text, onReplay }: { text: string; onReplay: () => void }) {
           ))}
         </div>
 
-        <div
-          className={`absolute bottom-0 left-[24%] w-[52%] transition-all duration-700 ${
-            phase === "run" || phase === "jump" || phase === "land" ? "" : "translate-y-3 opacity-0"
-          }`}
-        >
-          <Cars />
+        <div className="absolute inset-x-0 bottom-0 flex h-[124px] items-end gap-3 bg-gradient-to-t from-black/80 to-transparent px-5 pb-[max(20px,env(safe-area-inset-bottom))]">
+          {phase === "done" && (
+            <>
+              <button
+                type="button"
+                onClick={onReplay}
+                className={`${styles.rise} h-[52px] flex-1 rounded-2xl border border-white/20 bg-white/10 text-[14px] font-medium text-white/90 backdrop-blur transition hover:bg-white/15 active:scale-[0.98]`}
+              >
+                다시 보기
+              </button>
+              <button
+                type="button"
+                onClick={() => goHash("")}
+                className={`${styles.rise} h-[52px] flex-1 rounded-2xl bg-[#e31b23] text-[14px] font-bold text-white transition hover:bg-[#f2333a] active:scale-[0.98]`}
+              >
+                나도 보내기 📦
+              </button>
+            </>
+          )}
         </div>
-
-        <div className={`${styles.mover} ${mover}`}>
-          <div className={styles.hop}>
-            <div className={styles.flip}>
-              <Box />
-            </div>
-          </div>
-          {phase === "run" && <SpeedLines />}
-          {phase === "jump" && <Jets />}
-          {phase === "land" && <Dust />}
-        </div>
-
-        <div aria-hidden className="absolute -bottom-[3px] left-[-4vw] right-[-4vw] h-[3px] rounded-full bg-white/15" />
       </div>
-
-      <div className="relative mt-10 flex h-[52px] w-full max-w-sm gap-3 px-2">
-        {phase === "done" && (
-          <>
-            <button
-              type="button"
-              onClick={onReplay}
-              className={`${styles.rise} flex-1 rounded-2xl border border-white/15 bg-white/5 text-[14px] font-medium text-white/85 transition hover:bg-white/10 active:scale-[0.98]`}
-            >
-              다시 보기
-            </button>
-            <button
-              type="button"
-              onClick={() => goHash("")}
-              className={`${styles.rise} flex-1 rounded-2xl bg-[#e31b23] text-[14px] font-bold text-white transition hover:bg-[#f2333a] active:scale-[0.98]`}
-            >
-              나도 보내기 🚀
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** 달려올 때 상자 뒤로 끌리는 바람 줄 */
-function SpeedLines() {
-  return (
-    <div aria-hidden className="pointer-events-none absolute right-full top-[30%] mr-2 flex w-16 flex-col items-end gap-2.5">
-      {[100, 70, 85].map((w) => (
-        <span key={w} className="block h-[3px] rounded-full bg-white/50" style={{ width: `${w}%` }} />
-      ))}
-    </div>
-  );
-}
-
-/** 떠오르는 순간 바닥 분사구에서 뿜는 냉가스 */
-function Jets() {
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-full flex justify-around px-[8%]">
-      {[0, 1].map((n) => (
-        <span key={n} className={`${styles.jet} block h-10 w-5 rounded-full bg-gradient-to-b from-white to-white/0`} />
-      ))}
-    </div>
-  );
-}
-
-/** 착지하는 순간 양옆으로 퍼지는 먼지 */
-function Dust() {
-  const puffs = [-60, -36, -14, 14, 36, 60];
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center">
-      {puffs.map((px, n) => (
-        <span
-          key={px}
-          className={`${styles.puff} absolute bottom-0 h-7 w-7 rounded-full bg-[#c9c3d9]/60 blur-[3px]`}
-          style={{ "--px": `${px}px`, left: `calc(50% + ${px / 2}px - 14px)`, animationDelay: `${n * 25}ms` } as React.CSSProperties}
-        />
-      ))}
     </div>
   );
 }
@@ -319,14 +308,17 @@ function Composer() {
         <p className={`${styles.display} text-[14px] text-[#ff8a8a]`}>Do a kickflip! 📦</p>
         <h1 className={`${styles.display} mt-1 text-[42px] leading-tight`}>로드스터 택배</h1>
         <p className="mt-2 text-[14px] text-white/60 break-keep">
-          적어서 보내면 택배 상자가 로드스터처럼 차 다섯 대를 킥플립으로 넘어 착지하고, 열리면서 글을 꺼내 줘요.
+          적어서 보내면 택배 상자가 로드스터처럼 벽을 타고 올라가 킥플립으로 날아와 착지하고, 열리면서 글을 꺼내 줘요.
         </p>
       </header>
 
-      <div className="mx-auto mt-8 w-[120px]">
-        <Box />
-      </div>
-      <div aria-hidden className="mx-auto h-[3px] w-[min(70vw,280px)] rounded-full bg-white/15" />
+      {/* 영상 첫 장면을 미리 보여 준다 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={POSTER}
+        alt="콘크리트 램프 앞에 놓인 택배 상자"
+        className="mx-auto mt-8 aspect-[9/16] w-[150px] rounded-2xl object-cover shadow-[0_10px_40px_rgba(0,0,0,.6)] ring-1 ring-white/10"
+      />
 
       <label className="mt-8 block">
         <span className="sr-only">상자에 넣을 말</span>
