@@ -1,25 +1,34 @@
+import { useId } from "react";
+
 /**
- * 네밥내밥의 빈 민트 급식판. 앱 아이콘(icon.svg)에서 흰 바탕만 뺀 그림이다 —
- * 앱의 src/components/AppMark.tsx와 같은 그림이니 고치면 둘 다 고친다.
- * 아이콘 바탕 없이 쓸 때는 판이 꽉 차 보이게 translate·scale 로 키운다.
+ * 네밥내밥 식판 — 흰 식판 하나에 회색 칸 넷. 앱의 src/components/AppMark.tsx와 같은 그림이니 고치면 둘 다 고친다.
+ * backdrop="square"면 앱 아이콘 그대로(노른자 둥근 네모), "none"이면 식판만 꽉 차게 키운다.
+ * lunch를 끄면 네 칸 모두 비어 있는 빈 식판이다.
  */
 const WELLS: [number, number][] = [
-  [230, 230],
-  [530, 230],
-  [230, 530],
+  [204, 204],
+  [530, 204],
+  [204, 530],
   [530, 530],
 ];
+const LUNCH = 1; // 오른쪽 위 칸
 
 export default function TrayMark({
   size,
   className,
   title,
+  backdrop = "none",
+  lunch = true,
 }: {
   size: number;
   className?: string;
   /** 있으면 그림으로 읽히고, 없으면 꾸밈으로 숨긴다. */
   title?: string;
+  backdrop?: "none" | "square";
+  lunch?: boolean;
 }) {
+  const shade = `tray-shade-${useId().replace(/:/g, "")}`;
+  const bare = backdrop === "none";
   return (
     <svg
       viewBox="0 0 1024 1024"
@@ -30,14 +39,20 @@ export default function TrayMark({
       aria-label={title}
       aria-hidden={title ? undefined : true}
     >
-      <g transform="translate(-110 -110) scale(1.2148)">
-        <rect x={150} y={452} width={60} height={120} rx={24} fill="#49B796" />
-        <rect x={814} y={452} width={60} height={120} rx={24} fill="#49B796" />
-        <rect x={182} y={182} width={660} height={660} rx={150} fill="#5CC8A8" />
-        {WELLS.map(([x, y]) => (
+      <defs>
+        <linearGradient id={shade} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#000000" stopOpacity={0.1} />
+          <stop offset="0.25" stopColor="#000000" stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      {bare ? null : <rect width={1024} height={1024} rx={230} fill="#FFC531" />}
+      <g transform={bare ? "translate(-150 -150) scale(1.293)" : undefined}>
+        <rect x={160} y={174} width={704} height={704} rx={114} fill="#000000" fillOpacity={0.1} />
+        <rect x={160} y={160} width={704} height={704} rx={114} fill="#FFFFFF" />
+        {WELLS.map(([x, y], i) => (
           <g key={`${x}-${y}`}>
-            <rect x={x} y={y} width={264} height={264} rx={64} fill="#000000" fillOpacity={0.14} />
-            <rect x={x} y={y + 14} width={264} height={250} rx={62} fill="#FFFFFF" />
+            <rect x={x} y={y} width={290} height={290} rx={70} fill={lunch && i === LUNCH ? "#E8452F" : "#ECECEC"} />
+            <rect x={x} y={y} width={290} height={290} rx={70} fill={`url(#${shade})`} />
           </g>
         ))}
       </g>

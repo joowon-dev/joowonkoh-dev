@@ -14,7 +14,7 @@ const RISE = {
 };
 
 /**
- * 첫 화면은 앱의 로그인 화면과 같다 — 빈 민트 급식판, 이름, 천천히 바뀌는 인사, 그리고 내려받는 곳.
+ * 첫 화면은 앱의 로그인 화면과 같다 — 흰 식판(점심 칸만 토마토), 이름, 천천히 바뀌는 인사, 그리고 내려받는 곳.
  * 가운데 한 줄로만 쌓고 꾸밈은 바탕의 옅은 수저 무늬에 맡긴다.
  */
 export default function Hero() {
@@ -26,7 +26,7 @@ export default function Hero() {
       className="flex flex-col items-center text-center"
     >
       <motion.div variants={RISE}>
-        <TrayMark size={148} title="네밥내밥 빈 급식판" />
+        <TrayMark size={148} title="네밥내밥 식판" />
       </motion.div>
 
       <motion.h1 variants={RISE} className="mt-6 text-[30px] font-bold leading-[1.2] tracking-[-0.02em]" style={{ color: C.ink }}>
