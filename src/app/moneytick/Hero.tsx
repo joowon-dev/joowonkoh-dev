@@ -3,6 +3,8 @@
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
 
+import { LANDING } from "./copy";
+import type { Lang } from "./i18n";
 import { EASE } from "./motion";
 
 /**
@@ -18,15 +20,18 @@ const RISE = {
 };
 
 export default function Hero({
+  lang,
   appStoreUrl,
   playStoreUrl,
   children,
 }: {
+  lang: Lang;
   appStoreUrl: string;
   playStoreUrl: string;
   /** 앱 아이콘 — next/image 는 서버에서 넘겨받는다. */
   children: ReactNode;
 }) {
+  const copy = LANDING[lang];
   return (
     <motion.div
       initial="hidden"
@@ -51,10 +56,10 @@ export default function Hero({
         </motion.div>
         <div>
           <h1 className="text-[28px] font-bold leading-[34px] tracking-[-0.5px] md:text-[34px] md:leading-[41px]">
-            이게내연봉
+            {copy.appName}
           </h1>
           <p className="mt-1 text-[15px] tracking-[-0.24px] text-[rgba(60,60,67,0.6)]">
-            1초에 얼마 버는지 보는 앱
+            {copy.tagline}
           </p>
         </div>
       </motion.div>
@@ -73,7 +78,7 @@ export default function Hero({
           transition={{ type: "spring", stiffness: 420, damping: 24 }}
           className="rounded-full bg-[#34C759] px-6 py-3 text-[17px] font-semibold tracking-[-0.408px] text-white"
         >
-          App Store에서 받기
+          {copy.hero.appStore}
         </motion.a>
         <motion.a
           href={playStoreUrl}
@@ -84,10 +89,10 @@ export default function Hero({
           transition={{ type: "spring", stiffness: 420, damping: 24 }}
           className="rounded-full border border-[#34C759] px-6 py-3 text-[17px] font-semibold tracking-[-0.408px] text-[#248A3D]"
         >
-          Google Play에서 받기
+          {copy.hero.play}
         </motion.a>
         <span className="text-[13px] leading-[18px] text-[rgba(60,60,67,0.6)]">
-          iOS 17 · Android 7.0 이상 · 무료
+          {copy.hero.requirements}
         </span>
       </motion.div>
     </motion.div>

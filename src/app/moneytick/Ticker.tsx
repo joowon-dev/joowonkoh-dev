@@ -4,6 +4,9 @@ import { motion } from "motion/react";
 import { useState } from "react";
 
 import { useNowMs } from "./clock";
+import { LANDING } from "./copy";
+import type { Lang } from "./i18n";
+import { formatMoney, SECONDS_PER_YEAR, tickDecimals } from "./money";
 import Odometer from "./Odometer";
 import { EASE } from "./motion";
 
@@ -11,22 +14,19 @@ import { EASE } from "./motion";
  * 앱 홈 화면을 그대로 옮긴 데모.
  *
  * 앱과 같은 규칙으로 돈다: 오늘 0시를 기준 시점으로 잡고, 그때부터 지금까지
- * 흐른 시간에 초당 수입을 곱한다. 숫자는 연봉 4,000만 원을 예로 든 것이고,
- * 실제 앱은 사용자가 넣은 금액을 쓴다.
+ * 흐른 시간에 초당 수입을 곱한다. 숫자는 언어마다 그 나라에서 그럴듯한 연봉을
+ * 예로 든 것이고(한국어는 4,000만 원), 실제 앱은 사용자가 넣은 금액을 쓴다.
  */
 
-const YEARLY = 40_000_000;
-const SECONDS_PER_YEAR = 365 * 24 * 60 * 60;
-const PER_SECOND = YEARLY / SECONDS_PER_YEAR; // 1.2684…
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** 앱이 다시 그리는 간격. 소수점 아래는 이 눈금에 맞춰 끊는다. */
 const APP_TICK_MS = 70;
 
 const UNITS = [
-  { id: "year", label: "연봉", caption: "연봉 4,000만 원" },
-  { id: "month", label: "월급", caption: "월급 333만 원" },
-  { id: "day", label: "일급", caption: "일급 11만 원" },
+  { id: "year", per: 1 },
+  { id: "month", per: 12 },
+  { id: "day", per: 365 },
 ] as const;
 
 function midnight(now: number): number {
@@ -36,7 +36,7 @@ function midnight(now: number): number {
 }
 
 function clock(now: number): string {
-  return new Date(now).toLocaleTimeString("ko-KR", {
+  return new Date(now).toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -44,7 +44,13 @@ function clock(now: number): string {
   });
 }
 
-export default function Ticker() {
+export default function Ticker({ lang }: { lang: Lang }) {
+  const copy = LANDING[lang];
+  const t = copy.ticker;
+  const yearly = copy.salary.me;
+  const PER_SECOND = yearly / SECONDS_PER_YEAR;
+  const decimals = tickDecimals(PER_SECOND);
+
   const [unit, setUnit] = useState<(typeof UNITS)[number]["id"]>("year");
   const now = useNowMs();
 
@@ -54,6 +60,9 @@ export default function Ticker() {
     (Math.floor(elapsedMs / APP_TICK_MS) * APP_TICK_MS * PER_SECOND) / 1000;
   const dayPct = (elapsedMs / DAY_MS) * 100;
   const active = UNITS.find((u) => u.id === unit)!;
+  const caption =
+    t.captions?.[active.id] ??
+    `${t.unitNames[active.id]} ${formatMoney(copy.money, yearly / active.per)}`;
 
   return (
     <div className="rounded-[28px] bg-[#F2F2F7] p-4 sm:p-6">
@@ -80,7 +89,7 @@ export default function Ticker() {
                 unit === u.id ? "text-black" : "text-[rgba(60,60,67,0.6)]"
               }`}
             >
-              {u.label}
+              {t.units[u.id]}
             </span>
           </button>
         ))}
@@ -92,13 +101,17 @@ export default function Ticker() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#34C759] opacity-60" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#34C759]" />
           </span>
-          오늘 0시부터
+          {t.since}
         </p>
 
         <Odometer
           value={total}
           ratePerSecond={PER_SECOND}
           steppedValue={stepped}
+          decimals={decimals}
+          locale={copy.money.locale}
+          prefix={copy.money.prefix}
+          suffix={copy.money.suffix}
           className="mt-3.5 block text-[40px] font-semibold leading-none tracking-[-1.4px] text-black sm:text-[52px] sm:tracking-[-1.9px]"
           decimalClassName="text-[0.5em] text-[rgba(60,60,67,0.3)]"
         />
@@ -111,7 +124,7 @@ export default function Ticker() {
           className="mt-6 text-[13px] leading-[18px] text-[rgba(60,60,67,0.6)]"
           style={{ fontVariantNumeric: "tabular-nums" }}
         >
-          1초에 1.27원 · {active.caption}
+          {t.perSecond(formatMoney(copy.money, PER_SECOND, decimals))} · {caption}
         </motion.p>
 
         {/* 오늘이 얼마나 흘렀는지 — 자정에 비고 자정에 찬다. */}

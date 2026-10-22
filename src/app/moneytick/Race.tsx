@@ -4,6 +4,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
 import { useNowMs, prefersReducedMotion } from "./clock";
+import { LANDING } from "./copy";
+import type { Lang } from "./i18n";
+import { formatMoney, SECONDS_PER_YEAR } from "./money";
 import { EASE } from "./motion";
 
 /**
@@ -14,20 +17,12 @@ import { EASE } from "./motion";
  * 빨리 감는 것이라, 보여주는 장면과 실제가 어긋나지 않는다.
  *
  * 부장님이 결승선을 끊으면 잠깐 멈춰 결과를 보여주고 처음부터 다시 달린다.
+ *
+ * 결승선(치킨 한 마리)과 두 사람의 연봉은 언어마다 그 나라 것으로 바꾼다.
+ * 어느 언어든 부장님이 두 시간 남짓에 도착하도록 골라 뒀다 — 1000배속으로 8초 안팎.
  */
 
-const GOAL = 25_000; // 치킨 한 마리
 const SPEED = 1000;
-const SECONDS_PER_YEAR = 365 * 24 * 60 * 60;
-
-const RUNNERS = [
-  { name: "나", sub: "연봉 4,000만 원", yearly: 40_000_000, tone: "me" },
-  { name: "부장님", sub: "연봉 1억 원", yearly: 100_000_000, tone: "them" },
-] as const;
-
-const LEADER_RATE = RUNNERS[1].yearly / SECONDS_PER_YEAR;
-/** 부장님이 결승선을 끊기까지의 실제 시간(ms). */
-const RUN_MS = (GOAL / LEADER_RATE / SPEED) * 1000;
 /** 끝난 화면을 보여주는 시간. */
 const HOLD_MS = 2_500;
 
@@ -38,7 +33,30 @@ function stopwatch(seconds: number): string {
   return `${h}:${String(m).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export default function Race() {
+export default function Race({ lang }: { lang: Lang }) {
+  const copy = LANDING[lang];
+  const r0 = copy.race;
+  const GOAL = r0.goal;
+  const RUNNERS = [
+    {
+      name: r0.me,
+      sub: r0.subs?.[0] ?? `${copy.ticker.unitNames.year} ${formatMoney(copy.money, copy.salary.me)}`,
+      yearly: copy.salary.me,
+      tone: "me",
+    },
+    {
+      name: r0.boss,
+      sub: r0.subs?.[1] ?? `${copy.ticker.unitNames.year} ${formatMoney(copy.money, copy.salary.boss)}`,
+      yearly: copy.salary.boss,
+      tone: "them",
+    },
+  ] as const;
+  const LEADER_RATE = copy.salary.boss / SECONDS_PER_YEAR;
+  /** 부장님이 결승선을 끊기까지 걸리는 시간(초, 등배속). */
+  const leaderSeconds = GOAL / LEADER_RATE;
+  /** 부장님이 결승선을 끊기까지의 실제 시간(ms). */
+  const RUN_MS = (leaderSeconds / SPEED) * 1000;
+
   const now = useNowMs();
   // 페이지를 연 순간을 출발선으로 삼는다. 전역 시계를 그냥 나머지 연산하면
   // 들어오자마자 레이스 중반부터 보게 된다.
@@ -55,10 +73,10 @@ export default function Race() {
       <div className="rounded-[22px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
         <div className="flex items-baseline justify-between">
           <p className="text-[12px] font-semibold uppercase tracking-[0.6px] text-[rgba(60,60,67,0.3)]">
-            치킨 한 마리 · 25,000원 벌기까지
+            {r0.goalTitle(formatMoney(copy.money, GOAL))}
           </p>
           <p className="rounded-full bg-[rgba(52,199,89,0.12)] px-2.5 py-1 text-[11px] font-semibold tracking-[0.6px] text-[#248A3D]">
-            1000배속
+            {r0.speed}
           </p>
         </div>
 
@@ -98,7 +116,7 @@ export default function Race() {
                           transition={{ type: "spring", stiffness: 500, damping: 24 }}
                           className="rounded-full bg-[rgba(52,199,89,0.14)] px-2 py-0.5 text-[11px] font-semibold text-[#248A3D]"
                         >
-                          도착
+                          {r0.arrived}
                         </motion.span>
                       )}
                     </AnimatePresence>
@@ -109,7 +127,7 @@ export default function Race() {
                     }`}
                     style={{ fontVariantNumeric: "tabular-nums" }}
                   >
-                    {Math.floor(earned).toLocaleString("ko-KR")}원
+                    {formatMoney(copy.money, earned)}
                   </p>
                 </div>
                 <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[rgba(120,120,128,0.16)]">
@@ -127,7 +145,13 @@ export default function Race() {
       </div>
 
       <p className="px-2 pt-4 text-center text-[13px] leading-[18px] text-[rgba(60,60,67,0.6)]">
-        부장님이 치킨 한 마리를 버는 2시간 11분 동안, 나는 10,000원까지.
+        {r0.summary(
+          r0.duration(
+            Math.floor(leaderSeconds / 3600),
+            Math.floor((leaderSeconds % 3600) / 60),
+          ),
+          formatMoney(copy.money, (copy.salary.me / SECONDS_PER_YEAR) * leaderSeconds),
+        )}
       </p>
     </div>
   );

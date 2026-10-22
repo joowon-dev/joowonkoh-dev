@@ -1,5 +1,7 @@
 "use client";
 
+import { separators } from "./money";
+
 /**
  * 굴러가는 금액.
  *
@@ -83,6 +85,11 @@ export default function Odometer({
   ratePerSecond,
   /** 소수점 아래에 쓸, 70ms 눈금에 맞춰 끊은 값. */
   steppedValue,
+  /** 소수 자리수 — 초당 수입에서 정한다(`tickDecimals`). */
+  decimals = 2,
+  /** 자릿수 구분·소수점 기호를 정하는 로케일. */
+  locale = "ko-KR",
+  prefix = "",
   suffix = "원",
   className = "",
   decimalClassName = "",
@@ -90,10 +97,14 @@ export default function Odometer({
   value: number;
   ratePerSecond: number;
   steppedValue: number;
+  decimals?: number;
+  locale?: string;
+  prefix?: string;
   suffix?: string;
   className?: string;
   decimalClassName?: string;
 }) {
+  const { group, point } = separators(locale);
   const whole = Math.floor(value);
   const highest = whole > 0 ? Math.floor(Math.log10(whole)) : 0;
 
@@ -105,26 +116,31 @@ export default function Odometer({
     if (p > 0 && p % 3 === 0) {
       cells.push(
         <span key={`s${p}`} aria-hidden>
-          ,
+          {group}
         </span>,
       );
     }
   }
 
-  const dec = Math.floor((steppedValue % 1) * 100)
+  const dec = Math.floor((steppedValue % 1) * 10 ** decimals)
     .toString()
-    .padStart(2, "0");
+    .padStart(decimals, "0");
 
   return (
     <span className={className} style={{ fontVariantNumeric: "tabular-nums" }}>
+      {prefix ? <span aria-hidden>{prefix}</span> : null}
       {cells}
       <span className={decimalClassName} aria-hidden>
-        .{dec}
+        {point}
+        {dec}
       </span>
       {suffix ? <span aria-hidden> {suffix}</span> : null}
       {/* 화면 낭독기에는 굴러가는 띠 대신 읽을 수 있는 한 줄을 준다. */}
       <span className="sr-only">
-        {whole.toLocaleString("ko-KR")}.{dec}
+        {prefix}
+        {whole.toLocaleString(locale)}
+        {point}
+        {dec}
         {suffix}
       </span>
     </span>
