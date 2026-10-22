@@ -18,9 +18,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     siteName: "네밥내밥",
-    images: [{ url: "https://joowonkoh.com/yourmealmymeal/og-main-v2.jpg", width: 1200, height: 630 }],
+    images: [{ url: "https://joowonkoh.com/yourmealmymeal/og-main-v3.png", width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: ["https://joowonkoh.com/yourmealmymeal/og-main-v2.jpg"] },
+  twitter: { card: "summary_large_image", images: ["https://joowonkoh.com/yourmealmymeal/og-main-v3.png"] },
 };
 
 const CONTACT = "contact@joowonkoh.com";
@@ -36,8 +36,8 @@ export default function YourMealMyMealLayout({ children }: { children: ReactNode
               className="flex items-center gap-2 rounded-full py-1 pr-2 transition-opacity hover:opacity-80"
               aria-label="네밥내밥 처음으로"
             >
-              <TrayMark size={34} />
-              <span className="text-[19px] font-bold leading-none tracking-[-0.02em]" style={{ color: C.ink }}>
+              <TrayMark size={36} backdrop="square" />
+              <span className="text-[20px] font-black leading-none tracking-[-0.05em]" style={{ color: C.ink }}>
                 네밥내밥
               </span>
             </Link>

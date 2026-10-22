@@ -1,17 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <!-- 네밥내밥 앱 아이콘. src/components/AppMark.tsx와 같은 그림이다. 고치면 둘 다 고친다. -->
-  <rect width="1024" height="1024" fill="#FFFFFF"/>
+  <!-- 네밥내밥 앱 아이콘. src/components/AppMark.tsx와 같은 그림이다. 고치면 둘 다 고친다.
+       노른자(#FFC531) 바탕에 흰 식판 하나, 그 안에 앱 화면과 같은 회색 칸 넷. 점심 칸(오른쪽 위)만 토마토색으로 채웠다.
+       식판 모서리(114) = 칸 모서리(70) + 안쪽 여백(44) — 바깥 네모와 안쪽 네모가 같은 꼴이다. -->
+  <rect width="1024" height="1024" fill="#FFC531"/>
   <g id="tray">
-    <rect x="150" y="452" width="60" height="120" rx="24" fill="#49B796"/>
-    <rect x="814" y="452" width="60" height="120" rx="24" fill="#49B796"/>
-    <rect x="182" y="182" width="660" height="660" rx="150" fill="#5CC8A8"/>
-    <rect x="230" y="230" width="264" height="264" rx="64" fill="#000000" fill-opacity="0.14"/>
-    <rect x="230" y="244" width="264" height="250" rx="62" fill="#FFFFFF"/>
-    <rect x="530" y="230" width="264" height="264" rx="64" fill="#000000" fill-opacity="0.14"/>
-    <rect x="530" y="244" width="264" height="250" rx="62" fill="#FFFFFF"/>
-    <rect x="230" y="530" width="264" height="264" rx="64" fill="#000000" fill-opacity="0.14"/>
-    <rect x="230" y="544" width="264" height="250" rx="62" fill="#FFFFFF"/>
-    <rect x="530" y="530" width="264" height="264" rx="64" fill="#000000" fill-opacity="0.14"/>
-    <rect x="530" y="544" width="264" height="250" rx="62" fill="#FFFFFF"/>
+    <defs>
+      <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#000" stop-opacity="0.10"/>
+        <stop offset="0.25" stop-color="#000" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <rect x="160" y="174" width="704" height="704" rx="114" fill="#000" fill-opacity="0.10"/>
+    <rect x="160" y="160" width="704" height="704" rx="114" fill="#FFFFFF"/>
+    <rect x="204" y="204" width="290" height="290" rx="70" fill="#ECECEC"/>
+    <rect x="204" y="204" width="290" height="290" rx="70" fill="url(#shade)"/>
+    <rect x="530" y="204" width="290" height="290" rx="70" fill="#E8452F"/>
+    <rect x="530" y="204" width="290" height="290" rx="70" fill="url(#shade)"/>
+    <rect x="204" y="530" width="290" height="290" rx="70" fill="#ECECEC"/>
+    <rect x="204" y="530" width="290" height="290" rx="70" fill="url(#shade)"/>
+    <rect x="530" y="530" width="290" height="290" rx="70" fill="#ECECEC"/>
+    <rect x="530" y="530" width="290" height="290" rx="70" fill="url(#shade)"/>
   </g>
 </svg>

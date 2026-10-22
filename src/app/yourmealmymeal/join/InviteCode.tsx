@@ -15,7 +15,8 @@ const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const LENGTH = 6;
 
 /**
- * 초대 페이지도 앱의 새 로그인 화면을 따른다 — 밝은 회색 바탕에 옅은 수저 무늬, 빈 민트 급식판, 굵은 기기 글꼴.
+ * 초대 페이지는 초대장이다 — 흰 바탕에 옅은 수저 무늬, 앱 아이콘 대신 아무것도 담기지 않은 빈 식판 하나,
+ * 그리고 "밥 먹었어요?" 한 마디. 빈 칸을 같이 채우자는 부름이다. 주 행동은 앱처럼 노른자.
  * 단계 사이를 포크 화살표로 이어, 카톡 미리보기를 누르고 들어온 사람이
  * "코드 복사 → 설치 → 입력" 순서를 한눈에 따라가게 한다.
  */
@@ -37,14 +38,14 @@ const RISE = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 };
 
-/** 빈 민트 급식판. 천천히 떠 있다가 가끔 기우뚱한다. */
+/** 네 칸이 모두 빈 식판. 천천히 떠 있다가 가끔 기우뚱한다. */
 function FloatingTray({ still }: { still: boolean }) {
   return (
     <motion.div
       animate={still ? undefined : { y: [0, -5, 0], rotate: [-1.5, 1.5, -1.5] }}
       transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
     >
-      <TrayMark size={128} title="네밥내밥 빈 급식판" />
+      <TrayMark size={150} lunch={false} title="아직 아무것도 담기지 않은 빈 식판" />
     </motion.div>
   );
 }
@@ -68,7 +69,7 @@ function ForkArrow({ flip = false, className = "" }: { flip?: boolean; className
 
 function CopyIcon({ done }: { done: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="#FFFFFF" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       {done ? (
         <path d="M5 12.5l4.5 4.5L19 7" />
       ) : (
@@ -86,8 +87,8 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <p className="flex items-center justify-center gap-2 text-[20px] font-bold leading-none tracking-[-0.02em]" style={{ color: C.ink }}>
       <span
-        className="flex h-[24px] w-[24px] items-center justify-center rounded-full text-[13px] font-bold text-white"
-        style={{ background: C.mint }}
+        className="flex h-[24px] w-[24px] items-center justify-center rounded-full text-[13px] font-bold"
+        style={{ background: C.yolk, color: C.ink }}
         aria-hidden
       >
         {n}
@@ -138,14 +139,18 @@ export default function InviteCode() {
             <FloatingTray still={still} />
           </motion.div>
 
-          <motion.h1 variants={RISE} className="mt-6 text-[30px] font-bold leading-[1.25] tracking-[-0.02em]">
-            밥상에 초대받았어요
+          <motion.h1 variants={RISE} className="mt-7 text-[34px] font-black leading-[1.2] tracking-[-0.04em]">
+            밥 먹었어요?
           </motion.h1>
-          <motion.p variants={RISE} className="mt-2 text-[15px] break-keep" style={{ color: C.sub }}>
-            <b className="font-bold" style={{ color: C.ink }}>
-              네밥내밥
-            </b>
-            {" · "}가까운 친구끼리 끼니를 나누는 곳
+          <motion.p variants={RISE} className="mt-2 text-[18px] font-semibold leading-[1.5] break-keep" style={{ color: C.body }}>
+            오늘 먹은 밥을 식판에 기록해 보세요!
+          </motion.p>
+          <motion.p
+            variants={RISE}
+            className="mt-4 inline-flex items-center rounded-full px-4 py-2 text-[14px] font-semibold break-keep"
+            style={{ background: C.yolkSoft, color: C.ink }}
+          >
+            밥상에 초대받았어요 · 같이 채워요
           </motion.p>
 
           <motion.div
@@ -166,7 +171,7 @@ export default function InviteCode() {
                 disabled={!code}
                 whileTap={code ? { scale: 0.96 } : undefined}
                 className="mt-7 inline-flex h-[54px] items-center gap-3 rounded-full px-7 disabled:cursor-default"
-                style={{ background: C.mint, color: "#FFFFFF", opacity: code === null ? 0.5 : 1 }}
+                style={{ background: C.yolk, color: C.ink, opacity: code === null ? 0.5 : 1 }}
                 aria-label={code ? `초대코드 ${code} 복사하기` : "초대코드 없음"}
               >
                 <span className="text-[24px] font-bold leading-none tracking-[0.08em] tabular-nums">
@@ -184,7 +189,7 @@ export default function InviteCode() {
                       exit={{ y: -6, opacity: 0 }}
                       transition={{ duration: 0.18 }}
                       className="text-[15px] font-bold leading-[22px]"
-                      style={{ color: C.mint }}
+                      style={{ color: C.tomato }}
                     >
                       복사했어요!
                     </motion.p>
@@ -214,9 +219,9 @@ export default function InviteCode() {
                 <span>
                   앱 아래 <b style={{ color: C.ink, fontWeight: 600 }}>모임</b> 탭
                 </span>
-                <ForkRight height={8} color={C.mint} />
+                <ForkRight height={8} color={C.tomato} />
                 <span>모임 추가</span>
-                <ForkRight height={8} color={C.mint} />
+                <ForkRight height={8} color={C.tomato} />
                 <span>초대코드로 참여하기</span>
               </p>
             </div>

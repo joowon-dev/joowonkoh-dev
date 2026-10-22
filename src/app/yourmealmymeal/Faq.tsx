@@ -54,10 +54,10 @@ export default function Faq() {
                 {item.q}
               </span>
               <motion.span
-                animate={{ rotate: on ? 45 : 0, backgroundColor: on ? C.mint : C.surface, color: on ? "#FFFFFF" : C.ink }}
+                animate={{ rotate: on ? 45 : 0, backgroundColor: on ? C.yolk : C.surface, color: C.ink }}
                 transition={{ type: "spring", stiffness: 400, damping: 22 }}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[20px] font-light"
-                style={{ border: `1px solid ${on ? C.mint : C.hairline}` }}
+                style={{ border: `1px solid ${on ? C.yolk : C.hairline}` }}
                 aria-hidden
               >
                 +
