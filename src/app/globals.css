@@ -32,6 +32,12 @@ p, li, blockquote {
   word-break: keep-all;
 }
 
+/* 띄어쓰기가 없는 언어는 keep-all 이면 몇 안 되는 공백에서만 줄이 바뀐다.
+   `lang` 을 단 번역 페이지(이게내연봉 등)에서만 풀어 준다. */
+:is(:lang(ja), :lang(zh), :lang(th)) :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) {
+  word-break: normal;
+}
+
 /* Supanova spring transition */
 .spring-transition {
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);

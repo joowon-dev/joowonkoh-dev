@@ -2,6 +2,8 @@
 
 import { motion } from "motion/react";
 
+import { LANDING } from "./copy";
+import type { Lang } from "./i18n";
 import { EASE } from "./motion";
 
 /**
@@ -9,21 +11,11 @@ import { EASE } from "./motion";
  *
  * 문단으로 설명하지 않는다. 제목 한 줄과 여섯 단어쯤의 꼬리말이면 충분하고,
  * 나머지는 위의 데모가 이미 보여줬다. 스크롤을 따라 한 장씩 올라오고,
- * 커서를 얹으면 살짝 뜬다.
+ * 커서를 얹으면 살짝 뜬다. 타일 글은 언어별 문구(`copy/*.ts`)에 있다.
  */
 
-const FEATURES = [
-  { title: "1초에 얼마", tail: "연봉·월급·일급 중 편한 걸로" },
-  { title: "실시간 · 근무시간", tail: "자는 동안에도, 또는 일하는 동안만" },
-  { title: "요일별 출퇴근", tail: "휴게시간 한 구간, 야간 근무까지" },
-  { title: "위젯 · 잠금화면 · StandBy", tail: "앱을 열지 않아도" },
-  { title: "비교 레이스", tail: "커피 한 잔부터 경차 한 대까지" },
-  { title: "내 근무시간 기준으로", tail: "저 사람이 내 시간만큼 일하면" },
-  { title: "통화 6종", tail: "원·달러·엔·유로·파운드·위안" },
-  { title: "한국어 · English · 日本語", tail: "앱도 위젯도" },
-];
-
-export default function Features() {
+export default function Features({ lang }: { lang: Lang }) {
+  const FEATURES = LANDING[lang].features;
   return (
     <motion.div
       className="grid grid-cols-1 gap-3 rounded-[28px] bg-[#F2F2F7] p-4 sm:grid-cols-2 sm:p-5"
