@@ -71,7 +71,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           />
         </noscript>
         <ScrollToTop />
-        <HideOnAdmin>
+        <HideOnAdmin header>
           <Header />
         </HideOnAdmin>
         <SiteMain>{children}</SiteMain>

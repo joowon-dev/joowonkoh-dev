@@ -10,15 +10,30 @@ import { usePathname } from "next/navigation";
  */
 const OWN_SHELL = ["/admin", "/yourmealmymeal", "/playground/chiikawa-talk"];
 
+/**
+ * 헤더만 빼는 경로 — 푸터와 본문 틀은 그대로 쓴다.
+ * - /moneytick: 이게내연봉 소개·개인정보처리방침(12개 언어). 앱 소개가 첫 화면이어야 하고,
+ *   한국어 사이트 메뉴(Blog·Playground)가 다른 언어 페이지 위에 걸리면 어색하다.
+ */
+const NO_HEADER = ["/moneytick"];
+
 /** 본문 폭·여백까지 자체 셸이 정하는 경로. 어드민은 사이트 본문 틀을 그대로 쓴다. */
 const BARE_MAIN = ["/yourmealmymeal", "/playground/chiikawa-talk"];
 
 const under = (pathname: string, prefixes: string[]) =>
   prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-export default function HideOnAdmin({ children }: { children: React.ReactNode }) {
+export default function HideOnAdmin({
+  children,
+  header = false,
+}: {
+  children: React.ReactNode;
+  /** 헤더를 감쌀 때 켠다 — `NO_HEADER` 경로에서도 숨긴다. */
+  header?: boolean;
+}) {
   const pathname = usePathname();
   if (under(pathname, OWN_SHELL)) return null;
+  if (header && under(pathname, NO_HEADER)) return null;
   return <>{children}</>;
 }
 
