@@ -7,8 +7,9 @@ import { usePathname } from "next/navigation";
  * - /admin: 어드민 셸
  * - /yourmealmymeal: 네밥내밥 앱 페이지. 초대 링크로 들어온 사람에게 개인 사이트가 보이면 엉뚱하다.
  * - /playground/chiikawa-talk: 먼작귀 통역기. 하늘이 화면을 꽉 채우는 전체 화면 놀이 페이지다.
+ * - /playground/duo-decal: 듀오 데칼코마니. 애플 제품 페이지처럼 자체 내비를 쓴다.
  */
-const OWN_SHELL = ["/admin", "/yourmealmymeal", "/playground/chiikawa-talk"];
+const OWN_SHELL = ["/admin", "/yourmealmymeal", "/playground/chiikawa-talk", "/playground/duo-decal"];
 
 /**
  * 헤더만 빼는 경로 — 푸터와 본문 틀은 그대로 쓴다.
@@ -18,7 +19,7 @@ const OWN_SHELL = ["/admin", "/yourmealmymeal", "/playground/chiikawa-talk"];
 const NO_HEADER = ["/moneytick"];
 
 /** 본문 폭·여백까지 자체 셸이 정하는 경로. 어드민은 사이트 본문 틀을 그대로 쓴다. */
-const BARE_MAIN = ["/yourmealmymeal", "/playground/chiikawa-talk"];
+const BARE_MAIN = ["/yourmealmymeal", "/playground/chiikawa-talk", "/playground/duo-decal"];
 
 const under = (pathname: string, prefixes: string[]) =>
   prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));

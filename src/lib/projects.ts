@@ -22,7 +22,8 @@ export type IconName =
   | "gift"
   | "firework"
   | "shark"
-  | "bubble";
+  | "bubble"
+  | "duo";
 
 export interface Project {
   title: string;
@@ -43,6 +44,14 @@ export interface Project {
 }
 
 export const projects: Project[] = [
+  {
+    title: "듀오 데칼코마니",
+    description: "사진을 올리고 접었다 펴면 반쪽이 반대쪽에 찍혀요 🦋",
+    tags: ["Web", "CSS 3D", "Image"],
+    href: "/playground/duo-decal",
+    icon: "duo",
+    tile: ["#fbfbfd", "#d2d2d7"],
+  },
   {
     title: "먼작귀 통역기",
     description: "한글로 적으면 치이카와 친구들 말로 바꿔 줘요 💬",
