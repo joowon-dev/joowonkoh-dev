@@ -5,7 +5,7 @@
   font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
 }
 
-/* 둥근 붓글씨 같은 Jua — 친구들 그림의 둥근 선과 맞춘다. */
+/* 둥근 붓글씨 같은 Jua — 말랑한 느낌을 낸다. */
 .ct-display {
   font-family: "Jua", "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
   font-weight: 400;
@@ -85,33 +85,12 @@
   cursor: pointer;
 }
 
-/* 말풍선 — 왼쪽 친구를 가리키는 꼬리. */
+/* 말풍선 — 친구 그림을 뺐으니 가리킬 꼬리도 없다. */
 .ct-bubble {
-  position: relative;
   border: 3px solid #4b3a35;
   border-radius: 28px;
   padding: 14px 18px 12px;
   box-shadow: 0 5px 0 #4b3a35;
-}
-.ct-bubble::before,
-.ct-bubble::after {
-  content: "";
-  position: absolute;
-  bottom: 22px;
-  width: 0;
-  height: 0;
-  border-style: solid;
-}
-.ct-bubble::before {
-  left: -17px;
-  border-width: 9px 16px 9px 0;
-  border-color: transparent #4b3a35 transparent transparent;
-}
-.ct-bubble::after {
-  left: -11px;
-  border-width: 6px 11px 6px 0;
-  /* 꼬리 안쪽은 말풍선 색 — Bubble 이 --ct-fill 로 넘긴다 */
-  border-color: transparent var(--ct-fill, #fff) transparent transparent;
 }
 
 .ct-pop {

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 import { CHARACTERS, type Character } from "./lexicon";
@@ -92,7 +91,6 @@ export default function Translator() {
               className="ct-tab"
               style={{ background: who === c.id ? TINT[c.id] : undefined }}
             >
-              <Face id={c.id} className={who === c.id ? "ct-bob" : ""} />
               <span className="ct-display text-[15px] whitespace-nowrap sm:text-[14px]">{c.name}</span>
             </button>
           ))}
@@ -185,9 +183,8 @@ function Bubble({
   const tint = TINT[face ?? "unknown"];
 
   return (
-    <section aria-live="polite" className="mt-7 flex items-end gap-3">
-      <Face id={face} className="ct-bob shrink-0" big />
-      <div className="ct-bubble min-w-0 flex-1" style={{ background: tint, ["--ct-fill" as string]: tint }}>
+    <section aria-live="polite" className="mt-7">
+      <div className="ct-bubble" style={{ background: tint }}>
         <p className="ct-display text-[12px] opacity-55">{label}</p>
         <p className="ct-display mt-1 min-h-[1.6em] text-[24px] leading-snug break-keep">
           {empty ? (
@@ -226,39 +223,5 @@ function Bubble({
         )}
       </div>
     </section>
-  );
-}
-
-/** 친구 그림(public/playground/chiikawa-talk). 누군지 모르면 「?」 동그라미. */
-function Face({
-  id,
-  className = "",
-  big,
-}: {
-  id: Character | null;
-  className?: string;
-  big?: boolean;
-}) {
-  const size = big ? "h-[92px] w-[92px]" : "h-[52px] w-[52px]";
-  if (id) {
-    return (
-      <Image
-        src={`/playground/chiikawa-talk/${id}.webp`}
-        alt=""
-        width={220}
-        height={220}
-        priority
-        className={`${size} object-contain ${className}`}
-        draggable={false}
-      />
-    );
-  }
-  return (
-    <span
-      aria-hidden
-      className={`${size} ct-display grid place-items-center rounded-full border-[3px] border-[#4b3a35] bg-white text-[22px] ${className}`}
-    >
-      ?
-    </span>
   );
 }
