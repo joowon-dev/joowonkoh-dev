@@ -41,8 +41,7 @@ export default function DuoDecalPage() {
       </nav>
 
       <header className="px-4 pt-14 pb-10 text-center sm:pt-20">
-        <p className="duo-eyebrow">Duo 데칼코마니</p>
-        <h1 className="duo-h1 mt-3">닮았어요, 닮았어요.</h1>
+        <h1 className="duo-h1">Duo 데칼코마니</h1>
         <p className="duo-sub mx-auto mt-5 max-w-[34ch] break-keep">
           접는 순간 반쪽이 반대쪽에 찍힙니다. 펼치면 데칼코마니.
         </p>

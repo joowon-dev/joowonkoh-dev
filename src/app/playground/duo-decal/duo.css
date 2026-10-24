@@ -72,11 +72,6 @@
 }
 
 /* ── 히어로 ── */
-.duo-eyebrow {
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.17;
-}
 .duo-h1 {
   font-size: clamp(44px, 7.2vw, 80px);
   font-weight: 700;
