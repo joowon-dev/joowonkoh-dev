@@ -7,6 +7,14 @@ import { DEFAULT_WALLPAPER } from "./wallpaper";
 
 type Finish = "night" | "star";
 
+/** 올린 사진을 화면 전체에 깔지, 한쪽 칸에만 넣을지. */
+type Fill = "full" | "half";
+
+const FILLS: { id: Fill; name: string }[] = [
+  { id: "full", name: "화면 전체" },
+  { id: "half", name: "한쪽만" },
+];
+
 const FINISHES: { id: Finish; name: string; swatch: string }[] = [
   { id: "night", name: "나이트 스카이", swatch: "linear-gradient(135deg, #4a4d57, #1f2026)" },
   { id: "star", name: "스타 화이트", swatch: "linear-gradient(135deg, #fbfaf7, #d9d4ca)" },
@@ -101,6 +109,7 @@ export default function DuoStudio() {
   const [printed, setPrinted] = useState(false);
   const [source, setSource] = useState<Side>("right");
   const [finish, setFinish] = useState<Finish>("night");
+  const [fill, setFillRaw] = useState<Fill>("half");
   const [dragOver, setDragOver] = useState(false);
 
   const raf = useRef(0);
@@ -153,11 +162,17 @@ export default function DuoStudio() {
     if (openRef.current < 100) void tween(100, 700);
   };
 
-  /** 사진을 올렸으면 사진만 반대쪽 칸으로 옮기고, 기본 배경이면 반대쪽에서 찍어 보인다. */
+  const setFill = (f: Fill) => {
+    setFillRaw(f);
+    setPrinted(false);
+    if (openRef.current < 100) void tween(100, 700);
+  };
+
+  /** 한쪽에만 넣었으면 사진만 반대쪽 칸으로 옮기고, 화면 전체면 반대쪽에서 찍어 보인다. */
   const swapSide = () => {
     setSource((s) => otherSide(s));
     setPrinted(false);
-    if (src === DEFAULT_WALLPAPER) void foldAndOpen();
+    if (src === DEFAULT_WALLPAPER || fill === "full") void foldAndOpen();
     else if (openRef.current < 100) void tween(100, 700);
   };
 
@@ -177,7 +192,7 @@ export default function DuoStudio() {
       canvas.height = h;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      drawDecal(ctx, img, w, h, printed, source, src !== DEFAULT_WALLPAPER);
+      drawDecal(ctx, img, w, h, printed, source, halfMode);
       canvas.toBlob((blob) => {
         if (!blob) return;
         const a = document.createElement("a");
@@ -195,15 +210,17 @@ export default function DuoStudio() {
   const rad = (angle * Math.PI) / 180;
   const target = otherSide(source);
   const isDefault = src === DEFAULT_WALLPAPER;
-  const photoSide = isDefault ? null : source;
+  // 기본 배경화면은 늘 화면 전체에 깐다 — 한쪽 칸은 올린 사진에만 쓴다.
+  const halfMode = !isDefault && fill === "half";
+  const photoSide = halfMode ? source : null;
   // 찍히는 쪽은 막 떼어 냈을 때 번져 있다가 펼칠수록 마른다.
   const wet = printed ? t : 0;
 
   const lead = printed
     ? `찍혔어요. ${SIDE_KO[source]} 화면이 ${SIDE_KO[target]}에 거울처럼 옮겨 갔습니다.`
-    : isDefault
-      ? `사진을 올리면 ${SIDE_KO[source]} 화면에만 들어가요. 끝까지 접었다 펴면 ${SIDE_KO[target]}에 그대로 찍혀 나옵니다.`
-      : `사진은 ${SIDE_KO[source]}에만 들어갔어요. 끝까지 접었다 펴면 비어 있는 ${SIDE_KO[target]}에 찍혀 나옵니다.`;
+    : halfMode
+      ? `사진은 ${SIDE_KO[source]}에만 들어갔어요. 끝까지 접었다 펴면 비어 있는 ${SIDE_KO[target]}에 찍혀 나옵니다.`
+      : `사진을 올리고 끝까지 접었다 펴 보세요. ${SIDE_KO[source]} 화면이 ${SIDE_KO[target]}에 그대로 찍혀 나옵니다.`;
 
   return (
     <div className="duo-card">
@@ -212,6 +229,20 @@ export default function DuoStudio() {
           <p className="duo-box-lead" aria-live="polite">
             <strong>데칼코마니.</strong> {lead}
           </p>
+          <div className="duo-seg" role="radiogroup" aria-label="사진 넣는 곳">
+            {FILLS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                role="radio"
+                aria-checked={fill === f.id}
+                className="duo-seg-item"
+                onClick={() => setFill(f.id)}
+              >
+                {f.name}
+              </button>
+            ))}
+          </div>
           <label htmlFor="duo-fold" className="duo-box-hint">
             아래를 드래그해서 접고 펼쳐보기
           </label>
@@ -245,7 +276,7 @@ export default function DuoStudio() {
           <li>
             <button type="button" className="duo-pill" onClick={swapSide}>
               <CircleIcon glyph="swap" />
-              {isDefault ? `${SIDE_KO[target]}으로 찍기` : `사진을 ${SIDE_KO[target]}으로`}
+              {halfMode ? `사진을 ${SIDE_KO[target]}으로` : `${SIDE_KO[target]}으로 찍기`}
             </button>
           </li>
           <li>
