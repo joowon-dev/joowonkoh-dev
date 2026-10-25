@@ -39,9 +39,14 @@ export function coverCrop(iw: number, ih: number, bw: number, bh: number) {
   return { sx: (iw - sw) / 2, sy: (ih - sh) / 2, sw, sh };
 }
 
+/** 사진이 한쪽에만 들어갔을 때 빈 칸의 색 — 화면의 `.duo-paper` 와 같다. */
+export const PAPER = "#f5f5f7";
+
 /**
- * 결과를 캔버스에 그린다. 화면에서처럼 그림 전체를 깔고, 찍혔다면 반대쪽 반에
+ * 결과를 캔버스에 그린다. 화면에서처럼 그림을 깔고, 찍혔다면 반대쪽 반에
  * 좌우로 뒤집은 그림을 덮는다 — 뒤집은 그림의 왼쪽 반이 곧 원래 오른쪽 반의 거울상이다.
+ *
+ * `half` 면 그림을 `source` 반 칸에만 맞춰 넣고 나머지는 빈 종이로 둔다.
  */
 export function drawDecal(
   ctx: CanvasRenderingContext2D,
@@ -50,9 +55,16 @@ export function drawDecal(
   h: number,
   printed: boolean,
   source: Side,
+  half = false,
 ) {
-  const { sx, sy, sw, sh } = coverCrop(img.width, img.height, w, h);
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+  const dx = half && source === "right" ? w / 2 : 0;
+  const dw = half ? w / 2 : w;
+  const { sx, sy, sw, sh } = coverCrop(img.width, img.height, dw, h);
+  if (half) {
+    ctx.fillStyle = PAPER;
+    ctx.fillRect(0, 0, w, h);
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, dx, 0, dw, h);
   if (!printed) return;
   ctx.save();
   ctx.beginPath();
@@ -60,6 +72,6 @@ export function drawDecal(
   ctx.clip();
   ctx.translate(w, 0);
   ctx.scale(-1, 1);
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+  ctx.drawImage(img, sx, sy, sw, sh, dx, 0, dw, h);
   ctx.restore();
 }

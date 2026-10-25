@@ -453,6 +453,25 @@
   pointer-events: none;
 }
 
+/* 사진이 한쪽에만 들어갔을 때 비어 있는 칸 — 찍히기를 기다리는 종이 */
+.duo-paper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f7;
+}
+.duo-paper span {
+  padding: 0.5em 1em;
+  border: 1.5px dashed #c7c7cc;
+  border-radius: 999px;
+  font-size: calc(var(--sh) * 0.04);
+  font-weight: 600;
+  color: #86868b;
+  white-space: nowrap;
+}
+
 /* 잠금 화면 */
 .duo-lock {
   position: absolute;

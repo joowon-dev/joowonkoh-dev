@@ -19,35 +19,45 @@ const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
 /**
  * 화면 한 칸. 펼친 화면 전체(가로 W) 크기의 층을 반 칸 폭으로 잘라 보여 준다.
  * 왼쪽 반은 층의 0~W/2, 오른쪽 반은 W/2~W 를 보인다 — 그래서 시계·홈 막대가 접는 선을 넘어 이어진다.
+ *
+ * 올린 사진은 `photoSide` 반 칸에만 들어간다(층이 아니라 칸에 맞춰 채운다). 반대쪽은 비어 있다가
+ * 찍히면 같은 사진을 뒤집어 채운다 — 두 칸이 폭이 같아 접는 선에서 거울상이 딱 맞는다.
  */
 function Half({
   side,
   src,
+  photoSide,
   mirrored,
   wet,
   showClock,
 }: {
   side: Side;
   src: string;
+  /** 사진이 들어간 쪽. null 이면 기본 배경화면이 화면 전체에 깔린다. */
+  photoSide: Side | null;
   mirrored: boolean;
   wet: number;
   showClock: boolean;
 }) {
+  const style = mirrored
+    ? { transform: "scaleX(-1)", filter: wet > 0.01 ? `blur(${wet * 6}px) saturate(${1 + wet * 0.5})` : undefined }
+    : undefined;
+  const photo = (
+    // eslint-disable-next-line @next/next/no-img-element -- 올린 사진(blob:)을 그대로 띄운다
+    <img src={src} alt="" draggable={false} className="duo-photo" style={style} />
+  );
   return (
     <div className={`duo-screen duo-screen-${side}`}>
+      {photoSide &&
+        (side === photoSide || mirrored ? (
+          photo
+        ) : (
+          <div className="duo-paper">
+            <span>여기에 찍혀요</span>
+          </div>
+        ))}
       <div className="duo-layer">
-        {/* eslint-disable-next-line @next/next/no-img-element -- 올린 사진(blob:)을 그대로 띄운다 */}
-        <img
-          src={src}
-          alt=""
-          draggable={false}
-          className="duo-photo"
-          style={
-            mirrored
-              ? { transform: "scaleX(-1)", filter: wet > 0.01 ? `blur(${wet * 6}px) saturate(${1 + wet * 0.5})` : undefined }
-              : undefined
-          }
-        />
+        {!photoSide && photo}
         {showClock && (
           <div className="duo-lock">
             <p className="duo-lock-date">4월 1일 수요일</p>
@@ -143,10 +153,12 @@ export default function DuoStudio() {
     if (openRef.current < 100) void tween(100, 700);
   };
 
+  /** 사진을 올렸으면 사진만 반대쪽 칸으로 옮기고, 기본 배경이면 반대쪽에서 찍어 보인다. */
   const swapSide = () => {
     setSource((s) => otherSide(s));
     setPrinted(false);
-    void foldAndOpen();
+    if (src === DEFAULT_WALLPAPER) void foldAndOpen();
+    else if (openRef.current < 100) void tween(100, 700);
   };
 
   const reset = () => {
@@ -165,7 +177,7 @@ export default function DuoStudio() {
       canvas.height = h;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      drawDecal(ctx, img, w, h, printed, source);
+      drawDecal(ctx, img, w, h, printed, source, src !== DEFAULT_WALLPAPER);
       canvas.toBlob((blob) => {
         if (!blob) return;
         const a = document.createElement("a");
@@ -183,12 +195,15 @@ export default function DuoStudio() {
   const rad = (angle * Math.PI) / 180;
   const target = otherSide(source);
   const isDefault = src === DEFAULT_WALLPAPER;
+  const photoSide = isDefault ? null : source;
   // 찍히는 쪽은 막 떼어 냈을 때 번져 있다가 펼칠수록 마른다.
   const wet = printed ? t : 0;
 
   const lead = printed
     ? `찍혔어요. ${SIDE_KO[source]} 화면이 ${SIDE_KO[target]}에 거울처럼 옮겨 갔습니다.`
-    : `사진을 올리고 끝까지 접었다 펴 보세요. ${SIDE_KO[source]} 화면이 ${SIDE_KO[target]}에 그대로 찍혀 나옵니다.`;
+    : isDefault
+      ? `사진을 올리면 ${SIDE_KO[source]} 화면에만 들어가요. 끝까지 접었다 펴면 ${SIDE_KO[target]}에 그대로 찍혀 나옵니다.`
+      : `사진은 ${SIDE_KO[source]}에만 들어갔어요. 끝까지 접었다 펴면 비어 있는 ${SIDE_KO[target]}에 찍혀 나옵니다.`;
 
   return (
     <div className="duo-card">
@@ -230,7 +245,7 @@ export default function DuoStudio() {
           <li>
             <button type="button" className="duo-pill" onClick={swapSide}>
               <CircleIcon glyph="swap" />
-              {SIDE_KO[target]}으로 찍기
+              {isDefault ? `${SIDE_KO[target]}으로 찍기` : `사진을 ${SIDE_KO[target]}으로`}
             </button>
           </li>
           <li>
@@ -283,12 +298,12 @@ export default function DuoStudio() {
             <div className="duo-panel duo-panel-right">
               <span className="duo-btn duo-btn-a" aria-hidden />
               <span className="duo-btn duo-btn-b" aria-hidden />
-              <Half side="right" src={src} mirrored={printed && target === "right"} wet={wet} showClock={isDefault} />
+              <Half side="right" src={src} photoSide={photoSide} mirrored={printed && target === "right"} wet={wet} showClock={isDefault} />
             </div>
 
             <div className="duo-panel duo-panel-left" style={{ transform: `rotateY(${angle}deg)` }}>
               <div className="duo-face duo-front">
-                <Half side="left" src={src} mirrored={printed && target === "left"} wet={wet} showClock={isDefault} />
+                <Half side="left" src={src} photoSide={photoSide} mirrored={printed && target === "left"} wet={wet} showClock={isDefault} />
                 <span className="duo-shade" style={{ opacity: Math.sin(Math.min(rad, Math.PI / 2)) * 0.55 }} />
               </div>
               <div className="duo-face duo-back">

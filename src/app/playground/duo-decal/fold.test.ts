@@ -76,6 +76,20 @@ describe("drawDecal", () => {
     expect(calls).toContain("scale(-1,1)");
   });
 
+  it("한쪽에만 넣으면 그 반 칸에만 그리고 나머지는 빈 종이", () => {
+    const { ctx, calls } = fakeCtx();
+    drawDecal(ctx, img, 1400, 1000, false, "right", true);
+    // 700×1000 칸에 맞춰 1400×1000 사진의 가운데 700 폭만 쓴다
+    expect(calls).toEqual(["fillRect(0,0,1400,1000)", "drawImage(350,0,700,1000,700,0,700,1000)"]);
+  });
+
+  it("한쪽에만 넣고 찍으면 반대쪽 반에 뒤집어 덮는다", () => {
+    const { ctx, calls } = fakeCtx();
+    drawDecal(ctx, img, 1400, 1000, true, "right", true);
+    expect(calls).toContain("rect(0,0,700,1000)");
+    expect(calls.at(-2)).toBe("drawImage(350,0,700,1000,700,0,700,1000)");
+  });
+
   it("왼쪽을 찍으면 오른쪽 반에 덮는다", () => {
     const { ctx, calls } = fakeCtx();
     drawDecal(ctx, img, 1400, 1000, true, "left");
