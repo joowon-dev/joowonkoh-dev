@@ -50,6 +50,7 @@ module.exports = {
     "/playground/typing-hoop",
     // 초대 링크가 닿는 곳. 코드마다 같은 페이지라 검색에 올릴 까닭이 없다.
     "/yourmealmymeal/join",
+    "/yourmealmymeal/*/join",
     "/playground/doodle-dance",
     "/playground/gaebari-dance",
     "/playground/gaebari-glare",
