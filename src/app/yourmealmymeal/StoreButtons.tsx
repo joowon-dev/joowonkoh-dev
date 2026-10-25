@@ -31,13 +31,25 @@ function PlayGlyph() {
   );
 }
 
-function StoreButton({ href, glyph, store, dark }: { href: string; glyph: ReactNode; store: string; dark: boolean }) {
+function StoreButton({
+  href,
+  glyph,
+  store,
+  dark,
+  compact,
+}: {
+  href: string;
+  glyph: ReactNode;
+  store: string;
+  dark: boolean;
+  compact: boolean;
+}) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="flex h-[54px] min-w-0 flex-1 items-center justify-center gap-2.5 rounded-full px-4 transition-transform hover:-translate-y-0.5 active:translate-y-0"
+      className={`flex ${compact ? "h-[48px]" : "h-[54px]"} min-w-0 flex-1 items-center justify-center gap-2.5 rounded-full px-4 transition-transform hover:-translate-y-0.5 active:translate-y-0`}
       style={
         dark
           ? { background: "#000000", color: "#FFFFFF" }
@@ -53,12 +65,15 @@ function StoreButton({ href, glyph, store, dark }: { href: string; glyph: ReactN
   );
 }
 
-/** App Store(검정) · Google Play(흰색) 알약 버튼 한 줄. 공식 배지처럼 흑백으로 둔다. */
-export default function StoreButtons({ className = "" }: { className?: string }) {
+/**
+ * App Store(검정) · Google Play(흰색) 알약 버튼 한 줄. 공식 배지처럼 흑백으로 둔다.
+ * compact 는 한 화면에 다 들어가야 하는 초대 페이지용 — 조금 낮다.
+ */
+export default function StoreButtons({ className = "", compact = false }: { className?: string; compact?: boolean }) {
   return (
     <div className={`flex w-full gap-2.5 ${className}`}>
-      <StoreButton href={APP_STORE_URL} glyph={<AppleGlyph color="#FFFFFF" />} store="App Store" dark />
-      <StoreButton href={PLAY_STORE_URL} glyph={<PlayGlyph />} store="Google Play" dark={false} />
+      <StoreButton href={APP_STORE_URL} glyph={<AppleGlyph color="#FFFFFF" />} store="App Store" dark compact={compact} />
+      <StoreButton href={PLAY_STORE_URL} glyph={<PlayGlyph />} store="Google Play" dark={false} compact={compact} />
     </div>
   );
 }
