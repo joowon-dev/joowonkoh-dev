@@ -464,6 +464,19 @@ function Bubble() {
   );
 }
 
+/** 듀오 데칼코마니 — 펼친 폴더블 화면에 좌우가 똑같은 나비 얼룩 */
+function Duo() {
+  return (
+    <>
+      <rect x="6" y="14" width="52" height="37" rx="5" fill="#2b2c31" />
+      <rect x="8.5" y="16.5" width="47" height="32" rx="3" fill="#f5e6d3" />
+      <path d="M32 22 C26 18 16 20 18 28 C19 32 24 33 27 32 C22 35 21 42 26 43 C29 44 31 40 32 36 Z" fill="#0071e3" />
+      <path d="M32 22 C38 18 48 20 46 28 C45 32 40 33 37 32 C42 35 43 42 38 43 C35 44 33 40 32 36 Z" fill="#0071e3" />
+      <path d="M32 16.5 V48.5" stroke="#2b2c31" strokeWidth="0.8" strokeDasharray="1.6 1.6" />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -485,6 +498,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   firework: Firework,
   shark: Shark,
   bubble: Bubble,
+  duo: Duo,
 };
 
 /**
