@@ -42,7 +42,7 @@ export type MetricRow = {
   value: number;
 };
 
-type Chunk = {
+export type Chunk = {
   header?: { localizationSettings?: { currencyCode?: string } };
   row?: {
     dimensionValues: Record<string, { value: string; displayLabel?: string }>;
@@ -165,13 +165,13 @@ function datesBetween(start: YMD, end: YMD): string[] {
   return dates;
 }
 
-function kstDay(now: Date, offsetDays: number): YMD {
+export function kstDay(now: Date, offsetDays: number): YMD {
   const d = new Date(now.getTime() + 9 * 3_600_000 + offsetDays * 86_400_000);
   return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
 }
 
 /** 대시보드는 달러로 그린다. 다른 통화가 오면 숫자를 섞지 말고 멈춘다. */
-function assertUsd(chunks: readonly Chunk[]) {
+export function assertUsd(chunks: readonly Chunk[]) {
   const currency = chunks.find((c) => c.header)?.header?.localizationSettings?.currencyCode;
   if (currency && currency !== "USD") {
     throw new Error(`AdMob 보고서 통화가 USD 가 아니다: ${currency}`);
@@ -179,7 +179,7 @@ function assertUsd(chunks: readonly Chunk[]) {
 }
 
 /** 수익은 마이크로 단위 정수(microsValue)로, 나머지는 integerValue/doubleValue 로 온다. */
-function readMetric(
+export function readMetric(
   cell: { microsValue?: string; integerValue?: string; doubleValue?: number } | undefined,
 ): number | null {
   if (!cell) return null;

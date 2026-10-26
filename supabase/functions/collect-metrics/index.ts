@@ -8,6 +8,11 @@
  * pg_cron 이 소스마다 매일 부른다(마이그레이션 20261001000000, 20261001020000).
  * 처음 한 번은 days=30 으로 소급 수집해 차트를 채운다.
  *
+ * 실시간 소스는 따로 돈다(마이그레이션 20261026000000) — days 를 받지 않는다.
+ *   ga4_live     1분마다. 등록부(apps)의 GA4 속성마다 최근 30분 → live_metrics / live_detail
+ *   admob_today  10분마다. AdMob 오늘치 → live_metrics
+ *   ga4_discover 매일. 서비스 계정이 보는 속성의 스트림을 훑어 apps.ga4_property_id 를 채운다
+ *
  * 자격증명은 Vault 에 있다(마이그레이션 20261001010000). Edge Function secrets 가 아니라
  * Vault 를 쓰는 건 SQL 만으로 넣고 바꿀 수 있어서다.
  *
@@ -32,6 +37,19 @@ import {
   normalizeGa4Breakdown,
   normalizeGa4Report,
 } from "./ga4.ts";
+import {
+  ADMOB_TODAY_METRICS,
+  buildAdmobTodayRequest,
+  type LiveDetail,
+  type LiveRow,
+  matchProperties,
+  minuteFloor,
+  normalizeAdmobToday,
+  normalizeRealtime,
+  propertyIds,
+  REALTIME_REQUESTS,
+  type RealtimeReports,
+} from "./live.ts";
 import {
   fetchAccessToken,
   refreshAccessToken,
@@ -66,6 +84,13 @@ const COLLECTORS: Record<string, (days: number) => Promise<Collected>> = {
   admob: collectAdmob,
 };
 
+/** 실시간 작업은 쓰기까지 스스로 하고, 화면에 남길 요약만 돌려준다. */
+const LIVE_TASKS: Record<string, (now: Date) => Promise<Record<string, unknown>>> = {
+  ga4_live: collectGa4Live,
+  admob_today: collectAdmobToday,
+  ga4_discover: discoverGa4Properties,
+};
+
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -82,12 +107,32 @@ Deno.serve(async (req) => {
   const source = url.searchParams.get("source") ?? "";
   const days = clampDays(url.searchParams.get("days"));
 
+  const startedAt = new Date().toISOString();
+
+  const task = LIVE_TASKS[source];
+  if (task) {
+    try {
+      const summary = await task(new Date(startedAt));
+      // 일부 속성만 실패했으면 쓸 수 있는 건 쓰고, 실패는 숨기지 않는다.
+      const partial = typeof summary.error === "string" ? summary.error : null;
+      await recordRun(source, {
+        last_run_at: startedAt,
+        last_success: startedAt,
+        status: partial ? "error" : "ok",
+        error: partial,
+      });
+      return json({ source, ...summary });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await recordRun(source, { last_run_at: startedAt, status: "error", error: message });
+      return json({ source, error: message }, 500);
+    }
+  }
+
   const collect = COLLECTORS[source];
   if (!collect) {
     return json({ error: `아직 수집기가 없는 소스: ${source}` }, 400);
   }
-
-  const startedAt = new Date().toISOString();
 
   try {
     const { daily, breakdown } = await collect(days);
@@ -116,13 +161,13 @@ Deno.serve(async (req) => {
   }
 });
 
-async function collectGa4(days: number): Promise<Collected> {
+async function ga4Token(): Promise<string> {
   const key = JSON.parse(await requireSecret("ga4_service_account_json")) as ServiceAccountKey;
+  return fetchAccessToken(key, "https://www.googleapis.com/auth/analytics.readonly");
+}
 
-  const token = await fetchAccessToken(
-    key,
-    "https://www.googleapis.com/auth/analytics.readonly",
-  );
+async function collectGa4(days: number): Promise<Collected> {
+  const token = await ga4Token();
 
   const runReport = async (request: unknown) => {
     const res = await fetch(
@@ -152,14 +197,14 @@ async function collectGa4(days: number): Promise<Collected> {
   };
 }
 
-async function collectAdmob(days: number): Promise<Collected> {
+async function admobReporter() {
   const token = await refreshAccessToken({
     clientId: await requireSecret("admob_client_id"),
     clientSecret: await requireSecret("admob_client_secret"),
     refreshToken: await requireSecret("admob_refresh_token"),
   });
 
-  const generate = async (request: unknown) => {
+  return async (request: unknown) => {
     const res = await fetch(
       `https://admob.googleapis.com/v1/${ADMOB_ACCOUNT}/networkReport:generate`,
       {
@@ -176,7 +221,10 @@ async function collectAdmob(days: number): Promise<Collected> {
     }
     return body;
   };
+}
 
+async function collectAdmob(days: number): Promise<Collected> {
+  const generate = await admobReporter();
   const now = new Date();
   const request = buildNetworkReportRequest(now, days);
   const dimensions = Object.keys(ADMOB_BREAKDOWNS) as AdmobBreakdown[];
@@ -189,6 +237,121 @@ async function collectAdmob(days: number): Promise<Collected> {
     daily: normalizeAdmobReport(total, request.reportSpec.dateRange),
     breakdown: reports.flatMap((report, i) => normalizeAdmobBreakdown(report, dimensions[i])),
   };
+}
+
+async function collectGa4Live(now: Date) {
+  const { data: apps, error } = await supabase
+    .from("apps")
+    .select("slug, ga4_property_id")
+    .not("ga4_property_id", "is", null);
+  if (error) throw new Error(`apps 읽기 실패: ${error.message}`);
+
+  const token = await ga4Token();
+  const at = minuteFloor(now);
+  const names = Object.keys(REALTIME_REQUESTS) as (keyof typeof REALTIME_REQUESTS)[];
+
+  const realtime = async (propertyId: string, request: unknown) => {
+    const res = await fetch(
+      `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runRealtimeReport`,
+      {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify(request),
+      },
+    );
+    const body = await res.json();
+    if (!res.ok) throw new Error(`${res.status} ${body?.error?.message ?? JSON.stringify(body)}`);
+    return body;
+  };
+
+  // 속성 하나가 권한 오류여도 나머지는 적는다.
+  const results = await Promise.allSettled(
+    (apps ?? []).map(async ({ ga4_property_id: id }) => {
+      const reports = await Promise.all(names.map((n) => realtime(id, REALTIME_REQUESTS[n])));
+      const byName = Object.fromEntries(names.map((n, i) => [n, reports[i]])) as RealtimeReports;
+      return normalizeRealtime(byName, id, at);
+    }),
+  );
+
+  const rows: LiveRow[] = [];
+  const details: LiveDetail[] = [];
+  const failures: string[] = [];
+  results.forEach((r, i) => {
+    if (r.status === "fulfilled") {
+      rows.push(r.value.row);
+      details.push(r.value.detail);
+    } else {
+      const reason = r.reason instanceof Error ? r.reason.message : String(r.reason);
+      failures.push(`${apps![i].slug}: ${reason}`);
+    }
+  });
+
+  await upsertLive(rows);
+  if (details.length > 0) {
+    const { error: e } = await supabase.from("live_detail").upsert(details, { onConflict: "source,entity" });
+    if (e) throw new Error(`live_detail upsert 실패: ${e.message}`);
+  }
+
+  if (rows.length === 0 && failures.length > 0) throw new Error(failures.join(" / "));
+  return { properties: rows.length, ...(failures.length > 0 ? { error: failures.join(" / ") } : {}) };
+}
+
+async function collectAdmobToday(now: Date) {
+  const generate = await admobReporter();
+  const rows = normalizeAdmobToday(await generate(buildAdmobTodayRequest(now)), minuteFloor(now));
+
+  // 오늘 아직 광고가 하나도 안 나간 시각엔 행이 없다. 수집은 됐다는 걸 0 으로 남긴다.
+  if (rows.length === 0) {
+    for (const metricKey of Object.values(ADMOB_TODAY_METRICS)) {
+      rows.push({ at: minuteFloor(now), source: "admob", entity: "none", metric_key: metricKey, value: 0 });
+    }
+  }
+  await upsertLive(rows);
+  return { rows: rows.length };
+}
+
+async function discoverGa4Properties() {
+  const token = await ga4Token();
+  const admin = async (path: string) => {
+    const res = await fetch(`https://analyticsadmin.googleapis.com/v1beta/${path}`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(`GA4 Admin ${path} 실패 (${res.status}): ${body?.error?.message ?? JSON.stringify(body)}`);
+    return body;
+  };
+
+  const ids = propertyIds(await admin("accountSummaries?pageSize=200"));
+  const streams = await Promise.all(ids.map((id) => admin(`properties/${id}/dataStreams?pageSize=50`)));
+  const streamsByProperty = Object.fromEntries(ids.map((id, i) => [id, streams[i].dataStreams ?? []]));
+
+  const { data: apps, error } = await supabase
+    .from("apps")
+    .select("slug, ios_bundle_id, android_package")
+    .eq("kind", "app");
+  if (error) throw new Error(`apps 읽기 실패: ${error.message}`);
+
+  const found = matchProperties(apps ?? [], streamsByProperty);
+  for (const [slug, propertyId] of Object.entries(found)) {
+    const { error: e } = await supabase.from("apps").update({ ga4_property_id: propertyId }).eq("slug", slug);
+    if (e) throw new Error(`apps.${slug} 갱신 실패: ${e.message}`);
+  }
+
+  const missing = (apps ?? []).map((a) => a.slug).filter((slug) => !found[slug]);
+  return {
+    visibleProperties: ids.length,
+    matched: found,
+    ...(missing.length > 0 ? { error: `GA4 속성을 못 찾은 앱: ${missing.join(", ")} — 서비스 계정 권한 확인` } : {}),
+  };
+}
+
+async function upsertLive(rows: readonly LiveRow[]) {
+  for (let i = 0; i < rows.length; i += UPSERT_CHUNK) {
+    const { error } = await supabase
+      .from("live_metrics")
+      .upsert(rows.slice(i, i + UPSERT_CHUNK), { onConflict: "source,at,entity,metric_key" });
+    if (error) throw new Error(`live_metrics upsert 실패: ${error.message}`);
+  }
 }
 
 async function upsertAll(

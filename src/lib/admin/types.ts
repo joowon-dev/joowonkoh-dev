@@ -16,9 +16,12 @@ export type MetricRow = {
   value: number;
 };
 
+/** 실시간 수집(1분·10분마다)과 GA4 속성 찾기. 일별 배너(freshness)는 이걸 보지 않는다. */
+export type LiveRunSource = "ga4_live" | "admob_today" | "ga4_discover";
+
 /** collection_runs 한 행. 소스별 마지막 수집 상태. */
 export type CollectionRun = {
-  source: Source;
+  source: Source | LiveRunSource;
   last_run_at: string | null;
   last_success: string | null;
   status: "ok" | "error";

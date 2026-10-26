@@ -1,13 +1,15 @@
 import BreakdownTable from "@/components/admin/BreakdownTable";
 import FreshnessBanner from "@/components/admin/FreshnessBanner";
+import LiveHub from "@/components/admin/LiveHub";
 import TrendChart from "@/components/admin/TrendChart";
 import { Notice, PageHeader, Panel, Stat, StatGrid, Tabs } from "@/components/admin/ui";
 import { type BreakdownLine, ratio } from "@/lib/admin/breakdown";
 import type { LabelKind } from "@/lib/admin/columns";
 import { formatInt, formatPercent, formatUsd } from "@/lib/admin/format";
 import { findFreshnessProblems } from "@/lib/admin/freshness";
+import { buildAppCards, findLiveProblems, kstMidnightIso, liveTotals, minuteSeries } from "@/lib/admin/live";
 import { parsePeriod, previousPeriod } from "@/lib/admin/period";
-import { loadBreakdown, loadDaily, loadRuns, settle } from "@/lib/admin/queries";
+import { loadApps, loadBreakdown, loadDaily, loadLive, loadLiveDetail, loadRuns, settle } from "@/lib/admin/queries";
 import { buildSeries } from "@/lib/admin/series";
 import type { MetricRow } from "@/lib/admin/types";
 
@@ -41,12 +43,15 @@ export default async function AppsPage({ searchParams }: Props) {
   const metric = METRICS.find((m) => m.key === params.metric) ?? METRICS[0];
   const dim = DIMENSIONS.find((d) => d.key === params.dim) ?? DIMENSIONS[0];
 
-  const [daily, runs, lines, appsNow, appsPrev] = await Promise.all([
+  const [daily, runs, lines, appsNow, appsPrev, registry, live, liveDetail] = await Promise.all([
     settle(loadDaily(prev.start, period.end), [] as MetricRow[]),
     settle(loadRuns(), []),
     settle(loadBreakdown("admob", dim.key, period.start, period.end), []),
     settle(loadBreakdown("admob", "app", period.start, period.end), []),
     settle(loadBreakdown("admob", "app", prev.start, prev.end), []),
+    settle(loadApps(), []),
+    settle(loadLive(kstMidnightIso(now)), []),
+    settle(loadLiveDetail(), []),
   ]);
 
   const series = (key: string, end = period.end) =>
@@ -61,12 +66,38 @@ export default async function AppsPage({ searchParams }: Props) {
 
   const pageQuery = { ...period.query, metric: metric.key, dim: dim.key };
   const error = daily.error ?? runs.error ?? lines.error;
+  const liveError = registry.error ?? live.error ?? liveDetail.error;
+  const totals = liveTotals(live.value);
 
   return (
     <>
-      <PageHeader title="앱" path="/admin/apps" period={period} color="var(--apps)">
-        <p className="mt-1 text-xs text-[var(--ink-faint)]">이게내연봉 · 지구미아 · 네밥내밥 · AdMob (USD)</p>
-      </PageHeader>
+      <header className="mb-6 lg:mb-8">
+        <h1 className="text-2xl font-bold tracking-tight lg:text-3xl" style={{ color: "var(--apps)" }}>
+          앱
+        </h1>
+        <p className="mt-1 text-sm text-[var(--ink-soft)]">지금 · 오늘</p>
+      </header>
+
+      {liveError ? (
+        <Notice>실시간 지표를 불러오지 못했어요: {liveError}</Notice>
+      ) : (
+        <LiveHub
+          now={now}
+          users={totals.users}
+          earnings={totals.earnings}
+          impressions={totals.impressions.value}
+          series={minuteSeries(live.value)}
+          cards={buildAppCards(registry.value, live.value)}
+          details={liveDetail.value}
+          problems={findLiveProblems(runs.value, now)}
+        />
+      )}
+
+      <div className="mt-14 border-t border-[var(--rule)] pt-8">
+        <PageHeader title="기간 분석" path="/admin/apps" period={period} color="var(--apps)">
+          <p className="mt-1 text-xs text-[var(--ink-faint)]">AdMob (USD) · 하루 늦게 확정</p>
+        </PageHeader>
+      </div>
 
       {error ? <Notice>지표를 불러오지 못했어요: {error}</Notice> : <FreshnessBanner problems={findFreshnessProblems(runs.value, now).filter((p) => p.source === "admob")} />}
 

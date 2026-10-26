@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { type BreakdownTotal, pivotBreakdown } from "./breakdown";
+import type { AppEntry, LiveDetailRow, LiveRow } from "./live";
 import type { SnsDraft } from "./sns";
 import type { CollectionRun, MetricRow, Source } from "./types";
 
@@ -58,6 +59,41 @@ export async function loadBreakdown(source: Source, dimension: string, start: st
       .range(from, to),
   );
   return pivotBreakdown(rows);
+}
+
+/** 앱 등록부. 웹(joowonkoh.com)도 한 줄로 들어 있다. */
+export async function loadApps(): Promise<AppEntry[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("apps")
+    .select("slug, name, kind, sort, ios_bundle_id, android_package, app_store_id, play_listed, admob_app_ids, ga4_property_id")
+    .order("sort");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((a) => ({ ...a, app_store_id: a.app_store_id === null ? null : Number(a.app_store_id) }));
+}
+
+/** since 이후 실시간 합계. 오늘 하루 GA4 는 속성 × 1440분이라 나눠 받는다. */
+export async function loadLive(since: string): Promise<LiveRow[]> {
+  const supabase = await createServerSupabase();
+  const rows = await fetchAll<LiveRow>((from, to) =>
+    supabase
+      .from("live_metrics")
+      .select("source, at, entity, metric_key, value")
+      .gte("at", since)
+      .order("at")
+      .order("source")
+      .order("entity")
+      .order("metric_key")
+      .range(from, to),
+  );
+  return rows.map((r) => ({ ...r, value: Number(r.value) }));
+}
+
+export async function loadLiveDetail(): Promise<LiveDetailRow[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase.from("live_detail").select("entity, at, payload").eq("source", "ga4");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as LiveDetailRow[];
 }
 
 /** 조회가 막혀도(권한, 테이블 없음) 화면은 뜨게 한다. 이유는 화면에 적는다. */
