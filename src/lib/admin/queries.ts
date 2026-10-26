@@ -67,7 +67,7 @@ export async function loadApps(): Promise<AppEntry[]> {
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from("apps")
-    .select("slug, name, kind, sort, ios_bundle_id, android_package, app_store_id, play_listed, admob_app_ids, ga4_property_id")
+    .select("slug, name, kind, sort, ios_bundle_id, android_package, app_store_id, play_listed, admob_app_ids, admob_platforms, ga4_property_id")
     .order("sort");
   if (error) throw new Error(error.message);
   return (data ?? []).map((a) => ({ ...a, app_store_id: a.app_store_id === null ? null : Number(a.app_store_id) }));

@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AutoRefresh from "@/components/admin/AutoRefresh";
+import PlatformTable from "@/components/admin/PlatformTable";
 import ReviewList from "@/components/admin/ReviewList";
 import TrendChart from "@/components/admin/TrendChart";
 import { Notice, PageHeader, Panel, Tabs } from "@/components/admin/ui";
-import { formatInt, formatUsd } from "@/lib/admin/format";
+import { formatInt } from "@/lib/admin/format";
 import { buildAppCards, kstMidnightIso, storeLinks } from "@/lib/admin/live";
 import { parsePeriod } from "@/lib/admin/period";
 import {
   loadApps,
   loadLive,
+  loadLiveDetail,
   loadStoreListings,
   loadStoreMetrics,
   loadStoreReviews,
@@ -52,12 +54,13 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
   // 기간 첫날 0시(KST) 이전 하루치도 받아 「그날 마지막 값」이 비지 않게 한다.
   const since = new Date(Date.parse(`${period.start}T00:00:00+09:00`) - 86_400_000).toISOString();
 
-  const [apps, rows, listings, reviews, live] = await Promise.all([
+  const [apps, rows, listings, reviews, live, liveDetail] = await Promise.all([
     settle(loadApps(), []),
     settle(loadStoreMetrics(since, slug), []),
     settle(loadStoreListings(), []),
     settle(loadStoreReviews({ slug, limit: 200 }), []),
     settle(loadLive(kstMidnightIso(now)), []),
+    settle(loadLiveDetail(), []),
   ]);
 
   const app = apps.value.find((a) => a.slug === slug && a.kind === "app");
@@ -67,7 +70,7 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
 
   const links = storeLinks(app);
   const stores: Store[] = [...(app.app_store_id ? (["ios"] as const) : []), ...(links.play ? (["android"] as const) : [])];
-  const [card] = buildAppCards([app], live.value);
+  const [card] = buildAppCards([app], live.value, liveDetail.value);
   const dayAgo = new Date(now.getTime() - 24 * 3_600_000).toISOString();
 
   return (
@@ -85,10 +88,11 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
 
       {error && <Notice>일부 지표를 불러오지 못했어요: {error}</Notice>}
 
-      <dl className="admin-num grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
-        <Figure label="지금 30분" value={card.liveUsers === null ? (app.ga4_property_id ? "–" : "GA4 미연결") : `${formatInt(card.liveUsers)}명`} />
-        <Figure label="오늘 AdMob" value={card.earnings === null ? "–" : formatUsd(card.earnings)} note={card.impressions === null ? undefined : `노출 ${formatInt(card.impressions)}`} />
-      </dl>
+      <Panel title="지금" aside="최근 30분 · 오늘 AdMob" className="!mt-0">
+        <div className="rounded-xl border border-[var(--rule)] bg-[var(--paper-raised)] px-4 py-3 sm:max-w-md">
+          <PlatformTable card={card} className="" />
+        </div>
+      </Panel>
 
       {stores.map((store) => (
         <StoreBlock
@@ -119,7 +123,7 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
       </Panel>
 
       <Panel title="리뷰" aside={`모은 것 ${formatInt(reviews.value.length)}개 · 한국 스토어`}>
-        <ReviewList reviews={reviews.value} now={now} />
+        <ReviewList reviews={reviews.value} now={now} initial={5} />
       </Panel>
     </>
   );

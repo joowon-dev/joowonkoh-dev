@@ -28,6 +28,8 @@ export type Ga4LivePayload = {
   minutes: number[];
   screens: { label: string; users: number }[];
   countries: { label: string; users: number }[];
+  /** GA4 platform 차원 그대로 — "iOS" · "Android" · "web" */
+  platforms: { label: string; users: number }[];
 };
 
 /** 상위 몇 줄만 남긴다. 화면은 합쳐서 다시 자르므로 넉넉히. */
@@ -42,7 +44,7 @@ export function minuteFloor(now: Date): string {
 // ---------------------------------------------------------------- GA4 Realtime
 
 /**
- * 속성 하나에 보내는 요청 넷. 합계는 차원 없이 따로 받는다 — 차원별 행을 더하면
+ * 속성 하나에 보내는 요청 다섯. 합계는 차원 없이 따로 받는다 — 차원별 행을 더하면
  * 화면 두 개를 본 사람이 두 번 세어진다.
  */
 export const REALTIME_REQUESTS = {
@@ -62,6 +64,10 @@ export const REALTIME_REQUESTS = {
     metrics: [{ name: "activeUsers" }],
     orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
     limit: TOP,
+  },
+  platforms: {
+    dimensions: [{ name: "platform" }],
+    metrics: [{ name: "activeUsers" }],
   },
 } as const;
 
@@ -97,7 +103,12 @@ export function normalizeRealtime(
       source: "ga4",
       entity: propertyId,
       at,
-      payload: { minutes, screens: list(reports.screens), countries: list(reports.countries) },
+      payload: {
+        minutes,
+        screens: list(reports.screens),
+        countries: list(reports.countries),
+        platforms: list(reports.platforms),
+      },
     },
   };
 }

@@ -4,6 +4,7 @@ import {
   buildAppCards,
   findLiveProblems,
   kstMidnightIso,
+  type LiveDetailRow,
   type LiveRow,
   liveTotals,
   mergeMinutes,
@@ -22,6 +23,7 @@ const app = (over: Partial<AppEntry>): AppEntry => ({
   app_store_id: null,
   play_listed: false,
   admob_app_ids: [],
+  admob_platforms: {},
   ga4_property_id: null,
   ...over,
 });
@@ -70,6 +72,49 @@ describe("buildAppCards", () => {
   it("웹처럼 AdMob 이 없으면 수익도 null", () => {
     const [card] = buildAppCards([app({ kind: "web", ga4_property_id: "web" })], rows);
     expect(card).toMatchObject({ liveUsers: 4, earnings: null });
+  });
+});
+
+describe("buildAppCards — iOS · Android 나눠 보기", () => {
+  const moneytick = app({
+    slug: "m",
+    admob_app_ids: ["a~1", "a~2"],
+    admob_platforms: { "a~1": "ios", "a~2": "android" },
+    ga4_property_id: "p1",
+  });
+  const detail = (platforms?: { label: string; users: number }[]): LiveDetailRow => ({
+    entity: "p1",
+    at: T2,
+    payload: { minutes: [], screens: [], countries: [], ...(platforms ? { platforms } : {}) },
+  });
+
+  it("AdMob 은 앱 id 의 플랫폼으로, GA4 는 platform 차원으로 나눈다", () => {
+    const [card] = buildAppCards([moneytick], rows, [detail([{ label: "iOS", users: 9 }, { label: "Android", users: 3 }])]);
+    expect(card.platforms).toEqual([
+      { platform: "ios", users: 9, earnings: 0.5, impressions: 100 },
+      { platform: "android", users: 3, earnings: 0.25, impressions: 0 },
+    ]);
+  });
+
+  it("GA4 가 그 플랫폼에 아무도 없다고 하면 0명, 플랫폼 기록이 없는 옛 수집이면 null", () => {
+    const [now] = buildAppCards([moneytick], rows, [detail([{ label: "iOS", users: 9 }])]);
+    expect(now.platforms.map((p) => p.users)).toEqual([9, 0]);
+    const [old] = buildAppCards([moneytick], rows, [detail()]);
+    expect(old.platforms.map((p) => p.users)).toEqual([null, null]);
+  });
+
+  it("앱의 웹 버전에 사람이 있으면 웹 줄을 붙인다 — AdMob 은 없다", () => {
+    const [card] = buildAppCards([moneytick], rows, [detail([{ label: "web", users: 4 }, { label: "iOS", users: 1 }])]);
+    expect(card.platforms.map((p) => [p.platform, p.users, p.earnings])).toEqual([
+      ["ios", 1, 0.5],
+      ["android", 0, 0.25],
+      ["web", 4, null],
+    ]);
+  });
+
+  it("웹사이트는 나누지 않는다", () => {
+    const [card] = buildAppCards([app({ kind: "web", ga4_property_id: "p1" })], rows, [detail([{ label: "web", users: 4 }])]);
+    expect(card.platforms).toEqual([]);
   });
 });
 

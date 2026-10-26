@@ -1,3 +1,5 @@
+import type { Platform } from "./platform";
+
 /**
  * admin_breakdown RPC 결과(차원값 × 지표 합계, 세로로 긴 모양)를 표 한 줄씩으로 편다.
  * 비율 지표는 여기서 분자·분모로 계산한다 — DB 에는 합산 가능한 값만 있다.
@@ -14,6 +16,8 @@ export type BreakdownLine = {
   value: string;
   label: string | null;
   metrics: Record<string, number>;
+  /** AdMob 앱 줄 — 같은 이름의 iOS · Android 를 가른다 */
+  platform?: Platform | null;
 };
 
 export function pivotBreakdown(rows: readonly BreakdownTotal[]): BreakdownLine[] {

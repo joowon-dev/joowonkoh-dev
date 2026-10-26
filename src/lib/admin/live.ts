@@ -1,3 +1,4 @@
+import { APP_PLATFORMS, ga4Platform, type Platform } from "./platform";
 import type { CollectionRun } from "./types";
 
 /** apps 한 행 — 앱 등록부. */
@@ -11,6 +12,8 @@ export type AppEntry = {
   app_store_id: number | null;
   play_listed: boolean;
   admob_app_ids: string[];
+  /** AdMob 앱 id → 플랫폼 */
+  admob_platforms: Record<string, Platform>;
   ga4_property_id: string | null;
 };
 
@@ -29,7 +32,8 @@ export type Ranked = { label: string; users: number };
 export type LiveDetailRow = {
   entity: string;
   at: string;
-  payload: { minutes: number[]; screens: Ranked[]; countries: Ranked[] };
+  /** platforms 는 2026-10-27 부터 — 그 전 행에는 없다 */
+  payload: { minutes: number[]; screens: Ranked[]; countries: Ranked[]; platforms?: Ranked[] };
 };
 
 export const LIVE_SOURCES = ["ga4_live", "admob_today", "store"] as const;
@@ -56,15 +60,28 @@ export function latestSnapshot(rows: readonly LiveRow[], source: LiveRow["source
   return { at, values };
 }
 
+export type PlatformLine = {
+  platform: Platform;
+  users: number | null;
+  earnings: number | null;
+  impressions: number | null;
+};
+
 export type AppCard = {
   app: AppEntry;
   /** null = GA4 속성이 아직 연결되지 않았거나 이번 분에 못 받았다 */
   liveUsers: number | null;
   earnings: number | null;
   impressions: number | null;
+  /** iOS · Android 한 줄씩(+ 웹 버전에 사람이 있으면 웹). 웹사이트 자체는 빈 배열. */
+  platforms: PlatformLine[];
 };
 
-export function buildAppCards(apps: readonly AppEntry[], rows: readonly LiveRow[]): AppCard[] {
+export function buildAppCards(
+  apps: readonly AppEntry[],
+  rows: readonly LiveRow[],
+  details: readonly LiveDetailRow[] = [],
+): AppCard[] {
   const ga4 = latestSnapshot(rows, "ga4").values;
   const admob = latestSnapshot(rows, "admob").values;
 
@@ -80,7 +97,27 @@ export function buildAppCards(apps: readonly AppEntry[], rows: readonly LiveRow[
       liveUsers: app.ga4_property_id ? (ga4.get(app.ga4_property_id)?.active_users_30m ?? null) : null,
       earnings: app.admob_app_ids.length > 0 ? (pick(app.admob_app_ids, "estimated_earnings") ?? 0) : null,
       impressions: app.admob_app_ids.length > 0 ? (pick(app.admob_app_ids, "impressions") ?? 0) : null,
+      platforms: app.kind === "app" ? platformLines(app, details, pick) : [],
     }));
+}
+
+function platformLines(
+  app: AppEntry,
+  details: readonly LiveDetailRow[],
+  pick: (ids: readonly string[], key: string) => number | null,
+): PlatformLine[] {
+  const split = details.find((d) => d.entity === app.ga4_property_id)?.payload.platforms;
+  const hasWeb = split?.some((r) => ga4Platform(r.label) === "web" && r.users > 0) ?? false;
+  return [...APP_PLATFORMS, ...(hasWeb ? (["web"] as const) : [])].map((platform) => {
+    const ids = app.admob_app_ids.filter((id) => app.admob_platforms[id] === platform);
+    return {
+      platform,
+      // GA4 는 아무도 없는 플랫폼을 빼고 보낸다 — 플랫폼 기록이 있으면 없는 쪽은 0명
+      users: split ? split.filter((r) => ga4Platform(r.label) === platform).reduce((s, r) => s + r.users, 0) : null,
+      earnings: ids.length > 0 ? (pick(ids, "estimated_earnings") ?? 0) : null,
+      impressions: ids.length > 0 ? (pick(ids, "impressions") ?? 0) : null,
+    };
+  });
 }
 
 /** 마지막 수집의 합. 앱 등록부에 없는 AdMob 앱(옛 앱 등)도 수익에는 넣는다. */
