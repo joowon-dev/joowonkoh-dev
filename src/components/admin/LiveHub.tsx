@@ -9,12 +9,15 @@ import {
   type Ranked,
   storeLinks,
 } from "@/lib/admin/live";
+import { STORE_LABELS, type StoreReview, type StoreSummary } from "@/lib/admin/store";
 import AutoRefresh from "./AutoRefresh";
+import ReviewList from "./ReviewList";
 import { Notice, Panel } from "./ui";
 
 const LIVE_LABELS: Record<LiveProblem["source"], string> = {
   ga4_live: "GA4 실시간",
   admob_today: "AdMob 오늘치",
+  store: "스토어(1시간마다)",
 };
 
 /**
@@ -30,6 +33,8 @@ export default function LiveHub({
   cards,
   details,
   problems,
+  stores,
+  reviews,
 }: {
   now: Date;
   users: { at: string | null; value: number | null };
@@ -39,6 +44,8 @@ export default function LiveHub({
   cards: AppCard[];
   details: LiveDetailRow[];
   problems: LiveProblem[];
+  stores: Record<string, StoreSummary>;
+  reviews: StoreReview[];
 }) {
   const minutes = mergeMinutes(details);
   const unlinked = cards.filter((c) => c.app.kind === "app" && !c.app.ga4_property_id);
@@ -49,7 +56,7 @@ export default function LiveHub({
 
       {problems.length > 0 && (
         <Notice>
-          <p className="font-semibold">실시간 수집이 밀렸어요</p>
+          <p className="font-semibold">수집이 밀렸어요</p>
           <ul className="mt-1 space-y-0.5">
             {problems.map((p) => (
               <li key={p.source}>
@@ -84,7 +91,7 @@ export default function LiveHub({
       <Panel title="내 앱" aside={unlinked.length > 0 ? `GA4 미연결 ${unlinked.length}개` : undefined}>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => (
-            <AppTile key={card.app.slug} card={card} />
+            <AppTile key={card.app.slug} card={card} store={stores[card.app.slug]} />
           ))}
         </ul>
         {unlinked.length > 0 && (
@@ -102,6 +109,10 @@ export default function LiveHub({
           <RankList items={mergeRanked(details, "countries")} />
         </Panel>
       </div>
+
+      <Panel title="최근 리뷰" aside="한국 스토어 · 1시간마다">
+        <ReviewList reviews={reviews} now={now} appNames={Object.fromEntries(cards.map((c) => [c.app.slug, c.app.name]))} />
+      </Panel>
     </section>
   );
 }
@@ -175,13 +186,19 @@ function DayLine({ series }: { series: { at: string; value: number }[] }) {
   );
 }
 
-function AppTile({ card }: { card: AppCard }) {
+function AppTile({ card, store }: { card: AppCard; store?: StoreSummary }) {
   const { app } = card;
   const links = storeLinks(app);
   return (
     <li className="rounded-xl border border-[var(--rule)] bg-[var(--paper-raised)] p-4">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="truncate font-semibold">{app.name}</p>
+        {app.kind === "app" ? (
+          <Link href={`/admin/apps/${app.slug}`} className="truncate font-semibold underline-offset-2 hover:underline">
+            {app.name} <span aria-hidden className="text-[var(--ink-faint)]">›</span>
+          </Link>
+        ) : (
+          <p className="truncate font-semibold">{app.name}</p>
+        )}
         <p className="flex shrink-0 gap-2 text-xs">
           {links.appStore && (
             <a href={links.appStore} target="_blank" rel="noreferrer" className="text-[var(--ink-soft)] underline-offset-2 hover:underline">
@@ -205,8 +222,21 @@ function AppTile({ card }: { card: AppCard }) {
         <Cell label="오늘 수익" value={card.earnings === null ? null : formatUsd(card.earnings)} empty={app.kind === "web" ? "" : "–"} />
         <Cell label="노출" value={card.impressions === null ? null : formatInt(card.impressions)} empty={app.kind === "web" ? "" : "–"} />
       </dl>
+      {store && <StoreLine store={store} />}
     </li>
   );
+}
+
+/** 별점 · Play 설치 수 · 좋은 쪽 카테고리 순위 */
+function StoreLine({ store }: { store: StoreSummary }) {
+  const parts: string[] = [];
+  if (store.rating !== null) parts.push(`★ ${store.rating.toFixed(1)} (${formatInt(store.ratingCount)})`);
+  if (store.installs !== null) parts.push(`Play 설치 ${formatInt(store.installs)}`);
+  if (store.bestRank) {
+    parts.push(`${STORE_LABELS[store.bestRank.store]} ${store.bestRank.genre ?? ""} ${store.bestRank.rank}위`);
+  }
+  if (parts.length === 0) return null;
+  return <p className="admin-num mt-3 border-t border-[var(--rule)] pt-2 text-xs text-[var(--ink-soft)]">{parts.join(" · ")}</p>;
 }
 
 function Cell({ label, value, empty }: { label: string; value: string | null; empty: string }) {

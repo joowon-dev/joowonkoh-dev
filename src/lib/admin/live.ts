@@ -32,11 +32,11 @@ export type LiveDetailRow = {
   payload: { minutes: number[]; screens: Ranked[]; countries: Ranked[] };
 };
 
-export const LIVE_SOURCES = ["ga4_live", "admob_today"] as const;
+export const LIVE_SOURCES = ["ga4_live", "admob_today", "store"] as const;
 export type LiveSource = (typeof LIVE_SOURCES)[number];
 
-/** 이만큼 넘게 성공이 없으면 「실시간」이 아니다. 수집 주기(1분·10분)의 몇 배. */
-export const LIVE_STALE_MINUTES: Record<LiveSource, number> = { ga4_live: 5, admob_today: 30 };
+/** 이만큼 넘게 성공이 없으면 밀린 것이다. 수집 주기(1분·10분·1시간)의 몇 배. */
+export const LIVE_STALE_MINUTES: Record<LiveSource, number> = { ga4_live: 5, admob_today: 30, store: 150 };
 
 /**
  * 한 소스에서 가장 최근 수집 시각의 행만. 수집은 엔티티를 한꺼번에 적으므로

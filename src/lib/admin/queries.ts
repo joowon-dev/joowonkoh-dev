@@ -2,6 +2,7 @@ import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { type BreakdownTotal, pivotBreakdown } from "./breakdown";
 import type { AppEntry, LiveDetailRow, LiveRow } from "./live";
+import type { StoreListingRow, StoreMetric, StoreReview } from "./store";
 import type { SnsDraft } from "./sns";
 import type { CollectionRun, MetricRow, Source } from "./types";
 
@@ -94,6 +95,33 @@ export async function loadLiveDetail(): Promise<LiveDetailRow[]> {
   const { data, error } = await supabase.from("live_detail").select("entity, at, payload").eq("source", "ga4");
   if (error) throw new Error(error.message);
   return (data ?? []) as LiveDetailRow[];
+}
+
+/** since 이후 스토어 숫자(1시간마다). slug 를 주면 그 앱만. */
+export async function loadStoreMetrics(since: string, slug?: string): Promise<StoreMetric[]> {
+  const supabase = await createServerSupabase();
+  const rows = await fetchAll<StoreMetric>((from, to) => {
+    let q = supabase.from("store_metrics").select("at, app_slug, store, metric_key, value").gte("at", since);
+    if (slug) q = q.eq("app_slug", slug);
+    return q.order("at").order("app_slug").order("store").order("metric_key").range(from, to);
+  });
+  return rows.map((r) => ({ ...r, value: Number(r.value) }));
+}
+
+export async function loadStoreListings(): Promise<StoreListingRow[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase.from("store_listing").select("*");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as StoreListingRow[];
+}
+
+export async function loadStoreReviews(opts: { slug?: string; limit: number }): Promise<StoreReview[]> {
+  const supabase = await createServerSupabase();
+  let q = supabase.from("store_reviews").select("*");
+  if (opts.slug) q = q.eq("app_slug", opts.slug);
+  const { data, error } = await q.order("reviewed_at", { ascending: false }).limit(opts.limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as StoreReview[];
 }
 
 /** 조회가 막혀도(권한, 테이블 없음) 화면은 뜨게 한다. 이유는 화면에 적는다. */

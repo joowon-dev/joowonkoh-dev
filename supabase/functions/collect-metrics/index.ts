@@ -12,6 +12,8 @@
  *   ga4_live     1분마다. 등록부(apps)의 GA4 속성마다 최근 30분 → live_metrics / live_detail
  *   admob_today  10분마다. AdMob 오늘치 → live_metrics
  *   ga4_discover 매일. 서비스 계정이 보는 속성의 스트림을 훑어 apps.ga4_property_id 를 채운다
+ *   store        1시간마다. 스토어 공개 정보(별점·평가 수·Play 설치 수·차트 순위·리뷰)
+ *                → store_metrics / store_listing / store_reviews (마이그레이션 20261026010000)
  *
  * 자격증명은 Vault 에 있다(마이그레이션 20261001010000). Edge Function secrets 가 아니라
  * Vault 를 쓰는 건 SQL 만으로 넣고 바꿀 수 있어서다.
@@ -51,6 +53,24 @@ import {
   type RealtimeReports,
 } from "./live.ts";
 import {
+  appleChartUrl,
+  appleReviewsUrl,
+  hourFloor,
+  parseAppleChart,
+  parseAppleLookup,
+  parseAppleReviews,
+  parsePlayChart,
+  parsePlayDetails,
+  parsePlayReviews,
+  playChartRequest,
+  playDetailsUrl,
+  playReviewsRequest,
+  rankOf,
+  type ReviewRow,
+  type StoreListing,
+  type StoreMetricRow,
+} from "./store.ts";
+import {
   fetchAccessToken,
   refreshAccessToken,
   type ServiceAccountKey,
@@ -89,6 +109,7 @@ const LIVE_TASKS: Record<string, (now: Date) => Promise<Record<string, unknown>>
   ga4_live: collectGa4Live,
   admob_today: collectAdmobToday,
   ga4_discover: discoverGa4Properties,
+  store: collectStores,
 };
 
 const supabase = createClient(
@@ -342,6 +363,146 @@ async function discoverGa4Properties() {
     visibleProperties: ids.length,
     matched: found,
     ...(missing.length > 0 ? { error: `GA4 속성을 못 찾은 앱: ${missing.join(", ")} — 서비스 계정 권한 확인` } : {}),
+  };
+}
+
+type StoreApp = {
+  slug: string;
+  app_store_id: number | null;
+  android_package: string | null;
+  play_listed: boolean;
+};
+
+async function collectStores(now: Date) {
+  const { data, error } = await supabase
+    .from("apps")
+    .select("slug, app_store_id, android_package, play_listed")
+    .eq("kind", "app");
+  if (error) throw new Error(`apps 읽기 실패: ${error.message}`);
+  const apps = (data ?? []) as StoreApp[];
+  const at = hourFloor(now);
+
+  const getJson = async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`${res.status} ${url}`);
+    return res.json();
+  };
+  const getText = async (url: string, init?: RequestInit) => {
+    const res = await fetch(url, init);
+    if (!res.ok) throw new Error(`${res.status} ${url}`);
+    return res.text();
+  };
+  const postPlay = (req: { url: string; body: string }) =>
+    getText(req.url, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: req.body,
+    });
+
+  const metrics: StoreMetricRow[] = [];
+  const listings: StoreListing[] = [];
+  const reviews: ReviewRow[] = [];
+  const failures: string[] = [];
+
+  // 한 앱·한 스토어가 실패해도 나머지는 적는다.
+  const attempt = async (label: string, job: () => Promise<void>) => {
+    try {
+      await job();
+    } catch (err) {
+      failures.push(`${label}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
+
+  await Promise.all(
+    apps.flatMap((app) => {
+      const jobs: Promise<void>[] = [];
+      if (app.app_store_id) {
+        const id = Number(app.app_store_id);
+        jobs.push(attempt(`${app.slug} App Store`, async () => {
+          const r = parseAppleLookup(await getJson(`https://itunes.apple.com/lookup?id=${id}&country=kr`), app.slug, at);
+          metrics.push(...r.metrics);
+          listings.push(r.listing);
+        }));
+        jobs.push(attempt(`${app.slug} App Store 리뷰`, async () => {
+          reviews.push(...parseAppleReviews(await getJson(appleReviewsUrl(id)), app.slug));
+        }));
+      }
+      if (app.play_listed && app.android_package) {
+        const pkg = app.android_package;
+        jobs.push(attempt(`${app.slug} Play`, async () => {
+          const r = parsePlayDetails(await getText(playDetailsUrl(pkg)), app.slug, at);
+          metrics.push(...r.metrics);
+          listings.push(r.listing);
+        }));
+        jobs.push(attempt(`${app.slug} Play 리뷰`, async () => {
+          reviews.push(...parsePlayReviews(await postPlay(playReviewsRequest(pkg)), app.slug));
+        }));
+      }
+      return jobs;
+    }),
+  );
+
+  // 차트는 장르마다 한 번만 받는다. 앱이 차트 밖이면 순위 행을 쓰지 않는다(화면은 「밖」으로 읽는다).
+  const charts = new Map<string, Promise<string[]>>();
+  const chart = (key: string, load: () => Promise<string[]>) => {
+    if (!charts.has(key)) charts.set(key, load());
+    return charts.get(key)!;
+  };
+  const appleChart = (genre: string | null) =>
+    chart(`ios:${genre ?? "all"}`, async () => parseAppleChart(await getJson(appleChartUrl(genre))));
+  const playChart = (category: string) =>
+    chart(`android:${category}`, async () => parsePlayChart(await postPlay(playChartRequest(category))));
+
+  await Promise.all(
+    listings.map((listing) => {
+      const app = apps.find((a) => a.slug === listing.app_slug)!;
+      const rank = (metric_key: string, ids: string[], id: string) => {
+        const r = rankOf(ids, id);
+        if (r !== null) metrics.push({ at, app_slug: app.slug, store: listing.store, metric_key, value: r });
+      };
+      if (listing.store === "ios") {
+        const id = String(app.app_store_id);
+        return Promise.all([
+          attempt(`App Store 전체 차트`, async () => rank("rank_overall", await appleChart(null), id)),
+          listing.genre_key &&
+          attempt(`App Store ${listing.genre} 차트`, async () => rank("rank_category", await appleChart(listing.genre_key), id)),
+        ]);
+      }
+      const pkg = app.android_package!;
+      return Promise.all([
+        attempt(`Play 전체 차트`, async () => rank("rank_overall", await playChart("APPLICATION"), pkg)),
+        listing.genre_key &&
+        attempt(`Play ${listing.genre} 차트`, async () => rank("rank_category", await playChart(listing.genre_key!), pkg)),
+      ]);
+    }),
+  );
+
+  for (let i = 0; i < metrics.length; i += UPSERT_CHUNK) {
+    const { error: e } = await supabase
+      .from("store_metrics")
+      .upsert(metrics.slice(i, i + UPSERT_CHUNK), { onConflict: "at,app_slug,store,metric_key" });
+    if (e) throw new Error(`store_metrics upsert 실패: ${e.message}`);
+  }
+  if (listings.length > 0) {
+    const { error: e } = await supabase.from("store_listing").upsert(listings, { onConflict: "app_slug,store" });
+    if (e) throw new Error(`store_listing upsert 실패: ${e.message}`);
+  }
+  // first_seen_at 은 보내지 않는다 — 처음 본 시각이 남아 「새 리뷰」를 가른다.
+  for (let i = 0; i < reviews.length; i += UPSERT_CHUNK) {
+    const { error: e } = await supabase
+      .from("store_reviews")
+      .upsert(reviews.slice(i, i + UPSERT_CHUNK), { onConflict: "store,review_id" });
+    if (e) throw new Error(`store_reviews upsert 실패: ${e.message}`);
+  }
+
+  // 같은 차트 실패가 앱마다 반복되므로 한 번씩만 적는다.
+  const unique = [...new Set(failures)];
+  if (metrics.length === 0 && unique.length > 0) throw new Error(unique.join(" / "));
+  return {
+    metrics: metrics.length,
+    listings: listings.length,
+    reviews: reviews.length,
+    ...(unique.length > 0 ? { error: unique.join(" / ") } : {}),
   };
 }
 

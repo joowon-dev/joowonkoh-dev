@@ -109,11 +109,12 @@ describe("mergeRanked / mergeMinutes", () => {
 describe("findLiveProblems", () => {
   const now = new Date("2026-10-26T06:00:00Z");
 
-  it("GA4 는 5분, AdMob 은 30분 넘게 성공이 없으면 문제", () => {
+  it("GA4 5분, AdMob 30분, 스토어 150분 넘게 성공이 없으면 문제", () => {
     const problems = findLiveProblems(
       [
         { source: "ga4_live", last_run_at: null, last_success: "2026-10-26T05:54:00Z", status: "ok", error: null },
         { source: "admob_today", last_run_at: null, last_success: "2026-10-26T05:40:00Z", status: "ok", error: null },
+        { source: "store", last_run_at: null, last_success: "2026-10-26T05:07:00Z", status: "ok", error: null },
       ],
       now,
     );
@@ -128,6 +129,7 @@ describe("findLiveProblems", () => {
     expect(problems).toEqual([
       { source: "ga4_live", minutesSince: 1, error: "jigumia: 403" },
       { source: "admob_today", minutesSince: null, error: null },
+      { source: "store", minutesSince: null, error: null },
     ]);
   });
 });

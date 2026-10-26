@@ -9,7 +9,19 @@ import { formatInt, formatPercent, formatUsd } from "@/lib/admin/format";
 import { findFreshnessProblems } from "@/lib/admin/freshness";
 import { buildAppCards, findLiveProblems, kstMidnightIso, liveTotals, minuteSeries } from "@/lib/admin/live";
 import { parsePeriod, previousPeriod } from "@/lib/admin/period";
-import { loadApps, loadBreakdown, loadDaily, loadLive, loadLiveDetail, loadRuns, settle } from "@/lib/admin/queries";
+import {
+  loadApps,
+  loadBreakdown,
+  loadDaily,
+  loadLive,
+  loadLiveDetail,
+  loadRuns,
+  loadStoreListings,
+  loadStoreMetrics,
+  loadStoreReviews,
+  settle,
+} from "@/lib/admin/queries";
+import { summarizeStores } from "@/lib/admin/store";
 import { buildSeries } from "@/lib/admin/series";
 import type { MetricRow } from "@/lib/admin/types";
 
@@ -43,7 +55,8 @@ export default async function AppsPage({ searchParams }: Props) {
   const metric = METRICS.find((m) => m.key === params.metric) ?? METRICS[0];
   const dim = DIMENSIONS.find((d) => d.key === params.dim) ?? DIMENSIONS[0];
 
-  const [daily, runs, lines, appsNow, appsPrev, registry, live, liveDetail] = await Promise.all([
+  const storeSince = new Date(now.getTime() - 3 * 3_600_000).toISOString();
+  const [daily, runs, lines, appsNow, appsPrev, registry, live, liveDetail, storeRows, listings, reviews] = await Promise.all([
     settle(loadDaily(prev.start, period.end), [] as MetricRow[]),
     settle(loadRuns(), []),
     settle(loadBreakdown("admob", dim.key, period.start, period.end), []),
@@ -52,6 +65,9 @@ export default async function AppsPage({ searchParams }: Props) {
     settle(loadApps(), []),
     settle(loadLive(kstMidnightIso(now)), []),
     settle(loadLiveDetail(), []),
+    settle(loadStoreMetrics(storeSince), []),
+    settle(loadStoreListings(), []),
+    settle(loadStoreReviews({ limit: 10 }), []),
   ]);
 
   const series = (key: string, end = period.end) =>
@@ -90,6 +106,10 @@ export default async function AppsPage({ searchParams }: Props) {
           cards={buildAppCards(registry.value, live.value)}
           details={liveDetail.value}
           problems={findLiveProblems(runs.value, now)}
+          stores={Object.fromEntries(
+            registry.value.map((a) => [a.slug, summarizeStores(storeRows.value, listings.value, a.slug)]),
+          )}
+          reviews={reviews.value}
         />
       )}
 
