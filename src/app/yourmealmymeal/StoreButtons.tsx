@@ -1,13 +1,9 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
+import { appStoreUrl, playStoreUrl, type Lang } from "./i18n";
 import { C } from "./palette";
 
-/**
- * 스토어 주소. ASC 앱 ID(eas.json ascAppId)와 안드로이드 패키지 이름(app.json)으로 만든다.
- * 2026-10-13 기준 두 스토어 모두 공개 전(iOS 판매 중단 · Play 검토 중)이라 공개되기 전에는 열리지 않을 수 있다.
- */
-export const APP_STORE_URL = "https://apps.apple.com/kr/app/id6812959704";
-export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.joowonkoh.yourmealmymeal";
+/* 스토어 주소는 언어마다 조금 다르다(i18n.ts 의 appStoreUrl·playStoreUrl). */
 
 /** 사과 모양(직접 그린 단순 도형). */
 function AppleGlyph({ color }: { color: string }) {
@@ -31,13 +27,27 @@ function PlayGlyph() {
   );
 }
 
-function StoreButton({ href, glyph, store, dark }: { href: string; glyph: ReactNode; store: string; dark: boolean }) {
+function StoreButton({
+  href,
+  glyph,
+  store,
+  dark,
+  compact,
+  download,
+}: {
+  href: string;
+  glyph: ReactNode;
+  store: string;
+  dark: boolean;
+  compact: boolean;
+  download: string;
+}) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="flex h-[54px] min-w-0 flex-1 items-center justify-center gap-2.5 rounded-full px-4 transition-transform hover:-translate-y-0.5 active:translate-y-0"
+      className={`flex ${compact ? "h-[var(--store-h,48px)]" : "h-[54px]"} min-w-0 flex-1 items-center justify-center gap-2.5 rounded-full px-4 transition-transform hover:-translate-y-0.5 active:translate-y-0`}
       style={
         dark
           ? { background: "#000000", color: "#FFFFFF" }
@@ -46,19 +56,36 @@ function StoreButton({ href, glyph, store, dark }: { href: string; glyph: ReactN
     >
       {glyph}
       <span className="flex flex-col items-start leading-none">
-        <span className="text-[10px] opacity-75">다운로드</span>
+        <span className="text-[10px] opacity-75">{download}</span>
         <span className="mt-[3px] whitespace-nowrap text-[16px] font-semibold tracking-[-0.01em]">{store}</span>
       </span>
     </a>
   );
 }
 
-/** App Store(검정) · Google Play(흰색) 알약 버튼 한 줄. 공식 배지처럼 흑백으로 둔다. */
-export default function StoreButtons({ className = "" }: { className?: string }) {
+/**
+ * App Store(검정) · Google Play(흰색) 알약 버튼 한 줄. 공식 배지처럼 흑백으로 둔다.
+ * compact 는 한 화면에 다 들어가야 하는 초대 페이지용 — 조금 낮고, 화면 높이를 따라 더 낮아진다.
+ */
+export default function StoreButtons({
+  lang,
+  download,
+  className = "",
+  compact = false,
+  style,
+}: {
+  lang: Lang;
+  /** 스토어 이름 위의 작은 글 — "다운로드". */
+  download: string;
+  className?: string;
+  compact?: boolean;
+  /** compact 일 때 `--store-h` 로 높이를 바꿀 수 있다. */
+  style?: CSSProperties;
+}) {
   return (
-    <div className={`flex w-full gap-2.5 ${className}`}>
-      <StoreButton href={APP_STORE_URL} glyph={<AppleGlyph color="#FFFFFF" />} store="App Store" dark />
-      <StoreButton href={PLAY_STORE_URL} glyph={<PlayGlyph />} store="Google Play" dark={false} />
+    <div className={`flex w-full gap-2.5 ${className}`} style={style}>
+      <StoreButton href={appStoreUrl(lang)} glyph={<AppleGlyph color="#FFFFFF" />} store="App Store" dark compact={compact} download={download} />
+      <StoreButton href={playStoreUrl(lang)} glyph={<PlayGlyph />} store="Google Play" dark={false} compact={compact} download={download} />
     </div>
   );
 }

@@ -29,3 +29,13 @@
 body:has(.nemeal)::after {
   display: none;
 }
+
+/*
+ * 낱말 중간에서 줄을 바꾸지 않는 break-keep(keep-all)은 한국어를 위한 것이다.
+ * 일본어·중국어는 낱말 사이에 띄어쓰기가 없어 켜 두면 한 줄이 통째로 넘친다. 그 언어에서는 끈다.
+ */
+.nemeal :lang(ja) .break-keep,
+.nemeal :lang(zh) .break-keep {
+  word-break: normal;
+  line-break: strict;
+}

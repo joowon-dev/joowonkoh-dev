@@ -2,8 +2,11 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
+import type { Copy } from "../copy/types";
+import { pagePath, type Lang } from "../i18n";
+import LanguagePicker from "../LanguagePicker";
 import TrayMark from "../Mark";
 import { EASE } from "../motion";
 import { BODY, C, CARD } from "../palette";
@@ -33,19 +36,34 @@ function readCode(search: string): string | null {
   return code;
 }
 
+/**
+ * 초대 페이지는 휴대폰 한 화면에 스크롤 없이 다 보여야 한다. 카톡·인스타 안 브라우저는 위아래 막대 때문에
+ * 보이는 높이가 550px 남짓까지 줄어든다(아이폰 SE 카톡 기준). 그래서 세로 간격과 식판 크기를
+ * 보이는 높이(svh)에 묶어 낮은 화면에서는 줄이고, 큰 화면에서는 원래 느낌대로 넉넉하게 둔다.
+ */
+const TRAY = "clamp(48px, calc(20svh - 50px), 104px)";
+/** 알약 버튼 높이 — 낮은 화면에서는 42px 까지 줄인다. */
+const PILL_H = "clamp(42px, 7.6svh, 48px)";
+const gap = (min: number, vh: number, max: number) => `clamp(${min}px, ${vh}svh, ${max}px)`;
+
 const RISE = {
   hidden: { opacity: 0, y: 14 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 };
 
-/** 네 칸이 모두 빈 식판. 천천히 떠 있다가 가끔 기우뚱한다. */
-function FloatingTray({ still }: { still: boolean }) {
+/**
+ * 네 칸이 모두 빈 식판. 천천히 떠 있다가 가끔 기우뚱한다.
+ * 화면 높이를 따라 크기가 바뀐다(위 TRAY) — 카톡 안 브라우저처럼 낮은 화면에서는 작게, 큰 폰에서도 104px 까지만.
+ */
+function FloatingTray({ still, title }: { still: boolean; title: string }) {
   return (
     <motion.div
-      animate={still ? undefined : { y: [0, -5, 0], rotate: [-1.5, 1.5, -1.5] }}
+      animate={still ? undefined : { y: [0, -4, 0], rotate: [-1.5, 1.5, -1.5] }}
       transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+      className="[&>svg]:h-[var(--tray)] [&>svg]:w-[var(--tray)]"
+      style={{ "--tray": TRAY } as CSSProperties}
     >
-      <TrayMark size={150} lunch={false} title="아직 아무것도 담기지 않은 빈 식판" />
+      <TrayMark size={104} lunch={false} title={title} />
     </motion.div>
   );
 }
@@ -59,7 +77,7 @@ function ForkArrow({ flip = false, className = "" }: { flip?: boolean; className
   return (
     <Motif
       kind="fork"
-      size={46}
+      size={34}
       color={C.tomato}
       className={className}
       style={{ transform: `rotate(${flip ? 152 : 208}deg)` }}
@@ -85,9 +103,9 @@ function CopyIcon({ done }: { done: boolean }) {
 /** 단계 머리말 — 번호 동그라미와 굵은 한 줄. */
 function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
-    <p className="flex items-center justify-center gap-2 text-[20px] font-bold leading-none tracking-[-0.02em]" style={{ color: C.ink }}>
+    <p className="flex items-center justify-center gap-2 text-[18px] font-bold leading-[1.2] tracking-[-0.02em] break-keep" style={{ color: C.ink }}>
       <span
-        className="flex h-[24px] w-[24px] items-center justify-center rounded-full text-[13px] font-bold"
+        className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-[12px] font-bold"
         style={{ background: C.yolk, color: C.ink }}
         aria-hidden
       >
@@ -98,7 +116,19 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
   );
 }
 
-export default function InviteCode() {
+export default function InviteCode({
+  lang,
+  t,
+  download,
+  appName,
+  languageLabel,
+}: {
+  lang: Lang;
+  t: Copy["join"];
+  download: string;
+  appName: string;
+  languageLabel: string;
+}) {
   /** undefined = 아직 주소창을 못 읽음, null = 코드가 없거나 이상함. */
   const [code, setCode] = useState<string | null | undefined>(undefined);
   const [copied, setCopied] = useState(false);
@@ -128,101 +158,116 @@ export default function InviteCode() {
 
   return (
     <Wallpaper spots={JOIN_SPOTS}>
-      <div className="flex min-h-dvh flex-col" style={{ fontFamily: BODY }}>
+      <div className="relative flex min-h-svh flex-col" style={{ fontFamily: BODY }}>
+        {/* 언어 고르기는 구석에 띄워 둔다 — 한 화면 높이를 먹지 않게. */}
+        <div className="absolute right-3 top-3 z-10">
+          <LanguagePicker compact lang={lang} sub="/join" label={languageLabel} />
+        </div>
         <motion.main
           initial="hidden"
           animate="show"
           variants={{ show: { transition: { staggerChildren: 0.08 } } }}
-          className="relative mx-auto flex w-full max-w-[420px] flex-1 flex-col items-center px-4 pb-10 pt-12 text-center"
+          className="relative mx-auto flex w-full max-w-[420px] flex-1 flex-col items-center justify-center px-4 text-center"
+          style={{ paddingTop: gap(12, 2.4, 40), paddingBottom: gap(8, 2, 24) }}
         >
           <motion.div variants={RISE}>
-            <FloatingTray still={still} />
+            <FloatingTray still={still} title={t.trayTitle} />
           </motion.div>
 
-          <motion.h1 variants={RISE} className="mt-7 text-[34px] font-black leading-[1.2] tracking-[-0.04em]">
-            밥 먹었어요?
+          <motion.h1
+            variants={RISE}
+            className="text-[clamp(26px,4.6svh,32px)] font-black leading-[1.2] tracking-[-0.04em]"
+            style={{ marginTop: gap(6, 1.6, 22) }}
+          >
+            {t.title}
           </motion.h1>
-          <motion.p variants={RISE} className="mt-2 text-[18px] font-semibold leading-[1.5] break-keep" style={{ color: C.body }}>
-            오늘 먹은 밥을 식판에 기록해 보세요!
+          <motion.p variants={RISE} className="mt-1 text-[15px] font-semibold leading-[1.45] break-keep" style={{ color: C.body }}>
+            {t.sub}
           </motion.p>
           <motion.p
             variants={RISE}
-            className="mt-4 inline-flex items-center rounded-full px-4 py-2 text-[14px] font-semibold break-keep"
-            style={{ background: C.yolkSoft, color: C.ink }}
+            className="inline-flex items-center rounded-full px-3.5 py-1.5 text-[13px] font-semibold leading-[1.3] break-keep"
+            style={{ background: C.yolkSoft, color: C.ink, marginTop: gap(8, 1.6, 14) }}
           >
-            밥상에 초대받았어요 · 같이 채워요
+            {t.pill}
           </motion.p>
 
           <motion.div
             variants={RISE}
-            className="mt-8 flex w-full flex-col items-center rounded-[28px] bg-white px-4 pb-6 pt-7 sm:px-6"
-            style={CARD}
+            className="flex w-full flex-col items-center rounded-[24px] bg-white px-3.5 sm:px-6"
+            style={{ ...CARD, marginTop: gap(10, 2.2, 24), paddingTop: gap(14, 2.6, 24), paddingBottom: gap(12, 2.2, 20) }}
           >
             {/* 1. 코드 복사 */}
             <div className="flex w-full flex-col items-center">
-              <div className="relative flex w-full justify-center">
-                <Step n={1}>초대코드를 복사하고</Step>
-                <ForkArrow className="absolute -bottom-[50px] right-[5%]" />
+              <Step n={1}>{t.step1}</Step>
+
+              <div className="relative flex w-full justify-center" style={{ marginTop: gap(8, 1.6, 14) }}>
+                <motion.button
+                  type="button"
+                  onClick={copy}
+                  disabled={!code}
+                  whileTap={code ? { scale: 0.96 } : undefined}
+                  className="inline-flex items-center gap-3 rounded-full px-6 disabled:cursor-default"
+                  style={{ background: C.yolk, color: C.ink, opacity: code === null ? 0.5 : 1, height: PILL_H }}
+                  aria-label={code ? t.copyAria.replace("{code}", code) : t.noCodeAria}
+                >
+                  <span className="text-[22px] font-bold leading-none tracking-[0.08em] tabular-nums">
+                    # {code ?? (code === null ? "------" : "······")}
+                  </span>
+                  {code ? <CopyIcon done={copied} /> : null}
+                </motion.button>
+                <ForkArrow className="absolute right-[2%] top-[34px]" />
               </div>
 
-              <motion.button
-                type="button"
-                onClick={copy}
-                disabled={!code}
-                whileTap={code ? { scale: 0.96 } : undefined}
-                className="mt-7 inline-flex h-[54px] items-center gap-3 rounded-full px-7 disabled:cursor-default"
-                style={{ background: C.yolk, color: C.ink, opacity: code === null ? 0.5 : 1 }}
-                aria-label={code ? `초대코드 ${code} 복사하기` : "초대코드 없음"}
-              >
-                <span className="text-[24px] font-bold leading-none tracking-[0.08em] tabular-nums">
-                  # {code ?? (code === null ? "------" : "······")}
-                </span>
-                {code ? <CopyIcon done={copied} /> : null}
-              </motion.button>
-
-              <div className="mt-2 h-[22px]" aria-live="polite">
-                <AnimatePresence>
-                  {copied ? (
-                    <motion.p
-                      initial={{ y: 6, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -6, opacity: 0 }}
-                      transition={{ duration: 0.18 }}
-                      className="text-[15px] font-bold leading-[22px]"
-                      style={{ color: C.tomato }}
-                    >
-                      복사했어요!
-                    </motion.p>
-                  ) : null}
-                </AnimatePresence>
-              </div>
-
+              {/* 코드가 없으면 "복사했어요!" 자리에 안내를 넣는다 — 둘은 함께 뜰 일이 없다. */}
               {code === null ? (
-                <p className="text-[15px] leading-[1.7] break-keep" style={{ color: C.sub }}>
-                  링크에 초대코드가 없거나 잘렸어요.
+                <p className="mb-1 mt-1.5 text-[13px] leading-[1.5] break-keep" style={{ color: C.sub }}>
+                  {t.missing[0]}
                   <br />
-                  초대한 사람에게 코드를 다시 받아 주세요.
+                  {t.missing[1]}
                 </p>
-              ) : null}
+              ) : (
+                <div className="mt-0.5 h-[18px]" aria-live="polite">
+                  <AnimatePresence>
+                    {copied ? (
+                      <motion.p
+                        initial={{ y: 6, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -6, opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="text-[14px] font-bold leading-[18px]"
+                        style={{ color: C.tomato }}
+                      >
+                        {t.copied}
+                      </motion.p>
+                    ) : null}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
 
             {/* 2. 설치 후 입력 */}
-            <div className="mt-6 flex w-full flex-col items-center">
-              <div className="relative flex w-full justify-center">
-                <Step n={2}>앱 설치 후 입력해주세요</Step>
-                <ForkArrow flip className="absolute -bottom-[50px] left-[5%]" />
+            <div className="flex w-full flex-col items-center" style={{ marginTop: gap(4, 1, 10) }}>
+              <Step n={2}>{t.step2}</Step>
+
+              <div className="relative w-full" style={{ marginTop: gap(10, 2.4, 22) }}>
+                <ForkArrow flip className="absolute -top-[30px] left-[2%]" />
+                <StoreButtons compact lang={lang} download={download} style={{ "--store-h": PILL_H } as CSSProperties} />
               </div>
 
-              <StoreButtons className="mt-[54px]" />
-
-              <p className="mt-3 flex flex-wrap items-center justify-center gap-x-1.5 text-[13px] leading-[1.6] break-keep" style={{ color: C.sub }}>
+              <p
+                className="flex flex-wrap items-center justify-center gap-x-1.5 text-[12px] leading-[1.45] break-keep"
+                style={{ color: C.sub, marginTop: gap(6, 1.2, 12) }}
+              >
                 <span>
-                  앱 아래 <b style={{ color: C.ink, fontWeight: 600 }}>모임</b> 탭
+                  {t.hint.before}
+                  <b style={{ color: C.ink, fontWeight: 600 }}>{t.hint.tab}</b>
+                  {t.hint.after}
                 </span>
                 <ForkRight height={8} color={C.tomato} />
-                <span>모임 추가</span>
+                <span>{t.hint.add}</span>
                 <ForkRight height={8} color={C.tomato} />
-                <span>초대코드로 참여하기</span>
+                <span>{t.hint.join}</span>
               </p>
             </div>
           </motion.div>
@@ -232,22 +277,22 @@ export default function InviteCode() {
               variants={RISE}
               href={`yourmealmymeal://group/join?code=${code}`}
               whileTap={{ scale: 0.97 }}
-              className="mt-5 inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-full bg-white px-5 text-[15px] font-semibold"
-              style={{ color: C.ink, border: `1px solid ${C.hairline}` }}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 text-[15px] font-semibold"
+              style={{ color: C.ink, border: `1px solid ${C.hairline}`, marginTop: gap(8, 1.6, 16), height: PILL_H }}
             >
-              이미 앱이 있다면 · 앱에서 열기
+              {t.openInApp}
               <ForkRight height={9} color={C.ink} />
             </motion.a>
           ) : null}
         </motion.main>
 
-        <footer className="relative px-4 pb-8 text-center text-[12px] leading-[1.8]" style={{ color: C.sub }}>
-          <p>한 모임은 6명까지예요. 자리가 다 찼으면 참여할 수 없어요.</p>
+        <footer className="relative px-4 text-center text-[11px] leading-[1.6]" style={{ color: C.sub, paddingBottom: gap(10, 2, 24) }}>
+          <p>{t.limit}</p>
           <p>
-            <Link href="/yourmealmymeal" className="hover:underline">네밥내밥 소개</Link>
+            <Link href={pagePath(lang)} className="hover:underline">{t.about}</Link>
             {" · "}
-            <Link href="/yourmealmymeal/privacy" className="hover:underline">개인정보처리방침</Link>
-            {" · "}© 2026 네밥내밥
+            <Link href={pagePath(lang, "/privacy")} className="hover:underline">{t.privacy}</Link>
+            {" · "}© 2026 {appName}
           </p>
         </footer>
       </div>
