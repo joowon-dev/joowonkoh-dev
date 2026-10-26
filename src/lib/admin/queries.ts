@@ -1,6 +1,8 @@
 import "server-only";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { type BreakdownTotal, pivotBreakdown } from "./breakdown";
+import type { AppEntry, LiveDetailRow, LiveRow } from "./live";
+import type { StoreListingRow, StoreMetric, StoreReview } from "./store";
 import type { SnsDraft } from "./sns";
 import type { CollectionRun, MetricRow, Source } from "./types";
 
@@ -58,6 +60,68 @@ export async function loadBreakdown(source: Source, dimension: string, start: st
       .range(from, to),
   );
   return pivotBreakdown(rows);
+}
+
+/** 앱 등록부. 웹(joowonkoh.com)도 한 줄로 들어 있다. */
+export async function loadApps(): Promise<AppEntry[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("apps")
+    .select("slug, name, kind, sort, ios_bundle_id, android_package, app_store_id, play_listed, admob_app_ids, ga4_property_id")
+    .order("sort");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((a) => ({ ...a, app_store_id: a.app_store_id === null ? null : Number(a.app_store_id) }));
+}
+
+/** since 이후 실시간 합계. 오늘 하루 GA4 는 속성 × 1440분이라 나눠 받는다. */
+export async function loadLive(since: string): Promise<LiveRow[]> {
+  const supabase = await createServerSupabase();
+  const rows = await fetchAll<LiveRow>((from, to) =>
+    supabase
+      .from("live_metrics")
+      .select("source, at, entity, metric_key, value")
+      .gte("at", since)
+      .order("at")
+      .order("source")
+      .order("entity")
+      .order("metric_key")
+      .range(from, to),
+  );
+  return rows.map((r) => ({ ...r, value: Number(r.value) }));
+}
+
+export async function loadLiveDetail(): Promise<LiveDetailRow[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase.from("live_detail").select("entity, at, payload").eq("source", "ga4");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as LiveDetailRow[];
+}
+
+/** since 이후 스토어 숫자(1시간마다). slug 를 주면 그 앱만. */
+export async function loadStoreMetrics(since: string, slug?: string): Promise<StoreMetric[]> {
+  const supabase = await createServerSupabase();
+  const rows = await fetchAll<StoreMetric>((from, to) => {
+    let q = supabase.from("store_metrics").select("at, app_slug, store, metric_key, value").gte("at", since);
+    if (slug) q = q.eq("app_slug", slug);
+    return q.order("at").order("app_slug").order("store").order("metric_key").range(from, to);
+  });
+  return rows.map((r) => ({ ...r, value: Number(r.value) }));
+}
+
+export async function loadStoreListings(): Promise<StoreListingRow[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase.from("store_listing").select("*");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as StoreListingRow[];
+}
+
+export async function loadStoreReviews(opts: { slug?: string; limit: number }): Promise<StoreReview[]> {
+  const supabase = await createServerSupabase();
+  let q = supabase.from("store_reviews").select("*");
+  if (opts.slug) q = q.eq("app_slug", opts.slug);
+  const { data, error } = await q.order("reviewed_at", { ascending: false }).limit(opts.limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as StoreReview[];
 }
 
 /** 조회가 막혀도(권한, 테이블 없음) 화면은 뜨게 한다. 이유는 화면에 적는다. */
