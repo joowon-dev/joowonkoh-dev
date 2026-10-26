@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatDay, formatPercent } from "@/lib/admin/format";
 import { type Period, RANGE_PRESETS, withQuery } from "@/lib/admin/period";
+import { type Platform, PLATFORM_LABELS } from "@/lib/admin/platform";
 
 /** 화면 제목 + 기간 고르기. 기간은 링크(프리셋)와 GET 폼(직접 지정)이라 JS 없이도 된다. */
 export function PageHeader({
@@ -136,14 +137,17 @@ export function Panel({
   aside,
   children,
   className = "",
+  id,
 }: {
   title: string;
   aside?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  /** SectionNav 가 가리킬 때 */
+  id?: string;
 }) {
   return (
-    <section className={`mt-8 ${className}`}>
+    <section id={id} className={`mt-8 ${className}`}>
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 className="text-[15px] font-semibold">{title}</h2>
         {aside && <div className="text-xs text-[var(--ink-soft)]">{aside}</div>}
@@ -203,5 +207,42 @@ export function Notice({ tone = "warn", children }: { tone?: "warn" | "info"; ch
     >
       {children}
     </div>
+  );
+}
+
+const PLATFORM_COLORS: Record<Platform, string> = { ios: "var(--web)", android: "var(--apps)", web: "var(--ink-soft)" };
+
+/** iOS · Android 꼬리표. 같은 이름의 앱이 두 줄로 나올 때 어느 쪽인지. */
+export function PlatformBadge({ platform }: { platform: Platform }) {
+  return (
+    <span
+      className="inline-block shrink-0 rounded px-1.5 py-px align-middle text-[10px] font-semibold leading-[1.5]"
+      style={{ color: PLATFORM_COLORS[platform], boxShadow: `inset 0 0 0 1px ${PLATFORM_COLORS[platform]}` }}
+    >
+      {PLATFORM_LABELS[platform]}
+    </span>
+  );
+}
+
+/** 긴 화면에서 구역으로 바로 가는 칩 줄. 모바일에서 위에 붙어 있다. */
+export function SectionNav({ items }: { items: readonly { id: string; label: string }[] }) {
+  return (
+    <nav
+      aria-label="이 화면의 구역"
+      className="sticky top-0 z-10 -mx-4 mb-5 overflow-x-auto border-b border-[var(--rule)] bg-[var(--paper)]/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:backdrop-blur-none"
+    >
+      <ul className="flex w-max gap-1.5">
+        {items.map((item) => (
+          <li key={item.id}>
+            <a
+              href={`#${item.id}`}
+              className="block rounded-full border border-[var(--rule)] bg-[var(--paper-raised)] px-3 py-1.5 text-[13px] font-medium whitespace-nowrap text-[var(--ink-soft)] hover:text-[var(--ink)]"
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

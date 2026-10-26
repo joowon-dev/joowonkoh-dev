@@ -33,6 +33,12 @@ describe("normalizeRealtime", () => {
       ],
     },
     countries: { rows: [{ dimensionValues: [{ value: "South Korea" }], metricValues: [{ value: "7" }] }] },
+    platforms: {
+      rows: [
+        { dimensionValues: [{ value: "iOS" }], metricValues: [{ value: "5" }] },
+        { dimensionValues: [{ value: "Android" }], metricValues: [{ value: "2" }] },
+      ],
+    },
   };
 
   it("합계는 차원 없는 보고서에서 읽는다", () => {
@@ -58,8 +64,16 @@ describe("normalizeRealtime", () => {
     expect(detail.payload.countries).toEqual([{ label: "South Korea", users: 7 }]);
   });
 
+  it("플랫폼별 사용자도 남긴다 — 앱 카드의 iOS · Android 줄", () => {
+    const { detail } = normalizeRealtime(reports, "111", AT);
+    expect(detail.payload.platforms).toEqual([
+      { label: "iOS", users: 5 },
+      { label: "Android", users: 2 },
+    ]);
+  });
+
   it("아무도 없으면 GA4 는 rows 를 뺀다 — 0명으로 적는다", () => {
-    const empty = { total: {}, minutes: {}, screens: {}, countries: {} };
+    const empty = { total: {}, minutes: {}, screens: {}, countries: {}, platforms: {} };
     const { row, detail } = normalizeRealtime(empty, "111", AT);
     expect(row.value).toBe(0);
     expect(detail.payload.minutes.every((v) => v === 0)).toBe(true);

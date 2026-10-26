@@ -1,12 +1,13 @@
 import Link from "next/link";
 import FreshnessBanner from "@/components/admin/FreshnessBanner";
 import TrendChart from "@/components/admin/TrendChart";
-import { Notice, PageHeader, Panel, Stat, StatGrid } from "@/components/admin/ui";
+import { Notice, PageHeader, Panel, PlatformBadge, Stat, StatGrid } from "@/components/admin/ui";
 import { ratio } from "@/lib/admin/breakdown";
 import { formatDay, formatInt, formatPercent, formatUsd } from "@/lib/admin/format";
 import { findFreshnessProblems } from "@/lib/admin/freshness";
 import { parsePeriod, previousPeriod, withQuery } from "@/lib/admin/period";
-import { loadBreakdown, loadDaily, loadRuns, settle } from "@/lib/admin/queries";
+import { admobAppName, type Platform } from "@/lib/admin/platform";
+import { loadApps, loadBreakdown, loadDaily, loadRuns, settle } from "@/lib/admin/queries";
 import { buildSeries, sumPoints } from "@/lib/admin/series";
 import type { MetricRow, Source } from "@/lib/admin/types";
 
@@ -20,11 +21,12 @@ export default async function AdminHomePage({ searchParams }: Props) {
   const prev = previousPeriod(period);
   const yesterday = period.end;
 
-  const [daily, runs, topPages, apps] = await Promise.all([
+  const [daily, runs, topPages, apps, registry] = await Promise.all([
     settle(loadDaily(prev.start, period.end), [] as MetricRow[]),
     settle(loadRuns(), []),
     settle(loadBreakdown("ga4", "page", yesterday, yesterday), []),
     settle(loadBreakdown("admob", "app", period.start, period.end), []),
+    settle(loadApps(), []),
   ]);
 
   const series = (source: Source, metricKey: string, end = period.end) =>
@@ -136,12 +138,17 @@ export default async function AdminHomePage({ searchParams }: Props) {
         <Panel title={`앱별 수익 · ${period.days}일`}>
           <RankList
             color="var(--apps)"
-            items={appRank.map((a) => ({
-              key: a.value,
-              title: a.label ?? a.value,
-              sub: appTotal > 0 ? `${(((a.metrics.estimated_earnings ?? 0) / appTotal) * 100).toFixed(0)}%` : null,
-              value: formatUsd(a.metrics.estimated_earnings ?? 0),
-            }))}
+            items={appRank.map((a) => {
+              // AdMob 은 플랫폼마다 앱이 따로라 같은 이름이 두 줄 — 등록부 이름 + iOS/Android
+              const n = admobAppName(registry.value, a.value, a.label);
+              return {
+                key: a.value,
+                title: n.name,
+                badge: n.platform,
+                sub: appTotal > 0 ? `${(((a.metrics.estimated_earnings ?? 0) / appTotal) * 100).toFixed(0)}%` : null,
+                value: formatUsd(a.metrics.estimated_earnings ?? 0),
+              };
+            })}
             empty="이 기간 앱 수익이 없어요"
           />
         </Panel>
@@ -163,7 +170,7 @@ function RankList({
   color,
   empty,
 }: {
-  items: { key: string; title: string; sub: string | null; value: string }[];
+  items: { key: string; title: string; badge?: Platform | null; sub: string | null; value: string }[];
   color: string;
   empty: string;
 }) {
@@ -176,7 +183,10 @@ function RankList({
             {i + 1}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm">{item.title}</span>
+            <span className="flex items-center gap-1.5 text-sm">
+              <span className="truncate">{item.title}</span>
+              {item.badge && <PlatformBadge platform={item.badge} />}
+            </span>
             {item.sub && <span className="block truncate text-[12px] text-[var(--ink-faint)]">{item.sub}</span>}
           </span>
           <span className="admin-num text-[15px] font-semibold">{item.value}</span>

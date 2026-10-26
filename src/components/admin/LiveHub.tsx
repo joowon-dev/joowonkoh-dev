@@ -12,6 +12,7 @@ import {
 import { STORE_LABELS, type StoreReview, type StoreSummary } from "@/lib/admin/store";
 import AutoRefresh from "./AutoRefresh";
 import ReviewList from "./ReviewList";
+import PlatformTable from "./PlatformTable";
 import { Notice, Panel } from "./ui";
 
 const LIVE_LABELS: Record<LiveProblem["source"], string> = {
@@ -69,27 +70,24 @@ export default function LiveHub({
         </Notice>
       )}
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      {/* 폰에서도 두 숫자를 한 줄에 — 첫 화면에 「지금」이 다 보이게 */}
+      <div id="now" className="grid scroll-mt-16 grid-cols-2 gap-4 sm:gap-6">
         <Big
           label="지금 쓰는 사람"
           value={users.value === null ? "–" : `${formatInt(users.value)}명`}
-          note={`최근 30분 · 앱과 웹 GA4 합 · ${stamp(users.at, now)}`}
+          note={`최근 30분 · ${stamp(users.at, now)}`}
         >
           <MinuteBars minutes={minutes} />
         </Big>
         <Big
-          label="오늘 AdMob 수익"
+          label="오늘 AdMob"
           value={earnings.value === null ? "–" : formatUsd(earnings.value)}
-          note={`노출 ${impressions === null ? "–" : formatInt(impressions)} · AdMob 은 몇 시간 늦게 채워요 · ${stamp(earnings.at, now)}`}
+          note={`노출 ${impressions === null ? "–" : formatInt(impressions)} · ${stamp(earnings.at, now)}`}
         />
       </div>
 
-      <Panel title="오늘 하루" aside="분마다 · 최근 30분 사용자 합">
-        <DayLine series={series} />
-      </Panel>
-
-      <Panel title="내 앱" aside={unlinked.length > 0 ? `GA4 미연결 ${unlinked.length}개` : undefined}>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <Panel title="앱별 지금" aside={unlinked.length > 0 ? `GA4 미연결 ${unlinked.length}개` : "30분 사용자 · 오늘 수익"} className="scroll-mt-16" id="apps">
+        <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
             <AppTile key={card.app.slug} card={card} store={stores[card.app.slug]} />
           ))}
@@ -99,19 +97,24 @@ export default function LiveHub({
             GA4 미연결: 서비스 계정을 그 앱의 GA4 속성에 「뷰어」로 추가하면 다음 날 02:20 에 자동으로 붙어요.
           </p>
         )}
+        <p className="mt-3 text-xs text-[var(--ink-faint)]">AdMob 은 몇 시간 늦게 채워요.</p>
+      </Panel>
+
+      <Panel title="오늘 하루" aside="분마다 · 최근 30분 사용자 합">
+        <DayLine series={series} />
       </Panel>
 
       <div className="grid gap-x-8 sm:grid-cols-2">
         <Panel title="지금 보는 화면" aside="최근 30분">
-          <RankList items={mergeRanked(details, "screens")} />
+          <RankList items={mergeRanked(details, "screens", 6)} />
         </Panel>
         <Panel title="지금 어디서" aside="최근 30분">
-          <RankList items={mergeRanked(details, "countries")} />
+          <RankList items={mergeRanked(details, "countries", 6)} />
         </Panel>
       </div>
 
-      <Panel title="최근 리뷰" aside="한국 스토어 · 1시간마다">
-        <ReviewList reviews={reviews} now={now} appNames={Object.fromEntries(cards.map((c) => [c.app.slug, c.app.name]))} />
+      <Panel title="최근 리뷰" aside="한국 스토어 · 1시간마다" className="scroll-mt-16" id="reviews">
+        <ReviewList reviews={reviews} now={now} appNames={Object.fromEntries(cards.map((c) => [c.app.slug, c.app.name]))} initial={4} />
       </Panel>
     </section>
   );
@@ -119,10 +122,10 @@ export default function LiveHub({
 
 function Big({ label, value, note, children }: { label: string; value: string; note: string; children?: React.ReactNode }) {
   return (
-    <div className="border-l-2 border-[var(--apps)] py-1 pl-4">
+    <div className="min-w-0 border-l-2 border-[var(--apps)] py-1 pl-3 sm:pl-4">
       <p className="text-[13px] text-[var(--ink-soft)]">{label}</p>
-      <p className="admin-num mt-0.5 text-[40px] font-semibold leading-tight tracking-tight lg:text-[48px]">{value}</p>
-      <p className="admin-num text-xs text-[var(--ink-faint)]">{note}</p>
+      <p className="admin-num mt-0.5 text-[30px] font-semibold leading-tight tracking-tight sm:text-[40px] lg:text-[48px]">{value}</p>
+      <p className="admin-num text-[11px] leading-snug text-[var(--ink-faint)] sm:text-xs">{note}</p>
       {children}
     </div>
   );
@@ -191,39 +194,36 @@ function AppTile({ card, store }: { card: AppCard; store?: StoreSummary }) {
   const links = storeLinks(app);
   return (
     <li className="rounded-xl border border-[var(--rule)] bg-[var(--paper-raised)] p-4">
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         {app.kind === "app" ? (
-          <Link href={`/admin/apps/${app.slug}`} className="truncate font-semibold underline-offset-2 hover:underline">
+          <Link href={`/admin/apps/${app.slug}`} className="-my-1 truncate py-1 text-[15px] font-semibold">
             {app.name} <span aria-hidden className="text-[var(--ink-faint)]">›</span>
           </Link>
         ) : (
-          <p className="truncate font-semibold">{app.name}</p>
+          <p className="truncate text-[15px] font-semibold">{app.name}</p>
         )}
-        <p className="flex shrink-0 gap-2 text-xs">
-          {links.appStore && (
-            <a href={links.appStore} target="_blank" rel="noreferrer" className="text-[var(--ink-soft)] underline-offset-2 hover:underline">
-              App Store
-            </a>
-          )}
-          {links.play && (
-            <a href={links.play} target="_blank" rel="noreferrer" className="text-[var(--ink-soft)] underline-offset-2 hover:underline">
-              Play
-            </a>
-          )}
+        <p className="flex shrink-0 gap-1.5 text-[11px]">
+          {links.appStore && <ExtLink href={links.appStore}>App Store</ExtLink>}
+          {links.play && <ExtLink href={links.play}>Play</ExtLink>}
           {app.kind === "web" && (
-            <Link href="/" className="text-[var(--ink-soft)] underline-offset-2 hover:underline">
+            <Link href="/" className="rounded-md border border-[var(--rule)] px-2 py-1 text-[var(--ink-soft)]">
               사이트
             </Link>
           )}
         </p>
       </div>
-      <dl className="admin-num mt-3 grid grid-cols-3 gap-2 text-sm">
-        <Cell label="30분" value={card.liveUsers === null ? null : `${formatInt(card.liveUsers)}명`} empty={app.ga4_property_id ? "–" : "GA4 미연결"} />
-        <Cell label="오늘 수익" value={card.earnings === null ? null : formatUsd(card.earnings)} empty={app.kind === "web" ? "" : "–"} />
-        <Cell label="노출" value={card.impressions === null ? null : formatInt(card.impressions)} empty={app.kind === "web" ? "" : "–"} />
-      </dl>
+
+      <PlatformTable card={card} />
       {store && <StoreLine store={store} />}
     </li>
+  );
+}
+
+function ExtLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className="rounded-md border border-[var(--rule)] px-2 py-1 text-[var(--ink-soft)] hover:text-[var(--ink)]">
+      {children}
+    </a>
   );
 }
 
@@ -236,16 +236,7 @@ function StoreLine({ store }: { store: StoreSummary }) {
     parts.push(`${STORE_LABELS[store.bestRank.store]} ${store.bestRank.genre ?? ""} ${store.bestRank.rank}위`);
   }
   if (parts.length === 0) return null;
-  return <p className="admin-num mt-3 border-t border-[var(--rule)] pt-2 text-xs text-[var(--ink-soft)]">{parts.join(" · ")}</p>;
-}
-
-function Cell({ label, value, empty }: { label: string; value: string | null; empty: string }) {
-  return (
-    <div>
-      <dt className="text-[11px] text-[var(--ink-faint)]">{label}</dt>
-      <dd className={value === null ? "text-xs text-[var(--ink-faint)]" : "font-semibold"}>{value ?? empty}</dd>
-    </div>
-  );
+  return <p className="admin-num mt-2 border-t border-[var(--rule)] pt-2 text-xs text-[var(--ink-soft)]">{parts.join(" · ")}</p>;
 }
 
 function RankList({ items }: { items: Ranked[] }) {
@@ -257,7 +248,7 @@ function RankList({ items }: { items: Ranked[] }) {
         <li key={item.label} className="relative overflow-hidden rounded-md px-2 py-1 text-sm">
           <span className="absolute inset-y-0 left-0 bg-[var(--apps)] opacity-15" style={{ width: `${(item.users / max) * 100}%` }} />
           <span className="relative flex justify-between gap-3">
-            <span className="truncate">{item.label}</span>
+            <span className="truncate">{item.label || "(이름 없음)"}</span>
             <span className="admin-num shrink-0 text-[var(--ink-soft)]">{formatInt(item.users)}</span>
           </span>
         </li>

@@ -2,13 +2,14 @@ import BreakdownTable from "@/components/admin/BreakdownTable";
 import FreshnessBanner from "@/components/admin/FreshnessBanner";
 import LiveHub from "@/components/admin/LiveHub";
 import TrendChart from "@/components/admin/TrendChart";
-import { Notice, PageHeader, Panel, Stat, StatGrid, Tabs } from "@/components/admin/ui";
+import { Notice, PageHeader, Panel, SectionNav, Stat, StatGrid, Tabs } from "@/components/admin/ui";
 import { type BreakdownLine, ratio } from "@/lib/admin/breakdown";
 import type { LabelKind } from "@/lib/admin/columns";
 import { formatInt, formatPercent, formatUsd } from "@/lib/admin/format";
 import { findFreshnessProblems } from "@/lib/admin/freshness";
 import { buildAppCards, findLiveProblems, kstMidnightIso, liveTotals, minuteSeries } from "@/lib/admin/live";
 import { parsePeriod, previousPeriod } from "@/lib/admin/period";
+import { admobAppName } from "@/lib/admin/platform";
 import {
   loadApps,
   loadBreakdown,
@@ -85,14 +86,32 @@ export default async function AppsPage({ searchParams }: Props) {
   const liveError = registry.error ?? live.error ?? liveDetail.error;
   const totals = liveTotals(live.value);
 
+  // 앱 차원은 AdMob 이 붙인 이름(같은 앱이 iOS · Android 두 줄)을 등록부 이름 + 플랫폼으로 바꾼다
+  const tableLines =
+    dim.key === "app"
+      ? lines.value.map((l) => {
+          const n = admobAppName(registry.value, l.value, l.label);
+          return { ...l, label: n.name, platform: n.platform };
+        })
+      : lines.value;
+
   return (
     <>
-      <header className="mb-6 lg:mb-8">
+      <header className="mb-3 lg:mb-4">
         <h1 className="text-2xl font-bold tracking-tight lg:text-3xl" style={{ color: "var(--apps)" }}>
           앱
         </h1>
-        <p className="mt-1 text-sm text-[var(--ink-soft)]">지금 · 오늘</p>
+        <p className="mt-1 text-sm text-[var(--ink-soft)]">지금 · 오늘 · 1분마다 새로</p>
       </header>
+
+      <SectionNav
+        items={[
+          { id: "now", label: "지금" },
+          { id: "apps", label: "앱별" },
+          { id: "reviews", label: "리뷰" },
+          { id: "period", label: "기간 분석" },
+        ]}
+      />
 
       {liveError ? (
         <Notice>실시간 지표를 불러오지 못했어요: {liveError}</Notice>
@@ -103,7 +122,7 @@ export default async function AppsPage({ searchParams }: Props) {
           earnings={totals.earnings}
           impressions={totals.impressions.value}
           series={minuteSeries(live.value)}
-          cards={buildAppCards(registry.value, live.value)}
+          cards={buildAppCards(registry.value, live.value, liveDetail.value)}
           details={liveDetail.value}
           problems={findLiveProblems(runs.value, now)}
           stores={Object.fromEntries(
@@ -113,7 +132,7 @@ export default async function AppsPage({ searchParams }: Props) {
         />
       )}
 
-      <div className="mt-14 border-t border-[var(--rule)] pt-8">
+      <div id="period" className="mt-14 scroll-mt-16 border-t border-[var(--rule)] pt-8">
         <PageHeader title="기간 분석" path="/admin/apps" period={period} color="var(--apps)">
           <p className="mt-1 text-xs text-[var(--ink-faint)]">AdMob (USD) · 하루 늦게 확정</p>
         </PageHeader>
@@ -147,7 +166,7 @@ export default async function AppsPage({ searchParams }: Props) {
       <Panel title="어디서 벌었나" aside="기간 합계 · 머리글을 누르면 정렬">
         <Tabs path="/admin/apps" query={pageQuery} param="dim" active={dim.key} color="var(--apps)" items={DIMENSIONS} />
         <div className="mt-4">
-          <BreakdownTable lines={lines.value} columns="admob" labelKind={dim.kind} nameHeader={dim.name} color="var(--apps)" searchable={dim.key === "country"} />
+          <BreakdownTable lines={tableLines} columns="admob" labelKind={dim.kind} nameHeader={dim.name} color="var(--apps)" searchable={dim.key === "country"} />
         </div>
       </Panel>
     </>
