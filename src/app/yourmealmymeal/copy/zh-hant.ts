@@ -1,20 +1,20 @@
 import type { Copy } from "./types";
 
 const zhHant: Copy = {
-  appName: "네밥내밥",
+  appName: "你的飯，我的飯",
   quote: ["「", "」"],
   store: { download: "下載" },
 
   landing: {
     meta: {
-      title: "네밥내밥",
+      title: "你的飯，我的飯",
       description:
-        "把早餐、午餐、晚餐用照片一格一格填進餐盤，和家人朋友互相關心的 App。這裡是 iOS·Android App 네밥내밥 的介紹與支援頁面。",
-      ogTitle: "네밥내밥 — 不用再問「吃飯了嗎」",
+        "把早餐、午餐、晚餐用照片一格一格填進餐盤，和家人朋友互相關心的 App。這裡是 iOS·Android App「你的飯，我的飯」的介紹與支援頁面。",
+      ogTitle: "你的飯，我的飯 — 不用再問「吃飯了嗎」",
       ogDescription: "把早餐、午餐、晚餐用照片一格一格填進餐盤，和家人朋友互相關心的 App。",
-      ogAlt: "蛋黃色背景上的白色餐盤，只有午餐格填成番茄色的 네밥내밥 介紹圖",
+      ogAlt: "蛋黃色背景上的白色餐盤，只有午餐格填成番茄色的「你的飯，我的飯」介紹圖",
     },
-    trayTitle: "네밥내밥 餐盤",
+    trayTitle: "「你的飯，我的飯」餐盤",
     greetings: ["今天吃了什麼？", "有沒有好好吃飯？", "午餐好吃嗎？", "今晚就當作一起吃飯吧"],
     tagline: "用一張餐點照片，和家人朋友分享今天的餐盤。",
     together: {
@@ -68,7 +68,7 @@ const zhHant: Copy = {
 
   join: {
     meta: {
-      title: "吃飯了嗎？ · 네밥내밥",
+      title: "吃飯了嗎？ · 你的飯，我的飯",
       description:
         "你被邀請來一起吃飯囉。把今天吃的餐點記錄在餐盤上吧。複製邀請碼，在 App 裡輸入就能加入群組。",
       ogTitle: "吃飯了嗎？",
@@ -88,12 +88,12 @@ const zhHant: Copy = {
     hint: { before: "App 下方 ", tab: "群組", after: " 分頁", add: "新增群組", join: "用邀請碼加入" },
     openInApp: "已有 App · 在 App 中開啟",
     limit: "每個群組最多 6 人，額滿後就無法加入了。",
-    about: "關於 네밥내밥",
+    about: "關於「你的飯，我的飯」",
     privacy: "隱私權政策",
   },
 
   shell: {
-    homeAria: "回到 네밥내밥 首頁",
+    homeAria: "回到「你的飯，我的飯」首頁",
     about: "介紹",
     privacy: "隱私權政策",
     deleteAccount: "刪除帳號",
@@ -101,23 +101,23 @@ const zhHant: Copy = {
   },
 
   legal: {
-    badge: "네밥내밥 · Legal",
+    badge: "你的飯，我的飯 · Legal",
     updated: "最後更新",
     koreanPrevails: "本頁為翻譯版本，如與韓文版有任何不一致，以韓文版為準。",
     koreanLink: "查看韓文版",
   },
 
   privacy: {
-    title: "네밥내밥 隱私權政策",
+    title: "你的飯，我的飯 隱私權政策",
     description:
-      "關於 iOS·Android App 네밥내밥 處理哪些資訊、誰能看到照片和用餐紀錄，以及如何刪除帳號的說明。",
+      "關於 iOS·Android App「你的飯，我的飯」處理哪些資訊、誰能看到照片和用餐紀錄，以及如何刪除帳號的說明。",
     updatedAt: "2026年10月16日",
     sections: [
       {
         h: "1. 概述",
         blocks: [
           {
-            p: "네밥내밥（以下稱「本 App」）是一款用照片記錄今天吃的每一餐，並與同一群組的人分享的 iOS·Android 應用程式。本政策說明本 App 處理的資訊、處理目的，以及使用者可以做的選擇。",
+            p: "「你的飯，我的飯」（네밥내밥，以下稱「本 App」）是一款用照片記錄今天吃的每一餐，並與同一群組的人分享的 iOS·Android 應用程式。本政策說明本 App 處理的資訊、處理目的，以及使用者可以做的選擇。",
           },
           { p: "摘要如下。" },
           {
@@ -246,9 +246,9 @@ const zhHant: Copy = {
   },
 
   deleteAccount: {
-    title: "네밥내밥 刪除帳號",
+    title: "你的飯，我的飯 刪除帳號",
     description:
-      "刪除 네밥내밥 帳號以及上傳的照片和用餐紀錄的方法。可以在 App 內直接刪除；沒有 App 時，也可以寄信申請。",
+      "刪除「你的飯，我的飯」帳號以及上傳的照片和用餐紀錄的方法。可以在 App 內直接刪除；沒有 App 時，也可以寄信申請。",
     updatedAt: "2026年9月18日",
     mailSubject: "[네밥내밥] 刪除帳號申請",
     sections: [
@@ -258,7 +258,7 @@ const zhHant: Copy = {
           { p: "這是最快的方法。不需要等待申請處理，當場就會刪除。" },
           {
             ol: [
-              "開啟 네밥내밥，點選畫面下方的 **我的** 分頁。",
+              "開啟「你的飯，我的飯」，點選畫面下方的 **我的** 分頁。",
               "點選 **刪除帳號**。",
               "為了確認，輸入 **刪除** 後按鈕就能點選。",
             ],

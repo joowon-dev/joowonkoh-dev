@@ -1,21 +1,21 @@
 import type { Copy } from "./types";
 
 const pt: Copy = {
-  appName: "네밥내밥",
+  appName: "Seu prato, meu prato",
   quote: ["“", "”"],
   store: { download: "Baixar" },
 
   landing: {
     meta: {
-      title: "네밥내밥",
+      title: "Seu prato, meu prato",
       description:
-        "Um app para preencher sua bandeja com uma foto por refeição (café da manhã, almoço e jantar) e cuidar uns dos outros com a família ou os amigos. Página de apresentação e suporte do 네밥내밥 para iOS e Android.",
-      ogTitle: "네밥내밥 — Em vez de perguntar se já comeu",
+        "Um app para preencher sua bandeja com uma foto por refeição (café da manhã, almoço e jantar) e cuidar uns dos outros com a família ou os amigos. Página de apresentação e suporte do app “Seu prato, meu prato” para iOS e Android.",
+      ogTitle: "Seu prato, meu prato — Em vez de perguntar se já comeu",
       ogDescription:
         "Um app para preencher sua bandeja com uma foto por refeição (café da manhã, almoço e jantar) e cuidar uns dos outros com a família ou os amigos.",
-      ogAlt: "Imagem do 네밥내밥: uma bandeja branca sobre fundo amarelo-gema, com só o espaço do almoço preenchido em cor de tomate",
+      ogAlt: "Imagem do app “Seu prato, meu prato”: uma bandeja branca sobre fundo amarelo-gema, com só o espaço do almoço preenchido em cor de tomate",
     },
-    trayTitle: "Bandeja do 네밥내밥",
+    trayTitle: "Bandeja do app “Seu prato, meu prato”",
     greetings: [
       "O que você comeu hoje?",
       "Tá se alimentando direitinho?",
@@ -74,7 +74,7 @@ const pt: Copy = {
 
   join: {
     meta: {
-      title: "Já comeu? · 네밥내밥",
+      title: "Já comeu? · Seu prato, meu prato",
       description:
         "Você foi convidado pra mesa. Registre na bandeja o que você comeu hoje. Copie o código de convite, digite no app e você entra no grupo.",
       ogTitle: "Já comeu?",
@@ -103,12 +103,12 @@ const pt: Copy = {
     },
     openInApp: "Já tem o app? · Abrir no app",
     limit: "Até 6 pessoas por grupo. Se estiver cheio, não dá pra entrar.",
-    about: "Sobre o 네밥내밥",
+    about: "Sobre o “Seu prato, meu prato”",
     privacy: "Privacidade",
   },
 
   shell: {
-    homeAria: "Ir para o início do 네밥내밥",
+    homeAria: "Ir para o início do “Seu prato, meu prato”",
     about: "Sobre",
     privacy: "Política de privacidade",
     deleteAccount: "Excluir conta",
@@ -116,23 +116,23 @@ const pt: Copy = {
   },
 
   legal: {
-    badge: "네밥내밥 · Legal",
+    badge: "Seu prato, meu prato · Legal",
     updated: "Última atualização",
     koreanPrevails: "Esta é uma tradução; em caso de divergência, prevalece a versão em coreano.",
     koreanLink: "Ver a versão em coreano",
   },
 
   privacy: {
-    title: "Política de privacidade do 네밥내밥",
+    title: "Política de privacidade – Seu prato, meu prato",
     description:
-      "Informações sobre os dados tratados pelo 네밥내밥, app para iOS e Android, quem pode ver suas fotos e registros de refeições e como excluir sua conta.",
+      "Informações sobre os dados tratados pelo “Seu prato, meu prato”, app para iOS e Android, quem pode ver suas fotos e registros de refeições e como excluir sua conta.",
     updatedAt: "16 de outubro de 2026",
     sections: [
       {
         h: "1. Visão geral",
         blocks: [
           {
-            p: "O 네밥내밥 (doravante, “o App”) é um aplicativo para iOS e Android que permite registrar com fotos as refeições do dia e compartilhá-las com as pessoas do mesmo grupo. Esta política explica quais informações o App trata, com quais finalidades e quais escolhas você tem como usuário.",
+            p: "O “Seu prato, meu prato” (네밥내밥; doravante, “o App”) é um aplicativo para iOS e Android que permite registrar com fotos as refeições do dia e compartilhá-las com as pessoas do mesmo grupo. Esta política explica quais informações o App trata, com quais finalidades e quais escolhas você tem como usuário.",
           },
           { p: "Em resumo:" },
           {
@@ -265,9 +265,9 @@ const pt: Copy = {
   },
 
   deleteAccount: {
-    title: "Excluir sua conta do 네밥내밥",
+    title: "Excluir sua conta – Seu prato, meu prato",
     description:
-      "Como excluir sua conta do 네밥내밥 e as fotos e registros de refeições que você enviou. Dá pra excluir direto no app ou, se você não tiver o app, pedir por e-mail.",
+      "Como excluir sua conta do “Seu prato, meu prato” e as fotos e registros de refeições que você enviou. Dá pra excluir direto no app ou, se você não tiver o app, pedir por e-mail.",
     updatedAt: "18 de setembro de 2026",
     mailSubject: "[네밥내밥] Solicitação de exclusão de conta",
     sections: [
@@ -277,7 +277,7 @@ const pt: Copy = {
           { p: "É o jeito mais rápido. Não é preciso esperar uma solicitação ser processada: a conta é excluída na hora." },
           {
             ol: [
-              "Abra o 네밥내밥 e toque na aba **Perfil** na parte de baixo da tela.",
+              "Abra o “Seu prato, meu prato” e toque na aba **Perfil** na parte de baixo da tela.",
               "Toque em **Excluir conta**.",
               "Para confirmar, digite **excluir** e o botão será ativado.",
             ],

@@ -119,6 +119,25 @@ describe("주소", () => {
   });
 });
 
+/**
+ * 스토어에 올린 앱 이름 — 앱 저장소 store/screenshots/captions.json 의 `<언어>.brand` 와 같다.
+ * 스토어 이름을 바꾸면 여기와 copy/<언어>.ts 의 appName·본문을 같이 고친다.
+ */
+const BRAND: Record<Lang, string> = {
+  ko: "네밥내밥",
+  en: "Your Meal, My Meal",
+  ja: "あなたのごはん、わたしのごはん",
+  "zh-hans": "你的饭，我的饭",
+  "zh-hant": "你的飯，我的飯",
+  es: "Tu comida, mi comida",
+  fr: "Ton repas, mon repas",
+  de: "Dein Essen, mein Essen",
+  pt: "Seu prato, meu prato",
+  id: "Makananmu, Makananku",
+  vi: "Cơm bạn, cơm mình",
+  th: "ข้าวเธอ ข้าวฉัน",
+};
+
 /** 블록 모양만 — 문단이면 "p", 목록이면 항목 수. */
 const shape = (b: Block) => ("p" in b ? "p" : "ul" in b ? `ul${b.ul.length}` : `ol${b.ol.length}`);
 const texts = (b: Block) => ("p" in b ? [b.p] : "ul" in b ? b.ul : b.ol);
@@ -127,7 +146,7 @@ describe("문구", () => {
   it.each(LANGS)("%s — 한국어와 같은 모양이다", (lang) => {
     const c = COPY[lang];
     const ko = COPY.ko;
-    expect(c.appName).toBe("네밥내밥");
+    expect(c.appName).toBe(BRAND[lang]);
     expect(c.landing.features).toHaveLength(ko.landing.features.length);
     expect(c.landing.faq).toHaveLength(ko.landing.faq.length);
     expect(c.landing.greetings).toHaveLength(ko.landing.greetings.length);
@@ -149,5 +168,19 @@ describe("문구", () => {
   it.each(LANGS.filter((l) => l !== "ko"))("%s — 한국어판이 우선한다는 한 줄이 있다", (lang) => {
     expect(COPY[lang].legal.koreanPrevails.length).toBeGreaterThan(0);
     expect(COPY[lang].legal.koreanLink.length).toBeGreaterThan(0);
+  });
+
+  it.each(LANGS.filter((l) => l !== "ko"))("%s — 한국어 이름(네밥내밥)은 개인정보처리방침 첫 문단과 메일 제목에만 남는다", (lang) => {
+    const c = COPY[lang];
+    // 같은 앱이라는 걸 밝히려고 첫 문단에 한 번 "(네밥내밥)" 을 단다. 메일 제목 머리표는 받는 쪽이 앱을 가려내는 표지다.
+    const intro = c.privacy.sections[0].blocks[0];
+    expect("p" in intro && intro.p).toContain(`${BRAND[lang]}`);
+    expect("p" in intro && intro.p).toContain("네밥내밥");
+    const rest = {
+      ...c,
+      privacy: { ...c.privacy, sections: [{ ...c.privacy.sections[0], blocks: c.privacy.sections[0].blocks.slice(1) }, ...c.privacy.sections.slice(1)] },
+      deleteAccount: { ...c.deleteAccount, mailSubject: "" },
+    };
+    expect(JSON.stringify(rest)).not.toContain("네밥내밥");
   });
 });

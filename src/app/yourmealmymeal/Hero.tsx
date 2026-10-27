@@ -46,7 +46,7 @@ export default function Hero({
         <TrayMark size={148} title={trayTitle} />
       </motion.div>
 
-      <motion.h1 variants={RISE} className="mt-6 text-[30px] font-bold leading-[1.2] tracking-[-0.02em]" style={{ color: C.ink }}>
+      <motion.h1 variants={RISE} className="mt-6 text-[30px] font-bold leading-[1.2] tracking-[-0.02em] text-balance" style={{ color: C.ink }}>
         {appName}
       </motion.h1>
 

@@ -13,9 +13,9 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { buildFrames } from "../src/app/playground/kbo-race/standings.mjs";
+import { buildFrames } from "../src/app/(site)/playground/kbo-race/standings.mjs";
 
-const FILE = fileURLToPath(new URL("../src/app/playground/kbo-race/data/games.json", import.meta.url));
+const FILE = fileURLToPath(new URL("../src/app/(site)/playground/kbo-race/data/games.json", import.meta.url));
 const API = "https://www.koreabaseball.com/ws/Main.asmx/GetKboGameList";
 
 const argSeason = (() => {

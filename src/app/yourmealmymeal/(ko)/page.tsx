@@ -1,4 +1,4 @@
-import Landing, { landingMetadata } from "./Landing";
+import Landing, { landingMetadata } from "../Landing";
 
 export const metadata = landingMetadata("ko");
 

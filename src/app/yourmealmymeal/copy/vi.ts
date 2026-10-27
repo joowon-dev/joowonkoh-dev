@@ -1,21 +1,21 @@
 import type { Copy } from "./types";
 
 const vi: Copy = {
-  appName: "네밥내밥",
+  appName: "Cơm bạn, cơm mình",
   quote: ["“", "”"],
   store: { download: "Tải về" },
 
   landing: {
     meta: {
-      title: "네밥내밥",
+      title: "Cơm bạn, cơm mình",
       description:
-        "Ứng dụng giúp bạn lấp từng ô trên khay cơm bằng ảnh bữa sáng, trưa, tối và cùng gia đình, bạn bè quan tâm nhau. Trang giới thiệu và hỗ trợ của ứng dụng 네밥내밥 trên iOS và Android.",
-      ogTitle: "네밥내밥 — Thay vì hỏi “Ăn cơm chưa?”",
+        "Ứng dụng giúp bạn lấp từng ô trên khay cơm bằng ảnh bữa sáng, trưa, tối và cùng gia đình, bạn bè quan tâm nhau. Trang giới thiệu và hỗ trợ của ứng dụng “Cơm bạn, cơm mình” trên iOS và Android.",
+      ogTitle: "Cơm bạn, cơm mình — Thay vì hỏi “Ăn cơm chưa?”",
       ogDescription:
         "Ứng dụng giúp bạn lấp từng ô trên khay cơm bằng ảnh bữa sáng, trưa, tối và cùng gia đình, bạn bè quan tâm nhau.",
-      ogAlt: "Ảnh giới thiệu 네밥내밥: khay cơm trắng trên nền vàng lòng đỏ trứng, chỉ ô bữa trưa được tô màu cà chua",
+      ogAlt: "Ảnh giới thiệu “Cơm bạn, cơm mình”: khay cơm trắng trên nền vàng lòng đỏ trứng, chỉ ô bữa trưa được tô màu cà chua",
     },
-    trayTitle: "Khay cơm 네밥내밥",
+    trayTitle: "Khay cơm của “Cơm bạn, cơm mình”",
     greetings: ["Hôm nay ăn gì thế?", "Ăn uống đầy đủ chưa?", "Bữa trưa ngon không?", "Bữa tối nay, như đang ăn cùng nhau"],
     tagline: "Chỉ một tấm ảnh bữa ăn, chia sẻ khay cơm hôm nay với gia đình, bạn bè.",
     together: {
@@ -69,7 +69,7 @@ const vi: Copy = {
 
   join: {
     meta: {
-      title: "Ăn cơm chưa? · 네밥내밥",
+      title: "Ăn cơm chưa? · Cơm bạn, cơm mình",
       description:
         "Bạn được mời vào mâm cơm. Hãy ghi lại bữa ăn hôm nay lên khay cơm. Sao chép mã mời và nhập vào ứng dụng để vào nhóm.",
       ogTitle: "Ăn cơm chưa?",
@@ -94,7 +94,7 @@ const vi: Copy = {
   },
 
   shell: {
-    homeAria: "Về trang đầu 네밥내밥",
+    homeAria: "Về trang đầu Cơm bạn, cơm mình",
     about: "Giới thiệu",
     privacy: "Quyền riêng tư",
     deleteAccount: "Xóa tài khoản",
@@ -102,23 +102,23 @@ const vi: Copy = {
   },
 
   legal: {
-    badge: "네밥내밥 · Legal",
+    badge: "Cơm bạn, cơm mình · Legal",
     updated: "Cập nhật lần cuối",
     koreanPrevails: "Đây là bản dịch; nếu có khác biệt, bản tiếng Hàn sẽ được ưu tiên.",
     koreanLink: "Xem bản tiếng Hàn",
   },
 
   privacy: {
-    title: "Chính sách quyền riêng tư của 네밥내밥",
+    title: "Chính sách quyền riêng tư của Cơm bạn, cơm mình",
     description:
-      "Hướng dẫn về thông tin mà ứng dụng 네밥내밥 trên iOS và Android xử lý, ai có thể xem ảnh và ghi chép bữa ăn, và cách xóa tài khoản.",
+      "Hướng dẫn về thông tin mà ứng dụng “Cơm bạn, cơm mình” trên iOS và Android xử lý, ai có thể xem ảnh và ghi chép bữa ăn, và cách xóa tài khoản.",
     updatedAt: "Ngày 16 tháng 10 năm 2026",
     sections: [
       {
         h: "1. Tổng quan",
         blocks: [
           {
-            p: "네밥내밥 (sau đây gọi là “Ứng dụng”) là ứng dụng iOS và Android giúp ghi lại bữa ăn hôm nay bằng ảnh và chia sẻ với những người cùng nhóm. Chính sách này giải thích thông tin mà Ứng dụng xử lý, mục đích xử lý và các lựa chọn của người dùng.",
+            p: "“Cơm bạn, cơm mình” (네밥내밥, sau đây gọi là “Ứng dụng”) là ứng dụng iOS và Android giúp ghi lại bữa ăn hôm nay bằng ảnh và chia sẻ với những người cùng nhóm. Chính sách này giải thích thông tin mà Ứng dụng xử lý, mục đích xử lý và các lựa chọn của người dùng.",
           },
           { p: "Tóm tắt như sau." },
           {
@@ -251,9 +251,9 @@ const vi: Copy = {
   },
 
   deleteAccount: {
-    title: "Xóa tài khoản 네밥내밥",
+    title: "Xóa tài khoản Cơm bạn, cơm mình",
     description:
-      "Cách xóa tài khoản 네밥내밥 cùng ảnh và ghi chép bữa ăn đã đăng. Bạn có thể xóa ngay trong ứng dụng, hoặc gửi yêu cầu qua email nếu không còn ứng dụng.",
+      "Cách xóa tài khoản “Cơm bạn, cơm mình” cùng ảnh và ghi chép bữa ăn đã đăng. Bạn có thể xóa ngay trong ứng dụng, hoặc gửi yêu cầu qua email nếu không còn ứng dụng.",
     updatedAt: "Ngày 18 tháng 9 năm 2026",
     mailSubject: "[네밥내밥] Yêu cầu xóa tài khoản",
     sections: [
@@ -263,7 +263,7 @@ const vi: Copy = {
           { p: "Đây là cách nhanh nhất. Không cần chờ xử lý yêu cầu, tài khoản bị xóa ngay tại chỗ." },
           {
             ol: [
-              "Mở 네밥내밥 và nhấn tab **Tôi** ở dưới màn hình.",
+              "Mở “Cơm bạn, cơm mình” và nhấn tab **Tôi** ở dưới màn hình.",
               "Nhấn **Xóa tài khoản**.",
               "Nhập **xóa** để xác nhận, nút sẽ được kích hoạt.",
             ],
