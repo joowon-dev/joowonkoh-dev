@@ -1,5 +1,5 @@
-import { joinMetadata } from "./metadata";
-import Join from "./Join";
+import { joinMetadata } from "../../join/metadata";
+import Join from "../../join/Join";
 
 export const metadata = joinMetadata("ko");
 

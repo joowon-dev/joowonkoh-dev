@@ -66,6 +66,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    // 루트 레이아웃이 여럿이라(사이트·네밥내밥) 없는 주소의 404 는 src/app/global-not-found.tsx 가 그린다.
+    globalNotFound: true,
+  },
   async redirects() {
     return [
       ...postRedirects(),

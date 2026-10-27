@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import Header from "@/components/Header";
+import Script from "next/script";
+
+import { AnalyticsHead, AnalyticsNoScript, AnalyticsScripts } from "@/components/Analytics";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import HideOnAdmin, { SiteMain } from "@/components/HideOnAdmin";
 import ScrollToTop from "@/components/ScrollToTop";
-import Script from "next/script";
 import { ADSENSE_CLIENT } from "@/lib/adsense";
 
-export const metadata: Metadata = {
+export const siteMetadata: Metadata = {
   title: {
     default: "Joowon Koh",
     template: "%s",
@@ -32,26 +33,19 @@ export const metadata: Metadata = {
   // canonical은 여기에 두면 안 된다. 루트 레이아웃의 metadata는 자기 값을 지정하지 않은
   // 모든 하위 페이지가 그대로 물려받으므로, 홈 주소를 넣어두면 /blog·/playground 등
   // 전 페이지가 "내 정식 주소는 홈이다"라고 선언하게 되고 검색 색인에서 홈으로 합쳐진다.
-  // 페이지마다 자기 주소를 지정한다. (홈은 src/app/page.tsx)
+  // 페이지마다 자기 주소를 지정한다. (홈은 src/app/(site)/page.tsx)
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+/**
+ * 개인 사이트의 `<html>` — 헤더·푸터·광고·애널리틱스.
+ * 사이트 루트 레이아웃(`(site)/layout.tsx`)과 없는 주소 페이지(`global-not-found.tsx`)가 같이 쓴다.
+ * 네밥내밥(`/yourmealmymeal`)은 언어마다 `<html lang>` 이 달라야 해서 이것을 쓰지 않고 자기 루트 레이아웃을 둔다.
+ */
+export default function SiteDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-KJLLSWX6');`,
-          }}
-        />
+        <AnalyticsHead />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
@@ -62,14 +56,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         />
       </head>
       <body className="noise-overlay min-h-[100dvh] bg-bg text-text-primary font-sans antialiased">
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-KJLLSWX6"
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-          />
-        </noscript>
+        <AnalyticsNoScript />
         <ScrollToTop />
         <HideOnAdmin header>
           <Header />
@@ -78,7 +65,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <HideOnAdmin>
           <Footer />
         </HideOnAdmin>
-        {/* 자체 셸 경로(어드민·네밥내밥)에는 사이트 광고를 싣지 않는다. */}
+        {/* 자체 셸 경로(어드민 등)에는 사이트 광고를 싣지 않는다. */}
         <HideOnAdmin>
           <Script
             async
@@ -87,18 +74,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             strategy="afterInteractive"
           />
         </HideOnAdmin>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-924W0S77PX"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-924W0S77PX');
-  `}
-        </Script>
+        <AnalyticsScripts />
       </body>
     </html>
   );

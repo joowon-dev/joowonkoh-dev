@@ -17,10 +17,10 @@ import {
   parseVilageFcst,
   ultraSrtNcstUrl,
   vilageFcstUrl,
-} from "@/app/playground/jjimjilbang/kma";
-import { toGrid } from "@/app/playground/jjimjilbang/grid";
+} from "@/app/(site)/playground/jjimjilbang/kma";
+import { toGrid } from "@/app/(site)/playground/jjimjilbang/grid";
 import { cloudflareEnv, readEnv, similarEnvNames } from "@/lib/cloudflareEnv";
-import type { Reading, Weather } from "@/app/playground/jjimjilbang/weather";
+import type { Reading, Weather } from "@/app/(site)/playground/jjimjilbang/weather";
 
 /**
  * 이 저장소는 @cloudflare/next-on-pages로 배포한다. 그 도구는 정적이 아닌

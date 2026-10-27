@@ -1,4 +1,4 @@
-import Legal, { legalMetadata } from "../Legal";
+import Legal, { legalMetadata } from "../../Legal";
 
 export const metadata = legalMetadata("ko", "privacy");
 
