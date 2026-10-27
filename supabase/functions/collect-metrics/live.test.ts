@@ -6,9 +6,21 @@ import {
   normalizeAdmobToday,
   normalizeRealtime,
   propertyIds,
+  realtimeDue,
 } from "./live";
 
 const AT = "2026-10-26T05:41:00.000Z";
+
+describe("realtimeDue", () => {
+  it("웹은 매분, 앱은 짝수 분에만", () => {
+    const even = new Date("2026-10-27T01:40:30Z");
+    const odd = new Date("2026-10-27T01:41:30Z");
+    expect(realtimeDue("web", even)).toBe(true);
+    expect(realtimeDue("web", odd)).toBe(true);
+    expect(realtimeDue("app", even)).toBe(true);
+    expect(realtimeDue("app", odd)).toBe(false);
+  });
+});
 
 describe("minuteFloor", () => {
   it("초 아래를 잘라 같은 분에 다시 돌면 같은 키가 된다", () => {

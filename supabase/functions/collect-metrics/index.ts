@@ -9,7 +9,8 @@
  * 처음 한 번은 days=30 으로 소급 수집해 차트를 채운다.
  *
  * 실시간 소스는 따로 돈다(마이그레이션 20261026000000) — days 를 받지 않는다.
- *   ga4_live     1분마다. 등록부(apps)의 GA4 속성마다 최근 30분 → live_metrics / live_detail
+ *   ga4_live     1분마다 불린다. 웹 속성은 매분, 앱 속성은 짝수 분에만(시간 토큰 쿼터)
+ *                등록부(apps)의 GA4 속성마다 최근 30분 → live_metrics / live_detail
  *   admob_today  10분마다. AdMob 오늘치 → live_metrics
  *   ga4_discover 매일. 서비스 계정이 보는 속성의 스트림을 훑어 apps.ga4_property_id 를 채운다
  *   store        1시간마다. 스토어 공개 정보(별점·평가 수·Play 설치 수·차트 순위·리뷰)
@@ -51,6 +52,7 @@ import {
   propertyIds,
   REALTIME_REQUESTS,
   type RealtimeReports,
+  realtimeDue,
 } from "./live.ts";
 import {
   appleChartUrl,
@@ -261,11 +263,12 @@ async function collectAdmob(days: number): Promise<Collected> {
 }
 
 async function collectGa4Live(now: Date) {
-  const { data: apps, error } = await supabase
+  const { data, error } = await supabase
     .from("apps")
-    .select("slug, ga4_property_id")
+    .select("slug, kind, ga4_property_id")
     .not("ga4_property_id", "is", null);
   if (error) throw new Error(`apps 읽기 실패: ${error.message}`);
+  const apps = (data ?? []).filter((a) => realtimeDue(a.kind, now));
 
   const token = await ga4Token();
   const at = minuteFloor(now);
@@ -287,7 +290,7 @@ async function collectGa4Live(now: Date) {
 
   // 속성 하나가 권한 오류여도 나머지는 적는다.
   const results = await Promise.allSettled(
-    (apps ?? []).map(async ({ ga4_property_id: id }) => {
+    apps.map(async ({ ga4_property_id: id }) => {
       const reports = await Promise.all(names.map((n) => realtime(id, REALTIME_REQUESTS[n])));
       const byName = Object.fromEntries(names.map((n, i) => [n, reports[i]])) as RealtimeReports;
       return normalizeRealtime(byName, id, at);
@@ -303,7 +306,7 @@ async function collectGa4Live(now: Date) {
       details.push(r.value.detail);
     } else {
       const reason = r.reason instanceof Error ? r.reason.message : String(r.reason);
-      failures.push(`${apps![i].slug}: ${reason}`);
+      failures.push(`${apps[i].slug}: ${reason}`);
     }
   });
 

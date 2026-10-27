@@ -44,6 +44,15 @@ export function minuteFloor(now: Date): string {
 // ---------------------------------------------------------------- GA4 Realtime
 
 /**
+ * 이번 분에 실시간을 받을 속성인가. 웹은 매분, 앱은 짝수 분에만.
+ * Realtime 은 「프로젝트·속성당 시간 토큰」이 있고, 앱 속성은 요청 5개 × 매분이면
+ * 50분쯤에 바닥나 429 가 났다(2026-10-27). 30분 합계라 2분 간격이어도 티가 안 난다.
+ */
+export function realtimeDue(kind: string, now: Date): boolean {
+  return kind === "web" || now.getUTCMinutes() % 2 === 0;
+}
+
+/**
  * 속성 하나에 보내는 요청 다섯. 합계는 차원 없이 따로 받는다 — 차원별 행을 더하면
  * 화면 두 개를 본 사람이 두 번 세어진다.
  */
