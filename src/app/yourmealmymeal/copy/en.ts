@@ -1,21 +1,21 @@
 import type { Copy } from "./types";
 
 const en: Copy = {
-  appName: "네밥내밥",
+  appName: "Your Meal, My Meal",
   quote: ["“", "”"],
   store: { download: "Download" },
 
   landing: {
     meta: {
-      title: "네밥내밥",
+      title: "Your Meal, My Meal",
       description:
-        "Fill breakfast, lunch and dinner on your plate one photo at a time, and look out for each other with family or friends. The intro and support page for 네밥내밥, the iOS and Android app.",
-      ogTitle: "네밥내밥 — instead of asking “Did you eat?”",
+        "Fill breakfast, lunch and dinner on your plate one photo at a time, and look out for each other with family or friends. The intro and support page for the iOS and Android app Your Meal, My Meal.",
+      ogTitle: "Your Meal, My Meal — instead of asking “Did you eat?”",
       ogDescription:
         "Fill breakfast, lunch and dinner on your plate one photo at a time, and look out for each other with family or friends.",
-      ogAlt: "네밥내밥 intro image: a white plate on a yolk-yellow background, with only the lunch slot filled in tomato red",
+      ogAlt: "Your Meal, My Meal intro image: a white plate on a yolk-yellow background, with only the lunch slot filled in tomato red",
     },
-    trayTitle: "네밥내밥 plate",
+    trayTitle: "Plate from Your Meal, My Meal",
     greetings: [
       "What did you eat today?",
       "Have you been eating well?",
@@ -74,7 +74,7 @@ const en: Copy = {
 
   join: {
     meta: {
-      title: "Have you eaten? · 네밥내밥",
+      title: "Have you eaten? · Your Meal, My Meal",
       description:
         "You’re invited to the table. Log what you ate today on your plate. Copy the invite code and enter it in the app to join the group.",
       ogTitle: "Have you eaten?",
@@ -94,12 +94,12 @@ const en: Copy = {
     hint: { before: "In the app, ", tab: "Groups", after: " tab", add: "Add a group", join: "Join with an invite code" },
     openInApp: "Already have the app? · Open in app",
     limit: "Groups hold up to 6 people. If it’s full, you can’t join.",
-    about: "About 네밥내밥",
+    about: "About Your Meal, My Meal",
     privacy: "Privacy",
   },
 
   shell: {
-    homeAria: "네밥내밥 home",
+    homeAria: "Your Meal, My Meal home",
     about: "About",
     privacy: "Privacy Policy",
     deleteAccount: "Delete account",
@@ -107,23 +107,23 @@ const en: Copy = {
   },
 
   legal: {
-    badge: "네밥내밥 · Legal",
+    badge: "Your Meal, My Meal · Legal",
     updated: "Last updated",
     koreanPrevails: "This is a translation. If it differs from the Korean version in any way, the Korean version prevails.",
     koreanLink: "View the Korean version",
   },
 
   privacy: {
-    title: "네밥내밥 Privacy Policy",
+    title: "Your Meal, My Meal Privacy Policy",
     description:
-      "What information the iOS and Android app 네밥내밥 handles, who can see your photos and meal records, and how to delete your account.",
+      "What information the iOS and Android app “Your Meal, My Meal” handles, who can see your photos and meal records, and how to delete your account.",
     updatedAt: "October 16, 2026",
     sections: [
       {
         h: "1. Overview",
         blocks: [
           {
-            p: "네밥내밥 (the “App”) is an iOS and Android application for logging the meals you eat each day with photos and sharing them with people in the same group. This policy explains what information the App handles, why, and the choices you have.",
+            p: "Your Meal, My Meal (네밥내밥; the “App”) is an iOS and Android application for logging the meals you eat each day with photos and sharing them with people in the same group. This policy explains what information the App handles, why, and the choices you have.",
           },
           { p: "In short:" },
           {
@@ -252,9 +252,9 @@ const en: Copy = {
   },
 
   deleteAccount: {
-    title: "Delete your 네밥내밥 account",
+    title: "Delete your account on Your Meal, My Meal",
     description:
-      "How to delete your 네밥내밥 account and the photos and meal records you posted. You can delete it right in the App, or request it by email if you no longer have the App.",
+      "How to delete your account on Your Meal, My Meal, along with the photos and meal records you posted. You can delete it right in the App, or request it by email if you no longer have the App.",
     updatedAt: "September 18, 2026",
     mailSubject: "[네밥내밥] Account deletion request",
     sections: [
@@ -264,7 +264,7 @@ const en: Copy = {
           { p: "This is the fastest way. There’s no request to wait on — it’s deleted right then and there." },
           {
             ol: [
-              "Open 네밥내밥 and tap the **Me** tab at the bottom of the screen.",
+              "Open Your Meal, My Meal and tap the **Me** tab at the bottom of the screen.",
               "Tap **Delete account**.",
               "Type **delete** to confirm, and the button becomes active.",
             ],

@@ -1,21 +1,21 @@
 import type { Copy } from "./types";
 
 const id: Copy = {
-  appName: "네밥내밥",
+  appName: "Makananmu, Makananku",
   quote: ["“", "”"],
   store: { download: "Unduh" },
 
   landing: {
     meta: {
-      title: "네밥내밥",
+      title: "Makananmu, Makananku",
       description:
-        "Aplikasi untuk mengisi nampan dengan satu foto per waktu makan (sarapan, makan siang, makan malam) dan saling memperhatikan bersama keluarga atau teman. Halaman pengenalan dan dukungan aplikasi iOS & Android 네밥내밥.",
-      ogTitle: "네밥내밥 — Daripada nanya “udah makan?”",
+        "Aplikasi untuk mengisi nampan dengan satu foto per waktu makan (sarapan, makan siang, makan malam) dan saling memperhatikan bersama keluarga atau teman. Halaman pengenalan dan dukungan aplikasi iOS & Android “Makananmu, Makananku”.",
+      ogTitle: "Makananmu, Makananku — Daripada nanya “udah makan?”",
       ogDescription:
         "Aplikasi untuk mengisi nampan dengan satu foto per waktu makan (sarapan, makan siang, makan malam) dan saling memperhatikan bersama keluarga atau teman.",
-      ogAlt: "Gambar 네밥내밥: nampan putih di atas latar kuning telur, hanya kotak makan siang yang terisi warna tomat",
+      ogAlt: "Gambar “Makananmu, Makananku”: nampan putih di atas latar kuning telur, hanya kotak makan siang yang terisi warna tomat",
     },
-    trayTitle: "Nampan 네밥내밥",
+    trayTitle: "Nampan “Makananmu, Makananku”",
     greetings: [
       "Hari ini makan apa?",
       "Udah makan yang bener?",
@@ -74,7 +74,7 @@ const id: Copy = {
 
   join: {
     meta: {
-      title: "Udah makan? · 네밥내밥",
+      title: "Udah makan? · Makananmu, Makananku",
       description:
         "Kamu diundang ke meja makan. Catat makananmu hari ini di nampan. Salin kode undangannya, masukkan di aplikasi, dan kamu langsung masuk grup.",
       ogTitle: "Udah makan?",
@@ -103,12 +103,12 @@ const id: Copy = {
     },
     openInApp: "Sudah punya aplikasinya? · Buka",
     limit: "Maks. 6 orang per grup. Kalau sudah penuh, nggak bisa gabung.",
-    about: "Tentang 네밥내밥",
+    about: "Tentang Makananmu, Makananku",
     privacy: "Privasi",
   },
 
   shell: {
-    homeAria: "Ke beranda 네밥내밥",
+    homeAria: "Ke beranda Makananmu, Makananku",
     about: "Tentang",
     privacy: "Kebijakan Privasi",
     deleteAccount: "Hapus akun",
@@ -116,23 +116,23 @@ const id: Copy = {
   },
 
   legal: {
-    badge: "네밥내밥 · Legal",
+    badge: "Makananmu, Makananku · Legal",
     updated: "Terakhir diperbarui",
     koreanPrevails: "Ini adalah terjemahan; jika ada perbedaan, versi bahasa Korea yang berlaku.",
     koreanLink: "Lihat versi bahasa Korea",
   },
 
   privacy: {
-    title: "Kebijakan Privasi 네밥내밥",
+    title: "Kebijakan Privasi Makananmu, Makananku",
     description:
-      "Penjelasan tentang informasi yang diproses oleh aplikasi iOS & Android 네밥내밥, siapa yang bisa melihat foto dan catatan makanmu, serta cara menghapus akun.",
+      "Penjelasan tentang informasi yang diproses oleh aplikasi iOS & Android “Makananmu, Makananku”, siapa yang bisa melihat foto dan catatan makanmu, serta cara menghapus akun.",
     updatedAt: "16 Oktober 2026",
     sections: [
       {
         h: "1. Ringkasan",
         blocks: [
           {
-            p: "네밥내밥 (selanjutnya disebut “Aplikasi”) adalah aplikasi iOS dan Android untuk mencatat makanan hari ini dengan foto dan membagikannya dengan orang-orang di grup yang sama. Kebijakan ini menjelaskan informasi yang diproses oleh Aplikasi, tujuannya, dan pilihan yang kamu miliki sebagai pengguna.",
+            p: "“Makananmu, Makananku” (네밥내밥, selanjutnya disebut “Aplikasi”) adalah aplikasi iOS dan Android untuk mencatat makanan hari ini dengan foto dan membagikannya dengan orang-orang di grup yang sama. Kebijakan ini menjelaskan informasi yang diproses oleh Aplikasi, tujuannya, dan pilihan yang kamu miliki sebagai pengguna.",
           },
           { p: "Singkatnya:" },
           {
@@ -265,9 +265,9 @@ const id: Copy = {
   },
 
   deleteAccount: {
-    title: "Hapus akun 네밥내밥",
+    title: "Hapus akun Makananmu, Makananku",
     description:
-      "Cara menghapus akun 네밥내밥 beserta foto dan catatan makan yang sudah diunggah. Bisa langsung dihapus di dalam aplikasi, atau diminta lewat email jika kamu tidak punya aplikasinya.",
+      "Cara menghapus akun “Makananmu, Makananku” beserta foto dan catatan makan yang sudah diunggah. Bisa langsung dihapus di dalam aplikasi, atau diminta lewat email jika kamu tidak punya aplikasinya.",
     updatedAt: "18 September 2026",
     mailSubject: "[네밥내밥] Permintaan penghapusan akun",
     sections: [
@@ -277,7 +277,7 @@ const id: Copy = {
           { p: "Ini cara tercepat. Tidak perlu menunggu permintaan diproses; akun langsung terhapus saat itu juga." },
           {
             ol: [
-              "Buka 네밥내밥 lalu ketuk tab **Aku** di bagian bawah layar.",
+              "Buka “Makananmu, Makananku” lalu ketuk tab **Aku** di bagian bawah layar.",
               "Ketuk **Hapus akun**.",
               "Untuk konfirmasi, ketik **hapus**, lalu tombolnya akan aktif.",
             ],

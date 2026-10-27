@@ -1,21 +1,21 @@
 import type { Copy } from "./types";
 
 const es: Copy = {
-  appName: "네밥내밥",
+  appName: "Tu comida, mi comida",
   quote: ["“", "”"],
   store: { download: "Descargar" },
 
   landing: {
     meta: {
-      title: "네밥내밥",
+      title: "Tu comida, mi comida",
       description:
-        "Una app para llenar tu bandeja con una foto por comida (desayuno, almuerzo y cena) y estar pendientes unos de otros con tu familia o amigos. Página de presentación y soporte de 네밥내밥 para iOS y Android.",
-      ogTitle: "네밥내밥 — En vez de preguntar si ya comiste",
+        "Una app para llenar tu bandeja con una foto por comida (desayuno, almuerzo y cena) y estar pendientes unos de otros con tu familia o amigos. Página de presentación y soporte de “Tu comida, mi comida”, la app para iOS y Android.",
+      ogTitle: "Tu comida, mi comida — En vez de preguntar si ya comiste",
       ogDescription:
         "Una app para llenar tu bandeja con una foto por comida (desayuno, almuerzo y cena) y estar pendientes unos de otros con tu familia o amigos.",
-      ogAlt: "Imagen de 네밥내밥: una bandeja blanca sobre fondo amarillo yema, con solo el espacio del almuerzo lleno en color tomate",
+      ogAlt: "Imagen de “Tu comida, mi comida”: una bandeja blanca sobre fondo amarillo yema, con solo el espacio del almuerzo lleno en color tomate",
     },
-    trayTitle: "Bandeja de 네밥내밥",
+    trayTitle: "Bandeja de “Tu comida, mi comida”",
     greetings: [
       "¿Qué comiste hoy?",
       "¿Estás comiendo bien?",
@@ -74,7 +74,7 @@ const es: Copy = {
 
   join: {
     meta: {
-      title: "¿Ya comiste? · 네밥내밥",
+      title: "¿Ya comiste? · Tu comida, mi comida",
       description:
         "Te invitaron a la mesa. Registra en tu bandeja lo que comiste hoy. Copia el código de invitación, ingrésalo en la app y entrarás al grupo.",
       ogTitle: "¿Ya comiste?",
@@ -97,12 +97,12 @@ const es: Copy = {
     hint: { before: "Pestaña ", tab: "Grupos", after: " abajo", add: "Agregar grupo", join: "Unirse con código" },
     openInApp: "¿Tienes la app? · Abrir en la app",
     limit: "Máximo 6 personas por grupo. Si está lleno, no podrás unirte.",
-    about: "Acerca de 네밥내밥",
+    about: "Acerca de Tu comida, mi comida",
     privacy: "Privacidad",
   },
 
   shell: {
-    homeAria: "Ir al inicio de 네밥내밥",
+    homeAria: "Ir al inicio de Tu comida, mi comida",
     about: "Acerca de",
     privacy: "Política de privacidad",
     deleteAccount: "Eliminar cuenta",
@@ -110,23 +110,23 @@ const es: Copy = {
   },
 
   legal: {
-    badge: "네밥내밥 · Legal",
+    badge: "Tu comida, mi comida · Legal",
     updated: "Última actualización",
     koreanPrevails: "Esta es una traducción; en caso de discrepancia, prevalece la versión en coreano.",
     koreanLink: "Ver la versión en coreano",
   },
 
   privacy: {
-    title: "Política de privacidad de 네밥내밥",
+    title: "Política de privacidad de Tu comida, mi comida",
     description:
-      "Información sobre los datos que trata 네밥내밥, la app para iOS y Android, quién puede ver tus fotos y registros de comidas, y cómo eliminar tu cuenta.",
+      "Información sobre los datos que trata “Tu comida, mi comida”, la app para iOS y Android, quién puede ver tus fotos y registros de comidas, y cómo eliminar tu cuenta.",
     updatedAt: "16 de octubre de 2026",
     sections: [
       {
         h: "1. Resumen",
         blocks: [
           {
-            p: "네밥내밥 (en adelante, “la App”) es una aplicación para iOS y Android que permite registrar con fotos las comidas del día y compartirlas con las personas de tu mismo grupo. Esta política explica qué información trata la App, con qué fines y qué opciones tienes como usuario.",
+            p: "“Tu comida, mi comida” (네밥내밥; en adelante, “la App”) es una aplicación para iOS y Android que permite registrar con fotos las comidas del día y compartirlas con las personas de tu mismo grupo. Esta política explica qué información trata la App, con qué fines y qué opciones tienes como usuario.",
           },
           { p: "En resumen:" },
           {
@@ -259,9 +259,9 @@ const es: Copy = {
   },
 
   deleteAccount: {
-    title: "Eliminar tu cuenta de 네밥내밥",
+    title: "Eliminar tu cuenta de Tu comida, mi comida",
     description:
-      "Cómo eliminar tu cuenta de 네밥내밥 y las fotos y registros de comidas que subiste. Puedes eliminarla directamente desde la app o, si no la tienes, solicitarlo por correo.",
+      "Cómo eliminar tu cuenta de “Tu comida, mi comida” y las fotos y registros de comidas que subiste. Puedes eliminarla directamente desde la app o, si no la tienes, solicitarlo por correo.",
     updatedAt: "18 de septiembre de 2026",
     mailSubject: "[네밥내밥] Solicitud de eliminación de cuenta",
     sections: [
@@ -271,7 +271,7 @@ const es: Copy = {
           { p: "Es la forma más rápida. No tienes que esperar a que se procese una solicitud: se elimina en el momento." },
           {
             ol: [
-              "Abre 네밥내밥 y toca la pestaña **Perfil** en la parte inferior de la pantalla.",
+              "Abre “Tu comida, mi comida” y toca la pestaña **Perfil** en la parte inferior de la pantalla.",
               "Toca **Eliminar cuenta**.",
               "Para confirmar, escribe **eliminar** y el botón se activará.",
             ],

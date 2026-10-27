@@ -1,21 +1,21 @@
 import type { Copy } from "./types";
 
 const de: Copy = {
-  appName: "네밥내밥",
+  appName: "Dein Essen, mein Essen",
   quote: ["„", "“"],
   store: { download: "Herunterladen" },
 
   landing: {
     meta: {
-      title: "네밥내밥",
+      title: "Dein Essen, mein Essen",
       description:
-        "Füll Frühstück, Mittag- und Abendessen Fach für Fach mit Fotos auf deinem Tablett und achtet in Familie oder Freundeskreis aufeinander. Info- und Supportseite der iOS- und Android-App 네밥내밥.",
-      ogTitle: "네밥내밥 – statt zu fragen „Hast du gegessen?“",
+        "Füll Frühstück, Mittag- und Abendessen Fach für Fach mit Fotos auf deinem Tablett und achtet in Familie oder Freundeskreis aufeinander. Info- und Supportseite der iOS- und Android-App „Dein Essen, mein Essen“.",
+      ogTitle: "Dein Essen, mein Essen – statt zu fragen „Hast du gegessen?“",
       ogDescription:
         "Füll Frühstück, Mittag- und Abendessen Fach für Fach mit Fotos auf deinem Tablett und achtet in Familie oder Freundeskreis aufeinander.",
-      ogAlt: "Infobild von 네밥내밥: ein weißes Tablett auf eigelbem Hintergrund, nur das Mittagsfach ist tomatenrot gefüllt",
+      ogAlt: "Infobild von „Dein Essen, mein Essen“: ein weißes Tablett auf eigelbem Hintergrund, nur das Mittagsfach ist tomatenrot gefüllt",
     },
-    trayTitle: "네밥내밥-Tablett",
+    trayTitle: "Tablett von „Dein Essen, mein Essen“",
     greetings: [
       "Was hast du heute gegessen?",
       "Isst du auch genug?",
@@ -74,7 +74,7 @@ const de: Copy = {
 
   join: {
     meta: {
-      title: "Schon gegessen? · 네밥내밥",
+      title: "Schon gegessen? · Dein Essen, mein Essen",
       description:
         "Du bist an den Tisch eingeladen. Halte fest, was du heute gegessen hast. Kopier den Einladungscode und gib ihn in der App ein, um der Gruppe beizutreten.",
       ogTitle: "Schon gegessen?",
@@ -94,12 +94,12 @@ const de: Copy = {
     hint: { before: "In der App: Tab ", tab: "Gruppen", after: "", add: "Gruppe hinzufügen", join: "Mit Einladungscode beitreten" },
     openInApp: "App schon da? · In der App öffnen",
     limit: "Max. 6 Personen pro Gruppe. Ist sie voll, ist kein Beitritt möglich.",
-    about: "Über 네밥내밥",
+    about: "Über Dein Essen, mein Essen",
     privacy: "Datenschutz",
   },
 
   shell: {
-    homeAria: "네밥내밥 Startseite",
+    homeAria: "Startseite von Dein Essen, mein Essen",
     about: "Über die App",
     privacy: "Datenschutz",
     deleteAccount: "Konto löschen",
@@ -107,23 +107,23 @@ const de: Copy = {
   },
 
   legal: {
-    badge: "네밥내밥 · Legal",
+    badge: "Dein Essen, mein Essen · Legal",
     updated: "Zuletzt aktualisiert",
     koreanPrevails: "Dies ist eine Übersetzung. Bei Abweichungen von der koreanischen Fassung ist die koreanische Fassung maßgeblich.",
     koreanLink: "Koreanische Fassung ansehen",
   },
 
   privacy: {
-    title: "네밥내밥 Datenschutzerklärung",
+    title: "Datenschutzerklärung – Dein Essen, mein Essen",
     description:
-      "Welche Daten die iOS- und Android-App 네밥내밥 verarbeitet, wer deine Fotos und Mahlzeiteneinträge sehen kann und wie du dein Konto löschst.",
+      "Welche Daten die iOS- und Android-App „Dein Essen, mein Essen“ verarbeitet, wer deine Fotos und Mahlzeiteneinträge sehen kann und wie du dein Konto löschst.",
     updatedAt: "16. Oktober 2026",
     sections: [
       {
         h: "1. Überblick",
         blocks: [
           {
-            p: "네밥내밥 (im Folgenden „die App“) ist eine iOS- und Android-Anwendung, mit der du deine täglichen Mahlzeiten mit Fotos festhältst und mit den Personen in derselben Gruppe teilst. Diese Erklärung beschreibt, welche Daten die App verarbeitet, zu welchem Zweck und welche Wahlmöglichkeiten du hast.",
+            p: "„Dein Essen, mein Essen“ (네밥내밥, im Folgenden „die App“) ist eine iOS- und Android-Anwendung, mit der du deine täglichen Mahlzeiten mit Fotos festhältst und mit den Personen in derselben Gruppe teilst. Diese Erklärung beschreibt, welche Daten die App verarbeitet, zu welchem Zweck und welche Wahlmöglichkeiten du hast.",
           },
           { p: "Kurz zusammengefasst:" },
           {
@@ -252,9 +252,9 @@ const de: Copy = {
   },
 
   deleteAccount: {
-    title: "네밥내밥-Konto löschen",
+    title: "Konto löschen – Dein Essen, mein Essen",
     description:
-      "So löschst du dein 네밥내밥-Konto und die hochgeladenen Fotos und Mahlzeiteneinträge. Du kannst es direkt in der App löschen oder ohne App per E-Mail die Löschung beantragen.",
+      "So löschst du dein Konto bei „Dein Essen, mein Essen“ und die hochgeladenen Fotos und Mahlzeiteneinträge. Du kannst es direkt in der App löschen oder ohne App per E-Mail die Löschung beantragen.",
     updatedAt: "18. September 2026",
     mailSubject: "[네밥내밥] Antrag auf Kontolöschung",
     sections: [
@@ -264,7 +264,7 @@ const de: Copy = {
           { p: "Das ist der schnellste Weg. Du musst auf keine Bearbeitung warten – das Konto wird sofort gelöscht." },
           {
             ol: [
-              "Öffne 네밥내밥 und tippe unten auf den Tab **Ich**.",
+              "Öffne „Dein Essen, mein Essen“ und tippe unten auf den Tab **Ich**.",
               "Tippe auf **Konto löschen**.",
               "Gib zur Bestätigung **löschen** ein, dann wird die Schaltfläche aktiv.",
             ],

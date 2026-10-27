@@ -1,21 +1,21 @@
 import type { Copy } from "./types";
 
 const fr: Copy = {
-  appName: "네밥내밥",
+  appName: "Ton repas, mon repas",
   quote: ["« ", " »"],
   store: { download: "Télécharger" },
 
   landing: {
     meta: {
-      title: "네밥내밥",
+      title: "Ton repas, mon repas",
       description:
-        "Remplis ton plateau case par case avec des photos du petit-déj, du déjeuner et du dîner, et prenez soin les uns des autres en famille ou entre amis. Page de présentation et d’assistance de 네밥내밥, l’appli iOS et Android.",
-      ogTitle: "네밥내밥 — au lieu de demander « T’as mangé ? »",
+        "Remplis ton plateau case par case avec des photos du petit-déj, du déjeuner et du dîner, et prenez soin les uns des autres en famille ou entre amis. Page de présentation et d’assistance de « Ton repas, mon repas », l’appli iOS et Android.",
+      ogTitle: "Ton repas, mon repas — au lieu de demander « T’as mangé ? »",
       ogDescription:
         "Remplis ton plateau case par case avec des photos du petit-déj, du déjeuner et du dîner, et prenez soin les uns des autres en famille ou entre amis.",
-      ogAlt: "Image de présentation de 네밥내밥 : un plateau blanc sur fond jaune d’œuf, seule la case du déjeuner est remplie en rouge tomate",
+      ogAlt: "Image de présentation de « Ton repas, mon repas » : un plateau blanc sur fond jaune d’œuf, seule la case du déjeuner est remplie en rouge tomate",
     },
-    trayTitle: "Plateau 네밥내밥",
+    trayTitle: "Plateau « Ton repas, mon repas »",
     greetings: [
       "T’as mangé quoi aujourd’hui ?",
       "Tu manges bien, au moins ?",
@@ -74,7 +74,7 @@ const fr: Copy = {
 
   join: {
     meta: {
-      title: "T’as mangé ? · 네밥내밥",
+      title: "T’as mangé ? · Ton repas, mon repas",
       description:
         "On t’invite à table. Note sur ton plateau ce que tu as mangé aujourd’hui. Copie le code d’invitation et saisis-le dans l’appli pour rejoindre le groupe.",
       ogTitle: "T’as mangé ?",
@@ -99,7 +99,7 @@ const fr: Copy = {
   },
 
   shell: {
-    homeAria: "Accueil 네밥내밥",
+    homeAria: "Accueil de Ton repas, mon repas",
     about: "À propos",
     privacy: "Confidentialité",
     deleteAccount: "Supprimer le compte",
@@ -107,23 +107,23 @@ const fr: Copy = {
   },
 
   legal: {
-    badge: "네밥내밥 · Legal",
+    badge: "Ton repas, mon repas · Legal",
     updated: "Dernière mise à jour",
     koreanPrevails: "Ceci est une traduction. En cas de divergence avec la version coréenne, la version coréenne prévaut.",
     koreanLink: "Voir la version coréenne",
   },
 
   privacy: {
-    title: "네밥내밥 Politique de confidentialité",
+    title: "Politique de confidentialité de Ton repas, mon repas",
     description:
-      "Les informations traitées par 네밥내밥, l’appli iOS et Android, qui peut voir tes photos et tes repas, et comment supprimer ton compte.",
+      "Les informations traitées par « Ton repas, mon repas », l’appli iOS et Android, qui peut voir tes photos et tes repas, et comment supprimer ton compte.",
     updatedAt: "16 octobre 2026",
     sections: [
       {
         h: "1. Présentation",
         blocks: [
           {
-            p: "네밥내밥 (ci-après « l’Application ») est une application iOS et Android qui permet d’enregistrer en photo les repas de la journée et de les partager avec les personnes du même groupe. La présente politique explique quelles informations l’Application traite, dans quel but, et quels choix vous avez.",
+            p: "« Ton repas, mon repas » (네밥내밥, ci-après « l’Application ») est une application iOS et Android qui permet d’enregistrer en photo les repas de la journée et de les partager avec les personnes du même groupe. La présente politique explique quelles informations l’Application traite, dans quel but, et quels choix vous avez.",
           },
           { p: "En résumé :" },
           {
@@ -252,9 +252,9 @@ const fr: Copy = {
   },
 
   deleteAccount: {
-    title: "Supprimer son compte 네밥내밥",
+    title: "Supprimer son compte « Ton repas, mon repas »",
     description:
-      "Comment supprimer votre compte 네밥내밥 ainsi que les photos et les repas publiés. Vous pouvez le faire directement dans l’Application, ou en faire la demande par e-mail si vous ne l’avez plus.",
+      "Comment supprimer votre compte « Ton repas, mon repas » ainsi que les photos et les repas publiés. Vous pouvez le faire directement dans l’Application, ou en faire la demande par e-mail si vous ne l’avez plus.",
     updatedAt: "18 septembre 2026",
     mailSubject: "[네밥내밥] Demande de suppression de compte",
     sections: [
@@ -264,7 +264,7 @@ const fr: Copy = {
           { p: "C’est la méthode la plus rapide. Pas de demande à attendre : la suppression est immédiate." },
           {
             ol: [
-              "Ouvrez 네밥내밥 et touchez l’onglet **Moi** en bas de l’écran.",
+              "Ouvrez « Ton repas, mon repas » et touchez l’onglet **Moi** en bas de l’écran.",
               "Touchez **Supprimer le compte**.",
               "Saisissez **supprimer** pour confirmer : le bouton devient alors actif.",
             ],
