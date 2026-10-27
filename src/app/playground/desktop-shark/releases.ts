@@ -37,14 +37,24 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "1.0.4",
+    date: "2026-10-27",
+    latest: true,
+    notes: [
+      "윈도우에서 화면 배율이 100%가 아니면(125%·150% 같은 노트북) 도감·랭킹 창에 마우스를 올려도 눌리지 않던 것을 고쳤습니다.",
+      "같은 이유로 윈도우에서 클릭한 자리와 밥이 떨어지는 자리가 어긋나던 것도 고쳤습니다.",
+    ],
+    mac: { href: "/downloads/DesktopShark-mac.dmg", size: "573KB" },
+    windows: { href: "/downloads/DesktopShark-win-Setup.exe", size: "2.3MB" },
+  },
+  {
     version: "1.0.3",
     date: "2026-10-09",
-    latest: true,
     notes: [
       "윈도우에서 패널(⌥⇧R)에 마우스를 올리면 「Parameter count mismatch」 오류 창이 뜨고 도감·랭킹이 눌리지 않던 것을 고쳤습니다.",
     ],
-    mac: { href: "/downloads/DesktopShark-mac.dmg", size: "575KB" },
-    windows: { href: "/downloads/DesktopShark-win-Setup.exe", size: "2.3MB" },
+    mac: { href: "/downloads/desktop-shark/v1.0.3/DesktopShark-mac.dmg", size: "573KB" },
+    windows: { href: "/downloads/desktop-shark/v1.0.3/DesktopShark-win-Setup.exe", size: "2.3MB" },
   },
   {
     version: "1.0.2",

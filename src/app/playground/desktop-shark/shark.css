@@ -1,0 +1,49 @@
+/* 바탕화면 상어 페이지 전용. 이 페이지 밖에는 쓰지 않는다(이름에 sk- 를 붙였다). */
+
+/* 제목 글꼴 — 굵고 각진 도현. 상어 실루엣의 날카로운 지느러미와 맞춘다. */
+.sk-display {
+  font-family: "Do Hyeon", "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+/*
+ * 첫 화면의 바탕화면 — 얕은 바다의 물빛. 그림 파일 없이 그라데이션만.
+ * **밝게 둔다.** 상어는 먹색 실루엣이라 밝은 물 위에서 제일 잘 읽힌다(앱에서도 그렇다).
+ */
+.sk-desk {
+  background:
+    radial-gradient(55% 38% at 22% 18%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(38% 26% at 80% 10%, rgba(255, 255, 255, 0.55), transparent 70%),
+    radial-gradient(70% 50% at 70% 110%, rgba(120, 196, 222, 0.55), transparent 70%),
+    linear-gradient(180deg, #e3f5fb 0%, #cdeaf4 45%, #b4dceb 100%);
+}
+
+/* 물결 무늬 — 바닥에 어른거리는 빛. 아주 흐리게, 천천히. */
+.sk-caustics {
+  background-image:
+    radial-gradient(closest-side, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(closest-side, rgba(255, 255, 255, 0.25), transparent);
+  background-size: 340px 140px, 520px 200px;
+  background-position: 0 0, 160px 60px;
+  animation: sk-drift 18s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes sk-drift {
+  to {
+    background-position: 340px 0, -360px 60px;
+  }
+}
+
+.sk-page {
+  color: #0f2a3a;
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-page * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
