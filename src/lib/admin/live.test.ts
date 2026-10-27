@@ -49,6 +49,20 @@ describe("liveTotals", () => {
     expect(t.earnings).toEqual({ at: T1, value: 1.75 });
   });
 
+  it("홀수 분에 건너뛴 앱 속성은 1분 전 값을 쓰고, 2분보다 오래된 건 뺀다", () => {
+    const T3 = "2026-10-26T05:42:00.000Z";
+    const T5 = "2026-10-26T05:45:00.000Z";
+    const users = (at: string, entity: string, value: number): LiveRow => ({
+      source: "ga4",
+      at,
+      entity,
+      metric_key: "active_users_30m",
+      value,
+    });
+    expect(liveTotals([users(T1, "web", 3), users(T1, "p1", 10), users(T2, "web", 4)]).users).toEqual({ at: T2, value: 14 });
+    expect(liveTotals([users(T1, "p1", 10), users(T3, "p1", 11), users(T5, "web", 5)]).users).toEqual({ at: T5, value: 5 });
+  });
+
   it("행이 없으면 null", () => {
     expect(liveTotals([]).users).toEqual({ at: null, value: null });
   });
@@ -123,6 +137,22 @@ describe("minuteSeries", () => {
     expect(minuteSeries(rows)).toEqual([
       { at: T1, value: 13 },
       { at: T2, value: 16 },
+    ]);
+  });
+
+  it("앱 속성이 건너뛴 분은 바로 전 값으로 메운다", () => {
+    const at = (m: number) => `2026-10-26T05:${String(m).padStart(2, "0")}:00.000Z`;
+    const r = (m: number, entity: string, value: number): LiveRow => ({
+      source: "ga4",
+      at: at(m),
+      entity,
+      metric_key: "active_users_30m",
+      value,
+    });
+    expect(minuteSeries([r(40, "web", 3), r(40, "app", 10), r(41, "web", 4), r(44, "web", 5)])).toEqual([
+      { at: at(40), value: 13 },
+      { at: at(41), value: 14 },
+      { at: at(44), value: 5 },
     ]);
   });
 });

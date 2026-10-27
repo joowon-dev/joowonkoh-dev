@@ -42,17 +42,27 @@ export type LiveSource = (typeof LIVE_SOURCES)[number];
 /** 이만큼 넘게 성공이 없으면 밀린 것이다. 수집 주기(1분·10분·1시간)의 몇 배. */
 export const LIVE_STALE_MINUTES: Record<LiveSource, number> = { ga4_live: 5, admob_today: 30, store: 150 };
 
+/** 비어 있는 분은 속성마다 이만큼 전까지의 마지막 값으로 메운다. 앱 속성은 2분마다 받는다. */
+const CARRY_MS = 2 * 60_000;
+
 /**
- * 한 소스에서 가장 최근 수집 시각의 행만. 수집은 엔티티를 한꺼번에 적으므로
- * 마지막 at 하나가 「지금」이다. 그 분에 실패한 속성은 빠진다 — 옛 숫자를 섞지 않는다.
+ * 한 소스의 「지금」. 마지막 at 부터 CARRY_MS 안에서 엔티티마다 가장 최근 값을 쓴다 —
+ * 앱 속성은 2분마다 받으므로 홀수 분에는 바로 전 분 값을 쓴다. 그보다 오래 못 받은 속성은 빠진다.
  */
 export function latestSnapshot(rows: readonly LiveRow[], source: LiveRow["source"]) {
   let at: string | null = null;
   for (const r of rows) if (r.source === source && (at === null || r.at > at)) at = r.at;
   const values = new Map<string, Record<string, number>>();
   if (at === null) return { at, values };
+  const from = Date.parse(at) - CARRY_MS;
+  const newest = new Map<string, string>();
   for (const r of rows) {
-    if (r.source !== source || r.at !== at) continue;
+    if (r.source !== source || Date.parse(r.at) < from) continue;
+    const seen = newest.get(r.entity);
+    if (seen === undefined || r.at > seen) newest.set(r.entity, r.at);
+  }
+  for (const r of rows) {
+    if (r.source !== source || newest.get(r.entity) !== r.at) continue;
     const m = values.get(r.entity) ?? {};
     m[r.metric_key] = r.value;
     values.set(r.entity, m);
@@ -138,12 +148,21 @@ export function liveTotals(rows: readonly LiveRow[]) {
 
 /** 분마다 모든 속성의 30분 사용자 합. 오늘 추이 그래프용. */
 export function minuteSeries(rows: readonly LiveRow[]): { at: string; value: number }[] {
-  const byAt = new Map<string, number>();
-  for (const r of rows) {
-    if (r.source !== "ga4" || r.metric_key !== "active_users_30m") continue;
-    byAt.set(r.at, (byAt.get(r.at) ?? 0) + r.value);
+  const ga4 = rows
+    .filter((r) => r.source === "ga4" && r.metric_key === "active_users_30m")
+    .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
+  const last = new Map<string, { t: number; value: number }>();
+  const series: { at: string; value: number }[] = [];
+  for (let i = 0; i < ga4.length; i++) {
+    const r = ga4[i];
+    last.set(r.entity, { t: Date.parse(r.at), value: r.value });
+    if (ga4[i + 1]?.at === r.at) continue;
+    const t = Date.parse(r.at);
+    let value = 0;
+    for (const v of last.values()) if (t - v.t <= CARRY_MS) value += v.value;
+    series.push({ at: r.at, value });
   }
-  return [...byAt.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([at, value]) => ({ at, value }));
+  return series;
 }
 
 /** 속성마다의 상위 목록을 이름으로 합쳐 다시 줄 세운다. */
