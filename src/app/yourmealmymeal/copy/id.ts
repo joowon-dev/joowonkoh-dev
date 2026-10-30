@@ -25,7 +25,7 @@ const id: Copy = {
     tagline: "Bagi nampan makanmu hari ini ke keluarga & teman, cukup satu foto.",
     together: {
       title: "Satu meja makan bareng",
-      lead: "Nampan 2–6 orang yang kumpul lewat kode undangan ada di satu meja. Nggak perlu nanya, kelihatan siapa yang belum makan.",
+      lead: "Nampan 2–12 orang yang kumpul lewat kode undangan ada di satu meja. Nggak perlu nanya, kelihatan siapa yang belum makan.",
     },
     featuresTitle: "Yang bisa kamu lakukan",
     features: [
@@ -102,7 +102,7 @@ const id: Copy = {
       join: "Gabung pakai kode undangan",
     },
     openInApp: "Sudah punya aplikasinya? · Buka",
-    limit: "Maks. 6 orang per grup. Kalau sudah penuh, nggak bisa gabung.",
+    limit: "Maks. 12 orang per grup. Kalau sudah penuh, nggak bisa gabung.",
     about: "Tentang Makananmu, Makananku",
     privacy: "Privasi",
   },

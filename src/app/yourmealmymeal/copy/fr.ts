@@ -25,7 +25,7 @@ const fr: Copy = {
     tagline: "Une photo de ton repas, et ton plateau du jour se partage avec ta famille et tes amis.",
     together: {
       title: "Une même tablée",
-      lead: "Les plateaux de 2 à 6 personnes réunies par un code d’invitation sont posés sur une même table. Tu vois qui n’a pas encore mangé sans avoir à demander.",
+      lead: "Les plateaux de 2 à 12 personnes réunies par un code d’invitation sont posés sur une même table. Tu vois qui n’a pas encore mangé sans avoir à demander.",
     },
     featuresTitle: "Ce qu’on peut faire",
     features: [
@@ -93,7 +93,7 @@ const fr: Copy = {
     step2: "Installe l’appli et saisis-le",
     hint: { before: "Dans l’appli, onglet ", tab: "Groupes", after: "", add: "Ajouter un groupe", join: "Rejoindre avec un code" },
     openInApp: "Déjà l’appli ? · Ouvrir dans l’appli",
-    limit: "Jusqu’à 6 par groupe. Complet ? On ne peut plus entrer.",
+    limit: "Jusqu’à 12 par groupe. Complet ? On ne peut plus entrer.",
     about: "À propos",
     privacy: "Confidentialité",
   },
