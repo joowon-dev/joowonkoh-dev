@@ -20,7 +20,7 @@ const vi: Copy = {
     tagline: "Chỉ một tấm ảnh bữa ăn, chia sẻ khay cơm hôm nay với gia đình, bạn bè.",
     together: {
       title: "Mâm cơm chung",
-      lead: "Khay cơm của 2–6 người tụ lại bằng mã mời được đặt chung một mâm. Ai chưa ăn, không cần hỏi cũng thấy.",
+      lead: "Khay cơm của 2–12 người tụ lại bằng mã mời được đặt chung một mâm. Ai chưa ăn, không cần hỏi cũng thấy.",
     },
     featuresTitle: "Bạn có thể làm gì",
     features: [
@@ -88,7 +88,7 @@ const vi: Copy = {
     step2: "Cài ứng dụng rồi nhập mã",
     hint: { before: "Tab ", tab: "Nhóm", after: " ở dưới", add: "Thêm nhóm", join: "Vào nhóm bằng mã mời" },
     openInApp: "Đã có ứng dụng? · Mở trong ứng dụng",
-    limit: "Mỗi nhóm tối đa 6 người. Đủ người rồi thì không vào được.",
+    limit: "Mỗi nhóm tối đa 12 người. Đủ người rồi thì không vào được.",
     about: "Giới thiệu",
     privacy: "Quyền riêng tư",
   },

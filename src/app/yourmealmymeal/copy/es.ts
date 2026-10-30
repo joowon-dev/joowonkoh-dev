@@ -25,7 +25,7 @@ const es: Copy = {
     tagline: "Con una foto de tu comida, comparte la bandeja de hoy con familia y amigos.",
     together: {
       title: "Una mesa compartida",
-      lead: "Las bandejas de 2 a 6 personas, reunidas con un código de invitación, se sirven en una sola mesa. Sin preguntar, se ve quién todavía no ha comido.",
+      lead: "Las bandejas de 2 a 12 personas, reunidas con un código de invitación, se sirven en una sola mesa. Sin preguntar, se ve quién todavía no ha comido.",
     },
     featuresTitle: "Esto es lo que hace",
     features: [
@@ -96,7 +96,7 @@ const es: Copy = {
     step2: "Instala la app e ingrésalo",
     hint: { before: "Pestaña ", tab: "Grupos", after: " abajo", add: "Agregar grupo", join: "Unirse con código" },
     openInApp: "¿Tienes la app? · Abrir en la app",
-    limit: "Máximo 6 personas por grupo. Si está lleno, no podrás unirte.",
+    limit: "Máximo 12 personas por grupo. Si está lleno, no podrás unirte.",
     about: "Acerca de Tu comida, mi comida",
     privacy: "Privacidad",
   },

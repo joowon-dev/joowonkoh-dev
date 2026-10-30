@@ -25,7 +25,7 @@ const en: Copy = {
     tagline: "Share today’s plate with family and friends, one meal photo at a time.",
     together: {
       title: "One table, together",
-      lead: "The plates of 2–6 people who joined with an invite code sit side by side on one table. You can see who hasn’t eaten yet without having to ask.",
+      lead: "The plates of 2–12 people who joined with an invite code sit side by side on one table. You can see who hasn’t eaten yet without having to ask.",
     },
     featuresTitle: "What it does",
     features: [
@@ -93,7 +93,7 @@ const en: Copy = {
     step2: "Install the app and enter it",
     hint: { before: "In the app, ", tab: "Groups", after: " tab", add: "Add a group", join: "Join with an invite code" },
     openInApp: "Already have the app? · Open in app",
-    limit: "Groups hold up to 6 people. If it’s full, you can’t join.",
+    limit: "Groups hold up to 12 people. If it’s full, you can’t join.",
     about: "About Your Meal, My Meal",
     privacy: "Privacy",
   },

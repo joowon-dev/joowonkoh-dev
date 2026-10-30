@@ -19,7 +19,7 @@ const zhHans: Copy = {
     tagline: "一张饭菜照片，和家人朋友分享今天的餐盘。",
     together: {
       title: "一起吃饭的餐桌",
-      lead: "用邀请码聚在一起的 2~6 人，餐盘摆在同一张桌上。谁还没吃饭，不用问也看得到。",
+      lead: "用邀请码聚在一起的 2~12 人，餐盘摆在同一张桌上。谁还没吃饭，不用问也看得到。",
     },
     featuresTitle: "可以做这些",
     features: [
@@ -87,7 +87,7 @@ const zhHans: Copy = {
     step2: "安装应用后输入",
     hint: { before: "应用底部 ", tab: "群组", after: " 标签", add: "添加群组", join: "用邀请码加入" },
     openInApp: "已有应用 · 在应用中打开",
-    limit: "每个群组最多 6 人，满员后就无法加入了。",
+    limit: "每个群组最多 12 人，满员后就无法加入了。",
     about: "关于“你的饭，我的饭”",
     privacy: "隐私政策",
   },

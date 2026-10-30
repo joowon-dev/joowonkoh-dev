@@ -25,7 +25,7 @@ const pt: Copy = {
     tagline: "Com uma foto do seu prato, divida a bandeja de hoje com a família e os amigos.",
     together: {
       title: "Uma mesa em comum",
-      lead: "As bandejas de 2 a 6 pessoas, reunidas por um código de convite, ficam na mesma mesa. Sem precisar perguntar, dá pra ver quem ainda não comeu.",
+      lead: "As bandejas de 2 a 12 pessoas, reunidas por um código de convite, ficam na mesma mesa. Sem precisar perguntar, dá pra ver quem ainda não comeu.",
     },
     featuresTitle: "O que dá pra fazer",
     features: [
@@ -102,7 +102,7 @@ const pt: Copy = {
       join: "Entrar com código de convite",
     },
     openInApp: "Já tem o app? · Abrir no app",
-    limit: "Até 6 pessoas por grupo. Se estiver cheio, não dá pra entrar.",
+    limit: "Até 12 pessoas por grupo. Se estiver cheio, não dá pra entrar.",
     about: "Sobre o “Seu prato, meu prato”",
     privacy: "Privacidade",
   },

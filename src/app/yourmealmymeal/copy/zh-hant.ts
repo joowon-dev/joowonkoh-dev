@@ -19,7 +19,7 @@ const zhHant: Copy = {
     tagline: "用一張餐點照片，和家人朋友分享今天的餐盤。",
     together: {
       title: "一起吃飯的餐桌",
-      lead: "用邀請碼聚在一起的 2~6 人，餐盤擺在同一張桌上。誰還沒吃飯，不用問也看得到。",
+      lead: "用邀請碼聚在一起的 2~12 人，餐盤擺在同一張桌上。誰還沒吃飯，不用問也看得到。",
     },
     featuresTitle: "可以做這些",
     features: [
@@ -87,7 +87,7 @@ const zhHant: Copy = {
     step2: "安裝 App 後輸入",
     hint: { before: "App 下方 ", tab: "群組", after: " 分頁", add: "新增群組", join: "用邀請碼加入" },
     openInApp: "已有 App · 在 App 中開啟",
-    limit: "每個群組最多 6 人，額滿後就無法加入了。",
+    limit: "每個群組最多 12 人，額滿後就無法加入了。",
     about: "關於「你的飯，我的飯」",
     privacy: "隱私權政策",
   },

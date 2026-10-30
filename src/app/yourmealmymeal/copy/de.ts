@@ -25,7 +25,7 @@ const de: Copy = {
     tagline: "Ein Foto pro Mahlzeit – teil dein Tablett von heute mit Familie und Freunden.",
     together: {
       title: "Ein gemeinsamer Tisch",
-      lead: "Die Tabletts von 2–6 Leuten, die per Einladungscode zusammengekommen sind, stehen auf einem Tisch. Wer noch nicht gegessen hat, siehst du, ohne zu fragen.",
+      lead: "Die Tabletts von 2–12 Leuten, die per Einladungscode zusammengekommen sind, stehen auf einem Tisch. Wer noch nicht gegessen hat, siehst du, ohne zu fragen.",
     },
     featuresTitle: "Das kann die App",
     features: [
@@ -93,7 +93,7 @@ const de: Copy = {
     step2: "App installieren und eingeben",
     hint: { before: "In der App: Tab ", tab: "Gruppen", after: "", add: "Gruppe hinzufügen", join: "Mit Einladungscode beitreten" },
     openInApp: "App schon da? · In der App öffnen",
-    limit: "Max. 6 Personen pro Gruppe. Ist sie voll, ist kein Beitritt möglich.",
+    limit: "Max. 12 Personen pro Gruppe. Ist sie voll, ist kein Beitritt möglich.",
     about: "Über Dein Essen, mein Essen",
     privacy: "Datenschutz",
   },
