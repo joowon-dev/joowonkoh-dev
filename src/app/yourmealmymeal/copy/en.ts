@@ -117,7 +117,7 @@ const en: Copy = {
     title: "Your Meal, My Meal Privacy Policy",
     description:
       "What information the iOS and Android app “Your Meal, My Meal” handles, who can see your photos and meal records, and how to delete your account.",
-    updatedAt: "October 16, 2026",
+    updatedAt: "November 1, 2026",
     sections: [
       {
         h: "1. Overview",
@@ -132,6 +132,7 @@ const en: Copy = {
               "The App shows **Google AdMob full-screen ads and rewarded ads**. Full-screen ads occasionally take up the whole screen after you close a photo or finish posting, and rewarded ads are watched only when you choose to, after you’ve used up your Nudges. There are no banner ads that stay on screen. We use Google Analytics for Firebase for usage statistics. Your name, email, photos and meal records are not passed to these services.",
               "On iOS, after you sign in, we **ask first whether you allow ad tracking**, and you can use every feature of the App even if you decline.",
               "You can delete your account **directly in the App**, and deleting it removes your photos and records along with it.",
+              "In the **Eat-Together Diner** (a real-time space where people sit and eat together without talking), your name, character and movements are visible to people in the same room. In the solo diner, which anyone can enter, your photos are shown **only if you turn on “Show my meal”**.",
             ],
           },
           { p: "If you have any questions, please contact us at [contact@joowonkoh.com](contact)." },
@@ -151,6 +152,9 @@ const en: Copy = {
               "**Profile photo** — A photo you upload yourself. Visible only to people in the same group as you.",
               "**Report and block records** — Who reported what and why, and whom you blocked. Used only to handle inappropriate content.",
               "**Account identifier** — A random string created automatically when you sign up. Used only to link photos and records to their owner, and unlike your name or email, it is never shown on screen.",
+              "**Nicknames** — Names you give to people in your groups. Only you can see them, and the person you nicknamed cannot tell.",
+              "**Widget key and widget push token** — Stored on each device when you use the home screen widget, so the widget can fetch today’s plates of the people you chose and redraw itself when a new meal is posted. They are deleted when you sign out or delete your account.",
+              "**Eat-Together Diner usage information** — The diner you entered, the seat you took, where you walked, the greetings you tapped (such as “Let’s eat!”), and the meals on the plate you carry and the photos you chose. Used only to show to people in the same room while you are there, and deleted when you leave the room. If you come in as a guest from a browser outside the App, a random guest identifier is stored on that device.",
             ],
           },
           { p: "The following information is processed for ads and usage statistics." },
@@ -176,6 +180,19 @@ const en: Copy = {
           {
             p: "Comments and reactions are visible **only within the group where they were left**. Even on the same photo, people in other groups cannot see them. Content you report or block becomes invisible to you from that moment on.",
           },
+          {
+            p: "The home screen widget follows the same rules as the App’s screens. Because widgets can also appear on the lock screen, it narrows things down once more so that photos from people who have blocked you are not shown either.",
+          },
+          {
+            p: "In the **Eat-Together Diner**, people in the same room see your display name (“Guest” for visitors from outside the App), character color, seat and movements, and greetings in real time. There is no chat.",
+          },
+          {
+            ul: [
+              "A **group table** can be entered only by people in that group. The server checks that you are signed in and belong to the group. Group members see the photos each person chose of today’s meals.",
+              "A **solo diner** is open to anyone, so photos are **hidden by default** and shown as drawings of rice, soup and side dishes. Only when you turn on “Show my meal to people in the diner” are the photos you chose for your plate passed to people in that room, through addresses valid for one hour only. You can turn it off at any time.",
+              "You can “Hide” other people so you no longer see them.",
+            ],
+          },
         ],
       },
       {
@@ -192,6 +209,8 @@ const en: Copy = {
               "**Apple / Google** — Sign-in. We receive your email address.",
               "**Google AdMob** — Full-screen ads and rewarded ads. The advertising identifier, ad impression and click information, and device information are passed on.",
               "**Google Analytics for Firebase** — Usage statistics. App usage information, app instance ID and device information are passed on.",
+              "**Cloudflare Workers and Durable Objects** — The Eat-Together Diner screen and real-time connection. They process your display name, seat, movements and greetings while you are in a room, and the addresses of photos you chose to show, and delete them when you leave the room. Parts of the request logs are kept for a few days to fix errors.",
+              "**Apple APNs (widgets)** — Notifies the iOS widget through the widget push token so it redraws itself when a new meal is posted.",
             ],
           },
           { p: "You can see how Google processes this information in [How Google uses information from sites or apps that use our services](google)." },
@@ -203,6 +222,9 @@ const en: Copy = {
           {
             p: "We keep your information while your account exists and delete it when you delete your account. We keep no separate copies. Usage statistics are not tied to your account and are deleted after 2 months under the Google Analytics default setting.",
           },
+          {
+            p: "In the Eat-Together Diner, your seat, movements, greetings and photo addresses are deleted when you leave the room; only the current number of people in each diner is kept.",
+          },
         ],
       },
       {
@@ -210,7 +232,7 @@ const en: Copy = {
         blocks: [
           { p: "You can delete your account right in the App: **Me > Delete account**." },
           {
-            p: "Deleting it permanently removes your profile and display name, profile photo, uploaded photo files, meal records, comments, reactions, report and block records, group memberships and push tokens. This cannot be undone.",
+            p: "Deleting it permanently removes your profile and display name, profile photo, uploaded photo files, meal records, comments, reactions, report and block records, group memberships, push tokens, nicknames (both those you gave and those given to you), and widget keys and widget push tokens. This cannot be undone.",
           },
           {
             p: "Groups you created pass to the longest-standing remaining member. If no one is left, the group is deleted too. One person leaving never removes the group for everyone else.",
