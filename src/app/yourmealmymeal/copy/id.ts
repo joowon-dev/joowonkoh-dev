@@ -126,7 +126,7 @@ const id: Copy = {
     title: "Kebijakan Privasi Makananmu, Makananku",
     description:
       "Penjelasan tentang informasi yang diproses oleh aplikasi iOS & Android “Makananmu, Makananku”, siapa yang bisa melihat foto dan catatan makanmu, serta cara menghapus akun.",
-    updatedAt: "16 Oktober 2026",
+    updatedAt: "1 November 2026",
     sections: [
       {
         h: "1. Ringkasan",
@@ -141,6 +141,7 @@ const id: Copy = {
               "Aplikasi menampilkan **iklan interstisial dan iklan berhadiah dari Google AdMob**. Iklan interstisial sesekali muncul di layar penuh setelah kamu selesai melihat foto atau selesai mengunggah, sedangkan iklan berhadiah kamu pilih sendiri untuk ditonton saat colekmu habis. Tidak ada iklan banner yang selalu tampil di layar. Untuk statistik penggunaan, kami memakai Google Analytics for Firebase. Nama, email, foto, dan catatan makan tidak diberikan ke layanan-layanan ini.",
               "Di iOS, setelah login kami **menanyakan dulu apakah kamu mengizinkan** pelacakan iklan; kalaupun kamu menolak, semua fitur Aplikasi tetap bisa dipakai.",
               "Kamu bisa menghapus akun **langsung di dalam Aplikasi**, dan saat dihapus, foto serta catatanmu ikut terhapus.",
+              "Di **Kantin Makan Bareng** (ruang real-time untuk duduk dan makan bersama tanpa mengobrol), nama, karakter, dan gerakanmu terlihat oleh orang di ruangan yang sama. Di kantin makan sendiri yang bisa dimasuki siapa saja, foto **hanya terlihat jika kamu menyalakan “Tunjukkan makananku”**.",
             ],
           },
           { p: "Untuk pertanyaan, silakan hubungi [contact@joowonkoh.com](contact)." },
@@ -160,6 +161,9 @@ const id: Copy = {
               "**Foto profil** — foto yang kamu unggah sendiri. Hanya terlihat oleh orang yang berada di grup yang sama denganmu.",
               "**Catatan laporan dan blokir** — siapa melaporkan apa dan mengapa, serta siapa memblokir siapa. Hanya digunakan untuk menangani konten yang tidak pantas.",
               "**Pengenal akun** — rangkaian karakter acak yang dibuat otomatis saat mendaftar. Hanya digunakan untuk menghubungkan foto dan catatan dengan pemiliknya, dan tidak seperti nama atau email, tidak ditampilkan di layar.",
+              "**Nama panggilan** — nama yang kamu berikan untuk orang di grup yang sama. Hanya terlihat olehmu, dan orang yang diberi nama panggilan tidak akan tahu.",
+              "**Kunci widget dan token notifikasi push widget** — disimpan di setiap perangkat saat kamu memakai widget layar utama, agar widget bisa mengambil nampan hari ini dari orang-orang yang kamu pilih dan menggambar ulang saat ada makanan baru diunggah. Ikut dihapus saat kamu logout atau menghapus akun.",
+              "**Informasi penggunaan Kantin Makan Bareng** — kantin yang kamu masuki, kursi yang kamu duduki, posisi yang kamu lalui, sapaan yang kamu ketuk (seperti “Selamat makan!”), serta makanan di nampan yang kamu bawa dan foto yang kamu pilih. Hanya digunakan untuk ditampilkan kepada orang di ruangan yang sama selama kamu berada di sana, dan dihapus saat kamu keluar dari ruangan. Jika kamu masuk sebagai tamu lewat browser di luar Aplikasi, satu pengenal tamu acak disimpan di perangkat tersebut.",
             ],
           },
           { p: "Untuk iklan dan statistik penggunaan, informasi berikut diproses." },
@@ -187,6 +191,19 @@ const id: Copy = {
           {
             p: "Komentar dan reaksi **hanya terlihat di dalam grup tempat ia ditinggalkan**. Meskipun fotonya sama, orang di grup lain tidak bisa melihatnya. Konten yang kamu laporkan atau blokir tidak akan lagi terlihat olehmu sejak saat itu.",
           },
+          {
+            p: "Widget layar utama mengikuti aturan yang sama dengan layar Aplikasi. Karena widget juga bisa muncul di layar kunci, cakupannya dipersempit sekali lagi agar foto orang yang memblokirmu juga tidak terlihat.",
+          },
+          {
+            p: "Di **Kantin Makan Bareng**, orang di ruangan yang sama bisa melihat nama tampilanmu (“Tamu” untuk pengunjung dari luar Aplikasi), warna karakter, kursi dan gerakan, serta sapaan secara real-time. Tidak ada fitur chat.",
+          },
+          {
+            ul: [
+              "**Meja grup** hanya bisa dimasuki oleh orang di grup tersebut. Server memeriksa status login dan keanggotaan grup. Orang di grup bisa melihat foto makanan hari ini yang dipilih masing-masing.",
+              "**Kantin makan sendiri** bisa dimasuki siapa saja, jadi foto **tidak ditampilkan secara bawaan** dan diganti gambar nasi, sup, dan lauk. Hanya jika kamu menyalakan “Tunjukkan makananku ke orang di kantin”, foto yang kamu pilih untuk nampan dikirim ke orang-orang di ruangan itu melalui alamat yang hanya berlaku selama satu jam. Kamu bisa mematikannya kapan saja.",
+              "Kamu bisa memakai “Sembunyikan” agar orang lain tidak terlihat lagi.",
+            ],
+          },
         ],
       },
       {
@@ -203,6 +220,8 @@ const id: Copy = {
               "**Apple / Google** — login. Kami menerima alamat emailmu.",
               "**Google AdMob** — iklan interstisial dan iklan berhadiah. Pengenal iklan, informasi tayangan dan klik iklan, serta informasi perangkat dikirimkan.",
               "**Google Analytics for Firebase** — statistik penggunaan. Informasi penggunaan Aplikasi, ID instance aplikasi, dan informasi perangkat dikirimkan.",
+              "**Cloudflare Workers dan Durable Objects** — layar Kantin Makan Bareng dan koneksi real-time. Memproses nama tampilan, kursi, gerakan, dan sapaan selama kamu berada di ruangan, serta alamat foto yang kamu pilih untuk ditunjukkan, lalu menghapusnya saat kamu keluar dari ruangan. Sebagian catatan permintaan disimpan selama beberapa hari untuk memperbaiki error.",
+              "**Apple APNs (widget)** — memberi tahu widget iOS melalui token notifikasi push widget agar menggambar ulang saat ada makanan baru diunggah.",
             ],
           },
           {
@@ -216,6 +235,9 @@ const id: Copy = {
           {
             p: "Informasi disimpan selama akun masih ada, dan ikut dihapus saat akun dihapus. Kami tidak menyimpan salinan terpisah. Statistik penggunaan tidak terikat dengan akun dan dihapus setelah 2 bulan sesuai pengaturan bawaan Google Analytics.",
           },
+          {
+            p: "Kursi, gerakan, sapaan, dan alamat foto di Kantin Makan Bareng dihapus saat kamu keluar dari ruangan; yang disimpan hanya jumlah orang yang sedang ada di setiap kantin.",
+          },
         ],
       },
       {
@@ -223,7 +245,7 @@ const id: Copy = {
         blocks: [
           { p: "Kamu bisa langsung menghapusnya di dalam Aplikasi: **Aku > Hapus akun**." },
           {
-            p: "Saat dihapus, profil dan nama tampilan, foto profil, file foto yang diunggah, catatan makan, komentar, reaksi, catatan laporan dan blokir, keanggotaan grup, serta token notifikasi push akan dihapus seluruhnya dan tidak dapat dikembalikan.",
+            p: "Saat dihapus, profil dan nama tampilan, foto profil, file foto yang diunggah, catatan makan, komentar, reaksi, catatan laporan dan blokir, keanggotaan grup, token notifikasi push, nama panggilan (yang kamu berikan maupun yang diberikan kepadamu), serta kunci widget dan token notifikasi push widget akan dihapus seluruhnya dan tidak dapat dikembalikan.",
           },
           {
             p: "Grup yang kamu buat akan diserahkan kepada anggota yang paling lama bergabung di antara yang tersisa. Jika tidak ada yang tersisa, grup tersebut ikut hilang. Satu orang keluar tidak akan membuat grup orang lain hilang.",

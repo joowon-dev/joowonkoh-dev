@@ -117,7 +117,7 @@ const fr: Copy = {
     title: "Politique de confidentialité de Ton repas, mon repas",
     description:
       "Les informations traitées par « Ton repas, mon repas », l’appli iOS et Android, qui peut voir tes photos et tes repas, et comment supprimer ton compte.",
-    updatedAt: "16 octobre 2026",
+    updatedAt: "1er novembre 2026",
     sections: [
       {
         h: "1. Présentation",
@@ -132,6 +132,7 @@ const fr: Copy = {
               "L’Application affiche des **publicités plein écran et des publicités avec récompense Google AdMob**. Les publicités plein écran s’affichent de temps en temps sur tout l’écran après la fermeture d’une photo ou la fin d’une publication ; les publicités avec récompense ne sont regardées que si vous le choisissez, une fois vos Coucou épuisés. Il n’y a pas de bannière publicitaire affichée en permanence. Nous utilisons Google Analytics for Firebase pour les statistiques d’utilisation. Votre nom, votre e-mail, vos photos et vos repas ne sont pas transmis à ces services.",
               "Sur iOS, après la connexion, nous vous **demandons d’abord si vous autorisez le suivi publicitaire**, et vous pouvez utiliser toutes les fonctionnalités de l’Application même si vous refusez.",
               "Vous pouvez supprimer votre compte **directement dans l’Application**, et vos photos et vos repas sont supprimés avec lui.",
+              "Dans la **Cantine partagée** (un espace en temps réel où l’on s’assoit pour manger ensemble, sans se parler), votre nom, votre personnage et vos mouvements sont visibles par les personnes de la même salle. Dans la cantine solo, ouverte à tous, vos photos ne sont visibles **que si vous activez « Montrer mon repas »**.",
             ],
           },
           { p: "Pour toute question, contactez-nous à [contact@joowonkoh.com](contact)." },
@@ -151,6 +152,9 @@ const fr: Copy = {
               "**Photo de profil** — Une photo que vous ajoutez vous-même. Visible uniquement par les personnes du même groupe que vous.",
               "**Signalements et blocages** — Qui a signalé quoi et pourquoi, et qui vous avez bloqué. Utilisés uniquement pour traiter les contenus inappropriés.",
               "**Identifiant de compte** — Une chaîne aléatoire créée automatiquement à l’inscription. Il sert uniquement à relier les photos et les repas à leur propriétaire et, contrairement au nom ou à l’e-mail, il n’apparaît jamais à l’écran.",
+              "**Surnoms** — Les noms que vous donnez aux personnes de vos groupes. Vous seul pouvez les voir, et la personne surnommée n’en sait rien.",
+              "**Clé du widget et jeton push du widget** — Enregistrés sur chaque appareil lorsque vous utilisez le widget de l’écran d’accueil, pour que le widget puisse récupérer les plateaux du jour des personnes choisies et se redessiner quand un nouveau repas est publié. Ils sont supprimés lorsque vous vous déconnectez ou supprimez votre compte.",
+              "**Données d’utilisation de la Cantine partagée** — La cantine où vous êtes entré, la place où vous vous êtes assis, les endroits où vous avez marché, les salutations touchées (comme « Bon appétit ! »), ainsi que les repas du plateau que vous portez et les photos choisies. Elles servent uniquement à être montrées aux personnes de la même salle pendant que vous y êtes, et sont supprimées quand vous quittez la salle. Si vous entrez en tant qu’invité depuis un navigateur hors de l’Application, un identifiant d’invité aléatoire est enregistré sur cet appareil.",
             ],
           },
           { p: "Les informations suivantes sont traitées pour la publicité et les statistiques d’utilisation." },
@@ -176,6 +180,19 @@ const fr: Copy = {
           {
             p: "Les commentaires et les réactions ne sont visibles **qu’au sein du groupe où ils ont été laissés**. Même sur la même photo, les membres d’autres groupes ne les voient pas. Les contenus que vous signalez ou bloquez cessent de vous être visibles dès cet instant.",
           },
+          {
+            p: "Le widget de l’écran d’accueil suit les mêmes règles que les écrans de l’Application. Comme les widgets peuvent aussi s’afficher sur l’écran verrouillé, le filtre est resserré d’un cran pour que les photos des personnes qui vous ont bloqué n’y apparaissent pas non plus.",
+          },
+          {
+            p: "Dans la **Cantine partagée**, les personnes de la même salle voient en temps réel votre nom affiché (« Invité » pour les visiteurs venus hors de l’Application), la couleur de votre personnage, votre place et vos mouvements, ainsi que vos salutations. Il n’y a pas de messagerie.",
+          },
+          {
+            ul: [
+              "Seuls les membres du groupe peuvent entrer à la **table de groupe**. Le serveur vérifie la connexion et l’appartenance au groupe. Les membres du groupe voient les photos des repas du jour choisies par chacun.",
+              "La **cantine solo** est ouverte à tous : les photos y sont donc **masquées par défaut** et remplacées par des dessins de riz, de soupe et d’accompagnements. Ce n’est que si vous activez « Montrer mon repas aux gens de la cantine » que les photos choisies pour votre plateau sont transmises aux personnes de cette salle, via des adresses valides pendant une heure seulement. Vous pouvez le désactiver à tout moment.",
+              "Vous pouvez « Masquer » d’autres personnes pour ne plus les voir.",
+            ],
+          },
         ],
       },
       {
@@ -192,6 +209,8 @@ const fr: Copy = {
               "**Apple / Google** — Connexion. Nous recevons votre adresse e-mail.",
               "**Google AdMob** — Publicités plein écran et publicités avec récompense. L’identifiant publicitaire, les données d’affichage et de clic des publicités et les informations sur l’appareil sont transmis.",
               "**Google Analytics for Firebase** — Statistiques d’utilisation. Les données d’utilisation de l’Application, l’ID d’instance de l’application et les informations sur l’appareil sont transmis.",
+              "**Cloudflare Workers et Durable Objects** — Écran de la Cantine partagée et connexion en temps réel. Ils traitent votre nom affiché, votre place, vos mouvements et vos salutations pendant que vous êtes dans une salle, ainsi que les adresses des photos que vous avez choisi de montrer, et les suppriment quand vous quittez la salle. Une partie des journaux de requêtes est conservée quelques jours pour corriger les erreurs.",
+              "**Apple APNs (widget)** — Prévient le widget iOS via le jeton push du widget pour qu’il se redessine quand un nouveau repas est publié.",
             ],
           },
           { p: "Vous pouvez consulter la façon dont Google traite ces informations sur la page [Comment Google utilise les informations des sites ou applications qui utilisent ses services](google)." },
@@ -203,6 +222,9 @@ const fr: Copy = {
           {
             p: "Nous conservons vos informations tant que votre compte existe et les supprimons lorsque vous supprimez votre compte. Nous ne conservons aucune copie séparée. Les statistiques d’utilisation ne sont pas liées à votre compte et sont supprimées au bout de 2 mois, selon le paramètre par défaut de Google Analytics.",
           },
+          {
+            p: "Dans la Cantine partagée, la place, les mouvements, les salutations et les adresses des photos sont supprimés quand vous quittez la salle ; seul le nombre de personnes présentes dans chaque cantine est conservé.",
+          },
         ],
       },
       {
@@ -210,7 +232,7 @@ const fr: Copy = {
         blocks: [
           { p: "Vous pouvez supprimer votre compte directement dans l’Application : **Moi > Supprimer le compte**." },
           {
-            p: "La suppression efface définitivement votre profil et votre nom affiché, votre photo de profil, les fichiers photo publiés, vos repas, commentaires, réactions, signalements et blocages, vos adhésions aux groupes et vos jetons push. Elle est irréversible.",
+            p: "La suppression efface définitivement votre profil et votre nom affiché, votre photo de profil, les fichiers photo publiés, vos repas, commentaires, réactions, signalements et blocages, vos adhésions aux groupes, vos jetons push, les surnoms (ceux que vous avez donnés et ceux qu’on vous a donnés), ainsi que la clé du widget et le jeton push du widget. Elle est irréversible.",
           },
           {
             p: "Les groupes que vous avez créés passent au membre restant le plus ancien. S’il ne reste personne, le groupe est supprimé lui aussi. Le départ d’une personne ne fait jamais disparaître le groupe pour les autres.",

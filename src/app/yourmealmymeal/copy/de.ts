@@ -117,7 +117,7 @@ const de: Copy = {
     title: "Datenschutzerklärung – Dein Essen, mein Essen",
     description:
       "Welche Daten die iOS- und Android-App „Dein Essen, mein Essen“ verarbeitet, wer deine Fotos und Mahlzeiteneinträge sehen kann und wie du dein Konto löschst.",
-    updatedAt: "16. Oktober 2026",
+    updatedAt: "1. November 2026",
     sections: [
       {
         h: "1. Überblick",
@@ -132,6 +132,7 @@ const de: Copy = {
               "Die App zeigt **Vollbildwerbung und Werbung mit Belohnung von Google AdMob**. Vollbildwerbung erscheint gelegentlich bildschirmfüllend, nachdem du ein Foto geschlossen oder einen Upload abgeschlossen hast. Werbung mit Belohnung siehst du nur, wenn du sie selbst auswählst, nachdem deine Stupser aufgebraucht sind. Dauerhaft eingeblendete Bannerwerbung gibt es nicht. Für Nutzungsstatistiken verwenden wir Google Analytics for Firebase. Name, E-Mail-Adresse, Fotos und Mahlzeiteneinträge werden nicht an diese Dienste weitergegeben.",
               "Unter iOS **fragen wir nach der Anmeldung zuerst**, ob du Werbe-Tracking erlaubst. Auch wenn du ablehnst, kannst du alle Funktionen der App uneingeschränkt nutzen.",
               "Du kannst dein Konto **direkt in der App** löschen. Dabei werden auch deine Fotos und Einträge gelöscht.",
+              "In der **Gemeinsamen Kantine** (einem Echtzeit-Raum, in dem man sich ohne Worte zusammensetzt und isst) sind dein Name, deine Figur und deine Bewegungen für Personen im selben Raum sichtbar. In der Solo-Kantine, die alle betreten können, werden deine Fotos **nur angezeigt, wenn du „Mein Essen zeigen“ einschaltest**.",
             ],
           },
           { p: "Bei Fragen wende dich bitte an [contact@joowonkoh.com](contact)." },
@@ -151,6 +152,9 @@ const de: Copy = {
               "**Profilfoto** – ein Foto, das du selbst hochlädst. Nur für Personen in derselben Gruppe wie du sichtbar.",
               "**Meldungs- und Blockierdaten** – wer was aus welchem Grund gemeldet hat und wen du blockiert hast. Werden nur zur Bearbeitung unangemessener Inhalte verwendet.",
               "**Kontokennung** – eine zufällige Zeichenfolge, die bei der Registrierung automatisch erstellt wird. Sie dient nur dazu, Fotos und Einträge ihrer Besitzerin oder ihrem Besitzer zuzuordnen, und wird anders als Name oder E-Mail-Adresse nie angezeigt.",
+              "**Spitznamen** – Namen, die du Personen in deinen Gruppen gibst. Nur du siehst sie; die Person mit dem Spitznamen erfährt davon nichts.",
+              "**Widget-Schlüssel und Widget-Push-Token** – werden pro Gerät gespeichert, wenn du das Widget auf dem Home-Bildschirm nutzt, damit das Widget die heutigen Tabletts der ausgewählten Personen abrufen und sich neu zeichnen kann, sobald eine neue Mahlzeit hochgeladen wird. Sie werden gelöscht, wenn du dich abmeldest oder dein Konto löschst.",
+              "**Nutzungsdaten der Gemeinsamen Kantine** – die Kantine, die du betreten hast, dein Sitzplatz, wohin du gegangen bist, die angetippten Grüße (z. B. „Guten Appetit!“) sowie die Mahlzeiten auf deinem Tablett und die ausgewählten Fotos. Sie dienen nur dazu, sie Personen im selben Raum zu zeigen, solange du dort bist, und werden gelöscht, wenn du den Raum verlässt. Kommst du als Gast über einen Browser außerhalb der App, wird auf diesem Gerät eine zufällige Gastkennung gespeichert.",
             ],
           },
           { p: "Für Werbung und Nutzungsstatistiken werden folgende Daten verarbeitet." },
@@ -176,6 +180,19 @@ const de: Copy = {
           {
             p: "Kommentare und Reaktionen sind **nur in der Gruppe sichtbar, in der sie hinterlassen wurden**. Selbst beim selben Foto sehen Personen aus anderen Gruppen sie nicht. Inhalte, die du meldest oder blockierst, sind ab diesem Moment für dich nicht mehr sichtbar.",
           },
+          {
+            p: "Das Widget auf dem Home-Bildschirm folgt denselben Regeln wie die App selbst. Da Widgets auch auf dem Sperrbildschirm erscheinen können, wird zusätzlich noch einmal eingeschränkt, sodass auch Fotos von Personen, die dich blockiert haben, nicht angezeigt werden.",
+          },
+          {
+            p: "In der **Gemeinsamen Kantine** sehen Personen im selben Raum in Echtzeit deinen Anzeigenamen („Gast“ bei Besuchern von außerhalb der App), die Farbe deiner Figur, deinen Platz und deine Bewegungen sowie deine Grüße. Einen Chat gibt es nicht.",
+          },
+          {
+            ul: [
+              "Den **Gruppentisch** können nur Personen aus dieser Gruppe betreten. Der Server prüft Anmeldung und Gruppenmitgliedschaft. Gruppenmitglieder sehen die Fotos der heutigen Mahlzeiten, die jede Person ausgewählt hat.",
+              "Die **Solo-Kantine** kann jeder betreten, deshalb sind Fotos **standardmäßig ausgeblendet** und erscheinen als Zeichnungen von Reis, Suppe und Beilagen. Nur wenn du „Mein Essen den Leuten in der Kantine zeigen“ einschaltest, werden die für dein Tablett ausgewählten Fotos über Adressen, die nur eine Stunde gültig sind, an die Personen in diesem Raum übermittelt. Du kannst das jederzeit ausschalten.",
+              "Du kannst andere Personen mit „Ausblenden“ für dich unsichtbar machen.",
+            ],
+          },
         ],
       },
       {
@@ -192,6 +209,8 @@ const de: Copy = {
               "**Apple / Google** – Anmeldung. Wir erhalten deine E-Mail-Adresse.",
               "**Google AdMob** – Vollbildwerbung und Werbung mit Belohnung. Übermittelt werden Werbe-ID, Daten zu Werbeeinblendungen und -klicks sowie Gerätedaten.",
               "**Google Analytics for Firebase** – Nutzungsstatistiken. Übermittelt werden App-Nutzungsdaten, App-Instanz-ID und Gerätedaten.",
+              "**Cloudflare Workers und Durable Objects** – Bildschirm der Gemeinsamen Kantine und Echtzeitverbindung. Verarbeitet werden Anzeigename, Platz, Bewegungen und Grüße, solange du in einem Raum bist, sowie die Adressen der Fotos, die du zeigen möchtest; sie werden gelöscht, wenn du den Raum verlässt. Zur Fehlerbehebung wird ein Teil der Anfrageprotokolle einige Tage aufbewahrt.",
+              "**Apple APNs (Widget)** – benachrichtigt das iOS-Widget über den Widget-Push-Token, damit es sich neu zeichnet, sobald eine neue Mahlzeit hochgeladen wird.",
             ],
           },
           { p: "Wie Google diese Daten verarbeitet, erfährst du unter [Wie Google Daten von Websites und Apps verwendet, auf denen Google-Dienste genutzt werden](google)." },
@@ -203,6 +222,9 @@ const de: Copy = {
           {
             p: "Wir speichern die Daten, solange dein Konto besteht, und löschen sie, wenn du dein Konto löschst. Separate Kopien bewahren wir nicht auf. Nutzungsstatistiken sind nicht an dein Konto gebunden und werden gemäß der Standardeinstellung von Google Analytics nach 2 Monaten gelöscht.",
           },
+          {
+            p: "Platz, Bewegungen, Grüße und Fotoadressen in der Gemeinsamen Kantine werden gelöscht, wenn du den Raum verlässt. Gespeichert bleibt nur, wie viele Personen gerade in jeder Kantine sind.",
+          },
         ],
       },
       {
@@ -210,7 +232,7 @@ const de: Copy = {
         blocks: [
           { p: "Du kannst dein Konto direkt in der App löschen: **Ich > Konto löschen**." },
           {
-            p: "Dabei werden Profil und Anzeigename, Profilfoto, hochgeladene Fotodateien, Mahlzeiteneinträge, Kommentare, Reaktionen, Meldungs- und Blockierdaten, Gruppenmitgliedschaften und Push-Tokens vollständig gelöscht. Das lässt sich nicht rückgängig machen.",
+            p: "Dabei werden Profil und Anzeigename, Profilfoto, hochgeladene Fotodateien, Mahlzeiteneinträge, Kommentare, Reaktionen, Meldungs- und Blockierdaten, Gruppenmitgliedschaften, Push-Tokens, Spitznamen (die du vergeben hast und die dir gegeben wurden) sowie Widget-Schlüssel und Widget-Push-Tokens vollständig gelöscht. Das lässt sich nicht rückgängig machen.",
           },
           {
             p: "Gruppen, die du erstellt hast, gehen an das verbleibende Mitglied, das am längsten dabei ist. Ist niemand mehr übrig, wird auch die Gruppe gelöscht. Wenn eine Person geht, verschwindet die Gruppe für die anderen nicht.",

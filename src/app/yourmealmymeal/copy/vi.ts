@@ -112,7 +112,7 @@ const vi: Copy = {
     title: "Chính sách quyền riêng tư của Cơm bạn, cơm mình",
     description:
       "Hướng dẫn về thông tin mà ứng dụng “Cơm bạn, cơm mình” trên iOS và Android xử lý, ai có thể xem ảnh và ghi chép bữa ăn, và cách xóa tài khoản.",
-    updatedAt: "Ngày 16 tháng 10 năm 2026",
+    updatedAt: "Ngày 1 tháng 11 năm 2026",
     sections: [
       {
         h: "1. Tổng quan",
@@ -127,6 +127,7 @@ const vi: Copy = {
               "Ứng dụng hiển thị **quảng cáo toàn màn hình và quảng cáo có thưởng của Google AdMob**. Quảng cáo toàn màn hình thỉnh thoảng hiện ra chiếm cả màn hình sau khi bạn xem xong ảnh hoặc đăng ảnh xong; quảng cáo có thưởng do người dùng tự chọn xem khi đã dùng hết lượt Chọc. Không có quảng cáo banner luôn hiện trên màn hình. Ứng dụng dùng Google Analytics for Firebase để thống kê sử dụng. Tên, email, ảnh và ghi chép bữa ăn không được chuyển cho các dịch vụ này.",
               "Trên iOS, sau khi đăng nhập, Ứng dụng sẽ **hỏi trước bạn có cho phép theo dõi quảng cáo hay không**; dù từ chối, bạn vẫn dùng được mọi tính năng của Ứng dụng.",
               "Bạn có thể **tự xóa tài khoản ngay trong Ứng dụng**; khi xóa, ảnh và ghi chép cũng bị xóa theo.",
+              "Trong **Quán ăn cùng nhau** (không gian thời gian thực để cùng ngồi ăn mà không cần trò chuyện), tên, nhân vật và chuyển động của bạn hiển thị với những người cùng phòng. Ở quán ăn một mình, nơi ai cũng vào được, ảnh **chỉ hiển thị khi bạn bật “Cho xem cơm của mình”**.",
             ],
           },
           { p: "Mọi thắc mắc xin vui lòng liên hệ [contact@joowonkoh.com](contact)." },
@@ -146,6 +147,9 @@ const vi: Copy = {
               "**Ảnh đại diện** — Ảnh do người dùng tự tải lên. Chỉ hiển thị với những người cùng nhóm với bạn.",
               "**Ghi nhận báo cáo và chặn** — Ai đã báo cáo nội dung gì và vì sao, đã chặn ai. Chỉ dùng để xử lý nội dung không phù hợp.",
               "**Mã định danh tài khoản** — Chuỗi ký tự ngẫu nhiên được tạo tự động khi đăng ký. Chỉ dùng để liên kết ảnh và ghi chép với chủ sở hữu, và khác với tên hay email, nó không hiện trên màn hình.",
+              "**Biệt danh** — Tên bạn tự đặt cho người cùng nhóm. Chỉ người đặt mới thấy, người được đặt biệt danh sẽ không biết.",
+              "**Khóa tiện ích và mã thông báo đẩy của tiện ích** — Khi bạn dùng tiện ích (widget) trên màn hình chính, được lưu theo từng thiết bị để tiện ích lấy khay cơm hôm nay của những người đã chọn và vẽ lại khi có bữa ăn mới được đăng. Bị xóa cùng khi bạn đăng xuất hoặc xóa tài khoản.",
+              "**Thông tin sử dụng Quán ăn cùng nhau** — Quán đã vào và chỗ đã ngồi, vị trí đã đi qua, lời chào đã nhấn (như “Chúc ngon miệng!”), bữa ăn trên khay cơm đang mang theo và ảnh đã chọn. Chỉ dùng để hiển thị với người cùng phòng trong lúc bạn ở trong phòng, và bị xóa khi bạn rời phòng. Nếu vào với tư cách khách bằng trình duyệt bên ngoài Ứng dụng, một mã định danh khách ngẫu nhiên sẽ được lưu trên thiết bị đó.",
             ],
           },
           { p: "Các thông tin sau được xử lý cho quảng cáo và thống kê sử dụng." },
@@ -173,6 +177,19 @@ const vi: Copy = {
           {
             p: "Bình luận và cảm xúc **chỉ hiển thị trong nhóm nơi chúng được để lại**. Dù cùng một bức ảnh, người ở nhóm khác cũng không thấy. Nội dung đã báo cáo hoặc chặn sẽ không còn hiển thị với người báo cáo hoặc chặn kể từ lúc đó.",
           },
+          {
+            p: "Tiện ích trên màn hình chính tuân theo cùng quy tắc với màn hình ứng dụng. Vì tiện ích cũng có thể hiện trên màn hình khóa, phạm vi được thu hẹp thêm một bước để ảnh của người đã chặn bạn cũng không hiển thị.",
+          },
+          {
+            p: "Trong **Quán ăn cùng nhau**, những người cùng phòng sẽ thấy theo thời gian thực tên hiển thị của bạn (khách từ bên ngoài Ứng dụng hiện là “Khách”), màu nhân vật, chỗ ngồi và chuyển động, và lời chào. Không có tính năng trò chuyện.",
+          },
+          {
+            ul: [
+              "**Bàn nhóm** chỉ những người trong nhóm đó mới vào được. Máy chủ kiểm tra đăng nhập và tư cách thành viên nhóm. Người trong nhóm sẽ thấy ảnh bữa ăn hôm nay mà mỗi người tự chọn.",
+              "**Quán ăn một mình** ai cũng vào được nên ảnh **mặc định không hiển thị** mà hiện thành hình vẽ cơm, canh và món ăn kèm. Chỉ khi bạn bật “Cho người trong quán xem cơm của mình”, ảnh đã chọn cho khay cơm mới được gửi tới những người trong phòng đó qua địa chỉ chỉ có hiệu lực trong một giờ. Bạn có thể tắt bất cứ lúc nào.",
+              "Bạn có thể dùng “Ẩn” để không nhìn thấy người khác nữa.",
+            ],
+          },
         ],
       },
       {
@@ -189,6 +206,8 @@ const vi: Copy = {
               "**Apple / Google** — Đăng nhập. Nhận địa chỉ email.",
               "**Google AdMob** — Quảng cáo toàn màn hình và quảng cáo có thưởng. Mã định danh quảng cáo, thông tin hiển thị và nhấp quảng cáo, thông tin thiết bị được chuyển đi.",
               "**Google Analytics for Firebase** — Thống kê sử dụng. Thông tin sử dụng ứng dụng, ID phiên bản ứng dụng, thông tin thiết bị được chuyển đi.",
+              "**Cloudflare Workers và Durable Objects** — Màn hình Quán ăn cùng nhau và kết nối thời gian thực. Xử lý tên hiển thị, chỗ ngồi, chuyển động, lời chào trong lúc bạn ở trong phòng, cùng địa chỉ ảnh mà bạn đã chọn cho xem, và xóa khi bạn rời phòng. Một phần nhật ký yêu cầu được lưu vài ngày để sửa lỗi.",
+              "**Apple APNs (tiện ích)** — Báo cho tiện ích iOS qua mã thông báo đẩy của tiện ích để vẽ lại khi có bữa ăn mới được đăng.",
             ],
           },
           {
@@ -202,6 +221,9 @@ const vi: Copy = {
           {
             p: "Thông tin được lưu trong thời gian tài khoản còn tồn tại và bị xóa cùng khi bạn xóa tài khoản. Không có bản sao nào được lưu riêng. Số liệu thống kê sử dụng không gắn với tài khoản và sẽ bị xóa sau 2 tháng theo cài đặt mặc định của Google Analytics.",
           },
+          {
+            p: "Chỗ ngồi, chuyển động, lời chào và địa chỉ ảnh trong Quán ăn cùng nhau bị xóa khi bạn rời phòng; chỉ giữ lại số người đang có mặt ở mỗi quán.",
+          },
         ],
       },
       {
@@ -209,7 +231,7 @@ const vi: Copy = {
         blocks: [
           { p: "Bạn có thể xóa ngay trong Ứng dụng: **Tôi > Xóa tài khoản**." },
           {
-            p: "Khi xóa, hồ sơ và tên hiển thị, ảnh đại diện, tệp ảnh đã đăng, ghi chép bữa ăn, bình luận, cảm xúc, ghi nhận báo cáo và chặn, tư cách thành viên nhóm, mã thông báo đẩy đều bị xóa và không thể khôi phục.",
+            p: "Khi xóa, hồ sơ và tên hiển thị, ảnh đại diện, tệp ảnh đã đăng, ghi chép bữa ăn, bình luận, cảm xúc, ghi nhận báo cáo và chặn, tư cách thành viên nhóm, mã thông báo đẩy, biệt danh (do bạn đặt và người khác đặt cho bạn), khóa tiện ích và mã thông báo đẩy của tiện ích đều bị xóa và không thể khôi phục.",
           },
           {
             p: "Nhóm bạn tạo sẽ được chuyển cho người ở lâu nhất trong số những người còn lại. Nếu không còn ai, nhóm cũng bị xóa theo. Một người rời đi không làm mất nhóm của những người khác.",

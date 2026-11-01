@@ -126,7 +126,7 @@ const pt: Copy = {
     title: "Política de privacidade – Seu prato, meu prato",
     description:
       "Informações sobre os dados tratados pelo “Seu prato, meu prato”, app para iOS e Android, quem pode ver suas fotos e registros de refeições e como excluir sua conta.",
-    updatedAt: "16 de outubro de 2026",
+    updatedAt: "1º de novembro de 2026",
     sections: [
       {
         h: "1. Visão geral",
@@ -141,6 +141,7 @@ const pt: Copy = {
               "O App exibe **anúncios intersticiais e anúncios premiados do Google AdMob**. Os intersticiais aparecem de vez em quando em tela cheia ao sair de uma foto ou depois de terminar um envio; os anúncios premiados você mesmo escolhe assistir quando suas cutucadas acabam. Não há banners fixos na tela. Para estatísticas de uso, usamos o Google Analytics for Firebase. Seu nome, e-mail, fotos e registros de refeições não são repassados a esses serviços.",
               "No iOS, depois do login, **perguntamos primeiro se você permite** o rastreamento de anúncios; mesmo que você recuse, pode usar todas as funções do App normalmente.",
               "Você pode excluir sua conta **diretamente no App**, e ao fazer isso suas fotos e registros também são apagados.",
+              "No **Refeitório compartilhado** (um espaço em tempo real onde as pessoas se sentam e comem juntas, sem conversar), seu nome, seu personagem e seus movimentos ficam visíveis para as pessoas da mesma sala. No refeitório para comer sozinho, onde qualquer pessoa pode entrar, suas fotos só aparecem **se você ativar “Mostrar minha refeição”**.",
             ],
           },
           { p: "Em caso de dúvidas, entre em contato pelo [contact@joowonkoh.com](contact)." },
@@ -160,6 +161,9 @@ const pt: Copy = {
               "**Foto de perfil**: uma foto que você mesmo envia. Só as pessoas dos mesmos grupos que você podem vê-la.",
               "**Registros de denúncias e bloqueios**: quem denunciou o quê e por quê, e quem bloqueou quem. São usados apenas para tratar conteúdo impróprio.",
               "**Identificador da conta**: uma sequência aleatória criada automaticamente no cadastro. Serve apenas para vincular fotos e registros ao seu dono e, ao contrário do nome ou do e-mail, não aparece na tela.",
+              "**Apelidos**: nomes que você dá a pessoas dos seus grupos. Só você pode vê-los, e a pessoa apelidada não fica sabendo.",
+              "**Chave do widget e token de notificações push do widget**: armazenados em cada dispositivo quando você usa o widget da tela inicial, para que o widget possa buscar as bandejas de hoje das pessoas escolhidas e se redesenhar quando uma nova refeição é enviada. São apagados quando você sai da conta ou exclui a conta.",
+              "**Informações de uso do Refeitório compartilhado**: o refeitório em que você entrou, o lugar onde se sentou, por onde andou, as saudações que tocou (como “Bom apetite!”), e as refeições da bandeja que você carrega e as fotos escolhidas. São usadas apenas para mostrar às pessoas da mesma sala enquanto você estiver nela, e apagadas quando você sai da sala. Se você entrar como convidado por um navegador fora do App, um identificador de convidado aleatório é armazenado nesse dispositivo.",
             ],
           },
           { p: "Para anúncios e estatísticas de uso, são tratadas as seguintes informações." },
@@ -187,6 +191,19 @@ const pt: Copy = {
           {
             p: "Comentários e reações ficam visíveis **apenas dentro do grupo em que foram deixados**. Mesmo sendo a mesma foto, pessoas de outros grupos não os veem. O conteúdo que você denuncia ou bloqueia deixa de aparecer para você a partir desse momento.",
           },
+          {
+            p: "O widget da tela inicial segue as mesmas regras das telas do App. Como os widgets também podem aparecer na tela de bloqueio, o filtro é restringido mais uma vez para que as fotos de quem bloqueou você também não apareçam.",
+          },
+          {
+            p: "No **Refeitório compartilhado**, as pessoas da mesma sala veem em tempo real seu nome de exibição (“Convidado” para quem vem de fora do App), a cor do seu personagem, seu lugar e seus movimentos, e suas saudações. Não há chat.",
+          },
+          {
+            ul: [
+              "Na **mesa do grupo** só entram as pessoas daquele grupo. O servidor confere o login e a participação no grupo. As pessoas do grupo veem as fotos das refeições de hoje que cada um escolheu.",
+              "No **refeitório para comer sozinho** qualquer pessoa pode entrar, por isso as fotos **ficam ocultas por padrão** e aparecem como desenhos de arroz, sopa e acompanhamentos. Só quando você ativa “Mostrar minha refeição para as pessoas do refeitório” as fotos escolhidas para a sua bandeja são entregues às pessoas daquela sala, por um endereço válido por apenas uma hora. Você pode desativar a qualquer momento.",
+              "Você pode usar “Ocultar” para deixar de ver outras pessoas.",
+            ],
+          },
         ],
       },
       {
@@ -203,6 +220,8 @@ const pt: Copy = {
               "**Apple / Google**: login. Recebemos seu endereço de e-mail.",
               "**Google AdMob**: anúncios intersticiais e premiados. São transmitidos o identificador de publicidade, informações de exibição e cliques em anúncios e informações do dispositivo.",
               "**Google Analytics for Firebase**: estatísticas de uso. São transmitidos as informações de uso do App, o ID da instância do app e informações do dispositivo.",
+              "**Cloudflare Workers e Durable Objects**: tela do Refeitório compartilhado e conexão em tempo real. Tratam seu nome de exibição, lugar, movimentos e saudações enquanto você está em uma sala, e os endereços das fotos que você decidiu mostrar, e os apagam quando você sai da sala. Para corrigir erros, parte dos registros de solicitações é guardada por alguns dias.",
+              "**Apple APNs (widget)**: avisa o widget do iOS pelo token de notificações push do widget para que ele se redesenhe quando uma nova refeição é enviada.",
             ],
           },
           {
@@ -216,6 +235,9 @@ const pt: Copy = {
           {
             p: "Guardamos as informações enquanto sua conta existir e as apagamos quando você exclui a conta. Não mantemos cópias separadas. As estatísticas de uso não ficam vinculadas à sua conta e são apagadas após 2 meses, conforme a configuração padrão do Google Analytics.",
           },
+          {
+            p: "No Refeitório compartilhado, o lugar, os movimentos, as saudações e os endereços das fotos são apagados quando você sai da sala, e fica guardado apenas quantas pessoas há em cada refeitório no momento.",
+          },
         ],
       },
       {
@@ -223,7 +245,7 @@ const pt: Copy = {
         blocks: [
           { p: "Você pode excluí-la diretamente no App: **Perfil > Excluir conta**." },
           {
-            p: "Ao excluir, são apagados por completo seu perfil e nome de exibição, sua foto de perfil, os arquivos de fotos enviados, seus registros de refeições, comentários, reações, registros de denúncias e bloqueios, sua participação em grupos e seu token de notificações push, sem possibilidade de recuperação.",
+            p: "Ao excluir, são apagados por completo seu perfil e nome de exibição, sua foto de perfil, os arquivos de fotos enviados, seus registros de refeições, comentários, reações, registros de denúncias e bloqueios, sua participação em grupos, seu token de notificações push, os apelidos (os que você deu e os que deram a você), e a chave e o token de notificações push do widget, sem possibilidade de recuperação.",
           },
           {
             p: "Os grupos que você criou passam para quem está há mais tempo entre as pessoas que ficaram. Se não sobrar ninguém, o grupo também é apagado. A saída de uma pessoa não faz o grupo dos outros desaparecer.",

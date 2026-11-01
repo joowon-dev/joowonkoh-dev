@@ -120,7 +120,7 @@ const es: Copy = {
     title: "Política de privacidad de Tu comida, mi comida",
     description:
       "Información sobre los datos que trata “Tu comida, mi comida”, la app para iOS y Android, quién puede ver tus fotos y registros de comidas, y cómo eliminar tu cuenta.",
-    updatedAt: "16 de octubre de 2026",
+    updatedAt: "1 de noviembre de 2026",
     sections: [
       {
         h: "1. Resumen",
@@ -135,6 +135,7 @@ const es: Copy = {
               "La App muestra **anuncios intersticiales y anuncios con recompensa de Google AdMob**. Los intersticiales aparecen de vez en cuando a pantalla completa al salir de una foto o al terminar de subir una; los anuncios con recompensa los eliges ver tú mismo cuando se te acaban los toques. No hay banners fijos en pantalla. Para las estadísticas de uso utilizamos Google Analytics for Firebase. Tu nombre, correo, fotos y registros de comidas no se comparten con estos servicios.",
               "En iOS, después de iniciar sesión **te preguntamos primero si permites** el rastreo publicitario; aunque lo rechaces, puedes usar todas las funciones de la App.",
               "Puedes eliminar tu cuenta **directamente desde la App**, y al hacerlo se borran también tus fotos y registros.",
+              "En el **Comedor compartido** (un espacio en tiempo real donde la gente se sienta a comer junta, sin hablar), tu nombre, tu personaje y tus movimientos son visibles para las personas de la misma sala. En el comedor para comer solo, donde puede entrar cualquiera, tus fotos solo se ven **si activas “Mostrar mi comida”**.",
             ],
           },
           { p: "Para cualquier consulta, escríbenos a [contact@joowonkoh.com](contact)." },
@@ -154,6 +155,9 @@ const es: Copy = {
               "**Foto de perfil**: una foto que subes tú. Solo la ven las personas de tus mismos grupos.",
               "**Registros de denuncias y bloqueos**: quién denunció qué y por qué, y a quién bloqueó. Solo se usan para gestionar contenido inapropiado.",
               "**Identificador de cuenta**: una cadena aleatoria que se crea automáticamente al registrarte. Solo sirve para vincular las fotos y registros con su dueño y, a diferencia del nombre o el correo, no se muestra en pantalla.",
+              "**Apodos**: nombres que pones a personas de tus grupos. Solo los ves tú, y la persona a la que se lo pusiste no puede saberlo.",
+              "**Clave del widget y token de notificaciones push del widget**: se guardan en cada dispositivo cuando usas el widget de la pantalla de inicio, para que el widget pueda obtener las bandejas de hoy de las personas que elegiste y volver a dibujarse cuando se sube una comida nueva. Se borran al cerrar sesión o eliminar la cuenta.",
+              "**Información de uso del Comedor compartido**: el comedor al que entraste, el asiento que ocupaste, por dónde caminaste, los saludos que tocaste (como “¡Buen provecho!”), y las comidas de la bandeja que llevas y las fotos que elegiste. Solo se usa para mostrarla a las personas de la misma sala mientras estás en ella, y se borra al salir de la sala. Si entras como invitado desde un navegador fuera de la App, se guarda un identificador de invitado aleatorio en ese dispositivo.",
             ],
           },
           { p: "Para los anuncios y las estadísticas de uso se trata la siguiente información." },
@@ -181,6 +185,19 @@ const es: Copy = {
           {
             p: "Los comentarios y las reacciones **solo se ven dentro del grupo donde se dejaron**. Aunque sea la misma foto, las personas de otros grupos no los ven. El contenido que denuncias o bloqueas deja de mostrarse para ti desde ese momento.",
           },
+          {
+            p: "El widget de la pantalla de inicio sigue las mismas reglas que las pantallas de la App. Como los widgets también pueden aparecer en la pantalla de bloqueo, se restringe un paso más para que tampoco se vean las fotos de quienes te han bloqueado.",
+          },
+          {
+            p: "En el **Comedor compartido**, las personas de la misma sala ven en tiempo real tu nombre visible (“Invitado” para quienes entran desde fuera de la App), el color de tu personaje, tu asiento y tus movimientos, y tus saludos. No hay chat.",
+          },
+          {
+            ul: [
+              "En la **mesa del grupo** solo pueden entrar las personas de ese grupo. El servidor comprueba el inicio de sesión y la pertenencia al grupo. Las personas del grupo ven las fotos de la comida de hoy que cada uno eligió.",
+              "En el **comedor para comer solo** puede entrar cualquiera, así que las fotos **no se muestran por defecto** y en su lugar se ven dibujos de arroz, sopa y guarniciones. Solo si activas “Mostrar mi comida a la gente del comedor”, las fotos que elegiste para tu bandeja se envían a las personas de esa sala mediante una dirección válida solo por una hora. Puedes desactivarlo cuando quieras.",
+              "Puedes usar “Ocultar” para dejar de ver a otras personas.",
+            ],
+          },
         ],
       },
       {
@@ -197,6 +214,8 @@ const es: Copy = {
               "**Apple / Google**: inicio de sesión. Recibimos tu dirección de correo electrónico.",
               "**Google AdMob**: anuncios intersticiales y con recompensa. Se transmiten el identificador publicitario, información de impresiones y clics de anuncios, e información del dispositivo.",
               "**Google Analytics for Firebase**: estadísticas de uso. Se transmiten la información de uso de la App, el ID de instancia de la app e información del dispositivo.",
+              "**Cloudflare Workers y Durable Objects**: pantalla del Comedor compartido y conexión en tiempo real. Tratan tu nombre visible, asiento, movimientos y saludos mientras estás en una sala, y las direcciones de las fotos que decidiste mostrar, y los borran al salir de la sala. Para corregir errores, se conserva parte de los registros de solicitudes durante unos días.",
+              "**Apple APNs (widget)**: avisa al widget de iOS mediante el token de notificaciones push del widget para que se vuelva a dibujar cuando se sube una comida nueva.",
             ],
           },
           {
@@ -210,6 +229,9 @@ const es: Copy = {
           {
             p: "Conservamos la información mientras tu cuenta exista y la borramos cuando eliminas la cuenta. No guardamos copias aparte. Las estadísticas de uso no están vinculadas a tu cuenta y se borran a los 2 meses, según la configuración predeterminada de Google Analytics.",
           },
+          {
+            p: "En el Comedor compartido, el asiento, los movimientos, los saludos y las direcciones de las fotos se borran al salir de la sala, y solo se guarda cuántas personas hay en cada comedor en ese momento.",
+          },
         ],
       },
       {
@@ -217,7 +239,7 @@ const es: Copy = {
         blocks: [
           { p: "Puedes eliminarla directamente desde la App: **Perfil > Eliminar cuenta**." },
           {
-            p: "Al eliminarla se borran por completo tu perfil y nombre visible, tu foto de perfil, los archivos de fotos que subiste, tus registros de comidas, comentarios, reacciones, registros de denuncias y bloqueos, tu pertenencia a grupos y tu token de notificaciones push, y no se puede deshacer.",
+            p: "Al eliminarla se borran por completo tu perfil y nombre visible, tu foto de perfil, los archivos de fotos que subiste, tus registros de comidas, comentarios, reacciones, registros de denuncias y bloqueos, tu pertenencia a grupos, tu token de notificaciones push, los apodos (los que pusiste y los que te pusieron), y la clave y el token de notificaciones push del widget, y no se puede deshacer.",
           },
           {
             p: "Los grupos que creaste pasan a la persona que lleve más tiempo entre quienes quedan. Si no queda nadie, el grupo también desaparece. Que una persona se vaya no hace desaparecer el grupo de los demás.",
