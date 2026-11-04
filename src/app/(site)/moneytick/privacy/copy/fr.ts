@@ -2,18 +2,18 @@ import type { Privacy } from "./types";
 
 const fr: Privacy = {
   meta: {
-    title: "Mon Salaire – Politique de confidentialité",
+    title: "Salairomètre – Politique de confidentialité",
     description:
-      "Les informations traitées par l'app iOS et Android Mon Salaire, les services tiers utilisés pour la publicité, les statistiques d'utilisation et les rapports de plantage, et vos choix.",
+      "Les informations traitées par l'app iOS et Android Salairomètre, les services tiers utilisés pour la publicité, les statistiques d'utilisation et les rapports de plantage, et vos choix.",
   },
-  badge: "Mon Salaire · Legal",
-  title: "Mon Salaire – Politique de confidentialité",
+  badge: "Salairomètre · Legal",
+  title: "Salairomètre – Politique de confidentialité",
   updated: "Dernière mise à jour : 22 octobre 2026",
   sections: [
     {
       h: "1. Présentation",
       body: [
-        "Mon Salaire (l'« App ») est une application iOS et Android qui affiche en temps réel ce que vous avez gagné jusqu'ici, à partir du salaire que vous saisissez. Cette politique explique quelles informations l'App traite, dans quel but, et quels choix s'offrent à vous.",
+        "Salairomètre (l'« App ») est une application iOS et Android qui affiche en temps réel ce que vous avez gagné jusqu'ici, à partir du salaire que vous saisissez. Cette politique explique quelles informations l'App traite, dans quel but, et quels choix s'offrent à vous.",
         "En résumé :",
         [
           "**Le salaire, les réglages et les photos d'envies que vous saisissez ne quittent jamais votre appareil.** L'App n'a ni compte ni serveur qui reçoit vos données.",
@@ -32,7 +32,7 @@ const fr: Privacy = {
           "Personne, pas même le développeur, ne peut les consulter, puisqu'elles ne sont envoyées nulle part. Votre salaire et vos photos ne servent ni à la publicité ni aux statistiques (voir la section 4 pour ce que les statistiques enregistrent).",
           "Si la sauvegarde est activée, les données de l'App peuvent être incluses dans la sauvegarde iCloud d'Apple ou la sauvegarde automatique Android de Google. C'est le fonctionnement normal du système d'exploitation, pas une demande de l'App.",
         ],
-        "**Photos et appareil photo.** Lorsque vous ajoutez une envie ou personnalisez l'écran StandBy (iOS), l'App n'utilise que des photos que vous prenez ou choisissez vous-même. L'accès à l'appareil photo et à la photothèque est demandé au moment où vous utilisez ces fonctions ; si vous refusez, le reste de l'App fonctionne normalement. Le détourage des photos d'envies se fait sur votre appareil (Apple Vision sur iOS, Google ML Kit sur Android). Les photos sont stockées uniquement sur votre appareil et ne sont jamais envoyées.",
+        "**Photos et appareil photo.** Lorsque vous ajoutez une envie ou personnalisez le mode En veille (iOS), l'App n'utilise que des photos que vous prenez ou choisissez vous-même. L'accès à l'appareil photo et à la photothèque est demandé au moment où vous utilisez ces fonctions ; si vous refusez, le reste de l'App fonctionne normalement. Le détourage des photos d'envies se fait sur votre appareil (Apple Vision sur iOS, Google ML Kit sur Android). Les photos sont stockées uniquement sur votre appareil et ne sont jamais envoyées.",
         "L'App n'accède ni à votre position, ni à vos contacts, ni à votre numéro de téléphone, ni à vos informations de paiement ou de santé.",
       ],
     },

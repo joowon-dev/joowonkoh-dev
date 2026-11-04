@@ -2,13 +2,13 @@ import type { Landing } from "./types";
 
 const ja: Landing = {
   meta: {
-    title: "これが私の年収",
+    title: "給料メーター",
     description:
-      "給料を入れると、今この瞬間に貯まっていくお金が1秒単位で見えるiPhone・Androidアプリ。ホームウィジェット・ロック画面・StandByでも確認でき、気になる人の年収と並んで走る比較レースもあります。",
+      "給料を入れると、今この瞬間に貯まっていくお金が1秒単位で見えるiPhone・Androidアプリ。ホームウィジェット・ロック画面・スタンバイでも確認でき、気になる人の年収と並んで走る比較レースもあります。",
   },
-  appName: "これが私の年収",
+  appName: "給料メーター",
   tagline: "1秒でいくら稼いでいるか見るアプリ",
-  iconAlt: "これが私の年収 アプリアイコン",
+  iconAlt: "給料メーター アプリアイコン",
   languageLabel: "言語",
   hero: {
     appStore: "App Storeで入手",
@@ -36,7 +36,7 @@ const ja: Landing = {
     { title: "ウィッシュ", tail: "欲しいものを稼ぎで満たす" },
     { title: "給料泥棒", tail: "サボっている間に会社が払ったお金" },
     { title: "比較レース", tail: "コーヒー1杯から軽自動車1台まで" },
-    { title: "ウィジェット・ロック画面・StandBy", tail: "アプリを開かなくても" },
+    { title: "ウィジェット・ロック画面・スタンバイ", tail: "アプリを開かなくても" },
     { title: "20の通貨・12の言語", tail: "アプリもウィジェットも" },
   ],
   race: {

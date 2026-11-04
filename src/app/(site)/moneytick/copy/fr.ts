@@ -2,13 +2,13 @@ import type { Landing } from "./types";
 
 const fr: Landing = {
   meta: {
-    title: "Mon Salaire : paie en direct",
+    title: "Salairomètre : paie en direct",
     description:
-      "Une app iPhone et Android qui montre l'argent que tu gagnes en ce moment, seconde par seconde. Widgets, écran verrouillé, StandBy et une course contre le salaire de qui tu veux.",
+      "Une app iPhone et Android qui montre l'argent que tu gagnes en ce moment, seconde par seconde. Widgets, écran verrouillé, mode En veille et une course contre le salaire de qui tu veux.",
   },
-  appName: "Mon Salaire",
+  appName: "Salairomètre",
   tagline: "Ton salaire à la seconde",
-  iconAlt: "Icône de l'app Mon Salaire",
+  iconAlt: "Icône de l'app Salairomètre",
   languageLabel: "Langue",
   hero: {
     appStore: "Télécharger sur l'App Store",
@@ -36,7 +36,7 @@ const fr: Landing = {
     { title: "Envies", tail: "Remplis ce que tu veux avec ce que tu gagnes" },
     { title: "Payé à glander", tail: "Ce que ta boîte t'a payé pendant la pause café" },
     { title: "Course comparée", tail: "D'un café à une voiture neuve" },
-    { title: "Widgets · Écran verrouillé · StandBy", tail: "Sans ouvrir l'app" },
+    { title: "Widgets · Écran verrouillé · En veille", tail: "Sans ouvrir l'app" },
     { title: "20 devises · 12 langues", tail: "Dans l'app et les widgets" },
   ],
   race: {
