@@ -57,7 +57,7 @@ const id: Copy = {
       },
       {
         q: "Ada iklannya?",
-        a: "Ada iklan layar penuh yang sesekali muncul setelah kamu selesai lihat foto atau selesai mengunggah, dan iklan berhadiah yang cuma ditonton kalau kamu mau dapat colek tambahan. Nggak ada banner yang nempel terus di layar. Kami juga mengumpulkan statistik penggunaan untuk memperbaiki aplikasi. Detailnya ada di Kebijakan Privasi.",
+        a: "Ada iklan satu baris yang digambar menyatu dengan tampilan aplikasi di bagian atas layar Kamera, Grup, dan Aku, iklan layar penuh yang sesekali muncul setelah kamu selesai lihat foto atau selesai mengunggah, dan iklan berhadiah yang cuma ditonton kalau kamu mau dapat colek tambahan. Kami juga mengumpulkan statistik penggunaan untuk memperbaiki aplikasi. Detailnya ada di Kebijakan Privasi.",
       },
       {
         q: "Apa yang terjadi kalau akunku dihapus?",
@@ -111,6 +111,7 @@ const id: Copy = {
     homeAria: "Ke beranda Makananmu, Makananku",
     about: "Tentang",
     privacy: "Kebijakan Privasi",
+    terms: "Ketentuan Layanan",
     deleteAccount: "Hapus akun",
     language: "Bahasa",
   },
@@ -126,7 +127,7 @@ const id: Copy = {
     title: "Kebijakan Privasi Makananmu, Makananku",
     description:
       "Penjelasan tentang informasi yang diproses oleh aplikasi iOS & Android “Makananmu, Makananku”, siapa yang bisa melihat foto dan catatan makanmu, serta cara menghapus akun.",
-    updatedAt: "1 November 2026",
+    updatedAt: "6 November 2026",
     sections: [
       {
         h: "1. Ringkasan",
@@ -138,7 +139,7 @@ const id: Copy = {
           {
             ul: [
               "Foto dan catatan makan **hanya terlihat oleh orang yang berada di grup yang sama denganmu**.",
-              "Aplikasi menampilkan **iklan interstisial dan iklan berhadiah dari Google AdMob**. Iklan interstisial sesekali muncul di layar penuh setelah kamu selesai melihat foto atau selesai mengunggah, sedangkan iklan berhadiah kamu pilih sendiri untuk ditonton saat colekmu habis. Tidak ada iklan banner yang selalu tampil di layar. Untuk statistik penggunaan, kami memakai Google Analytics for Firebase. Nama, email, foto, dan catatan makan tidak diberikan ke layanan-layanan ini.",
+              "Aplikasi menampilkan **iklan native, iklan interstisial, dan iklan berhadiah dari Google AdMob**. Iklan native tampil sebagai satu baris yang digambar menyatu dengan tampilan Aplikasi di bagian atas layar Kamera, Grup, dan Aku; iklan interstisial sesekali muncul di layar penuh setelah kamu selesai melihat foto atau selesai mengunggah; sedangkan iklan berhadiah kamu pilih sendiri untuk ditonton saat colekmu habis. Untuk statistik penggunaan, kami memakai Google Analytics for Firebase. Nama, email, foto, dan catatan makan tidak diberikan ke layanan-layanan ini.",
               "Di iOS, setelah login kami **menanyakan dulu apakah kamu mengizinkan** pelacakan iklan; kalaupun kamu menolak, semua fitur Aplikasi tetap bisa dipakai.",
               "Kamu bisa menghapus akun **langsung di dalam Aplikasi**, dan saat dihapus, foto serta catatanmu ikut terhapus.",
               "Di **Kantin Makan Bareng** (ruang real-time untuk duduk dan makan bersama tanpa mengobrol), nama, karakter, dan gerakanmu terlihat oleh orang di ruangan yang sama. Di kantin makan sendiri yang bisa dimasuki siapa saja, foto **hanya terlihat jika kamu menyalakan “Tunjukkan makananku”**.",
@@ -218,7 +219,7 @@ const id: Copy = {
               "**Cloudflare R2** — penyimpanan foto makanan dan foto profil. Disimpan secara privat di wilayah Asia-Pasifik, dan setelah hak aksesmu diperiksa, foto dikirim melalui alamat yang hanya berlaku selama satu jam.",
               "**Expo** — pengiriman notifikasi. Di iOS melalui Apple APNs, di Android melalui Google FCM. Teks notifikasi dan token perangkat ikut dikirimkan.",
               "**Apple / Google** — login. Kami menerima alamat emailmu.",
-              "**Google AdMob** — iklan interstisial dan iklan berhadiah. Pengenal iklan, informasi tayangan dan klik iklan, serta informasi perangkat dikirimkan.",
+              "**Google AdMob** — iklan native, iklan interstisial, dan iklan berhadiah. Pengenal iklan, informasi tayangan dan klik iklan, serta informasi perangkat dikirimkan.",
               "**Google Analytics for Firebase** — statistik penggunaan. Informasi penggunaan Aplikasi, ID instance aplikasi, dan informasi perangkat dikirimkan.",
               "**Cloudflare Workers dan Durable Objects** — layar Kantin Makan Bareng dan koneksi real-time. Memproses nama tampilan, kursi, gerakan, dan sapaan selama kamu berada di ruangan, serta alamat foto yang kamu pilih untuk ditunjukkan, lalu menghapusnya saat kamu keluar dari ruangan. Sebagian catatan permintaan disimpan selama beberapa hari untuk memperbaiki error.",
               "**Apple APNs (widget)** — memberi tahu widget iOS melalui token notifikasi push widget agar menggambar ulang saat ada makanan baru diunggah.",
@@ -280,6 +281,148 @@ const id: Copy = {
         blocks: [
           {
             p: "Kebijakan ini dapat diubah untuk menyesuaikan dengan peraturan atau perubahan layanan. Jika ada perubahan pada informasi yang diproses, kami akan memperbarui kebijakan ini terlebih dahulu sebelum versi yang memuat fitur tersebut dirilis, sekaligus mengubah tanggal “Terakhir diperbarui”.",
+          },
+        ],
+      },
+    ],
+  },
+
+  terms: {
+    title: "Ketentuan Layanan Makananmu, Makananku",
+    description:
+      "Penjelasan tentang syarat penggunaan, batas tanggung jawab, dan informasi operator “Makananmu, Makananku”, aplikasi untuk berbagi foto makanan dengan orang-orang di grupmu.",
+    updatedAt: "6 November 2026",
+    sections: [
+      {
+        h: "Pasal 1 (Tujuan)",
+        blocks: [
+          {
+            p: "Ketentuan ini bertujuan untuk menetapkan syarat penggunaan aplikasi iOS dan Android “Makananmu, Makananku” (selanjutnya disebut “Layanan”) yang disediakan oleh 바리바리스튜디오 (Baribari Studio) (perwakilan: 고주원 (Joowon Koh), selanjutnya disebut “Operator”), serta hak, kewajiban, dan tanggung jawab Operator dan pengguna.",
+          },
+        ],
+      },
+      {
+        h: "Pasal 2 (Isi Layanan)",
+        blocks: [
+          {
+            ol: [
+              "Layanan menyediakan fitur bagi pengguna untuk mencatat foto makanan dan berbagi foto, reaksi, serta komentar dengan orang-orang di grup yang sama.",
+              "Layanan mencakup fitur seperti membuat grup dan mengundang anggota, notifikasi dan colek, kalender catatan dan kolase, widget layar utama, serta Kantin Makan Bareng (ruang real-time untuk duduk dan makan bersama).",
+              "Layanan disediakan secara gratis, dan iklan ditampilkan di layar Layanan.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Pasal 3 (Berlakunya dan Perubahan Ketentuan)",
+        blocks: [
+          {
+            ol: [
+              "Ketentuan ini berlaku sejak dipublikasikan di halaman ini, dan dengan login ke Layanan, pengguna dianggap telah menyetujui Ketentuan ini.",
+              "Operator dapat mengubah Ketentuan ini sepanjang tidak melanggar peraturan perundang-undangan yang berlaku. Jika ada perubahan, tanggal berlaku dan alasannya akan diumumkan di halaman ini sejak 7 hari sebelum tanggal berlaku, dan untuk perubahan yang merugikan pengguna, sejak 30 hari sebelumnya.",
+              "Pengguna yang tidak menyetujui Ketentuan yang telah diubah dapat berhenti menggunakan Layanan dengan menghapus akunnya.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Pasal 4 (Akun)",
+        blocks: [
+          {
+            ol: [
+              "Pengguna menggunakan Layanan dengan login menggunakan akun Apple atau Google.",
+              "Pengguna dapat menghapus akunnya kapan saja di dalam Aplikasi. Saat dihapus, foto dan catatan yang diunggah ikut terhapus dan tidak dapat dikembalikan. Caranya dijelaskan di [Cara hapus akun](deleteAccount).",
+              "Pemrosesan informasi pribadi mengikuti [Kebijakan Privasi](privacy).",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Pasal 5 (Konten Pengguna)",
+        blocks: [
+          {
+            ol: [
+              "Hak atas konten yang diunggah pengguna, seperti foto, komentar, dan nama, tetap menjadi milik pengguna.",
+              "Operator hanya menggunakan konten sebatas yang diperlukan untuk menyediakan Layanan (penyimpanan, menampilkannya kepada orang di grup yang sama, membuat foto kecil, dan sebagainya).",
+              "Konten hanya terlihat oleh orang di grup yang sama, dan di Kantin Makan Bareng terlihat oleh orang di ruangan yang sama sebatas yang dipilih pengguna untuk ditunjukkan.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Pasal 6 (Kewajiban Pengguna)",
+        blocks: [
+          { p: "Pengguna tidak boleh mengunggah konten atau melakukan tindakan seperti berikut." },
+          {
+            ul: [
+              "Konten cabul atau kekerasan, serta konten yang menghasut kebencian atau diskriminasi",
+              "Konten yang merundung atau mencemarkan nama baik orang lain, atau melanggar informasi pribadi maupun hak atas potret orang lain",
+              "Konten yang melanggar hak cipta atau hak kekayaan intelektual lain milik orang lain",
+              "Tindakan yang mengganggu jalannya Layanan secara normal, atau menekan iklan berulang kali dengan cara yang tidak wajar",
+            ],
+          },
+          {
+            p: "Pengguna dapat melaporkan atau memblokir konten maupun orang yang tidak pantas di dalam Aplikasi. Operator akan memeriksa konten yang dilaporkan, dan jika melanggar pasal ini, Operator dapat menghapus konten tersebut atau membatasi penggunaan oleh pengguna yang bersangkutan.",
+          },
+        ],
+      },
+      {
+        h: "Pasal 7 (Iklan)",
+        blocks: [
+          {
+            ol: [
+              "Untuk menjalankan Layanan, Operator menampilkan iklan native, iklan interstisial, dan iklan berhadiah melalui Google AdMob.",
+              "Transaksi atas produk atau layanan dalam iklan terjadi antara pengguna dan pengiklan, dan Operator tidak bertanggung jawab atas isinya.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Pasal 8 (Perubahan dan Penghentian Layanan)",
+        blocks: [
+          {
+            ol: [
+              "Layanan disediakan apa adanya, dan isinya dapat berubah atau dihentikan sesuai kebutuhan operasional maupun teknis.",
+              "Jika Layanan diakhiri, sedapat mungkin kami akan memberitahukannya 30 hari sebelumnya melalui halaman ini dan Aplikasi.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Pasal 9 (Batasan Tanggung Jawab)",
+        blocks: [
+          {
+            ol: [
+              "Operator tidak bertanggung jawab atas isi konten yang diunggah pengguna maupun sengketa antarpengguna, kecuali jika terdapat kesengajaan atau kelalaian berat dari pihak Operator.",
+              "Operator tidak bertanggung jawab atas akibat yang timbul karena notifikasi tidak masuk akibat pengaturan perangkat (notifikasi dimatikan, mode senyap, penghemat baterai, dan sebagainya).",
+              "Operator tidak bertanggung jawab jika Layanan terhenti karena bencana alam atau keadaan kahar lain yang setara.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Pasal 10 (Penyelesaian Sengketa)",
+        blocks: [
+          {
+            ol: [
+              "Jika timbul sengketa terkait penggunaan Layanan, Operator dan pengguna akan menyelesaikannya melalui musyawarah dengan itikad baik.",
+              "Jika musyawarah tidak mencapai kesepakatan, gugatan dapat diajukan ke pengadilan yang berwenang menurut Undang-Undang Hukum Acara Perdata Korea. Ketentuan ini tunduk pada hukum Republik Korea.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Informasi Operator",
+        blocks: [
+          {
+            ul: [
+              "Nama usaha: 바리바리스튜디오 (Baribari Studio)",
+              "Perwakilan: 고주원 (Joowon Koh)",
+              "Nomor registrasi usaha: 895-14-03120",
+              "Nomor laporan usaha penjualan jarak jauh: 2026-서울서초-3693",
+              "Alamat: 서울특별시 서초구 바우뫼로 91, 2층 가2호 (91 Baumoe-ro, 2F Ga-2, Seocho-gu, Seoul, Republic of Korea)",
+              "Kontak: [contact@joowonkoh.com](contact)",
+            ],
           },
         ],
       },

@@ -12,18 +12,19 @@ import Legal, { legalMetadata } from "../Legal";
  *
  * 이게내연봉(`moneytick/[...path]`)과 같은 까닭으로 `[lang]/join/page.tsx` 처럼 나누지 않고 하나로 받는다:
  * 클라우드플레어 빌드(next-on-pages)는 주소가 동적 조각으로 끝나야만 "미리 만들어 둔 페이지" 로 봐 준다.
- * 빌드 때 44장을 전부 만들어 두고, 목록에 없는 주소는 404 다.
+ * 빌드 때 55장을 전부 만들어 두고, 목록에 없는 주소는 404 다.
  */
 
 interface Props {
   params: Promise<{ path: string[] }>;
 }
 
-type Page = { lang: Lang; kind: "landing" | "join" | "privacy" | "deleteAccount" };
+type Page = { lang: Lang; kind: "landing" | "join" | "privacy" | "terms" | "deleteAccount" };
 
 const KINDS: Record<string, Page["kind"]> = {
   join: "join",
   privacy: "privacy",
+  terms: "terms",
   "delete-account": "deleteAccount",
 };
 
@@ -42,6 +43,7 @@ export function generateStaticParams() {
     { path: [lang] },
     { path: [lang, "join"] },
     { path: [lang, "privacy"] },
+    { path: [lang, "terms"] },
     { path: [lang, "delete-account"] },
   ]);
 }

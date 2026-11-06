@@ -51,8 +51,8 @@ export const BASE = "/yourmealmymeal";
 export const ORIGIN = "https://joowonkoh.com";
 
 /** 언어마다 있는 네 장. `""` 는 소개. */
-export type Sub = "" | "/join" | "/privacy" | "/delete-account";
-export const SUBS: Sub[] = ["", "/join", "/privacy", "/delete-account"];
+export type Sub = "" | "/join" | "/privacy" | "/terms" | "/delete-account";
+export const SUBS: Sub[] = ["", "/join", "/privacy", "/terms", "/delete-account"];
 
 /** 이 언어의 그 페이지 주소. 한국어는 원래 주소다. */
 export function pagePath(lang: Lang, sub: Sub = ""): string {

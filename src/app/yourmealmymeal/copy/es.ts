@@ -57,7 +57,7 @@ const es: Copy = {
       },
       {
         q: "¿Tiene anuncios?",
-        a: "Hay anuncios de pantalla completa que aparecen de vez en cuando al salir de una foto o al terminar de subir una, y anuncios con recompensa que solo ves si quieres conseguir más toques. No hay banners fijos en pantalla. También recopilamos estadísticas de uso para mejorar la app. Encontrarás los detalles en la política de privacidad.",
+        a: "Hay un anuncio de una sola línea, diseñado para encajar con la app, en la parte superior de las pantallas Cámara, Grupos y Perfil; anuncios de pantalla completa que aparecen de vez en cuando al salir de una foto o al terminar de subir una, y anuncios con recompensa que solo ves si quieres conseguir más toques. También recopilamos estadísticas de uso para mejorar la app. Encontrarás los detalles en la política de privacidad.",
       },
       {
         q: "¿Qué pasa si elimino mi cuenta?",
@@ -105,6 +105,7 @@ const es: Copy = {
     homeAria: "Ir al inicio de Tu comida, mi comida",
     about: "Acerca de",
     privacy: "Política de privacidad",
+    terms: "Términos de servicio",
     deleteAccount: "Eliminar cuenta",
     language: "Idioma",
   },
@@ -120,7 +121,7 @@ const es: Copy = {
     title: "Política de privacidad de Tu comida, mi comida",
     description:
       "Información sobre los datos que trata “Tu comida, mi comida”, la app para iOS y Android, quién puede ver tus fotos y registros de comidas, y cómo eliminar tu cuenta.",
-    updatedAt: "1 de noviembre de 2026",
+    updatedAt: "6 de noviembre de 2026",
     sections: [
       {
         h: "1. Resumen",
@@ -132,7 +133,7 @@ const es: Copy = {
           {
             ul: [
               "Tus fotos y registros de comidas solo los ven **las personas que están en tus mismos grupos**.",
-              "La App muestra **anuncios intersticiales y anuncios con recompensa de Google AdMob**. Los intersticiales aparecen de vez en cuando a pantalla completa al salir de una foto o al terminar de subir una; los anuncios con recompensa los eliges ver tú mismo cuando se te acaban los toques. No hay banners fijos en pantalla. Para las estadísticas de uso utilizamos Google Analytics for Firebase. Tu nombre, correo, fotos y registros de comidas no se comparten con estos servicios.",
+              "La App muestra **anuncios nativos, anuncios intersticiales y anuncios con recompensa de Google AdMob**. Los anuncios nativos se ven como una sola línea, diseñada para encajar con las pantallas de la App, en la parte superior de las pantallas Cámara, Grupos y Perfil; los intersticiales aparecen de vez en cuando a pantalla completa al salir de una foto o al terminar de subir una; y los anuncios con recompensa los eliges ver tú mismo cuando se te acaban los toques. Para las estadísticas de uso utilizamos Google Analytics for Firebase. Tu nombre, correo, fotos y registros de comidas no se comparten con estos servicios.",
               "En iOS, después de iniciar sesión **te preguntamos primero si permites** el rastreo publicitario; aunque lo rechaces, puedes usar todas las funciones de la App.",
               "Puedes eliminar tu cuenta **directamente desde la App**, y al hacerlo se borran también tus fotos y registros.",
               "En el **Comedor compartido** (un espacio en tiempo real donde la gente se sienta a comer junta, sin hablar), tu nombre, tu personaje y tus movimientos son visibles para las personas de la misma sala. En el comedor para comer solo, donde puede entrar cualquiera, tus fotos solo se ven **si activas “Mostrar mi comida”**.",
@@ -212,7 +213,7 @@ const es: Copy = {
               "**Cloudflare R2**: almacenamiento de fotos de comidas y de perfil. Se guardan de forma privada en la región de Asia-Pacífico y, tras comprobar que tienes permiso para verlas, se entregan mediante una dirección válida solo por una hora.",
               "**Expo**: envío de notificaciones. En iOS pasan por Apple APNs y en Android por Google FCM. Se transmiten el texto de la notificación y el token del dispositivo.",
               "**Apple / Google**: inicio de sesión. Recibimos tu dirección de correo electrónico.",
-              "**Google AdMob**: anuncios intersticiales y con recompensa. Se transmiten el identificador publicitario, información de impresiones y clics de anuncios, e información del dispositivo.",
+              "**Google AdMob**: anuncios nativos, intersticiales y con recompensa. Se transmiten el identificador publicitario, información de impresiones y clics de anuncios, e información del dispositivo.",
               "**Google Analytics for Firebase**: estadísticas de uso. Se transmiten la información de uso de la App, el ID de instancia de la app e información del dispositivo.",
               "**Cloudflare Workers y Durable Objects**: pantalla del Comedor compartido y conexión en tiempo real. Tratan tu nombre visible, asiento, movimientos y saludos mientras estás en una sala, y las direcciones de las fotos que decidiste mostrar, y los borran al salir de la sala. Para corregir errores, se conserva parte de los registros de solicitudes durante unos días.",
               "**Apple APNs (widget)**: avisa al widget de iOS mediante el token de notificaciones push del widget para que se vuelva a dibujar cuando se sube una comida nueva.",
@@ -274,6 +275,148 @@ const es: Copy = {
         blocks: [
           {
             p: "Esta política puede modificarse para reflejar cambios legales o del servicio. Si cambia la información que tratamos, actualizaremos esta política antes de publicar la versión que incluya esa función y modificaremos también la fecha de “Última actualización”.",
+          },
+        ],
+      },
+    ],
+  },
+
+  terms: {
+    title: "Términos de servicio de Tu comida, mi comida",
+    description:
+      "Las condiciones de uso de Tu comida, mi comida, la app para compartir fotos de tus comidas con la gente de tus grupos, el alcance de las responsabilidades y los datos del responsable del servicio.",
+    updatedAt: "6 de noviembre de 2026",
+    sections: [
+      {
+        h: "Artículo 1 (Objeto)",
+        blocks: [
+          {
+            p: "Estos términos tienen por objeto establecer las condiciones de uso de la app para iOS y Android Tu comida, mi comida (el “Servicio”), ofrecida por 바리바리스튜디오 (Baribari Studio; representante: 고주원 (Joowon Koh); el “Responsable”), así como los derechos, obligaciones y responsabilidades del Responsable y de los usuarios.",
+          },
+        ],
+      },
+      {
+        h: "Artículo 2 (Contenido del Servicio)",
+        blocks: [
+          {
+            ol: [
+              "El Servicio permite a los usuarios registrar fotos de sus comidas y compartir fotos, reacciones y comentarios con las personas de su mismo grupo.",
+              "El Servicio incluye funciones como crear grupos e invitar a otras personas, notificaciones y toques, el calendario de comidas y los collages, los widgets de la pantalla de inicio y el Comedor compartido (un espacio en tiempo real donde la gente se sienta a comer junta).",
+              "El Servicio es gratuito y muestra anuncios en sus pantallas.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artículo 3 (Vigencia y modificación de los términos)",
+        blocks: [
+          {
+            ol: [
+              "Estos términos entran en vigor al publicarse en esta página, y se considera que el usuario los acepta al iniciar sesión en el Servicio.",
+              "El Responsable puede modificar los términos dentro de lo que permita la legislación aplicable. En ese caso, anunciará en esta página la fecha de aplicación y el motivo al menos 7 días antes de esa fecha, y al menos 30 días antes si el cambio es desfavorable para los usuarios.",
+              "El usuario que no esté de acuerdo con los términos modificados puede dejar de usar el Servicio eliminando su cuenta.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artículo 4 (Cuenta)",
+        blocks: [
+          {
+            ol: [
+              "El usuario inicia sesión en el Servicio con una cuenta de Apple o de Google.",
+              "El usuario puede eliminar su cuenta desde la App en cualquier momento. Al hacerlo se borran también las fotos y los registros que subió, y no se puede deshacer. Los detalles están en [Cómo eliminar tu cuenta](deleteAccount).",
+              "El tratamiento de los datos personales se rige por la [Política de privacidad](privacy).",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artículo 5 (Contenido de los usuarios)",
+        blocks: [
+          {
+            ol: [
+              "Los derechos sobre el contenido que sube el usuario, como fotos, comentarios y nombres, pertenecen al usuario.",
+              "El Responsable usa ese contenido solo en la medida necesaria para prestar el Servicio (guardarlo, mostrarlo a las personas del mismo grupo, crear versiones reducidas de las fotos, etc.).",
+              "El contenido solo es visible para las personas del mismo grupo. En el Comedor compartido, es visible para las personas de la misma sala dentro de lo que el usuario haya elegido mostrar.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artículo 6 (Obligaciones del usuario)",
+        blocks: [
+          { p: "El usuario no debe subir el siguiente contenido ni realizar las siguientes acciones." },
+          {
+            ul: [
+              "Contenido obsceno o violento, o que incite al odio o a la discriminación",
+              "Contenido que acose o difame a otras personas, o que vulnere sus datos personales o su derecho a la propia imagen",
+              "Contenido que vulnere los derechos de autor u otros derechos de propiedad intelectual de terceros",
+              "Acciones que interfieran con el funcionamiento normal del Servicio, o tocar anuncios repetidamente por medios fraudulentos",
+            ],
+          },
+          {
+            p: "El usuario puede denunciar o bloquear contenido o personas inapropiadas desde la App. El Responsable revisa el contenido denunciado y, si infringe este artículo, puede eliminarlo o restringir el uso del Servicio al usuario correspondiente.",
+          },
+        ],
+      },
+      {
+        h: "Artículo 7 (Publicidad)",
+        blocks: [
+          {
+            ol: [
+              "Para mantener el Servicio, el Responsable muestra anuncios nativos, anuncios intersticiales y anuncios con recompensa a través de Google AdMob.",
+              "Las transacciones de productos o servicios que aparecen en los anuncios se realizan entre el usuario y el anunciante, y el Responsable no se hace responsable de su contenido.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artículo 8 (Cambios e interrupción del Servicio)",
+        blocks: [
+          {
+            ol: [
+              "El Servicio se ofrece tal cual, y su contenido puede cambiar o interrumpirse por necesidades operativas o técnicas.",
+              "Si el Servicio va a cerrar, el Responsable lo anunciará en esta página y en la App, en la medida de lo posible con 30 días de antelación.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artículo 9 (Limitación de responsabilidad)",
+        blocks: [
+          {
+            ol: [
+              "El Responsable no se hace responsable del contenido que suben los usuarios ni de las disputas entre usuarios, salvo en caso de dolo o culpa grave por su parte.",
+              "El Responsable no se hace responsable de las consecuencias de que no lleguen notificaciones por la configuración del dispositivo (notificaciones desactivadas, modo silencio, ahorro de batería, etc.).",
+              "El Responsable no se hace responsable si el Servicio se interrumpe por desastres naturales u otros casos de fuerza mayor equivalentes.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artículo 10 (Resolución de disputas)",
+        blocks: [
+          {
+            ol: [
+              "Si surge una disputa relacionada con el uso del Servicio, el Responsable y el usuario procurarán resolverla de buena fe mediante el diálogo.",
+              "Si no se llega a un acuerdo, podrá presentarse una demanda ante el tribunal competente según la Ley de Procedimiento Civil de la República de Corea. Estos términos se rigen por las leyes de la República de Corea.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Datos del responsable",
+        blocks: [
+          {
+            ul: [
+              "Nombre comercial: 바리바리스튜디오 (Baribari Studio)",
+              "Representante: 고주원 (Joowon Koh)",
+              "Número de registro comercial: 895-14-03120",
+              "Número de registro de venta a distancia: 2026-서울서초-3693",
+              "Dirección: 서울특별시 서초구 바우뫼로 91, 2층 가2호 (91 Baumoe-ro, 2F Ga-2, Seocho-gu, Seoul, Republic of Korea)",
+              "Contacto: [contact@joowonkoh.com](contact)",
+            ],
           },
         ],
       },

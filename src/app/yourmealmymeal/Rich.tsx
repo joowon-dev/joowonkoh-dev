@@ -21,12 +21,14 @@ function target(key: LinkKey, lang: Lang, mailSubject?: string): { href: string;
       return { href: "https://policies.google.com/technologies/partner-sites", internal: false, underline: false };
     case "privacy":
       return { href: pagePath(lang, "/privacy"), internal: true, underline: true };
+    case "terms":
+      return { href: pagePath(lang, "/terms"), internal: true, underline: true };
     case "deleteAccount":
       return { href: pagePath(lang, "/delete-account"), internal: true, underline: true };
   }
 }
 
-const TOKEN = /\*\*(.+?)\*\*|\[([^\]]+)\]\((contact|privacy|deleteAccount|google|deleteMail)\)/g;
+const TOKEN = /\*\*(.+?)\*\*|\[([^\]]+)\]\((contact|privacy|terms|deleteAccount|google|deleteMail)\)/g;
 
 /**
  * 사전 글 한 줄을 그린다. `**굵게**` 와 `[글](링크 이름)` 두 가지만 안다(copy/types.ts).

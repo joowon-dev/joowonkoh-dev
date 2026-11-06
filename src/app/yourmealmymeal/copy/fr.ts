@@ -57,7 +57,7 @@ const fr: Copy = {
       },
       {
         q: "Est-ce qu’il y a des pubs ?",
-        a: "Il y a des pubs plein écran qui s’affichent de temps en temps après avoir fermé une photo ou terminé une publication, et des pubs avec récompense que tu regardes seulement si tu veux plus de Coucou. Il n’y a pas de bannière affichée en permanence. On collecte aussi des statistiques d’utilisation pour améliorer l’appli. Tous les détails sont dans la politique de confidentialité.",
+        a: "Il y a une pub d’une ligne, dessinée pour aller avec l’appli, en haut des écrans Caméra, Groupes et Moi, des pubs plein écran qui s’affichent de temps en temps après avoir fermé une photo ou terminé une publication, et des pubs avec récompense que tu regardes seulement si tu veux plus de Coucou. On collecte aussi des statistiques d’utilisation pour améliorer l’appli. Tous les détails sont dans la politique de confidentialité.",
       },
       {
         q: "Que se passe-t-il si je supprime mon compte ?",
@@ -102,6 +102,7 @@ const fr: Copy = {
     homeAria: "Accueil de Ton repas, mon repas",
     about: "À propos",
     privacy: "Confidentialité",
+    terms: "Conditions d’utilisation",
     deleteAccount: "Supprimer le compte",
     language: "Langue",
   },
@@ -117,7 +118,7 @@ const fr: Copy = {
     title: "Politique de confidentialité de Ton repas, mon repas",
     description:
       "Les informations traitées par « Ton repas, mon repas », l’appli iOS et Android, qui peut voir tes photos et tes repas, et comment supprimer ton compte.",
-    updatedAt: "1er novembre 2026",
+    updatedAt: "6 novembre 2026",
     sections: [
       {
         h: "1. Présentation",
@@ -129,7 +130,7 @@ const fr: Copy = {
           {
             ul: [
               "Vos photos et vos repas ne sont visibles **que par les personnes du même groupe que vous**.",
-              "L’Application affiche des **publicités plein écran et des publicités avec récompense Google AdMob**. Les publicités plein écran s’affichent de temps en temps sur tout l’écran après la fermeture d’une photo ou la fin d’une publication ; les publicités avec récompense ne sont regardées que si vous le choisissez, une fois vos Coucou épuisés. Il n’y a pas de bannière publicitaire affichée en permanence. Nous utilisons Google Analytics for Firebase pour les statistiques d’utilisation. Votre nom, votre e-mail, vos photos et vos repas ne sont pas transmis à ces services.",
+              "L’Application affiche des **publicités natives, des publicités plein écran et des publicités avec récompense Google AdMob**. Les publicités natives apparaissent sur une seule ligne, dessinée pour s’accorder aux écrans de l’Application, en haut des écrans Caméra, Groupes et Moi ; les publicités plein écran s’affichent de temps en temps sur tout l’écran après la fermeture d’une photo ou la fin d’une publication ; les publicités avec récompense ne sont regardées que si vous le choisissez, une fois vos Coucou épuisés. Nous utilisons Google Analytics for Firebase pour les statistiques d’utilisation. Votre nom, votre e-mail, vos photos et vos repas ne sont pas transmis à ces services.",
               "Sur iOS, après la connexion, nous vous **demandons d’abord si vous autorisez le suivi publicitaire**, et vous pouvez utiliser toutes les fonctionnalités de l’Application même si vous refusez.",
               "Vous pouvez supprimer votre compte **directement dans l’Application**, et vos photos et vos repas sont supprimés avec lui.",
               "Dans la **Cantine partagée** (un espace en temps réel où l’on s’assoit pour manger ensemble, sans se parler), votre nom, votre personnage et vos mouvements sont visibles par les personnes de la même salle. Dans la cantine solo, ouverte à tous, vos photos ne sont visibles **que si vous activez « Montrer mon repas »**.",
@@ -207,7 +208,7 @@ const fr: Copy = {
               "**Cloudflare R2** — Stockage des photos de repas et des photos de profil. Elles sont conservées de façon privée dans la région Asie-Pacifique et ne sont servies, après vérification du droit d’accès, que via des adresses valides pendant une heure.",
               "**Expo** — Envoi des notifications, via Apple APNs sur iOS et Google FCM sur Android. Le texte de la notification et le jeton de l’appareil sont transmis.",
               "**Apple / Google** — Connexion. Nous recevons votre adresse e-mail.",
-              "**Google AdMob** — Publicités plein écran et publicités avec récompense. L’identifiant publicitaire, les données d’affichage et de clic des publicités et les informations sur l’appareil sont transmis.",
+              "**Google AdMob** — Publicités natives, publicités plein écran et publicités avec récompense. L’identifiant publicitaire, les données d’affichage et de clic des publicités et les informations sur l’appareil sont transmis.",
               "**Google Analytics for Firebase** — Statistiques d’utilisation. Les données d’utilisation de l’Application, l’ID d’instance de l’application et les informations sur l’appareil sont transmis.",
               "**Cloudflare Workers et Durable Objects** — Écran de la Cantine partagée et connexion en temps réel. Ils traitent votre nom affiché, votre place, vos mouvements et vos salutations pendant que vous êtes dans une salle, ainsi que les adresses des photos que vous avez choisi de montrer, et les suppriment quand vous quittez la salle. Une partie des journaux de requêtes est conservée quelques jours pour corriger les erreurs.",
               "**Apple APNs (widget)** — Prévient le widget iOS via le jeton push du widget pour qu’il se redessine quand un nouveau repas est publié.",
@@ -267,6 +268,148 @@ const fr: Copy = {
         blocks: [
           {
             p: "La présente politique peut être modifiée pour tenir compte de l’évolution de la loi ou du service. Si les données traitées changent, nous mettrons à jour cette politique ainsi que sa date de « Dernière mise à jour » avant la publication de la version qui inclut la fonctionnalité concernée.",
+          },
+        ],
+      },
+    ],
+  },
+
+  terms: {
+    title: "Conditions d’utilisation de Ton repas, mon repas",
+    description:
+      "Les conditions d’utilisation de Ton repas, mon repas, l’application pour partager des photos de repas avec les personnes de vos groupes, l’étendue des responsabilités et les informations sur l’exploitant.",
+    updatedAt: "6 novembre 2026",
+    sections: [
+      {
+        h: "Article 1 (Objet)",
+        blocks: [
+          {
+            p: "Les présentes conditions ont pour objet de définir les conditions d’utilisation de l’application iOS et Android « Ton repas, mon repas » (le « Service »), fournie par 바리바리스튜디오 (Baribari Studio ; représentant : 고주원 (Joowon Koh) ; l’« Exploitant »), ainsi que les droits, obligations et responsabilités de l’Exploitant et des utilisateurs.",
+          },
+        ],
+      },
+      {
+        h: "Article 2 (Contenu du Service)",
+        blocks: [
+          {
+            ol: [
+              "Le Service permet aux utilisateurs d’enregistrer des photos de leurs repas et de partager photos, réactions et commentaires avec les personnes d’un même groupe.",
+              "Le Service comprend notamment la création de groupes et les invitations, les notifications et les Coucou, le calendrier des repas et les collages, les widgets de l’écran d’accueil, ainsi que la Cantine partagée (un espace en temps réel où l’on s’assoit pour manger ensemble).",
+              "Le Service est gratuit, et des publicités s’affichent sur ses écrans.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 3 (Entrée en vigueur et modification des conditions)",
+        blocks: [
+          {
+            ol: [
+              "Les présentes conditions prennent effet dès leur publication sur cette page, et l’utilisateur est réputé les avoir acceptées en se connectant au Service.",
+              "L’Exploitant peut modifier les conditions dans le respect de la législation applicable. Il annonce alors sur cette page la date d’application et le motif au moins 7 jours avant cette date, et au moins 30 jours avant pour toute modification défavorable aux utilisateurs.",
+              "L’utilisateur qui n’accepte pas les conditions modifiées peut cesser d’utiliser le Service en supprimant son compte.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 4 (Compte)",
+        blocks: [
+          {
+            ol: [
+              "L’utilisateur se connecte au Service avec un compte Apple ou Google.",
+              "L’utilisateur peut supprimer son compte à tout moment dans l’Application. La suppression efface aussi les photos et les données publiées, et elle est irréversible. Les détails figurent sur la page [Suppression du compte](deleteAccount).",
+              "Le traitement des données personnelles est régi par la [Politique de confidentialité](privacy).",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 5 (Contenus des utilisateurs)",
+        blocks: [
+          {
+            ol: [
+              "Les droits sur les contenus publiés par l’utilisateur, tels que les photos, les commentaires et les noms, appartiennent à l’utilisateur.",
+              "L’Exploitant n’utilise ces contenus que dans la mesure nécessaire à la fourniture du Service (stockage, affichage aux personnes du même groupe, création de versions réduites des photos, etc.).",
+              "Les contenus ne sont visibles que par les personnes du même groupe. Dans la Cantine partagée, ils sont visibles par les personnes de la même salle, dans la limite de ce que l’utilisateur a choisi de montrer.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 6 (Obligations de l’utilisateur)",
+        blocks: [
+          { p: "L’utilisateur ne doit pas publier les contenus suivants ni se livrer aux actes suivants." },
+          {
+            ul: [
+              "Contenus obscènes ou violents, ou incitant à la haine ou à la discrimination",
+              "Contenus qui harcèlent ou diffament autrui, ou qui portent atteinte aux données personnelles ou au droit à l’image d’autrui",
+              "Contenus qui portent atteinte aux droits d’auteur ou à d’autres droits de propriété intellectuelle d’autrui",
+              "Actes qui perturbent le fonctionnement normal du Service, ou clics répétés sur des publicités par des moyens frauduleux",
+            ],
+          },
+          {
+            p: "L’utilisateur peut signaler ou bloquer des contenus ou des personnes inappropriés dans l’Application. L’Exploitant examine les contenus signalés et, en cas de violation du présent article, peut supprimer le contenu ou restreindre l’utilisation du Service par l’utilisateur concerné.",
+          },
+        ],
+      },
+      {
+        h: "Article 7 (Publicité)",
+        blocks: [
+          {
+            ol: [
+              "Pour faire fonctionner le Service, l’Exploitant affiche des publicités natives, des publicités plein écran et des publicités avec récompense via Google AdMob.",
+              "Les transactions portant sur les produits ou services présentés dans les publicités ont lieu entre l’utilisateur et l’annonceur, et l’Exploitant n’est pas responsable de leur contenu.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 8 (Modification et interruption du Service)",
+        blocks: [
+          {
+            ol: [
+              "Le Service est fourni en l’état, et son contenu peut être modifié ou interrompu pour des raisons d’exploitation ou techniques.",
+              "En cas de fermeture du Service, l’Exploitant l’annonce dans la mesure du possible 30 jours à l’avance sur cette page et dans l’Application.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 9 (Limitation de responsabilité)",
+        blocks: [
+          {
+            ol: [
+              "L’Exploitant n’est pas responsable du contenu publié par les utilisateurs ni des litiges entre utilisateurs, sauf en cas de faute intentionnelle ou de faute lourde de sa part.",
+              "L’Exploitant n’est pas responsable des conséquences d’une notification non reçue en raison des réglages de l’appareil (notifications désactivées, mode silencieux, économiseur de batterie, etc.).",
+              "L’Exploitant n’est pas responsable d’une interruption du Service causée par une catastrophe naturelle ou un cas de force majeure équivalent.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 10 (Règlement des litiges)",
+        blocks: [
+          {
+            ol: [
+              "En cas de litige lié à l’utilisation du Service, l’Exploitant et l’utilisateur s’efforcent de le régler de bonne foi par la discussion.",
+              "À défaut d’accord, une action peut être portée devant le tribunal compétent selon le Code de procédure civile de la République de Corée. Les présentes conditions sont régies par le droit de la République de Corée.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Informations sur l’exploitant",
+        blocks: [
+          {
+            ul: [
+              "Nom commercial : 바리바리스튜디오 (Baribari Studio)",
+              "Représentant : 고주원 (Joowon Koh)",
+              "Numéro d’immatriculation de l’entreprise : 895-14-03120",
+              "Numéro de déclaration de vente à distance : 2026-서울서초-3693",
+              "Adresse : 서울특별시 서초구 바우뫼로 91, 2층 가2호 (91 Baumoe-ro, 2F Ga-2, Seocho-gu, Seoul, Republic of Korea)",
+              "Contact : [contact@joowonkoh.com](contact)",
+            ],
           },
         ],
       },

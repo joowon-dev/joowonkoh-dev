@@ -52,7 +52,7 @@ const vi: Copy = {
       },
       {
         q: "Ứng dụng có quảng cáo không?",
-        a: "Có quảng cáo toàn màn hình thỉnh thoảng hiện ra sau khi bạn xem xong ảnh hoặc đăng ảnh xong, và quảng cáo có thưởng chỉ xem khi bạn muốn nhận thêm lượt Chọc. Không có banner luôn hiện trên màn hình. Chúng tôi cũng thu thập số liệu sử dụng để cải thiện ứng dụng. Chi tiết có trong Chính sách quyền riêng tư.",
+        a: "Có một dòng quảng cáo được vẽ hợp với giao diện ứng dụng ở phía trên màn hình Máy ảnh, Nhóm và Tôi, quảng cáo toàn màn hình thỉnh thoảng hiện ra sau khi bạn xem xong ảnh hoặc đăng ảnh xong, và quảng cáo có thưởng chỉ xem khi bạn muốn nhận thêm lượt Chọc. Chúng tôi cũng thu thập số liệu sử dụng để cải thiện ứng dụng. Chi tiết có trong Chính sách quyền riêng tư.",
       },
       {
         q: "Xóa tài khoản thì sẽ thế nào?",
@@ -97,6 +97,7 @@ const vi: Copy = {
     homeAria: "Về trang đầu Cơm bạn, cơm mình",
     about: "Giới thiệu",
     privacy: "Quyền riêng tư",
+    terms: "Điều khoản sử dụng",
     deleteAccount: "Xóa tài khoản",
     language: "Ngôn ngữ",
   },
@@ -112,7 +113,7 @@ const vi: Copy = {
     title: "Chính sách quyền riêng tư của Cơm bạn, cơm mình",
     description:
       "Hướng dẫn về thông tin mà ứng dụng “Cơm bạn, cơm mình” trên iOS và Android xử lý, ai có thể xem ảnh và ghi chép bữa ăn, và cách xóa tài khoản.",
-    updatedAt: "Ngày 1 tháng 11 năm 2026",
+    updatedAt: "Ngày 6 tháng 11 năm 2026",
     sections: [
       {
         h: "1. Tổng quan",
@@ -124,7 +125,7 @@ const vi: Copy = {
           {
             ul: [
               "Ảnh và ghi chép bữa ăn **chỉ hiển thị với những người cùng nhóm với bạn**.",
-              "Ứng dụng hiển thị **quảng cáo toàn màn hình và quảng cáo có thưởng của Google AdMob**. Quảng cáo toàn màn hình thỉnh thoảng hiện ra chiếm cả màn hình sau khi bạn xem xong ảnh hoặc đăng ảnh xong; quảng cáo có thưởng do người dùng tự chọn xem khi đã dùng hết lượt Chọc. Không có quảng cáo banner luôn hiện trên màn hình. Ứng dụng dùng Google Analytics for Firebase để thống kê sử dụng. Tên, email, ảnh và ghi chép bữa ăn không được chuyển cho các dịch vụ này.",
+              "Ứng dụng hiển thị **quảng cáo gốc (native), quảng cáo toàn màn hình và quảng cáo có thưởng của Google AdMob**. Quảng cáo gốc hiện thành một dòng được vẽ hợp với giao diện Ứng dụng ở phía trên màn hình Máy ảnh, Nhóm và Tôi; quảng cáo toàn màn hình thỉnh thoảng hiện ra chiếm cả màn hình sau khi bạn xem xong ảnh hoặc đăng ảnh xong; quảng cáo có thưởng do người dùng tự chọn xem khi đã dùng hết lượt Chọc. Ứng dụng dùng Google Analytics for Firebase để thống kê sử dụng. Tên, email, ảnh và ghi chép bữa ăn không được chuyển cho các dịch vụ này.",
               "Trên iOS, sau khi đăng nhập, Ứng dụng sẽ **hỏi trước bạn có cho phép theo dõi quảng cáo hay không**; dù từ chối, bạn vẫn dùng được mọi tính năng của Ứng dụng.",
               "Bạn có thể **tự xóa tài khoản ngay trong Ứng dụng**; khi xóa, ảnh và ghi chép cũng bị xóa theo.",
               "Trong **Quán ăn cùng nhau** (không gian thời gian thực để cùng ngồi ăn mà không cần trò chuyện), tên, nhân vật và chuyển động của bạn hiển thị với những người cùng phòng. Ở quán ăn một mình, nơi ai cũng vào được, ảnh **chỉ hiển thị khi bạn bật “Cho xem cơm của mình”**.",
@@ -204,7 +205,7 @@ const vi: Copy = {
               "**Cloudflare R2** — Lưu ảnh bữa ăn và ảnh đại diện. Được lưu riêng tư tại khu vực châu Á – Thái Bình Dương, và sau khi xác nhận quyền xem, ảnh được cung cấp qua địa chỉ chỉ có hiệu lực trong một giờ.",
               "**Expo** — Gửi thông báo. iOS đi qua Apple APNs, Android đi qua Google FCM. Nội dung thông báo và mã thiết bị được chuyển đi.",
               "**Apple / Google** — Đăng nhập. Nhận địa chỉ email.",
-              "**Google AdMob** — Quảng cáo toàn màn hình và quảng cáo có thưởng. Mã định danh quảng cáo, thông tin hiển thị và nhấp quảng cáo, thông tin thiết bị được chuyển đi.",
+              "**Google AdMob** — Quảng cáo gốc (native), quảng cáo toàn màn hình và quảng cáo có thưởng. Mã định danh quảng cáo, thông tin hiển thị và nhấp quảng cáo, thông tin thiết bị được chuyển đi.",
               "**Google Analytics for Firebase** — Thống kê sử dụng. Thông tin sử dụng ứng dụng, ID phiên bản ứng dụng, thông tin thiết bị được chuyển đi.",
               "**Cloudflare Workers và Durable Objects** — Màn hình Quán ăn cùng nhau và kết nối thời gian thực. Xử lý tên hiển thị, chỗ ngồi, chuyển động, lời chào trong lúc bạn ở trong phòng, cùng địa chỉ ảnh mà bạn đã chọn cho xem, và xóa khi bạn rời phòng. Một phần nhật ký yêu cầu được lưu vài ngày để sửa lỗi.",
               "**Apple APNs (tiện ích)** — Báo cho tiện ích iOS qua mã thông báo đẩy của tiện ích để vẽ lại khi có bữa ăn mới được đăng.",
@@ -266,6 +267,148 @@ const vi: Copy = {
         blocks: [
           {
             p: "Chính sách này có thể được sửa đổi để phản ánh thay đổi của pháp luật hoặc dịch vụ. Khi các mục thông tin được xử lý có thay đổi, chúng tôi sẽ cập nhật chính sách này trước khi phát hành phiên bản có tính năng đó và sửa ngày “Cập nhật lần cuối” cùng lúc.",
+          },
+        ],
+      },
+    ],
+  },
+
+  terms: {
+    title: "Điều khoản sử dụng của Cơm bạn, cơm mình",
+    description:
+      "Hướng dẫn về điều kiện sử dụng, phạm vi trách nhiệm và thông tin đơn vị vận hành của “Cơm bạn, cơm mình”, ứng dụng chia sẻ ảnh bữa ăn với những người trong nhóm.",
+    updatedAt: "Ngày 6 tháng 11 năm 2026",
+    sections: [
+      {
+        h: "Điều 1 (Mục đích)",
+        blocks: [
+          {
+            p: "Điều khoản này nhằm quy định điều kiện sử dụng ứng dụng iOS và Android “Cơm bạn, cơm mình” (sau đây gọi là “Dịch vụ”) do 바리바리스튜디오 (Baribari Studio) (người đại diện: 고주원 (Joowon Koh), sau đây gọi là “Đơn vị vận hành”) cung cấp, cùng quyền, nghĩa vụ và trách nhiệm của Đơn vị vận hành và người dùng.",
+          },
+        ],
+      },
+      {
+        h: "Điều 2 (Nội dung Dịch vụ)",
+        blocks: [
+          {
+            ol: [
+              "Dịch vụ cung cấp tính năng để người dùng ghi lại ảnh bữa ăn và chia sẻ ảnh, cảm xúc, bình luận với những người cùng nhóm.",
+              "Dịch vụ bao gồm các tính năng như tạo nhóm và mời, thông báo và Chọc, lịch ghi chép và ảnh ghép, tiện ích màn hình chính, Quán ăn cùng nhau (không gian thời gian thực để cùng ngồi ăn).",
+              "Dịch vụ được cung cấp miễn phí, và quảng cáo được hiển thị trên màn hình Dịch vụ.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Điều 3 (Hiệu lực và thay đổi Điều khoản)",
+        blocks: [
+          {
+            ol: [
+              "Điều khoản này có hiệu lực khi được đăng trên trang này, và người dùng được xem là đã đồng ý với Điều khoản khi đăng nhập vào Dịch vụ.",
+              "Đơn vị vận hành có thể thay đổi Điều khoản trong phạm vi không trái với pháp luật liên quan. Khi thay đổi, ngày áp dụng và lý do sẽ được thông báo trên trang này từ 7 ngày trước ngày áp dụng; với thay đổi bất lợi cho người dùng, sẽ thông báo từ 30 ngày trước.",
+              "Người dùng không đồng ý với Điều khoản đã thay đổi có thể ngừng sử dụng bằng cách xóa tài khoản.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Điều 4 (Tài khoản)",
+        blocks: [
+          {
+            ol: [
+              "Người dùng đăng nhập bằng tài khoản Apple hoặc Google để sử dụng Dịch vụ.",
+              "Người dùng có thể xóa tài khoản bất cứ lúc nào ngay trong ứng dụng; khi xóa, ảnh và ghi chép đã đăng cũng bị xóa theo và không thể khôi phục. Cách làm chi tiết có tại [Hướng dẫn xóa tài khoản](deleteAccount).",
+              "Việc xử lý thông tin cá nhân tuân theo [Chính sách quyền riêng tư](privacy).",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Điều 5 (Nội dung do người dùng đăng)",
+        blocks: [
+          {
+            ol: [
+              "Quyền đối với nội dung người dùng đăng như ảnh, bình luận, tên thuộc về người dùng.",
+              "Đơn vị vận hành chỉ sử dụng nội dung trong phạm vi cần thiết để cung cấp Dịch vụ (lưu trữ, hiển thị cho người cùng nhóm, tạo ảnh thu nhỏ, v.v.).",
+              "Nội dung chỉ hiển thị với những người cùng nhóm; trong Quán ăn cùng nhau, nội dung hiển thị với người cùng phòng trong phạm vi người dùng đã chọn cho xem.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Điều 6 (Nghĩa vụ của người dùng)",
+        blocks: [
+          { p: "Người dùng không được đăng nội dung hoặc thực hiện hành vi như sau." },
+          {
+            ul: [
+              "Nội dung khiêu dâm hoặc bạo lực, nội dung kích động thù ghét, phân biệt đối xử",
+              "Nội dung quấy rối hoặc bôi nhọ danh dự người khác, xâm phạm thông tin cá nhân hoặc quyền hình ảnh của người khác",
+              "Nội dung xâm phạm quyền tác giả hoặc quyền sở hữu trí tuệ khác của người khác",
+              "Hành vi cản trở hoạt động bình thường của Dịch vụ, hoặc nhấn quảng cáo lặp đi lặp lại bằng cách gian lận",
+            ],
+          },
+          {
+            p: "Người dùng có thể báo cáo hoặc chặn nội dung hay người không phù hợp ngay trong ứng dụng. Đơn vị vận hành sẽ kiểm tra nội dung bị báo cáo và nếu vi phạm điều này, có thể xóa nội dung hoặc hạn chế việc sử dụng của người dùng đó.",
+          },
+        ],
+      },
+      {
+        h: "Điều 7 (Quảng cáo)",
+        blocks: [
+          {
+            ol: [
+              "Để vận hành Dịch vụ, Đơn vị vận hành hiển thị quảng cáo gốc (native), quảng cáo toàn màn hình và quảng cáo có thưởng thông qua Google AdMob.",
+              "Giao dịch hàng hóa, dịch vụ trong quảng cáo diễn ra giữa người dùng và nhà quảng cáo, và Đơn vị vận hành không chịu trách nhiệm về nội dung đó.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Điều 8 (Thay đổi và tạm ngừng Dịch vụ)",
+        blocks: [
+          {
+            ol: [
+              "Dịch vụ được cung cấp theo hiện trạng, và nội dung có thể thay đổi hoặc bị ngừng tùy theo nhu cầu vận hành, kỹ thuật.",
+              "Khi chấm dứt Dịch vụ, chúng tôi sẽ cố gắng thông báo trước 30 ngày qua trang này và ứng dụng.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Điều 9 (Giới hạn trách nhiệm)",
+        blocks: [
+          {
+            ol: [
+              "Đơn vị vận hành không chịu trách nhiệm về nội dung người dùng đăng và tranh chấp giữa các người dùng, trừ trường hợp Đơn vị vận hành có lỗi cố ý hoặc lỗi nghiêm trọng.",
+              "Đơn vị vận hành không chịu trách nhiệm về hậu quả phát sinh do không nhận được thông báo vì cài đặt thiết bị (tắt thông báo, chế độ im lặng, tiết kiệm pin, v.v.).",
+              "Đơn vị vận hành không chịu trách nhiệm khi Dịch vụ bị gián đoạn do thiên tai hoặc sự kiện bất khả kháng tương tự.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Điều 10 (Giải quyết tranh chấp)",
+        blocks: [
+          {
+            ol: [
+              "Khi phát sinh tranh chấp liên quan đến việc sử dụng Dịch vụ, Đơn vị vận hành và người dùng sẽ thiện chí thương lượng để giải quyết.",
+              "Nếu thương lượng không thành, có thể khởi kiện tại tòa án có thẩm quyền theo Luật Tố tụng Dân sự của Hàn Quốc. Điều khoản này tuân theo pháp luật Đại Hàn Dân Quốc.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Thông tin đơn vị vận hành",
+        blocks: [
+          {
+            ul: [
+              "Tên cơ sở kinh doanh: 바리바리스튜디오 (Baribari Studio)",
+              "Người đại diện: 고주원 (Joowon Koh)",
+              "Số đăng ký kinh doanh: 895-14-03120",
+              "Số đăng ký kinh doanh bán hàng từ xa: 2026-서울서초-3693",
+              "Địa chỉ: 서울특별시 서초구 바우뫼로 91, 2층 가2호 (91 Baumoe-ro, 2F Ga-2, Seocho-gu, Seoul, Republic of Korea)",
+              "Liên hệ: [contact@joowonkoh.com](contact)",
+            ],
           },
         ],
       },

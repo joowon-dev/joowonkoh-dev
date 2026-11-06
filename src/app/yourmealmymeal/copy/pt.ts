@@ -57,7 +57,7 @@ const pt: Copy = {
       },
       {
         q: "Tem anúncios?",
-        a: "Tem anúncios de tela cheia que aparecem de vez em quando ao sair de uma foto ou depois de terminar um envio, e anúncios premiados que você só vê se quiser ganhar mais cutucadas. Não tem banner fixo na tela. Também coletamos estatísticas de uso para melhorar o app. Os detalhes estão na política de privacidade.",
+        a: "Tem um anúncio de uma linha, desenhado pra combinar com o app, no topo das telas Câmera, Grupos e Perfil; anúncios de tela cheia que aparecem de vez em quando ao sair de uma foto ou depois de terminar um envio; e anúncios premiados que você só vê se quiser ganhar mais cutucadas. Também coletamos estatísticas de uso para melhorar o app. Os detalhes estão na política de privacidade.",
       },
       {
         q: "O que acontece se eu excluir minha conta?",
@@ -111,6 +111,7 @@ const pt: Copy = {
     homeAria: "Ir para o início do “Seu prato, meu prato”",
     about: "Sobre",
     privacy: "Política de privacidade",
+    terms: "Termos de uso",
     deleteAccount: "Excluir conta",
     language: "Idioma",
   },
@@ -126,7 +127,7 @@ const pt: Copy = {
     title: "Política de privacidade – Seu prato, meu prato",
     description:
       "Informações sobre os dados tratados pelo “Seu prato, meu prato”, app para iOS e Android, quem pode ver suas fotos e registros de refeições e como excluir sua conta.",
-    updatedAt: "1º de novembro de 2026",
+    updatedAt: "6 de novembro de 2026",
     sections: [
       {
         h: "1. Visão geral",
@@ -138,7 +139,7 @@ const pt: Copy = {
           {
             ul: [
               "Suas fotos e registros de refeições ficam visíveis **apenas para as pessoas que estão nos mesmos grupos que você**.",
-              "O App exibe **anúncios intersticiais e anúncios premiados do Google AdMob**. Os intersticiais aparecem de vez em quando em tela cheia ao sair de uma foto ou depois de terminar um envio; os anúncios premiados você mesmo escolhe assistir quando suas cutucadas acabam. Não há banners fixos na tela. Para estatísticas de uso, usamos o Google Analytics for Firebase. Seu nome, e-mail, fotos e registros de refeições não são repassados a esses serviços.",
+              "O App exibe **anúncios nativos, anúncios intersticiais e anúncios premiados do Google AdMob**. Os anúncios nativos aparecem como uma única linha, desenhada para combinar com as telas do App, no topo das telas Câmera, Grupos e Perfil; os intersticiais aparecem de vez em quando em tela cheia ao sair de uma foto ou depois de terminar um envio; os anúncios premiados você mesmo escolhe assistir quando suas cutucadas acabam. Para estatísticas de uso, usamos o Google Analytics for Firebase. Seu nome, e-mail, fotos e registros de refeições não são repassados a esses serviços.",
               "No iOS, depois do login, **perguntamos primeiro se você permite** o rastreamento de anúncios; mesmo que você recuse, pode usar todas as funções do App normalmente.",
               "Você pode excluir sua conta **diretamente no App**, e ao fazer isso suas fotos e registros também são apagados.",
               "No **Refeitório compartilhado** (um espaço em tempo real onde as pessoas se sentam e comem juntas, sem conversar), seu nome, seu personagem e seus movimentos ficam visíveis para as pessoas da mesma sala. No refeitório para comer sozinho, onde qualquer pessoa pode entrar, suas fotos só aparecem **se você ativar “Mostrar minha refeição”**.",
@@ -218,7 +219,7 @@ const pt: Copy = {
               "**Cloudflare R2**: armazenamento das fotos das refeições e de perfil. Ficam guardadas de forma privada na região Ásia-Pacífico e, depois de verificar que você tem permissão para vê-las, são entregues por um endereço válido por apenas uma hora.",
               "**Expo**: entrega de notificações. No iOS passam pelo Apple APNs e no Android pelo Google FCM. São transmitidos o texto da notificação e o token do dispositivo.",
               "**Apple / Google**: login. Recebemos seu endereço de e-mail.",
-              "**Google AdMob**: anúncios intersticiais e premiados. São transmitidos o identificador de publicidade, informações de exibição e cliques em anúncios e informações do dispositivo.",
+              "**Google AdMob**: anúncios nativos, intersticiais e premiados. São transmitidos o identificador de publicidade, informações de exibição e cliques em anúncios e informações do dispositivo.",
               "**Google Analytics for Firebase**: estatísticas de uso. São transmitidos as informações de uso do App, o ID da instância do app e informações do dispositivo.",
               "**Cloudflare Workers e Durable Objects**: tela do Refeitório compartilhado e conexão em tempo real. Tratam seu nome de exibição, lugar, movimentos e saudações enquanto você está em uma sala, e os endereços das fotos que você decidiu mostrar, e os apagam quando você sai da sala. Para corrigir erros, parte dos registros de solicitações é guardada por alguns dias.",
               "**Apple APNs (widget)**: avisa o widget do iOS pelo token de notificações push do widget para que ele se redesenhe quando uma nova refeição é enviada.",
@@ -280,6 +281,148 @@ const pt: Copy = {
         blocks: [
           {
             p: "Esta política pode ser alterada para refletir mudanças na legislação ou no serviço. Se houver mudança nas informações tratadas, atualizaremos esta política antes de lançar a versão que inclui essa função e alteraremos também a data de “Última atualização”.",
+          },
+        ],
+      },
+    ],
+  },
+
+  terms: {
+    title: "Termos de uso – Seu prato, meu prato",
+    description:
+      "Condições de uso, limites de responsabilidade e informações do responsável pelo “Seu prato, meu prato”, app para compartilhar fotos das refeições com as pessoas do seu grupo.",
+    updatedAt: "6 de novembro de 2026",
+    sections: [
+      {
+        h: "Artigo 1 (Objetivo)",
+        blocks: [
+          {
+            p: "Estes termos têm como objetivo estabelecer as condições de uso do “Seu prato, meu prato” (doravante, “o Serviço”), aplicativo para iOS e Android oferecido pela 바리바리스튜디오 (Baribari Studio), representada por 고주원 (Joowon Koh) (doravante, “o Operador”), bem como os direitos, deveres e responsabilidades do Operador e dos usuários.",
+          },
+        ],
+      },
+      {
+        h: "Artigo 2 (Conteúdo do Serviço)",
+        blocks: [
+          {
+            ol: [
+              "O Serviço permite que você registre fotos das suas refeições e compartilhe fotos, reações e comentários com as pessoas que pertencem aos mesmos grupos que você.",
+              "O Serviço inclui funções como criar grupos e convidar pessoas, notificações e cutucadas, calendário de registros e colagens, widget da tela inicial e o Refeitório compartilhado (um espaço em tempo real onde as pessoas se sentam e comem juntas).",
+              "O Serviço é gratuito, e são exibidos anúncios nas telas do Serviço.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artigo 3 (Vigência e alteração dos termos)",
+        blocks: [
+          {
+            ol: [
+              "Estes termos entram em vigor ao serem publicados nesta página, e, ao fazer login no Serviço, considera-se que você concorda com eles.",
+              "O Operador pode alterar estes termos, desde que não viole a legislação aplicável. Nesse caso, a data de vigência e o motivo serão informados nesta página a partir de 7 dias antes da data de vigência; alterações desfavoráveis ao usuário serão informadas a partir de 30 dias antes.",
+              "Se você não concordar com os termos alterados, pode excluir sua conta e deixar de usar o Serviço.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artigo 4 (Conta)",
+        blocks: [
+          {
+            ol: [
+              "Você usa o Serviço fazendo login com uma conta Apple ou Google.",
+              "Você pode excluir sua conta a qualquer momento dentro do App. Ao excluí-la, as fotos e registros que você enviou também são apagados, sem possibilidade de recuperação. Os detalhes estão em [Como excluir a conta](deleteAccount).",
+              "O tratamento de informações pessoais segue a [Política de privacidade](privacy).",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artigo 5 (Conteúdo publicado pelo usuário)",
+        blocks: [
+          {
+            ol: [
+              "Os direitos sobre o conteúdo que você publica, como fotos, comentários e nomes, pertencem a você.",
+              "O Operador usa esse conteúdo apenas na medida necessária para prestar o Serviço (armazenar, mostrar às pessoas do mesmo grupo, criar miniaturas etc.).",
+              "O conteúdo fica visível apenas para as pessoas dos mesmos grupos que você e, no Refeitório compartilhado, para as pessoas da mesma sala, dentro do que você escolheu mostrar.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artigo 6 (Deveres do usuário)",
+        blocks: [
+          { p: "Você não deve publicar conteúdo nem praticar atos como os seguintes." },
+          {
+            ul: [
+              "Conteúdo obsceno ou violento, ou que incite ódio ou discriminação",
+              "Conteúdo que assedie ou difame outras pessoas, ou que viole os dados pessoais ou o direito de imagem de outras pessoas",
+              "Conteúdo que viole direitos autorais ou outros direitos de propriedade intelectual de terceiros",
+              "Atos que atrapalhem o funcionamento normal do Serviço ou que cliquem repetidamente em anúncios de forma fraudulenta",
+            ],
+          },
+          {
+            p: "Você pode denunciar ou bloquear conteúdo ou pessoas impróprias dentro do App. O Operador verifica o conteúdo denunciado e, se houver violação deste artigo, pode removê-lo ou restringir o uso do Serviço pelo usuário responsável.",
+          },
+        ],
+      },
+      {
+        h: "Artigo 7 (Anúncios)",
+        blocks: [
+          {
+            ol: [
+              "Para manter o Serviço, o Operador exibe anúncios nativos, intersticiais e premiados por meio do Google AdMob.",
+              "As transações de produtos ou serviços anunciados ocorrem entre você e o anunciante, e o Operador não se responsabiliza pelo conteúdo dos anúncios.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artigo 8 (Alteração e interrupção do Serviço)",
+        blocks: [
+          {
+            ol: [
+              "O Serviço é oferecido no estado em que se encontra e pode ser alterado ou interrompido por necessidades operacionais ou técnicas.",
+              "Se o Serviço for encerrado, avisaremos nesta página e no App, sempre que possível, com 30 dias de antecedência.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artigo 9 (Limitação de responsabilidade)",
+        blocks: [
+          {
+            ol: [
+              "O Operador não se responsabiliza pelo conteúdo publicado pelos usuários nem por disputas entre usuários, exceto em caso de dolo ou culpa grave do Operador.",
+              "O Operador não se responsabiliza por consequências de notificações que não chegaram por causa das configurações do dispositivo (notificações desativadas, modo silencioso, economia de bateria etc.).",
+              "O Operador não se responsabiliza por interrupções do Serviço causadas por desastres naturais ou outros casos de força maior equivalentes.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artigo 10 (Resolução de disputas)",
+        blocks: [
+          {
+            ol: [
+              "Se surgir uma disputa relacionada ao uso do Serviço, o Operador e o usuário buscarão resolvê-la por meio de negociação de boa-fé.",
+              "Se não houver acordo, a ação poderá ser proposta no tribunal competente segundo o Código de Processo Civil da Coreia do Sul. Estes termos são regidos pelas leis da República da Coreia.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Informações do responsável",
+        blocks: [
+          {
+            ul: [
+              "Razão social: 바리바리스튜디오 (Baribari Studio)",
+              "Representante: 고주원 (Joowon Koh)",
+              "Número de registro da empresa: 895-14-03120",
+              "Número de registro de vendas a distância: 2026-서울서초-3693",
+              "Endereço: 서울특별시 서초구 바우뫼로 91, 2층 가2호 (91 Baumoe-ro, 2F Ga-2, Seocho-gu, Seoul, Republic of Korea)",
+              "Contato: [contact@joowonkoh.com](contact)",
+            ],
           },
         ],
       },

@@ -6,7 +6,7 @@
  * - `[보이는 글](링크 이름)` — 링크 이름은 `LinkKey` 중 하나. 주소는 언어에 맞게 Rich.tsx 가 붙인다.
  */
 
-export type LinkKey = "contact" | "privacy" | "deleteAccount" | "google" | "deleteMail";
+export type LinkKey = "contact" | "privacy" | "terms" | "deleteAccount" | "google" | "deleteMail";
 
 /** 개인정보처리방침·계정 삭제 안내의 한 덩어리. */
 export type Block = { p: string } | { ul: string[] } | { ol: string[] };
@@ -78,6 +78,7 @@ export type Copy = {
     homeAria: string;
     about: string;
     privacy: string;
+    terms: string;
     deleteAccount: string;
     language: string;
   };
@@ -91,5 +92,7 @@ export type Copy = {
     koreanLink: string;
   };
   privacy: LegalDoc;
+  /** 이용약관. 맨 끝 절에 사업자 정보(상호·대표·등록번호·통신판매업 신고번호·주소)를 둔다. */
+  terms: LegalDoc;
   deleteAccount: LegalDoc & { mailSubject: string };
 };

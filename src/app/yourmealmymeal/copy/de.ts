@@ -57,7 +57,7 @@ const de: Copy = {
       },
       {
         q: "Gibt es Werbung?",
-        a: "Es gibt Vollbildwerbung, die gelegentlich erscheint, nachdem du ein Foto geschlossen oder einen Upload abgeschlossen hast, und Werbung mit Belohnung, die du nur ansiehst, wenn du mehr Stupser möchtest. Dauerhaft eingeblendete Banner gibt es nicht. Außerdem erfassen wir Nutzungsstatistiken, um die App zu verbessern. Die Details stehen in der Datenschutzerklärung.",
+        a: "Oben auf den Bildschirmen Kamera, Gruppen und Ich gibt es eine einzeilige Werbung, die passend zur App gestaltet ist. Dazu kommen Vollbildwerbung, die gelegentlich erscheint, nachdem du ein Foto geschlossen oder einen Upload abgeschlossen hast, und Werbung mit Belohnung, die du nur ansiehst, wenn du mehr Stupser möchtest. Außerdem erfassen wir Nutzungsstatistiken, um die App zu verbessern. Die Details stehen in der Datenschutzerklärung.",
       },
       {
         q: "Was passiert, wenn ich mein Konto lösche?",
@@ -102,6 +102,7 @@ const de: Copy = {
     homeAria: "Startseite von Dein Essen, mein Essen",
     about: "Über die App",
     privacy: "Datenschutz",
+    terms: "Nutzungsbedingungen",
     deleteAccount: "Konto löschen",
     language: "Sprache",
   },
@@ -117,7 +118,7 @@ const de: Copy = {
     title: "Datenschutzerklärung – Dein Essen, mein Essen",
     description:
       "Welche Daten die iOS- und Android-App „Dein Essen, mein Essen“ verarbeitet, wer deine Fotos und Mahlzeiteneinträge sehen kann und wie du dein Konto löschst.",
-    updatedAt: "1. November 2026",
+    updatedAt: "6. November 2026",
     sections: [
       {
         h: "1. Überblick",
@@ -129,7 +130,7 @@ const de: Copy = {
           {
             ul: [
               "Fotos und Mahlzeiteneinträge sind **nur für Personen in derselben Gruppe wie du** sichtbar.",
-              "Die App zeigt **Vollbildwerbung und Werbung mit Belohnung von Google AdMob**. Vollbildwerbung erscheint gelegentlich bildschirmfüllend, nachdem du ein Foto geschlossen oder einen Upload abgeschlossen hast. Werbung mit Belohnung siehst du nur, wenn du sie selbst auswählst, nachdem deine Stupser aufgebraucht sind. Dauerhaft eingeblendete Bannerwerbung gibt es nicht. Für Nutzungsstatistiken verwenden wir Google Analytics for Firebase. Name, E-Mail-Adresse, Fotos und Mahlzeiteneinträge werden nicht an diese Dienste weitergegeben.",
+              "Die App zeigt **native Werbung, Vollbildwerbung und Werbung mit Belohnung von Google AdMob**. Native Werbung erscheint als einzelne Zeile, passend zum Design der App, oben auf den Bildschirmen Kamera, Gruppen und Ich. Vollbildwerbung erscheint gelegentlich bildschirmfüllend, nachdem du ein Foto geschlossen oder einen Upload abgeschlossen hast. Werbung mit Belohnung siehst du nur, wenn du sie selbst auswählst, nachdem deine Stupser aufgebraucht sind. Für Nutzungsstatistiken verwenden wir Google Analytics for Firebase. Name, E-Mail-Adresse, Fotos und Mahlzeiteneinträge werden nicht an diese Dienste weitergegeben.",
               "Unter iOS **fragen wir nach der Anmeldung zuerst**, ob du Werbe-Tracking erlaubst. Auch wenn du ablehnst, kannst du alle Funktionen der App uneingeschränkt nutzen.",
               "Du kannst dein Konto **direkt in der App** löschen. Dabei werden auch deine Fotos und Einträge gelöscht.",
               "In der **Gemeinsamen Kantine** (einem Echtzeit-Raum, in dem man sich ohne Worte zusammensetzt und isst) sind dein Name, deine Figur und deine Bewegungen für Personen im selben Raum sichtbar. In der Solo-Kantine, die alle betreten können, werden deine Fotos **nur angezeigt, wenn du „Mein Essen zeigen“ einschaltest**.",
@@ -207,7 +208,7 @@ const de: Copy = {
               "**Cloudflare R2** – Speicherung von Mahlzeiten- und Profilfotos. Die Fotos werden privat in der Region Asien-Pazifik gespeichert und erst nach Prüfung der Berechtigung über Adressen ausgeliefert, die nur eine Stunde gültig sind.",
               "**Expo** – Zustellung von Benachrichtigungen, unter iOS über Apple APNs, unter Android über Google FCM. Übermittelt werden der Benachrichtigungstext und der Geräte-Token.",
               "**Apple / Google** – Anmeldung. Wir erhalten deine E-Mail-Adresse.",
-              "**Google AdMob** – Vollbildwerbung und Werbung mit Belohnung. Übermittelt werden Werbe-ID, Daten zu Werbeeinblendungen und -klicks sowie Gerätedaten.",
+              "**Google AdMob** – Native Werbung, Vollbildwerbung und Werbung mit Belohnung. Übermittelt werden Werbe-ID, Daten zu Werbeeinblendungen und -klicks sowie Gerätedaten.",
               "**Google Analytics for Firebase** – Nutzungsstatistiken. Übermittelt werden App-Nutzungsdaten, App-Instanz-ID und Gerätedaten.",
               "**Cloudflare Workers und Durable Objects** – Bildschirm der Gemeinsamen Kantine und Echtzeitverbindung. Verarbeitet werden Anzeigename, Platz, Bewegungen und Grüße, solange du in einem Raum bist, sowie die Adressen der Fotos, die du zeigen möchtest; sie werden gelöscht, wenn du den Raum verlässt. Zur Fehlerbehebung wird ein Teil der Anfrageprotokolle einige Tage aufbewahrt.",
               "**Apple APNs (Widget)** – benachrichtigt das iOS-Widget über den Widget-Push-Token, damit es sich neu zeichnet, sobald eine neue Mahlzeit hochgeladen wird.",
@@ -267,6 +268,148 @@ const de: Copy = {
         blocks: [
           {
             p: "Diese Erklärung kann geändert werden, um Gesetzesänderungen oder Änderungen am Dienst zu berücksichtigen. Ändert sich, welche Daten verarbeitet werden, aktualisieren wir diese Erklärung samt dem Datum „Zuletzt aktualisiert“, bevor die Version mit der betreffenden Funktion veröffentlicht wird.",
+          },
+        ],
+      },
+    ],
+  },
+
+  terms: {
+    title: "Nutzungsbedingungen – Dein Essen, mein Essen",
+    description:
+      "Die Nutzungsbedingungen von „Dein Essen, mein Essen“, der App zum Teilen von Mahlzeitenfotos mit den Personen in deinen Gruppen, sowie der Umfang der Haftung und Angaben zum Betreiber.",
+    updatedAt: "6. November 2026",
+    sections: [
+      {
+        h: "Artikel 1 (Zweck)",
+        blocks: [
+          {
+            p: "Diese Bedingungen regeln die Nutzung der iOS- und Android-App „Dein Essen, mein Essen“ (der „Dienst“), die von 바리바리스튜디오 (Baribari Studio; Inhaber: 고주원 (Joowon Koh); der „Betreiber“) angeboten wird, sowie die Rechte, Pflichten und Verantwortlichkeiten von Betreiber und Nutzern.",
+          },
+        ],
+      },
+      {
+        h: "Artikel 2 (Inhalt des Dienstes)",
+        blocks: [
+          {
+            ol: [
+              "Mit dem Dienst können Nutzer Fotos ihrer Mahlzeiten festhalten und Fotos, Reaktionen und Kommentare mit Personen in derselben Gruppe teilen.",
+              "Zum Dienst gehören Funktionen wie das Erstellen von Gruppen und Einladen von Personen, Benachrichtigungen und Stupser, der Mahlzeitenkalender und Collagen, Widgets für den Home-Bildschirm sowie die Gemeinsame Kantine (ein Echtzeit-Raum, in dem man sich zusammensetzt und isst).",
+              "Der Dienst ist kostenlos; auf seinen Bildschirmen wird Werbung angezeigt.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artikel 3 (Geltung und Änderung der Bedingungen)",
+        blocks: [
+          {
+            ol: [
+              "Diese Bedingungen werden mit ihrer Veröffentlichung auf dieser Seite wirksam. Mit der Anmeldung beim Dienst gelten sie als vom Nutzer akzeptiert.",
+              "Der Betreiber kann die Bedingungen im Rahmen der geltenden Gesetze ändern. In diesem Fall gibt er das Datum des Inkrafttretens und den Grund mindestens 7 Tage vorher auf dieser Seite bekannt, bei Änderungen zum Nachteil der Nutzer mindestens 30 Tage vorher.",
+              "Nutzer, die den geänderten Bedingungen nicht zustimmen, können die Nutzung beenden, indem sie ihr Konto löschen.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artikel 4 (Konto)",
+        blocks: [
+          {
+            ol: [
+              "Nutzer melden sich mit einem Apple- oder Google-Konto beim Dienst an.",
+              "Nutzer können ihr Konto jederzeit in der App löschen. Dabei werden die hochgeladenen Fotos und Einträge mitgelöscht; das lässt sich nicht rückgängig machen. Details stehen unter [Konto löschen](deleteAccount).",
+              "Für die Verarbeitung personenbezogener Daten gilt die [Datenschutzerklärung](privacy).",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artikel 5 (Inhalte der Nutzer)",
+        blocks: [
+          {
+            ol: [
+              "Die Rechte an Inhalten, die Nutzer hochladen, etwa Fotos, Kommentare und Namen, liegen bei den Nutzern.",
+              "Der Betreiber nutzt diese Inhalte nur in dem Umfang, der für den Dienst nötig ist (Speichern, Anzeigen für Personen in derselben Gruppe, Erstellen verkleinerter Fotos usw.).",
+              "Inhalte sind nur für Personen in derselben Gruppe sichtbar. In der Gemeinsamen Kantine sind sie in dem Umfang, den der Nutzer zum Zeigen ausgewählt hat, für Personen im selben Raum sichtbar.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artikel 6 (Pflichten der Nutzer)",
+        blocks: [
+          { p: "Nutzer dürfen die folgenden Inhalte nicht hochladen und die folgenden Handlungen nicht vornehmen." },
+          {
+            ul: [
+              "Obszöne oder gewalttätige Inhalte sowie Inhalte, die zu Hass oder Diskriminierung aufstacheln",
+              "Inhalte, die andere belästigen oder verleumden oder deren personenbezogene Daten oder Recht am eigenen Bild verletzen",
+              "Inhalte, die Urheberrechte oder andere Rechte des geistigen Eigentums Dritter verletzen",
+              "Handlungen, die den ordnungsgemäßen Betrieb des Dienstes stören, sowie das wiederholte Anklicken von Werbung mit unlauteren Mitteln",
+            ],
+          },
+          {
+            p: "Nutzer können unangemessene Inhalte oder Personen in der App melden oder blockieren. Der Betreiber prüft gemeldete Inhalte und kann sie bei einem Verstoß gegen diesen Artikel löschen oder die Nutzung durch den betreffenden Nutzer einschränken.",
+          },
+        ],
+      },
+      {
+        h: "Artikel 7 (Werbung)",
+        blocks: [
+          {
+            ol: [
+              "Für den Betrieb des Dienstes zeigt der Betreiber über Google AdMob native Werbung, Vollbildwerbung und Werbung mit Belohnung an.",
+              "Geschäfte über Waren oder Dienstleistungen aus der Werbung kommen zwischen dem Nutzer und dem Werbetreibenden zustande; der Betreiber übernimmt für deren Inhalt keine Verantwortung.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artikel 8 (Änderung und Einstellung des Dienstes)",
+        blocks: [
+          {
+            ol: [
+              "Der Dienst wird so bereitgestellt, wie er ist, und kann aus betrieblichen oder technischen Gründen geändert oder unterbrochen werden.",
+              "Wird der Dienst eingestellt, kündigt der Betreiber dies nach Möglichkeit 30 Tage vorher auf dieser Seite und in der App an.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artikel 9 (Haftungsbeschränkung)",
+        blocks: [
+          {
+            ol: [
+              "Der Betreiber haftet nicht für den Inhalt der von Nutzern hochgeladenen Beiträge und nicht für Streitigkeiten zwischen Nutzern. Dies gilt nicht bei Vorsatz oder grober Fahrlässigkeit des Betreibers.",
+              "Der Betreiber haftet nicht für Folgen, die entstehen, weil Benachrichtigungen aufgrund von Geräteeinstellungen (ausgeschaltete Benachrichtigungen, Stummmodus, Energiesparmodus usw.) nicht ankommen.",
+              "Wird der Dienst durch Naturkatastrophen oder vergleichbare höhere Gewalt unterbrochen, haftet der Betreiber nicht.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artikel 10 (Streitbeilegung)",
+        blocks: [
+          {
+            ol: [
+              "Entsteht im Zusammenhang mit der Nutzung des Dienstes ein Streit, bemühen sich Betreiber und Nutzer, ihn in redlicher Absprache beizulegen.",
+              "Kommt keine Einigung zustande, kann Klage bei dem nach der koreanischen Zivilprozessordnung zuständigen Gericht erhoben werden. Diese Bedingungen unterliegen dem Recht der Republik Korea.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Angaben zum Betreiber",
+        blocks: [
+          {
+            ul: [
+              "Firmenname: 바리바리스튜디오 (Baribari Studio)",
+              "Inhaber: 고주원 (Joowon Koh)",
+              "Unternehmensregisternummer: 895-14-03120",
+              "Registrierungsnummer für den Versandhandel: 2026-서울서초-3693",
+              "Anschrift: 서울특별시 서초구 바우뫼로 91, 2층 가2호 (91 Baumoe-ro, 2F Ga-2, Seocho-gu, Seoul, Republic of Korea)",
+              "Kontakt: [contact@joowonkoh.com](contact)",
+            ],
           },
         ],
       },
