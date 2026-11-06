@@ -8,8 +8,8 @@ import { CARD } from "./palette";
 import RedirectScript from "./RedirectScript";
 import Rich from "./Rich";
 
-type Kind = "privacy" | "deleteAccount";
-const SUB = { privacy: "/privacy", deleteAccount: "/delete-account" } as const;
+type Kind = "privacy" | "terms" | "deleteAccount";
+const SUB = { privacy: "/privacy", terms: "/terms", deleteAccount: "/delete-account" } as const;
 
 /**
  * 개인정보처리방침·계정 삭제 안내의 머리 정보.

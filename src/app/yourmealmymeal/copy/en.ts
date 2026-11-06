@@ -57,7 +57,7 @@ const en: Copy = {
       },
       {
         q: "Are there ads?",
-        a: "There are full-screen ads that occasionally appear after you close a photo or finish posting, and rewarded ads that you only watch when you want more Nudges. There are no banners that stay on screen. We also collect usage statistics to improve the app. The details are in the privacy policy.",
+        a: "There’s a one-line ad, drawn to match the app, at the top of the Camera, Groups and Me screens, full-screen ads that occasionally appear after you close a photo or finish posting, and rewarded ads that you only watch when you want more Nudges. We also collect usage statistics to improve the app. The details are in the privacy policy.",
       },
       {
         q: "What happens if I delete my account?",
@@ -102,6 +102,7 @@ const en: Copy = {
     homeAria: "Your Meal, My Meal home",
     about: "About",
     privacy: "Privacy Policy",
+    terms: "Terms of Service",
     deleteAccount: "Delete account",
     language: "Language",
   },
@@ -117,7 +118,7 @@ const en: Copy = {
     title: "Your Meal, My Meal Privacy Policy",
     description:
       "What information the iOS and Android app “Your Meal, My Meal” handles, who can see your photos and meal records, and how to delete your account.",
-    updatedAt: "November 1, 2026",
+    updatedAt: "November 6, 2026",
     sections: [
       {
         h: "1. Overview",
@@ -129,7 +130,7 @@ const en: Copy = {
           {
             ul: [
               "Your photos and meal records are visible **only to people in the same group as you**.",
-              "The App shows **Google AdMob full-screen ads and rewarded ads**. Full-screen ads occasionally take up the whole screen after you close a photo or finish posting, and rewarded ads are watched only when you choose to, after you’ve used up your Nudges. There are no banner ads that stay on screen. We use Google Analytics for Firebase for usage statistics. Your name, email, photos and meal records are not passed to these services.",
+              "The App shows **Google AdMob native ads, full-screen ads and rewarded ads**. Native ads appear as a single line, drawn to match the App’s screens, at the top of the Camera, Groups and Me screens; full-screen ads occasionally take up the whole screen after you close a photo or finish posting; and rewarded ads are watched only when you choose to, after you’ve used up your Nudges. We use Google Analytics for Firebase for usage statistics. Your name, email, photos and meal records are not passed to these services.",
               "On iOS, after you sign in, we **ask first whether you allow ad tracking**, and you can use every feature of the App even if you decline.",
               "You can delete your account **directly in the App**, and deleting it removes your photos and records along with it.",
               "In the **Eat-Together Diner** (a real-time space where people sit and eat together without talking), your name, character and movements are visible to people in the same room. In the solo diner, which anyone can enter, your photos are shown **only if you turn on “Show my meal”**.",
@@ -207,7 +208,7 @@ const en: Copy = {
               "**Cloudflare R2** — Storage for meal photos and profile photos. Stored privately in the Asia-Pacific region, and served through addresses valid for one hour only after confirming the viewer is allowed to see them.",
               "**Expo** — Notification delivery, via Apple APNs on iOS and Google FCM on Android. The notification text and device token are passed on.",
               "**Apple / Google** — Sign-in. We receive your email address.",
-              "**Google AdMob** — Full-screen ads and rewarded ads. The advertising identifier, ad impression and click information, and device information are passed on.",
+              "**Google AdMob** — Native ads, full-screen ads and rewarded ads. The advertising identifier, ad impression and click information, and device information are passed on.",
               "**Google Analytics for Firebase** — Usage statistics. App usage information, app instance ID and device information are passed on.",
               "**Cloudflare Workers and Durable Objects** — The Eat-Together Diner screen and real-time connection. They process your display name, seat, movements and greetings while you are in a room, and the addresses of photos you chose to show, and delete them when you leave the room. Parts of the request logs are kept for a few days to fix errors.",
               "**Apple APNs (widgets)** — Notifies the iOS widget through the widget push token so it redraws itself when a new meal is posted.",
@@ -267,6 +268,148 @@ const en: Copy = {
         blocks: [
           {
             p: "This policy may be revised to reflect changes in law or in the service. If what we process changes, we will update this policy and its “Last updated” date before releasing the version that includes the feature.",
+          },
+        ],
+      },
+    ],
+  },
+
+  terms: {
+    title: "Your Meal, My Meal Terms of Service",
+    description:
+      "The terms of use for Your Meal, My Meal, the app for sharing meal photos with the people in your groups, along with the scope of responsibility and operator information.",
+    updatedAt: "November 6, 2026",
+    sections: [
+      {
+        h: "Article 1 (Purpose)",
+        blocks: [
+          {
+            p: "These Terms set out the conditions for using Your Meal, My Meal (the “Service”), the iOS and Android app provided by 바리바리스튜디오 (Baribari Studio; representative: 고주원 (Joowon Koh); the “Operator”), and the rights, obligations and responsibilities of the Operator and users.",
+          },
+        ],
+      },
+      {
+        h: "Article 2 (The Service)",
+        blocks: [
+          {
+            ol: [
+              "The Service lets users log photos of their meals and share photos, reactions and comments with people in the same group.",
+              "The Service includes features such as creating groups and inviting people, notifications and Nudges, the meal calendar and collages, home screen widgets, and the Eat-Together Diner (a real-time space where people sit and eat together).",
+              "The Service is provided free of charge, and ads are shown on its screens.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 3 (Effect and changes to these Terms)",
+        blocks: [
+          {
+            ol: [
+              "These Terms take effect when posted on this page, and by signing in to the Service, users are deemed to have agreed to them.",
+              "The Operator may change these Terms to the extent permitted by applicable law. When doing so, the Operator will announce the effective date and the reason on this page at least 7 days before the effective date, or at least 30 days before for changes that are unfavorable to users.",
+              "Users who do not agree to the changed Terms may stop using the Service by deleting their account.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 4 (Accounts)",
+        blocks: [
+          {
+            ol: [
+              "Users sign in to the Service with an Apple or Google account.",
+              "Users can delete their account in the app at any time. Deleting it removes the photos and records they posted, and this cannot be undone. See [Account deletion](deleteAccount) for details.",
+              "Personal information is handled in accordance with the [Privacy Policy](privacy).",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 5 (User content)",
+        blocks: [
+          {
+            ol: [
+              "Rights to the content users post, such as photos, comments and names, belong to the users.",
+              "The Operator uses that content only to the extent needed to provide the Service (storing it, showing it to people in the same group, making smaller versions of photos, and so on).",
+              "Content is visible only to people in the same group. In the Eat-Together Diner, it is visible to people in the same room within the scope the user chose to show.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 6 (User obligations)",
+        blocks: [
+          { p: "Users must not post the following content or engage in the following conduct." },
+          {
+            ul: [
+              "Obscene or violent content, or content that incites hatred or discrimination",
+              "Content that harasses or defames others, or that infringes on others’ personal information or portrait rights",
+              "Content that infringes on others’ copyrights or other intellectual property rights",
+              "Interfering with the normal operation of the Service, or repeatedly clicking ads by fraudulent means",
+            ],
+          },
+          {
+            p: "Users can report or block inappropriate content or people in the app. The Operator reviews reported content and, if it violates this Article, may delete the content or restrict that user’s use of the Service.",
+          },
+        ],
+      },
+      {
+        h: "Article 7 (Advertising)",
+        blocks: [
+          {
+            ol: [
+              "To operate the Service, the Operator shows native ads, full-screen ads and rewarded ads through Google AdMob.",
+              "Any transaction for products or services in an ad takes place between the user and the advertiser, and the Operator is not responsible for it.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 8 (Changes to and suspension of the Service)",
+        blocks: [
+          {
+            ol: [
+              "The Service is provided as is, and its contents may change or be suspended for operational or technical reasons.",
+              "If the Service is to be discontinued, the Operator will announce it on this page and in the app at least 30 days in advance where possible.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 9 (Limitation of liability)",
+        blocks: [
+          {
+            ol: [
+              "The Operator is not responsible for the content users post or for disputes between users, except in cases of intent or gross negligence on the Operator’s part.",
+              "The Operator is not responsible for consequences of notifications not arriving because of device settings (notifications turned off, silent mode, battery saver and so on).",
+              "The Operator is not responsible if the Service is interrupted by natural disasters or equivalent force majeure.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 10 (Dispute resolution)",
+        blocks: [
+          {
+            ol: [
+              "If a dispute arises in connection with use of the Service, the Operator and the user will resolve it through good-faith discussion.",
+              "If no agreement is reached, either party may file a suit with the competent court under the Civil Procedure Act of the Republic of Korea. These Terms are governed by the laws of the Republic of Korea.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Operator information",
+        blocks: [
+          {
+            ul: [
+              "Business name: 바리바리스튜디오 (Baribari Studio)",
+              "Representative: 고주원 (Joowon Koh)",
+              "Business registration number: 895-14-03120",
+              "Mail-order business registration number: 2026-서울서초-3693",
+              "Address: 서울특별시 서초구 바우뫼로 91, 2층 가2호 (91 Baumoe-ro, 2F Ga-2, Seocho-gu, Seoul, Republic of Korea)",
+              "Contact: [contact@joowonkoh.com](contact)",
+            ],
           },
         ],
       },

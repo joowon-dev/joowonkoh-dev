@@ -56,6 +56,7 @@ export default function Shell({ shells, children }: { shells: Record<Lang, Shell
           >
             <Link href={pagePath(lang)} className="hover:underline">{t.about}</Link>
             <Link href={pagePath(lang, "/privacy")} className="hover:underline">{t.privacy}</Link>
+            <Link href={pagePath(lang, "/terms")} className="hover:underline">{t.terms}</Link>
             <Link href={pagePath(lang, "/delete-account")} className="hover:underline">{t.deleteAccount}</Link>
             <a href={`mailto:${CONTACT}`} className="hover:underline">{CONTACT}</a>
           </div>
