@@ -48,8 +48,10 @@ interface Props {
   onPick?: (mm: number) => void;
   /** 다 먹고 똑 부러져 튀어 오른 조각의 실제 길이(mm) */
   piece?: number | null;
-  /** 깨문 자리(mm) */
+  /** 깨문(부딪힌) 자리(mm) */
   bite?: number | null;
+  /** 그 자리에 터지는 글자 — 기본 「앙!」 */
+  burst?: string;
   sparkle?: boolean;
   confetti?: boolean;
   crumbs?: Crumb[];
@@ -184,7 +186,7 @@ export default function Scene3D(props: Props) {
       {bite !== null && (
         <>
           <div ref={tag("bite")} className="pp-tag">
-            <span className="pp-burst pp-display">앙!</span>
+            <span className="pp-burst pp-display">{props.burst ?? "앙!"}</span>
           </div>
           <div className="pp-flash-dom pointer-events-none absolute inset-0" />
         </>

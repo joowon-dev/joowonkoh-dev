@@ -617,3 +617,192 @@
     animation: none;
   }
 }
+
+/* ───────────── 실시간 대결 ───────────── */
+
+.pp-arena {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* 가까워질수록 화면 가장자리가 빨갛게 조여 온다 */
+.pp-vignette {
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(224, 40, 80, 0.55) 100%);
+  transition: opacity 0.1s linear;
+}
+
+/* 3·2·1·냠! */
+.pp-count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 96px;
+  color: #fff;
+  -webkit-text-stroke: 4px #4a2f27;
+  paint-order: stroke fill;
+  text-shadow: 0 6px 0 #4a2f27;
+  animation: pp-count 1s cubic-bezier(0.2, 1.4, 0.5, 1) both;
+}
+.pp-count-go {
+  color: #ff6f91;
+  font-size: 84px;
+  animation-duration: 0.6s;
+}
+@keyframes pp-count {
+  0% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+}
+
+/* 남은 길이 */
+.pp-gap {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  padding: 2px 14px;
+  border: 2.5px solid #4a2f27;
+  border-radius: 999px;
+  background: #fffaf5;
+  font-size: 18px;
+  white-space: nowrap;
+}
+.pp-gap-hot {
+  background: #ff6f91;
+  color: #fff;
+  animation: pp-beat 0.45s ease-in-out infinite;
+}
+
+/* 먹은 길이 칸 */
+.pp-eat {
+  position: relative;
+  border-radius: 16px;
+  padding: 6px 10px;
+  border: 2px solid transparent;
+}
+.pp-eat-left {
+  background: #ffe3ea;
+}
+.pp-eat-right {
+  background: #dcf3ea;
+}
+.pp-eat-me {
+  border-color: #4a2f27;
+}
+.pp-stopchip {
+  position: absolute;
+  top: -9px;
+  right: 6px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #4a2f27;
+  color: #fff;
+  font-size: 11px;
+  animation: pp-pop 0.3s cubic-bezier(0.3, 1.6, 0.6, 1) both;
+}
+
+/* 꾹 누르는 큰 버튼 */
+.pp-hold {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 96px;
+  border: 3px solid #4a2f27;
+  border-radius: 28px;
+  background: #5b3221;
+  color: #fff6ec;
+  font-size: 22px;
+  box-shadow: 0 7px 0 #4a2f27;
+  transition: transform 0.06s, box-shadow 0.06s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.pp-hold-on {
+  transform: translateY(6px);
+  box-shadow: 0 1px 0 #4a2f27;
+  background: #e0577b;
+  animation: pp-munch 0.18s ease-in-out infinite alternate;
+}
+@keyframes pp-munch {
+  to {
+    background: #ea6b8c;
+  }
+}
+.pp-hold-off {
+  background: #d9cfc6;
+  color: #6b5a52;
+  box-shadow: 0 3px 0 #4a2f27;
+}
+.pp-hold-urgent {
+  animation: pp-shake 0.4s ease-in-out infinite;
+}
+
+/* 점수판 */
+.pp-score {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+.pp-score b {
+  padding: 2px 14px;
+  border-radius: 999px;
+  background: #4a2f27;
+  color: #fff6ec;
+  font-weight: 400;
+  font-size: 20px;
+}
+
+.pp-btn:disabled {
+  cursor: default;
+}
+.pp-btn-wait {
+  background: #fff;
+  color: #4a2f27;
+  font-size: 16px;
+}
+
+.pp-waiting::after {
+  content: "";
+  animation: pp-dots 1.2s steps(4) infinite;
+}
+@keyframes pp-dots {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75% {
+    content: "...";
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-count,
+  .pp-gap-hot,
+  .pp-hold-on,
+  .pp-hold-urgent {
+    animation: none;
+  }
+}

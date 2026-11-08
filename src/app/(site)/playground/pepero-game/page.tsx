@@ -4,9 +4,9 @@ import Link from "next/link";
 import Game from "./Game";
 import "./pepero.css";
 
-const TITLE = "빼빼로 게임 — 링크로 보내는 막대과자 눈치 게임";
+const TITLE = "빼빼로 게임 — 친구랑 실시간으로 하는 막대과자 치킨 게임";
 const DESCRIPTION =
-  "내가 어디까지 먹을지 몰래 고르고 링크를 보내면, 친구가 반대쪽에서 어디까지 먹을지 골라요. 둘이 동시에 먹고 남은 길이가 짧을수록 찰떡 호흡. 너무 욕심내면 입술을 앙! 깨물어요.";
+  "링크로 친구를 부르고 둘이 동시에 버튼을 꾹! 누르는 동안 양쪽에서 막대과자를 먹고, 손을 떼면 멈춰요. 더 많이 먹은 사람이 이기지만, 상대가 멈췄는데 계속 먹으면 입술을 앙! 먼저 겁먹는 사람이 진다.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     siteName: "Joowon Koh",
-    title: "🍫 빼빼로 게임 도전장이 왔어요",
-    description: "어디까지 먹을지 골라 봐. 너무 많이 먹으면 입술을 깨물어요!",
+    title: "🍫 빼빼로 게임 한 판 할래?",
+    description: "버튼 꾹 누르는 동안 먹고, 떼면 멈춰. 먼저 겁먹는 사람이 진다!",
     url: "https://joowonkoh.com/playground/pepero-game",
   },
 };
@@ -42,12 +42,12 @@ export default function PeperoGamePage() {
 
       <div className="flex-1 pt-5 pb-12 sm:pt-8">
         <header className="mx-auto max-w-[560px] px-4 text-center">
-          <p className="pp-display text-[15px] text-[#e0577b]">링크로 하는 눈치 게임</p>
+          <p className="pp-display text-[15px] text-[#e0577b]">친구랑 실시간 치킨 게임</p>
           <h1 className="pp-display mt-1 text-[44px] leading-tight sm:text-[54px]">
             빼빼로 게임 <span aria-hidden>🍫</span>
           </h1>
           <p className="mt-1 text-[14.5px] opacity-70 break-keep">
-            누가 더 짧게 남기나? 대신 너무 먹으면 앙!
+            꾹 누르면 냠냠, 떼면 멈춤. 먼저 겁먹는 사람이 진다!
           </p>
         </header>
 
@@ -57,7 +57,7 @@ export default function PeperoGamePage() {
       </div>
 
       <p className="mx-auto max-w-[64ch] px-4 pb-5 text-center text-[11.5px] leading-relaxed opacity-55 break-keep">
-        서버에 아무것도 저장하지 않아요. 고른 자리는 링크 안에만 섞여 들어가요.
+        대결 중 누른·뗀 시각만 실시간으로 오가고, 아무것도 저장하지 않아요.
         특정 과자 브랜드와 관계없는 놀이 페이지예요.
       </p>
     </div>

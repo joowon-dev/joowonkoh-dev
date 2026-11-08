@@ -1,86 +1,87 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  collision,
-  decode,
-  duration,
-  encode,
-  hashOf,
-  judge,
-  mouthsAt,
-  routeOf,
-  SPEED,
+  dist,
+  eatenAt,
+  type Input,
+  isRoomCode,
+  meetAt,
+  newRoomCode,
+  PRESS_WINDOW,
   STICK_MM,
+  viewAt,
+  winnerOf,
 } from "./rules";
 
-describe("judge", () => {
-  it("입이 안 닿으면 남은 길이로 칭호를 준다", () => {
-    expect(judge(70, 73)).toMatchObject({ kind: "ok", leftMm: 3, tier: { title: "전설의 빼빼로" } });
-    expect(judge(60, 70)).toMatchObject({ kind: "ok", leftMm: 10, tier: { title: "찰떡 호흡" } });
-    expect(judge(20, 140)).toMatchObject({ kind: "ok", leftMm: 120, tier: { title: "낯가림 대폭발" } });
+const inp = (press: number | null, release: number | null, until = 99): Input => ({ press, release, until });
+
+describe("먹는 길이", () => {
+  it("시간이 갈수록 빨라진다", () => {
+    expect(dist(1) - dist(0)).toBeLessThan(dist(3) - dist(2));
   });
 
-  it("딱 맞닿아도(0mm) 깨문 것으로 친다", () => {
-    expect(judge(70, 70).kind).toBe("bite");
+  it("누른 때부터 뗀 때까지만 먹는다", () => {
+    const i = inp(1, 2);
+    expect(eatenAt(i, 0.5)).toBe(0);
+    expect(eatenAt(i, 1.5)).toBeCloseTo(dist(1.5) - dist(1));
+    expect(eatenAt(i, 5)).toBeCloseTo(dist(2) - dist(1));
   });
 
-  it("왼쪽이 가운데 전에 멈췄으면 오른쪽이 왼쪽 입술을 깨문다", () => {
-    expect(collision(50, 30)).toEqual({ at: 50, time: (STICK_MM - 50) / SPEED, biter: "right" });
-  });
-
-  it("오른쪽이 가운데 전에 멈췄으면 왼쪽이 깨문다", () => {
-    expect(collision(120, 100)).toEqual({ at: 100, time: 100 / SPEED, biter: "left" });
-  });
-
-  it("둘 다 가운데를 넘보면 가운데서 만나고 더 욕심낸 쪽이 깨문다", () => {
-    expect(collision(100, 60)).toMatchObject({ at: 75, biter: "left" }); // 왼쪽 25, 오른쪽 15 넘음
-    expect(collision(80, 40)).toMatchObject({ at: 75, biter: "right" }); // 왼쪽 5, 오른쪽 35 넘음
-    expect(collision(85, 65)).toMatchObject({ at: 75, biter: "right" }); // 똑같으면 나중 사람
+  it("둘 다 처음부터 끝까지 누르면 가운데쯤에서 만난다", () => {
+    const t = meetAt(inp(0, null), inp(0, null), 20)!;
+    expect(dist(t)).toBeCloseTo(STICK_MM / 2);
   });
 });
 
-describe("mouthsAt", () => {
-  it("같은 빠르기로 다가오다 각자 자리에서 멈춘다", () => {
-    expect(mouthsAt(0, 60, 80)).toEqual({ left: 0, right: STICK_MM });
-    const end = mouthsAt(duration(60, 80) + 1, 60, 80);
-    expect(end).toEqual({ left: 60, right: 80 });
+describe("판정", () => {
+  it("둘 다 멈추면 더 많이 먹은 사람이 이긴다", () => {
+    const v = viewAt(inp(0, 2.5), inp(0, 2), 3);
+    expect(v.outcome?.kind).toBe("ok");
+    if (v.outcome?.kind !== "ok") return;
+    expect(v.outcome.winner).toBe("left");
+    expect(v.outcome.rest).toBeCloseTo(STICK_MM - dist(2.5) - dist(2));
+    expect(winnerOf(v.outcome)).toBe("left");
   });
 
-  it("깨물면 닿은 자리에서 둘 다 멈춘다", () => {
-    const end = mouthsAt(99, 50, 30);
-    expect(end.left).toBe(50);
-    expect(end.right).toBeCloseTo(50);
+  it("상대가 멈췄는데 계속 먹으면 깨문다 — 깨문 사람이 진다", () => {
+    const v = viewAt(inp(0, 2), inp(0, null), 6);
+    expect(v.outcome?.kind).toBe("bite");
+    if (v.outcome?.kind !== "bite") return;
+    expect(v.outcome.biter).toBe("right");
+    expect(v.outcome.left + v.outcome.right).toBeCloseTo(STICK_MM);
+    expect(winnerOf(v.outcome)).toBe("left");
+  });
+
+  it("둘 다 끝까지 버티면 쿵 — 이긴 사람 없음", () => {
+    const v = viewAt(inp(0, null), inp(0.2, null), 8);
+    expect(v.outcome?.kind).toBe("bonk");
+    expect(winnerOf(v.outcome!)).toBeNull();
+  });
+
+  it("상대 입력이 만난 순간까지 안 왔으면 확인 중으로 멈춰 있는다", () => {
+    const v = viewAt(inp(0, null, 8), inp(0, null, 1), 8);
+    expect(v.pending).toBe(true);
+    expect(v.outcome).toBeNull();
+    expect(v.left + v.right).toBeCloseTo(STICK_MM);
+  });
+
+  it("상대가 만나기 전에 뗀 게 늦게 도착해도 결과는 같다", () => {
+    const late = viewAt(inp(0, null, 8), inp(0, 2, 8), 8);
+    expect(late.outcome?.kind).toBe("bite");
+    if (late.outcome?.kind === "bite") expect(late.outcome.biter).toBe("left");
+  });
+
+  it("아무도 안 누르면 시간 지나 0cm 로 끝", () => {
+    expect(viewAt(inp(null, null, 1), inp(null, null, 1), 1).outcome).toBeNull();
+    const v = viewAt(inp(null, null, PRESS_WINDOW), inp(null, null, PRESS_WINDOW), PRESS_WINDOW);
+    expect(v.outcome?.kind).toBe("ok");
+    if (v.outcome?.kind === "ok") expect(v.outcome.rest).toBe(STICK_MM);
   });
 });
 
-describe("링크", () => {
-  it("도전장·결과가 그대로 돌아온다(한글·이모지 이름 포함)", () => {
-    const c = { a: 73, n: "주원🍫" };
-    expect(decode(encode(c))).toEqual(c);
-    const r = { a: 73, n: "주원", b: 77, m: "친구" };
-    expect(decode(encode(r))).toEqual(r);
-  });
-
-  it("링크에 숫자가 그대로 보이지 않고, 같은 자리여도 링크가 매번 다르다", () => {
-    expect(encode({ a: 73, n: "a" })).not.toMatch(/73/);
-    const codes = new Set(Array.from({ length: 20 }, () => encode({ a: 73, n: "a" })));
-    expect(codes.size).toBeGreaterThan(1);
-  });
-
-  it("망가진 링크는 null", () => {
-    expect(decode("abc")).toBeNull();
-    expect(decode("")).toBeNull();
-    // 끝이 잘린 링크
-    const code = encode({ a: 73, n: "주원" });
-    expect(decode(code.slice(0, -4))).toBeNull();
-  });
-
-  it("# 로 화면을 고른다", () => {
-    expect(routeOf("")).toEqual({ kind: "make" });
-    expect(routeOf(hashOf({ a: 10, n: "가" }))).toEqual({ kind: "answer", game: { a: 10, n: "가" } });
-    expect(routeOf(hashOf({ a: 10, n: "가", b: 20, m: "나" })).kind).toBe("replay");
-    expect(routeOf("#c=@@")).toEqual({ kind: "broken" });
-    // 도전장 자리에 결과를 넣으면 받지 않는다.
-    expect(routeOf(`#c=${encode({ a: 10, n: "가", b: 20, m: "나" })}`)).toEqual({ kind: "broken" });
+describe("방 번호", () => {
+  it("만든 번호는 늘 올바른 꼴", () => {
+    for (let i = 0; i < 50; i++) expect(isRoomCode(newRoomCode())).toBe(true);
+    expect(isRoomCode("ABC10O")).toBe(false);
   });
 });

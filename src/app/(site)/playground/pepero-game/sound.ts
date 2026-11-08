@@ -12,9 +12,15 @@ export interface Sound {
   ding(): void;
   /** 가까워졌을 때 두근(두 번 쿵쿵) */
   heartbeat(): void;
+  /** 3·2·1 삑, 시작은 높게 */
+  beep(go?: boolean): void;
+  /** 둘 다 버티다 이마 쿵 */
+  bonk(): void;
+  /** 상대가 멈췄을 때 톡 */
+  tick(): void;
 }
 
-const silent: Sound = { crunch() {}, bite() {}, ding() {}, heartbeat() {} };
+const silent: Sound = { crunch() {}, bite() {}, ding() {}, heartbeat() {}, beep() {}, bonk() {}, tick() {} };
 
 export function makeSound(enabled: boolean): Sound {
   if (!enabled || typeof window === "undefined") return silent;
@@ -86,6 +92,49 @@ export function makeSound(enabled: boolean): Sound {
         o.start(t + d);
         o.stop(t + d + 0.18);
       });
+    },
+    beep(go = false) {
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      o.type = "triangle";
+      o.frequency.value = go ? 1046 : 523;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.22, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + (go ? 0.45 : 0.18));
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + 0.5);
+    },
+    bonk() {
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.setValueAtTime(180, t);
+      o.frequency.exponentialRampToValueAtTime(45, t + 0.3);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.6, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + 0.4);
+      const src = ctx.createBufferSource();
+      src.buffer = crunchBuf;
+      src.playbackRate.value = 0.4;
+      src.connect(ctx.destination);
+      src.start(t);
+    },
+    tick() {
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      o.type = "square";
+      o.frequency.value = 1500;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.08, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + 0.08);
     },
     ding() {
       const t = ctx.currentTime;

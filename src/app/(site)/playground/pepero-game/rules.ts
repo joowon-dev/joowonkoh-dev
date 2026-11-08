@@ -1,185 +1,155 @@
 /**
- * 빼빼로 게임 규칙과 링크 암호.
+ * 실시간 빼빼로 게임의 규칙 — 화면·네트워크와 따로, 두 사람이 「언제 누르고 언제 뗐나」만으로 판정한다.
  *
- * 막대는 왼쪽 끝 0mm 부터 오른쪽 끝 STICK_MM 까지다.
- * - 먼저 하는 사람(왼쪽)은 왼쪽 끝부터 `a` mm 까지 먹는다.
- * - 받은 사람(오른쪽)은 오른쪽 끝부터 먹어서 `b` mm 자리(왼쪽에서 잰 자리)에서 멈춘다.
- * 남는 길이는 `b - a`. 0 이하면 입이 먼저 닿는다 — 누군가 입술을 깨문다.
+ * - 둘 다 버튼을 꾹 누르고 있는 동안 막대를 먹는다. 손을 떼면 그 자리에서 멈추고, 그 판에서는 다시 못 먹는다.
+ * - 먹는 속도는 시간이 갈수록 빨라진다(누른 순간이 아니라 「시작!」부터 잰 시간 기준이라 둘에게 같다).
+ * - 두 입이 만나는 순간: 한쪽만 먹고 있었으면 그 사람이 상대 입술을 깨물고 진다.
+ *   둘 다 먹고 있었으면 이마를 「쿵」 — 둘 다 진다.
+ * - 둘 다 멈추면 더 많이 먹은 사람이 이긴다. 남은 길이가 짧을수록 둘의 호흡 등급이 높다.
  *
- * 서버도 DB 도 쓰지 않는다. 먼저 한 사람의 자리는 링크의 # 뒤에 섞어서 넣는다
- * (# 뒤는 서버로 가지 않는다). 숫자가 바로 보이지 않게 섞을 뿐, 암호는 아니다 —
- * 마음먹고 코드를 뜯어보면 풀 수 있다. 친구끼리 하는 장난이라 그 정도로 둔다.
+ * 두 사람 화면이 같은 입력(누른 시각·뗀 시각)만 받으면 똑같은 결과를 낸다 — 서버가 판정할 필요가 없다.
  */
 
-/** 막대 길이(mm). 실제 막대과자와 비슷하게. */
 export const STICK_MM = 150;
-/** 고를 수 있는 가장 앞·뒤 자리 — 끝을 아예 안 먹거나 통째로 먹는 건 막는다. */
-export const MIN_MM = 1;
-export const MAX_MM = STICK_MM - 1;
-/** 둘이 먹는 빠르기(mm/초). 둘 다 같은 빠르기로 다가온다. */
-export const SPEED = 42;
-
+/** 「3·2·1」 시간(초) */
+export const COUNTDOWN = 3;
+/** 시작하고 이 시간(초) 안에 한 번도 안 누르면 그 판은 0cm 로 끝 */
+export const PRESS_WINDOW = 4;
 export const NAME_MAX = 8;
 
-export const clampMm = (mm: number) => Math.min(MAX_MM, Math.max(MIN_MM, Math.round(mm)));
+export type SideKey = "left" | "right";
+export const other = (s: SideKey): SideKey => (s === "left" ? "right" : "left");
 
-export const cm = (mm: number) => (mm / 10).toFixed(1);
-
-export interface Challenge {
-  /** 먼저 한 사람이 왼쪽 끝부터 먹은 mm */
-  a: number;
-  /** 먼저 한 사람 이름 */
-  n: string;
+/** 한 사람의 입력. 시각은 모두 「시작!」부터 잰 초. */
+export interface Input {
+  press: number | null;
+  release: number | null;
+  /** 이 시각까지의 입력은 다 안다(그 뒤로 누르거나 뗐을 수 있다) */
+  until: number;
 }
 
-export interface Answer extends Challenge {
-  /** 받은 사람이 멈춘 자리(왼쪽에서 잰 mm) */
-  b: number;
-  /** 받은 사람 이름 */
-  m: string;
+export const freshInput = (): Input => ({ press: null, release: null, until: 0 });
+
+/** 시작부터 t 초 동안 쉬지 않고 먹었을 때 먹은 길이(mm). 속도 = 12 + 4t mm/s. */
+export const dist = (t: number) => (t <= 0 ? 0 : 12 * t + 2 * t * t);
+
+/** t 초에 이 사람이 먹은 길이(mm). 아직 안 뗐으면 지금도 먹고 있다고 본다. */
+export function eatenAt(i: Input, t: number): number {
+  if (i.press === null || t <= i.press) return 0;
+  const end = i.release === null ? t : Math.min(t, i.release);
+  return Math.max(0, dist(end) - dist(i.press));
 }
 
-/** 깨문 사람. left = 먼저 한 사람. 「둘이 동시에」는 없다 — 늘 한 사람이 깨문다. */
-export type Biter = "right" | "left";
+/** t 초에 먹고(움직이고) 있나 */
+export function movingAt(i: Input, t: number): boolean {
+  return i.press !== null && i.press < t && (i.release === null || i.release >= t);
+}
 
-export type Outcome =
-  | { kind: "ok"; leftMm: number; tier: Tier }
-  | { kind: "bite"; biter: Biter; at: number; time: number };
+/** 이 사람은 이번 판 입력이 끝났나(뗐거나, 끝까지 안 눌렀거나) */
+export function isDone(i: Input): boolean {
+  return i.release !== null || (i.press === null && i.until >= PRESS_WINDOW);
+}
+
+/** t 초까지 두 입이 만났으면 만난 시각, 아니면 null */
+export function meetAt(l: Input, r: Input, t: number): number | null {
+  if (eatenAt(l, t) + eatenAt(r, t) < STICK_MM) return null;
+  let lo = 0;
+  let hi = t;
+  for (let k = 0; k < 40; k++) {
+    const mid = (lo + hi) / 2;
+    if (eatenAt(l, mid) + eatenAt(r, mid) >= STICK_MM) hi = mid;
+    else lo = mid;
+  }
+  return hi;
+}
 
 export interface Tier {
+  max: number;
   title: string;
   line: string;
 }
 
-/** 남은 길이별 칭호. 위에서부터 처음 맞는 것. */
-const TIERS: [maxMm: number, tier: Tier][] = [
-  [5, { title: "전설의 빼빼로", line: "숨도 못 쉬었겠다… 이건 기네스에 올려야 해" }],
-  [15, { title: "찰떡 호흡", line: "말 안 해도 통하는 사이. 눈빛만 봐도 알지?" }],
-  [30, { title: "조마조마", line: "조금만 더 용기 냈으면 전설이었는데!" }],
-  [60, { title: "아직은 수줍", line: "서로 눈치만 보다가 끝났어요" }],
-  [Infinity, { title: "낯가림 대폭발", line: "빼빼로가 아니라 거의 통째로 남았잖아…" }],
+/** 남은 길이(mm) → 둘의 호흡 등급 */
+export const TIERS: Tier[] = [
+  { max: 5, title: "전설의 빼빼로", line: "이 정도면 텔레파시. 둘이 무슨 사이예요?" },
+  { max: 15, title: "찰떡 호흡", line: "한 입만 더 갔으면… 조마조마했다!" },
+  { max: 30, title: "조마조마", line: "꽤 가까웠어요. 다음 판엔 조금만 더 용기를." },
+  { max: 60, title: "아직은 수줍", line: "서로 눈치만 봤네요. 막대가 아까워요." },
+  { max: Infinity, title: "겁쟁이 대잔치", line: "막대과자가 거의 그대로… 둘 다 겁쟁이!" },
 ];
+export const tierOf = (restMm: number) => TIERS.find((t) => restMm <= t.max) ?? TIERS[TIERS.length - 1];
 
-export const tierOf = (leftMm: number): Tier => TIERS.find(([max]) => leftMm <= max)![1];
+export type Outcome =
+  | { kind: "ok"; left: number; right: number; rest: number; winner: SideKey | "tie"; tier: Tier }
+  | { kind: "bite"; at: number; left: number; right: number; biter: SideKey }
+  | { kind: "bonk"; at: number; left: number; right: number };
 
-/**
- * 둘이 같은 빠르기로 동시에 먹기 시작했을 때 언제 어디서 입이 닿는지.
- * b > a 면 닿지 않는다(null). 닿으면 그 순간 움직이고 있던 쪽이 깨문 사람이다.
- */
-export function collision(a: number, b: number, speed = SPEED): { at: number; time: number; biter: Biter } | null {
-  if (b > a) return null;
-  const mid = STICK_MM / 2;
-  // 둘 다 가운데를 넘어 먹으려 했다 — 가운데서 만나고, 더 욕심낸 쪽이 깨문다.
-  // 똑같이 욕심냈으면 상대 자리를 넘어 들어온 나중 사람(오른쪽)이 깨문다.
-  if (a >= mid && b <= mid) {
-    return { at: mid, time: mid / speed, biter: a - mid > mid - b ? "left" : "right" };
+/** 이긴 사람(없으면 null) */
+export function winnerOf(o: Outcome): SideKey | null {
+  if (o.kind === "bite") return other(o.biter);
+  if (o.kind === "ok" && o.winner !== "tie") return o.winner;
+  return null;
+}
+
+export interface View {
+  /** 화면에 보여 줄 시각 — 아직 확인 안 된 만남이면 그 순간에 멈춰 있다 */
+  t: number;
+  left: number;
+  right: number;
+  outcome: Outcome | null;
+  /** 만난 것 같지만 상대 입력이 아직 안 와서 확인 중 */
+  pending: boolean;
+}
+
+/** 지금(now) 화면에 그릴 모습과, 판정이 끝났으면 결과 */
+export function viewAt(l: Input, r: Input, now: number): View {
+  const horizon = Math.max(now, l.release ?? 0, r.release ?? 0);
+  const tc = meetAt(l, r, horizon);
+  if (tc !== null) {
+    const left = eatenAt(l, tc);
+    const right = STICK_MM - left; // 만난 자리 — 반올림 오차 없이 막대 길이에 맞춘다
+    if (Math.min(l.until, r.until) < tc) return { t: tc, left, right, outcome: null, pending: true };
+    const ml = movingAt(l, tc);
+    const mr = movingAt(r, tc);
+    const outcome: Outcome =
+      ml && mr
+        ? { kind: "bonk", at: left, left, right }
+        : { kind: "bite", at: left, left, right, biter: ml ? "left" : "right" };
+    return { t: tc, left, right, outcome, pending: false };
   }
-  // 왼쪽이 가운데 전에 멈췄다 — 오른쪽이 계속 와서 왼쪽 입술을 깨문다.
-  if (a < mid) return { at: a, time: (STICK_MM - a) / speed, biter: "right" };
-  // 오른쪽이 가운데 전에 멈췄다 — 왼쪽이 계속 가서 오른쪽 입술을 깨문다.
-  return { at: b, time: b / speed, biter: "left" };
-}
 
-export function judge(a: number, b: number): Outcome {
-  const hit = collision(a, b);
-  if (hit) return { kind: "bite", ...hit };
-  const leftMm = b - a;
-  return { kind: "ok", leftMm, tier: tierOf(leftMm) };
-}
-
-/** t초가 지났을 때 두 입의 자리(왼쪽에서 잰 mm). 닿으면 거기서 멈춘다. */
-export function mouthsAt(t: number, a: number, b: number, speed = SPEED): { left: number; right: number } {
-  const hit = collision(a, b, speed);
-  const tt = hit ? Math.min(t, hit.time) : t;
-  return {
-    left: Math.min(a, speed * tt),
-    right: Math.max(b, STICK_MM - speed * tt),
-  };
-}
-
-/** 둘 다 멈추거나 입이 닿기까지 걸리는 시간(초). */
-export function duration(a: number, b: number, speed = SPEED): number {
-  const hit = collision(a, b, speed);
-  if (hit) return hit.time;
-  return Math.max(a, STICK_MM - b) / speed;
-}
-
-/* ───────────── 링크 암호 ───────────── */
-
-const KEY = [0x5a, 0x17, 0xc3, 0x8e, 0x21, 0x6b, 0xf4, 0x39, 0xa2, 0x4d, 0x90, 0x1f];
-
-/** 소금(salt) 한 바이트로 섞는다 — 같은 자리를 골라도 링크가 매번 달라 보이게. */
-function scramble(bytes: Uint8Array, salt: number): Uint8Array {
-  return bytes.map((x, i) => x ^ KEY[(i + salt) % KEY.length] ^ ((i * 37 + salt * 101) & 0xff));
-}
-
-function toBase64Url(bytes: Uint8Array): string {
-  let s = "";
-  for (const x of bytes) s += String.fromCharCode(x);
-  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function fromBase64Url(text: string): Uint8Array {
-  const b64 = text.replace(/-/g, "+").replace(/_/g, "/");
-  const bin = atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4));
-  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
-}
-
-export const cleanName = (name: string, fallback: string) =>
-  [...name.replace(/[\u0000-\u001f|]/g, "").trim()].slice(0, NAME_MAX).join("") || fallback;
-
-const checksum = (bytes: Uint8Array) => bytes.reduce((sum, x, i) => (sum * 31 + x + i) & 0xff, 7);
-
-/** 도전장(a, n) 또는 결과(a, n, b, m)를 링크에 넣을 글자로. */
-export function encode(game: Challenge | Answer): string {
-  const parts = [3, game.a, game.n];
-  if ("b" in game) parts.push(game.b, game.m);
-  const salt = Math.floor(Math.random() * 256);
-  const text = new TextEncoder().encode(parts.join("|"));
-  // 끝 한 바이트는 검산용 — 링크 끝이 잘리거나 손대면 알아챈다.
-  const body = scramble(Uint8Array.of(...text, checksum(text)), salt);
-  return toBase64Url(Uint8Array.of(salt, ...body));
-}
-
-/** 망가졌거나 손댄 링크면 null. */
-export function decode(code: string): Challenge | Answer | null {
-  try {
-    const raw = fromBase64Url(code);
-    if (raw.length < 3) return null;
-    const plain = scramble(raw.subarray(1), raw[0]);
-    const bytes = plain.subarray(0, -1);
-    if (checksum(bytes) !== plain[plain.length - 1]) return null;
-    const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-    const [v, a, n, b, m, ...rest] = text.split("|");
-    if (v !== "3" || rest.length) return null;
-    const okMm = (s: string | undefined) => s !== undefined && /^\d{1,3}$/.test(s) && clampMm(+s) === +s;
-    if (!okMm(a) || !n) return null;
-    const challenge: Challenge = { a: +a, n: cleanName(n, "도전자") };
-    if (b === undefined) return challenge;
-    if (!okMm(b) || !m) return null;
-    return { ...challenge, b: +b, m: cleanName(m, "상대") };
-  } catch {
-    return null;
+  const left = eatenAt(l, now);
+  const right = eatenAt(r, now);
+  if (isDone(l) && isDone(r)) {
+    const fl = eatenAt(l, horizon);
+    const fr = eatenAt(r, horizon);
+    const rest = STICK_MM - fl - fr;
+    const winner: SideKey | "tie" = Math.abs(fl - fr) < 0.5 ? "tie" : fl > fr ? "left" : "right";
+    return {
+      t: now,
+      left: fl,
+      right: fr,
+      outcome: { kind: "ok", left: fl, right: fr, rest, winner, tier: tierOf(rest) },
+      pending: false,
+    };
   }
+  return { t: now, left, right, outcome: null, pending: false };
 }
 
-/** 링크의 # 부분. 도전장은 #c=, 결과는 #r=. */
-export function hashOf(game: Challenge | Answer): string {
-  return `#${"b" in game ? "r" : "c"}=${encode(game)}`;
+/** 막대 위 한 자리(mm)로 — 무대에서 누른 자리를 고를 때 */
+export const clampMm = (mm: number) => Math.round(Math.min(STICK_MM - 1, Math.max(1, mm)));
+
+/** mm → "3.4" (cm, 소수 한 자리) */
+export const cm = (mm: number) => (Math.max(0, mm) / 10).toFixed(1);
+
+export function cleanName(raw: string, fallback: string) {
+  const s = [...raw.replace(/\s+/g, " ").trim()].slice(0, NAME_MAX).join("");
+  return s || fallback;
 }
 
-export type Route =
-  | { kind: "make" }
-  | { kind: "answer"; game: Challenge }
-  | { kind: "replay"; game: Answer }
-  | { kind: "broken" };
-
-export function routeOf(hash: string): Route {
-  const m = /^#([cr])=([A-Za-z0-9_-]+)$/.exec(hash);
-  if (!m) return hash.length > 1 ? { kind: "broken" } : { kind: "make" };
-  const game = decode(m[2]);
-  if (!game) return { kind: "broken" };
-  if (m[1] === "c" && !("b" in game)) return { kind: "answer", game };
-  if (m[1] === "r" && "b" in game) return { kind: "replay", game };
-  return { kind: "broken" };
+/** 방 번호 — 헷갈리는 글자(0/O, 1/I/L) 뺀 6글자 */
+const ROOM_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+export function newRoomCode(rand: () => number = Math.random) {
+  return Array.from({ length: 6 }, () => ROOM_CHARS[Math.floor(rand() * ROOM_CHARS.length)]).join("");
 }
+export const isRoomCode = (s: string) => /^[2-9A-HJKMNP-Z]{6}$/.test(s);
