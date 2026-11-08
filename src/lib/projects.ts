@@ -23,7 +23,8 @@ export type IconName =
   | "firework"
   | "shark"
   | "bubble"
-  | "duo";
+  | "duo"
+  | "stick";
 
 export interface Project {
   title: string;
@@ -44,6 +45,16 @@ export interface Project {
 }
 
 export const projects: Project[] = [
+  {
+    title: "빼빼로 게임",
+    description: "어디까지 먹을지 몰래 고르고 링크로 보내는 눈치 게임 🍫",
+    tags: ["Game", "SVG", "No DB"],
+    href: "/playground/pepero-game",
+    icon: "stick",
+    tile: ["#ffe6ec", "#ff9fb5"],
+    blurb:
+      "빼빼로데이에 맞춰 만든 둘이 하는 눈치 게임입니다. 먼저 하는 사람이 막대 왼쪽 끝부터 어디까지 먹을지 몰래 고르고 링크를 보내면, 받은 사람은 그 자리를 모른 채 오른쪽 끝부터 고릅니다. 둘이 같은 빠르기로 먹다가 남은 길이가 짧을수록 호흡이 잘 맞는 것이고, 자리가 겹치면 상대 입술을 앙 깨물고 끝납니다. 서버도 DB 도 없이 고른 자리를 링크의 # 뒤에 섞어 넣었습니다.",
+  },
   {
     title: "듀오 데칼코마니",
     description: "사진을 올리고 접었다 펴면 반쪽이 반대쪽에 찍혀요 🦋",

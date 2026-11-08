@@ -1,0 +1,301 @@
+/* 빼빼로 게임 페이지 전용. 이 페이지 밖에는 쓰지 않는다(이름에 pp- 를 붙였다). */
+
+.pp-page {
+  color: #4a2f27;
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
+  /* 딸기우유색 바탕에 비스듬한 줄무늬 — 과자 상자 느낌만 살짝. */
+  background:
+    radial-gradient(60% 40% at 50% 0%, rgba(255, 255, 255, 0.9), transparent 70%),
+    repeating-linear-gradient(-35deg, transparent 0 34px, rgba(255, 143, 171, 0.09) 34px 52px),
+    linear-gradient(180deg, #fff4ec 0%, #ffe6ec 100%);
+}
+
+.pp-display {
+  font-family: "Jua", "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.pp-card {
+  position: relative;
+  background: #fffaf5;
+  border: 3px solid #4a2f27;
+  border-radius: 28px;
+  padding: 20px 16px;
+  box-shadow: 0 6px 0 #4a2f27;
+}
+
+@media (min-width: 480px) {
+  .pp-card {
+    padding: 24px 22px;
+  }
+}
+
+.pp-step {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #5b3221;
+  color: #fff6ec;
+  font-size: 16px;
+}
+
+.pp-input {
+  width: 100%;
+  border: 2.5px solid #4a2f27;
+  border-radius: 16px;
+  background: #fff;
+  padding: 10px 14px;
+  font-size: 16px; /* 16px 밑이면 iOS 가 확대해 버린다 */
+  outline: none;
+}
+
+.pp-input:focus {
+  border-color: #e0577b;
+  box-shadow: 0 0 0 3px rgba(224, 87, 123, 0.2);
+}
+
+.pp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 0 20px;
+  border: 3px solid #4a2f27;
+  border-radius: 999px;
+  background: #e0577b;
+  color: #fff;
+  font-family: "Jua", "Apple SD Gothic Neo", system-ui, sans-serif;
+  font-size: 18px;
+  box-shadow: 0 4px 0 #4a2f27;
+  transition: transform 0.08s, box-shadow 0.08s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pp-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #4a2f27;
+}
+
+.pp-btn-ghost {
+  background: #fff;
+  color: #4a2f27;
+  font-size: 16px;
+}
+
+.pp-chip {
+  border: 2px solid #4a2f27;
+  border-radius: 999px;
+  background: #fffaf5;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* 슬라이더 — 막대과자 모양 */
+.pp-range {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 34px;
+  background: transparent;
+}
+
+.pp-range::-webkit-slider-runnable-track {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e8b46c 0 10%, #5b3221 10% 100%);
+  border: 2px solid #4a2f27;
+}
+
+.pp-range::-moz-range-track {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e8b46c 0 10%, #5b3221 10% 100%);
+  border: 2px solid #4a2f27;
+}
+
+.pp-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 30px;
+  height: 30px;
+  margin-top: -11px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #e0577b;
+  box-shadow: 0 2px 0 #4a2f27;
+}
+
+.pp-range::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #e0577b;
+}
+
+.pp-rules summary {
+  list-style: none;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.pp-rules summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 알림 */
+.pp-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 50;
+  max-width: calc(100vw - 32px);
+  transform: translate(-50%, 20px);
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #4a2f27;
+  color: #fff6ec;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.pp-toast-on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ── 움직임 ── */
+
+/* 먹는 동안 입술이 오물오물 */
+.pp-chomp-top {
+  animation: pp-chomp-top 0.16s ease-in-out infinite alternate;
+}
+.pp-chomp-bottom {
+  animation: pp-chomp-bottom 0.16s ease-in-out infinite alternate;
+}
+@keyframes pp-chomp-top {
+  to {
+    transform: translateY(-2.5px);
+  }
+}
+@keyframes pp-chomp-bottom {
+  to {
+    transform: translateY(2.5px);
+  }
+}
+
+/* 먹는 동안 머리가 콩콩 */
+.pp-bob {
+  animation: pp-bob 0.32s ease-in-out infinite alternate;
+}
+@keyframes pp-bob {
+  to {
+    transform: translateY(-1.5px);
+  }
+}
+
+.pp-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pp-blink 3.6s infinite;
+}
+@keyframes pp-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+.pp-crumb {
+  animation: pp-crumb 0.8s cubic-bezier(0.3, 0, 0.7, 1) forwards;
+}
+@keyframes pp-crumb {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+}
+
+.pp-tear {
+  animation: pp-tear 1.2s ease-in infinite;
+}
+@keyframes pp-tear {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+
+.pp-pop {
+  animation: pp-pop 0.35s cubic-bezier(0.3, 1.6, 0.6, 1) both;
+}
+@keyframes pp-pop {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+}
+
+.pp-shake {
+  animation: pp-shake 0.4s ease-in-out;
+}
+@keyframes pp-shake {
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+/* 결과 카드는 먹는 장면이 끝난 뒤에 올라온다(지연은 인라인 animation-delay). */
+.pp-result {
+  animation: pp-rise 0.45s cubic-bezier(0.2, 1.2, 0.5, 1) both;
+}
+@keyframes pp-rise {
+  from {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-chomp-top,
+  .pp-chomp-bottom,
+  .pp-bob,
+  .pp-blink,
+  .pp-shake,
+  .pp-tear {
+    animation: none;
+  }
+}

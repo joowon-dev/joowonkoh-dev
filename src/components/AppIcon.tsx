@@ -477,6 +477,21 @@ function Duo() {
   );
 }
 
+/** 빼빼로 게임 — 비스듬한 막대과자 양 끝을 무는 두 입 */
+function Stick() {
+  return (
+    <>
+      <g transform="rotate(-30 32 32)">
+        <rect x="8" y="28" width="48" height="8" rx="3" fill="#e8b46c" stroke="#4a2f27" strokeWidth="2" />
+        <rect x="18" y="27" width="38" height="10" rx="4" fill="#5b3221" />
+        <rect x="20" y="29" width="34" height="2" rx="1" fill="#8a5a3c" />
+      </g>
+      <circle cx="12" cy="44" r="4" fill="#ff7d96" stroke="#4a2f27" strokeWidth="1.6" />
+      <circle cx="52" cy="20" r="4" fill="#ff7d96" stroke="#4a2f27" strokeWidth="1.6" />
+    </>
+  );
+}
+
 const ICONS: Record<IconName, () => React.ReactElement> = {
   cat: Cat,
   hoop: Hoop,
@@ -499,6 +514,7 @@ const ICONS: Record<IconName, () => React.ReactElement> = {
   shark: Shark,
   bubble: Bubble,
   duo: Duo,
+  stick: Stick,
 };
 
 /**
