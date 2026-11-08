@@ -32,8 +32,10 @@ describe("judge", () => {
     expect(collision(120, 100)).toEqual({ at: 100, time: 100 / SPEED, biter: "left" });
   });
 
-  it("둘 다 가운데를 넘보면 가운데서 같이 콩", () => {
-    expect(collision(100, 40)).toMatchObject({ at: 75, biter: "both" });
+  it("둘 다 가운데를 넘보면 가운데서 만나고 더 욕심낸 쪽이 깨문다", () => {
+    expect(collision(100, 60)).toMatchObject({ at: 75, biter: "left" }); // 왼쪽 25, 오른쪽 15 넘음
+    expect(collision(80, 40)).toMatchObject({ at: 75, biter: "right" }); // 왼쪽 5, 오른쪽 35 넘음
+    expect(collision(85, 65)).toMatchObject({ at: 75, biter: "right" }); // 똑같으면 나중 사람
   });
 });
 
@@ -53,15 +55,15 @@ describe("mouthsAt", () => {
 
 describe("링크", () => {
   it("도전장·결과가 그대로 돌아온다(한글·이모지 이름 포함)", () => {
-    const c = { a: 73, n: "주원🍫" };
+    const c = { a: 73, n: "주원🍫", ca: 3 };
     expect(decode(encode(c))).toEqual(c);
-    const r = { a: 73, n: "주원", b: 77, m: "친구" };
+    const r = { a: 73, n: "주원", ca: 0, b: 77, m: "친구", cb: 2 };
     expect(decode(encode(r))).toEqual(r);
   });
 
   it("링크에 숫자가 그대로 보이지 않고, 같은 자리여도 링크가 매번 다르다", () => {
-    expect(encode({ a: 73, n: "a" })).not.toMatch(/73/);
-    const codes = new Set(Array.from({ length: 20 }, () => encode({ a: 73, n: "a" })));
+    expect(encode({ a: 73, n: "a", ca: 0 })).not.toMatch(/73/);
+    const codes = new Set(Array.from({ length: 20 }, () => encode({ a: 73, n: "a", ca: 0 })));
     expect(codes.size).toBeGreaterThan(1);
   });
 
@@ -69,16 +71,16 @@ describe("링크", () => {
     expect(decode("abc")).toBeNull();
     expect(decode("")).toBeNull();
     // 끝이 잘린 링크
-    const code = encode({ a: 73, n: "주원" });
+    const code = encode({ a: 73, n: "주원", ca: 1 });
     expect(decode(code.slice(0, -4))).toBeNull();
   });
 
   it("# 로 화면을 고른다", () => {
     expect(routeOf("")).toEqual({ kind: "make" });
-    expect(routeOf(hashOf({ a: 10, n: "가" }))).toEqual({ kind: "answer", game: { a: 10, n: "가" } });
-    expect(routeOf(hashOf({ a: 10, n: "가", b: 20, m: "나" })).kind).toBe("replay");
+    expect(routeOf(hashOf({ a: 10, n: "가", ca: 0 }))).toEqual({ kind: "answer", game: { a: 10, n: "가", ca: 0 } });
+    expect(routeOf(hashOf({ a: 10, n: "가", ca: 0, b: 20, m: "나", cb: 1 })).kind).toBe("replay");
     expect(routeOf("#c=@@")).toEqual({ kind: "broken" });
     // 도전장 자리에 결과를 넣으면 받지 않는다.
-    expect(routeOf(`#c=${encode({ a: 10, n: "가", b: 20, m: "나" })}`)).toEqual({ kind: "broken" });
+    expect(routeOf(`#c=${encode({ a: 10, n: "가", ca: 0, b: 20, m: "나", cb: 1 })}`)).toEqual({ kind: "broken" });
   });
 });

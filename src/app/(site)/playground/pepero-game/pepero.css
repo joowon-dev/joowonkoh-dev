@@ -170,7 +170,237 @@
   transform: translate(-50%, 0);
 }
 
+/* 캐릭터 고르기 */
+.pp-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 2px 6px;
+  border: 2.5px solid #e9dcd0;
+  border-radius: 18px;
+  background: #fff;
+  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pp-pick svg {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tint) 22%, #fff);
+}
+.pp-pick-on {
+  border-color: #4a2f27;
+  background: color-mix(in srgb, var(--tint) 18%, #fff);
+  transform: translateY(-3px);
+  box-shadow: 0 3px 0 #4a2f27;
+}
+
 /* ── 움직임 ── */
+
+/* 가만히 있어도 숨 쉰다 */
+.pp-breathe {
+  animation: pp-breathe 2.6s ease-in-out infinite;
+}
+@keyframes pp-breathe {
+  50% {
+    transform: translateY(-1.2px);
+  }
+}
+
+/* 팔은 표정이 바뀔 때 부드럽게 */
+.pp-arm {
+  transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+/* 오물거리는 볼 */
+.pp-cheek {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pp-cheek 0.18s ease-in-out infinite alternate;
+}
+@keyframes pp-cheek {
+  to {
+    transform: scale(1.25, 1.12);
+  }
+}
+
+/* 땀방울이 주르륵 */
+.pp-sweat {
+  animation: pp-sweat 1s ease-in infinite;
+}
+@keyframes pp-sweat {
+  0% {
+    transform: translateY(-2px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(9px);
+    opacity: 0;
+  }
+}
+
+/* 긴장한 눈동자가 떨린다 */
+.pp-jitter {
+  animation: pp-jitter 0.18s steps(2) infinite;
+}
+@keyframes pp-jitter {
+  50% {
+    transform: translateX(-0.8px);
+  }
+}
+
+/* 포니테일 살랑 */
+.pp-sway {
+  animation: pp-sway 1.4s ease-in-out infinite alternate;
+}
+@keyframes pp-sway {
+  from {
+    transform: rotate(-6deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
+}
+
+/* 머리 위를 도는 별 */
+.pp-orbit {
+  animation: pp-orbit 1.1s linear infinite;
+}
+@keyframes pp-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 깨물렸다 — 펄쩍 */
+.pp-hop {
+  animation: pp-hop 0.55s cubic-bezier(0.3, 0, 0.4, 1) both;
+}
+@keyframes pp-hop {
+  0% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-14px) rotate(-4deg);
+  }
+  70% {
+    transform: translateY(2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.pp-bandage {
+  animation: pp-pop 0.35s cubic-bezier(0.3, 1.6, 0.6, 1) 0.5s both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.pp-float {
+  animation: pp-float 1.6s ease-in-out infinite alternate;
+}
+@keyframes pp-float {
+  to {
+    transform: translateY(-5px);
+  }
+}
+
+/* 똑 부러진 조각이 빙글 돌며 튀어 오른다 */
+.pp-fly {
+  animation: pp-fly 0.7s cubic-bezier(0.2, 0.9, 0.4, 1) both;
+}
+@keyframes pp-fly {
+  0% {
+    transform: translateY(0) rotate(0);
+  }
+  55% {
+    transform: translateY(-62px) rotate(300deg);
+  }
+  100% {
+    transform: translateY(-50px) rotate(360deg);
+  }
+}
+
+/* 남은 길이 자가 위에서 툭 */
+.pp-drop {
+  animation: pp-drop 0.45s cubic-bezier(0.3, 1.6, 0.6, 1) both;
+}
+@keyframes pp-drop {
+  from {
+    transform: translateY(-24px) scale(0.6);
+    opacity: 0;
+  }
+}
+
+.pp-twinkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pp-twinkle 0.9s ease-in-out infinite;
+}
+@keyframes pp-twinkle {
+  0% {
+    transform: scale(0) rotate(0);
+  }
+  50% {
+    transform: scale(1.1) rotate(45deg);
+  }
+  100% {
+    transform: scale(0) rotate(90deg);
+  }
+}
+
+.pp-confetti {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pp-confetti 1.6s cubic-bezier(0.3, 0.2, 0.6, 1) both;
+}
+@keyframes pp-confetti {
+  from {
+    transform: translateY(0) rotate(0);
+  }
+  to {
+    transform: translateY(240px) rotate(540deg);
+  }
+}
+
+/* 깨무는 순간 번쩍 */
+.pp-flash {
+  animation: pp-flash 0.3s ease-out both;
+}
+@keyframes pp-flash {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 가까워지면 테두리가 분홍으로 두근 */
+.pp-tense {
+  animation: pp-tense 0.62s ease-in-out infinite;
+}
+@keyframes pp-tense {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 0 rgba(255, 111, 145, 0);
+  }
+  20% {
+    box-shadow: inset 0 0 36px 4px rgba(255, 111, 145, 0.35);
+  }
+}
+.pp-beat {
+  animation: pp-beat 0.62s ease-in-out infinite;
+}
+@keyframes pp-beat {
+  20% {
+    transform: scale(1.12);
+  }
+}
+
 
 /* 먹는 동안 입술이 오물오물 */
 .pp-chomp-top {
@@ -272,7 +502,7 @@
   }
 }
 
-/* 결과 카드는 먹는 장면이 끝난 뒤에 올라온다(지연은 인라인 animation-delay). */
+/* 결과 카드는 먹는 장면이 끝난 뒤에 올라온다. */
 .pp-result {
   animation: pp-rise 0.45s cubic-bezier(0.2, 1.2, 0.5, 1) both;
 }
@@ -295,7 +525,13 @@
   .pp-bob,
   .pp-blink,
   .pp-shake,
-  .pp-tear {
+  .pp-tear,
+  .pp-breathe,
+  .pp-cheek,
+  .pp-sway,
+  .pp-jitter,
+  .pp-tense,
+  .pp-beat {
     animation: none;
   }
 }

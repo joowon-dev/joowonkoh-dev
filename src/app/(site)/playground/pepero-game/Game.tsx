@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
+import { CHARACTERS, type Expr, Portrait } from "./Character";
+import { BITE_STEP, camZoom, slowFactor, stepped, visibleGap } from "./motion";
 import {
   type Answer,
   type Challenge,
@@ -16,11 +18,10 @@ import {
   NAME_MAX,
   type Outcome,
   routeOf,
-  SPEED,
   STICK_MM,
 } from "./rules";
 import { makeSound, type Sound } from "./sound";
-import Stage, { type Crumb, type Mood, xOf } from "./Stage";
+import Stage, { type Crumb, type Side, xOf } from "./Stage";
 
 /* ───────────── 링크(#) 읽기 ───────────── */
 
@@ -67,6 +68,9 @@ async function shareLink(url: string, text: string): Promise<ShareResult> {
   return (await copy(`${text}\n${url}`)) ? "copied" : "manual";
 }
 
+/** 많이 먹으려 할수록 얼굴이 긴장한다(고르는 동안). */
+const pickExpr = (eatMm: number): Expr => (eatMm > 80 ? "nervous" : "idle");
+
 /* ───────────── 맨 위 ───────────── */
 
 export default function Game() {
@@ -81,18 +85,13 @@ export default function Game() {
   return (
     <div className="mx-auto w-full max-w-[560px] px-4">
       <div className="mb-3 flex justify-end">
-        <button
-          type="button"
-          className="pp-chip"
-          onClick={() => setSoundOn((v) => !v)}
-          aria-pressed={soundOn}
-        >
-          {soundOn ? "🔊 바삭 소리 켬" : "🔇 소리 끔"}
+        <button type="button" className="pp-chip" onClick={() => setSoundOn((v) => !v)} aria-pressed={soundOn}>
+          {soundOn ? "🔊 소리 켬" : "🔇 소리 끔"}
         </button>
       </div>
 
       {!hydrated ? (
-        <div className="pp-card h-[340px] animate-pulse" aria-hidden />
+        <div className="pp-card h-[380px] animate-pulse" aria-hidden />
       ) : route.kind === "make" ? (
         <Make
           key="make"
@@ -125,11 +124,14 @@ export default function Game() {
 
 function Make({ onHandoff }: { onHandoff: (game: Challenge) => void }) {
   const [name, setName] = useState("");
+  const [ca, setCa] = useState(0);
   const [a, setA] = useState(64);
   const [link, setLink] = useState<string | null>(null);
   const [toast, say] = useToast();
 
-  const game = (): Challenge => ({ a, n: cleanName(name, "도전자") });
+  const game = (): Challenge => ({ a, n: cleanName(name, "도전자"), ca });
+  const me = (expr: Expr): Side => ({ at: 0, char: ca, expr, name: cleanName(name, "나") });
+  const stranger: Side = { at: STICK_MM, char: "mystery", expr: "mystery", name: "두구두구" };
 
   if (link) {
     const text = `🍫 빼빼로 게임 도전장! ${game().n}님이 막대과자를 물고 기다려요. 어디까지 먹을지 골라 봐 — 너무 많이 먹으면 입술 깨문다?`;
@@ -140,24 +142,11 @@ function Make({ onHandoff }: { onHandoff: (game: Challenge) => void }) {
           이 링크를 인스타 DM·카톡으로 보내 보세요. 상대가 자기 자리를 고르면 둘이 같이 먹기 시작해요.
         </p>
         <div className="mt-4">
-          <Stage
-            left={0}
-            right={STICK_MM}
-            leftMood="proud"
-            rightMood="mystery"
-            leftName={game().n}
-            rightName="두구두구"
-            pickLeft={a}
-          />
+          <Stage left={{ ...me("proud"), bubble: "기다릴게!" }} right={stranger} pickLeft={a} />
         </div>
         <label className="mt-4 block">
           <span className="sr-only">도전장 링크</span>
-          <input
-            readOnly
-            value={link}
-            className="pp-input text-[13px]"
-            onFocus={(e) => e.currentTarget.select()}
-          />
+          <input readOnly value={link} className="pp-input text-[13px]" onFocus={(e) => e.currentTarget.select()} />
         </label>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
@@ -195,15 +184,12 @@ function Make({ onHandoff }: { onHandoff: (game: Challenge) => void }) {
   return (
     <section className="pp-card">
       <Step n={1} title="내가 먼저 물게요" />
+      <CharacterPicker value={ca} onChange={setCa} />
       <NameField value={name} onChange={setName} placeholder="내 이름 (안 적으면 도전자)" />
-      <div className="mt-4">
+      <div className="mt-3">
         <Stage
-          left={0}
-          right={STICK_MM}
-          leftMood="idle"
-          rightMood="mystery"
-          leftName={cleanName(name, "나")}
-          rightName="두구두구"
+          left={me(pickExpr(a))}
+          right={stranger}
           pickLeft={a}
           onPick={setA}
           caption="막대를 누르거나 끌어서 내가 어디까지 먹을지 고르세요"
@@ -216,11 +202,7 @@ function Make({ onHandoff }: { onHandoff: (game: Challenge) => void }) {
       <p className="mt-1 text-center text-[13px] opacity-60 break-keep">
         상대는 이 자리를 몰라요. 욕심내면 상대가 입술을 깨물 수도 있어요!
       </p>
-      <button
-        type="button"
-        className="pp-btn mt-5 w-full"
-        onClick={() => setLink(linkFor(hashOf(game())))}
-      >
+      <button type="button" className="pp-btn mt-5 w-full" onClick={() => setLink(linkFor(hashOf(game())))}>
         도전장 만들기 🍫
       </button>
       <Rules />
@@ -233,8 +215,10 @@ function Make({ onHandoff }: { onHandoff: (game: Challenge) => void }) {
 function AnswerView({ game, soundOn, covered }: { game: Challenge; soundOn: boolean; covered: boolean }) {
   const [cover, setCover] = useState(covered);
   const [name, setName] = useState("");
+  const [cb, setCb] = useState((game.ca + 1) % CHARACTERS.length);
   const [b, setB] = useState(86);
   const [play, setPlay] = useState<{ answer: Answer; sound: Sound; round: number } | null>(null);
+  const [shown, setShown] = useState(false);
   const [toast, say] = useToast();
 
   if (cover) {
@@ -255,32 +239,37 @@ function AnswerView({ game, soundOn, covered }: { game: Challenge; soundOn: bool
     const outcome = judge(answer.a, answer.b);
     return (
       <section className="pp-card">
-        <Bout key={`bout-${play.round}`} game={answer} sound={play.sound} />
-        <ResultCard key={`result-${play.round}`} game={answer} outcome={outcome} delay={duration(answer.a, answer.b) + COUNTDOWN}>
-          <button
-            type="button"
-            className="pp-btn"
-            onClick={async () => {
-              const r = await shareLink(linkFor(hashOf(answer)), shareText(outcome));
-              if (r === "copied") say(`결과 링크를 복사했어요. ${answer.n}님한테 보내 주세요!`);
-              if (r === "manual") say("공유가 막혀 있어요. 화면을 캡처해서 보내 주세요");
-            }}
-          >
-            {answer.n}님한테 결과 보내기
-          </button>
-          <div className="grid grid-cols-2 gap-2">
+        <Bout key={`bout-${play.round}`} game={answer} sound={play.sound} onDone={() => setShown(true)} />
+        {shown && (
+          <ResultCard key={`result-${play.round}`} game={answer} outcome={outcome}>
             <button
               type="button"
-              className="pp-btn pp-btn-ghost"
-              onClick={() => setPlay({ ...play, sound: makeSound(soundOn), round: play.round + 1 })}
+              className="pp-btn"
+              onClick={async () => {
+                const r = await shareLink(linkFor(hashOf(answer)), shareText(outcome));
+                if (r === "copied") say(`결과 링크를 복사했어요. ${answer.n}님한테 보내 주세요!`);
+                if (r === "manual") say("공유가 막혀 있어요. 화면을 캡처해서 보내 주세요");
+              }}
             >
-              다시 보기
+              {answer.n}님한테 결과 보내기
             </button>
-            <button type="button" className="pp-btn pp-btn-ghost" onClick={() => go("")}>
-              내가 도전장 만들기
-            </button>
-          </div>
-        </ResultCard>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                className="pp-btn pp-btn-ghost"
+                onClick={() => {
+                  setShown(false);
+                  setPlay({ ...play, sound: makeSound(soundOn), round: play.round + 1 });
+                }}
+              >
+                다시 보기
+              </button>
+              <button type="button" className="pp-btn pp-btn-ghost" onClick={() => go("")}>
+                내가 도전장 만들기
+              </button>
+            </div>
+          </ResultCard>
+        )}
         <Toast text={toast} />
       </section>
     );
@@ -296,16 +285,13 @@ function AnswerView({ game, soundOn, covered }: { game: Challenge; soundOn: bool
       </p>
       <div className="mt-4">
         <Step n={2} title="나는 오른쪽에서 먹을게요" />
+        <CharacterPicker value={cb} onChange={setCb} />
         <NameField value={name} onChange={setName} placeholder="내 이름 (안 적으면 상대)" />
       </div>
-      <div className="mt-4">
+      <div className="mt-3">
         <Stage
-          left={0}
-          right={STICK_MM}
-          leftMood="idle"
-          rightMood="idle"
-          leftName={game.n}
-          rightName={cleanName(name, "나")}
+          left={{ at: 0, char: game.ca, expr: "idle", name: game.n }}
+          right={{ at: STICK_MM, char: cb, expr: pickExpr(STICK_MM - b), name: cleanName(name, "나") }}
           pickRight={b}
           onPick={setB}
           caption="막대를 누르거나 끌어서 내가 어디까지 먹을지 고르세요"
@@ -319,7 +305,7 @@ function AnswerView({ game, soundOn, covered }: { game: Challenge; soundOn: bool
         type="button"
         className="pp-btn mt-5 w-full"
         onClick={() =>
-          setPlay({ answer: { ...game, b, m: cleanName(name, "상대") }, sound: makeSound(soundOn), round: 0 })
+          setPlay({ answer: { ...game, b, m: cleanName(name, "상대"), cb }, sound: makeSound(soundOn), round: 0 })
         }
       >
         냠냠 시작!
@@ -332,31 +318,23 @@ function AnswerView({ game, soundOn, covered }: { game: Challenge; soundOn: bool
 
 function Replay({ game, soundOn }: { game: Answer; soundOn: boolean }) {
   const [play, setPlay] = useState<{ sound: Sound; round: number } | null>(null);
+  const [shown, setShown] = useState(false);
 
   if (!play) {
     return (
       <section className="pp-card text-center">
-        <p className="text-[44px]">📬</p>
-        <p className="pp-display mt-1 text-[24px] break-keep">
+        <p className="pp-display text-[24px] break-keep">
           {game.n} × {game.m}
           <br />
-          빼빼로 게임 결과가 왔어요
+          빼빼로 게임 결과가 왔어요 📬
         </p>
         <div className="mt-4">
           <Stage
-            left={0}
-            right={STICK_MM}
-            leftMood="idle"
-            rightMood="idle"
-            leftName={game.n}
-            rightName={game.m}
+            left={{ at: 0, char: game.ca, expr: "idle", name: game.n }}
+            right={{ at: STICK_MM, char: game.cb, expr: "idle", name: game.m }}
           />
         </div>
-        <button
-          type="button"
-          className="pp-btn mt-5"
-          onClick={() => setPlay({ sound: makeSound(soundOn), round: 0 })}
-        >
+        <button type="button" className="pp-btn mt-5" onClick={() => setPlay({ sound: makeSound(soundOn), round: 0 })}>
           두근두근 결과 보기 ▶
         </button>
       </section>
@@ -366,32 +344,40 @@ function Replay({ game, soundOn }: { game: Answer; soundOn: boolean }) {
   const outcome = judge(game.a, game.b);
   return (
     <section className="pp-card">
-      <Bout key={`bout-${play.round}`} game={game} sound={play.sound} />
-      <ResultCard key={`result-${play.round}`} game={game} outcome={outcome} delay={duration(game.a, game.b) + COUNTDOWN}>
-        <button type="button" className="pp-btn" onClick={() => go("")}>
-          한 판 더! 내가 도전장 만들기
-        </button>
-        <button
-          type="button"
-          className="pp-btn pp-btn-ghost"
-          onClick={() => setPlay({ sound: makeSound(soundOn), round: play.round + 1 })}
-        >
-          다시 보기
-        </button>
-      </ResultCard>
+      <Bout key={`bout-${play.round}`} game={game} sound={play.sound} onDone={() => setShown(true)} />
+      {shown && (
+        <ResultCard key={`result-${play.round}`} game={game} outcome={outcome}>
+          <button type="button" className="pp-btn" onClick={() => go("")}>
+            한 판 더! 내가 도전장 만들기
+          </button>
+          <button
+            type="button"
+            className="pp-btn pp-btn-ghost"
+            onClick={() => {
+              setShown(false);
+              setPlay({ sound: makeSound(soundOn), round: play.round + 1 });
+            }}
+          >
+            다시 보기
+          </button>
+        </ResultCard>
+      )}
     </section>
   );
 }
 
 /* ───────────── 먹는 장면 ───────────── */
 
-const COUNTDOWN = 1.1;
-/** 깨물 때 입 사이에 남겨 두는 틈(mm) — 입이 붙는 장면은 그리지 않는다 */
-const BITE_GAP = 4;
+/** 「준비~ 냠!」 시간(초) */
+const COUNTDOWN = 1.3;
 /** 깨문 뒤 둘이 튕겨 나가는 거리(mm) */
-const RECOIL = 14;
-/** 바삭 소리 간격(초) */
-const CRUNCH_EVERY = 0.16;
+const RECOIL = 16;
+/** 다 먹고 막대가 똑 부러질 때 둘이 물러나는 거리(mm) */
+const PULL_BACK = 12;
+/** 이보다 가까우면 두근두근 */
+const TENSE_GAP = 30;
+/** 장면이 끝나고 결과 카드가 뜨기까지(초) */
+const AFTER = { ok: 1.3, bite: 1.6 };
 
 /** 부스러기 번호 — 다시 보기를 해도 안 겹치게 모듈에서 센다. */
 let crumbSeq = 0;
@@ -400,109 +386,189 @@ interface LiveCrumb extends Crumb {
   born: number;
 }
 
-function Bout({ game, sound }: { game: Answer; sound: Sound }) {
-  const [t, setT] = useState(0);
-  const [crumbs, setCrumbs] = useState<LiveCrumb[]>([]);
+interface Frame {
+  /** 시작부터 흐른 실제 시간(초) */
+  real: number;
+  /** 슬로모션을 반영한 장면 시간(초) */
+  sim: number;
+  /** 장면이 끝난 실제 시각 */
+  endedAt: number | null;
+  crumbs: LiveCrumb[];
+}
+
+function Bout({ game, sound, onDone }: { game: Answer; sound: Sound; onDone: () => void }) {
+  const [frame, setFrame] = useState<Frame>({ real: 0, sim: 0, endedAt: null, crumbs: [] });
   const outcome = judge(game.a, game.b);
   const total = duration(game.a, game.b);
+  const final = mouthsAt(total, game.a, game.b);
+
+  const doneRef = useRef(onDone);
+  useEffect(() => {
+    doneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     let raf = 0;
     const t0 = performance.now();
-    let prev = mouthsAt(0, game.a, game.b);
-    const nextCrunch = { left: COUNTDOWN, right: COUNTDOWN };
-    let ended = false;
+    let last = t0;
+    let sim = 0;
+    let endedAt: number | null = null;
+    let done = false;
+    let nextBeat = 0;
+    const bites = { left: 0, right: 0 };
+    let crumbs: LiveCrumb[] = [];
+    const kind = judge(game.a, game.b).kind;
 
     const tick = (now: number) => {
-      const el = (now - t0) / 1000;
-      const eat = Math.max(0, el - COUNTDOWN);
-      const pos = mouthsAt(eat, game.a, game.b);
-      const born: LiveCrumb[] = [];
+      const real = (now - t0) / 1000;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
 
+      if (real >= COUNTDOWN && endedAt === null) {
+        const p = mouthsAt(sim, game.a, game.b);
+        sim = Math.min(total, sim + dt * slowFactor(p.right - p.left));
+        if (sim >= total) {
+          endedAt = real;
+          if (kind === "bite") {
+            sound.bite();
+            navigator.vibrate?.(160);
+          } else {
+            sound.ding();
+          }
+        }
+      }
+
+      const pos = mouthsAt(sim, game.a, game.b);
+      const gap = pos.right - pos.left;
+      const born: LiveCrumb[] = [];
+      const eaten = { left: pos.left, right: STICK_MM - pos.right };
       (["left", "right"] as const).forEach((side) => {
-        if (pos[side] === prev[side] || el < nextCrunch[side]) return;
-        nextCrunch[side] = el + CRUNCH_EVERY;
+        const n = Math.floor(eaten[side] / BITE_STEP);
+        if (n <= bites[side]) return;
+        bites[side] = n;
         sound.crunch(side === "left" ? -1 : 1);
-        for (let i = 0; i < 2; i++) {
+        const c = (pos.left + pos.right) / 2;
+        const h = visibleGap(gap) / 2;
+        const x = xOf(side === "left" ? c - h : c + h);
+        for (let i = 0; i < 3; i++) {
           born.push({
             id: crumbSeq++,
-            born: el,
-            x: xOf(pos[side]) + (side === "left" ? -4 : 4),
-            dx: (side === "left" ? -1 : 1) * (6 + Math.random() * 14),
-            dy: 26 + Math.random() * 26,
-            r: 1.4 + Math.random() * 1.6,
+            born: real,
+            x: x + (side === "left" ? -3 : 3),
+            dx: (side === "left" ? -1 : 1) * (4 + Math.random() * 16),
+            dy: 24 + Math.random() * 30,
+            r: 1.2 + Math.random() * 1.8,
             dark: Math.random() < 0.6,
           });
         }
       });
-      prev = pos;
 
-      if (!ended && eat >= total) {
-        ended = true;
-        if (outcome.kind === "bite") {
-          sound.bite();
-          navigator.vibrate?.(150);
-        } else {
-          sound.ding();
-        }
+      if (endedAt === null && real >= COUNTDOWN && gap < TENSE_GAP && real >= nextBeat) {
+        sound.heartbeat();
+        nextBeat = real + 0.62;
       }
 
-      setT(el);
-      setCrumbs((cs) => [...cs.filter((c) => el - c.born < 0.8), ...born]);
-      if (el < COUNTDOWN + total + 1.2) raf = requestAnimationFrame(tick);
+      crumbs = [...crumbs.filter((c) => real - c.born < 0.8), ...born];
+      setFrame({ real, sim, endedAt, crumbs });
+
+      if (endedAt !== null && !done && real - endedAt >= AFTER[kind]) {
+        done = true;
+        doneRef.current();
+      }
+      if (endedAt === null || real - endedAt < AFTER[kind] + 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [game.a, game.b, sound, total, outcome.kind]);
+  }, [game.a, game.b, sound, total]);
 
-  const eat = Math.max(0, t - COUNTDOWN);
-  const done = eat >= total;
-  const pos = shown(eat);
-  /**
-   * 그리는 자리. 깨무는 판에서는 입이 딱 붙는 순간을 그리지 않는다 —
-   * 4mm 앞에서 「앙!」 하고, 둘 다 깜짝 놀라 뒤로 튕겨 나간다.
-   */
-  function shown(at: number) {
-    const p = mouthsAt(at, game.a, game.b);
-    if (outcome.kind !== "bite") return p;
-    const mid = (p.left + p.right) / 2;
-    const half = Math.max(BITE_GAP / 2, (p.right - p.left) / 2);
-    const k = Math.min(1, Math.max(0, at - total) / 0.3);
-    const recoil = RECOIL * (1 - (1 - k) ** 3);
-    return { left: mid - half - recoil, right: mid + half + recoil };
-  }
+  const { real, sim, endedAt, crumbs } = frame;
+  const ended = endedAt !== null;
+  const after = ended ? real - endedAt : 0;
+  const counting = real < COUNTDOWN;
 
-  const moving = (side: "left" | "right") =>
-    !done && t >= COUNTDOWN && (side === "left" ? eat < game.a / SPEED : eat < (STICK_MM - game.b) / SPEED);
-
-  const moodOf = (side: "left" | "right"): Mood => {
-    if (done && outcome.kind === "bite") {
-      const bitten = outcome.biter === "both" || outcome.biter !== side;
-      return bitten ? "ouch" : "blush";
-    }
-    if (moving(side)) return "chomp";
-    if (t < COUNTDOWN) return "idle";
-    // 멈춘 쪽은 남은 길이가 짧을수록 얼굴이 빨개진다.
-    return pos.right - pos.left <= 30 ? "blush" : "proud";
+  // 판정용 자리 → 한 입씩 끊어서 보여 줄 자리
+  const raw = mouthsAt(sim, game.a, game.b);
+  const stepL = stepped(raw.left, final.left);
+  const stepR = STICK_MM - stepped(STICK_MM - raw.right, STICK_MM - final.right);
+  const realGap = stepR - stepL;
+  // 화면 속 틈은 가까울수록 눌러서 그린다 — 얼굴이 맞닿아 보이는 순간은 없다.
+  // 끝나면 깨문 판은 튕겨 나가고, 아닌 판은 막대가 똑 부러지며 둘 다 물러난다.
+  const back =
+    !ended
+      ? 0
+      : outcome.kind === "bite"
+        ? RECOIL * (1 - (1 - Math.min(1, after / 0.28)) ** 3)
+        : after < 0.2
+          ? 0
+          : PULL_BACK * (1 - (1 - Math.min(1, (after - 0.2) / 0.3)) ** 3);
+  const half = visibleGap(realGap) / 2 + back;
+  const center = (stepL + stepR) / 2;
+  const left = center - half;
+  const right = center + half;
+  const gap = realGap;
+  const moving = {
+    left: !ended && !counting && raw.left < final.left,
+    right: !ended && !counting && raw.right > final.right,
   };
 
+  const exprOf = (side: "left" | "right"): Expr => {
+    if (ended && outcome.kind === "bite") return outcome.biter === side ? "oops" : "ouch";
+    if (ended && outcome.kind === "ok") return after < 0.2 ? "nervous" : outcome.leftMm <= 60 ? "proud" : "meh";
+    if (moving[side]) return gap < 14 ? "nervous" : "chew";
+    if (counting) return "idle";
+    return gap < TENSE_GAP ? "nervous" : "idle";
+  };
+
+  const bubbleOf = (side: "left" | "right"): string | null => {
+    if (!ended) return null;
+    if (outcome.kind === "bite") {
+      if (after < 0.45) return null;
+      return outcome.biter === side ? "미안…!" : "아야!";
+    }
+    if (after < 0.55) return null;
+    if (outcome.leftMm > 60) return "…";
+    if (outcome.leftMm <= TENSE_GAP) return side === "left" ? "휴…!" : "아슬아슬!";
+    return null;
+  };
+
+  const side = (s: "left" | "right"): Side => ({
+    at: s === "left" ? left : right,
+    char: s === "left" ? game.ca : game.cb,
+    expr: exprOf(s),
+    name: s === "left" ? game.n : game.m,
+    bubble: bubbleOf(s),
+  });
+
+  const tense = !ended && !counting && gap < TENSE_GAP;
+  // 끝나면 카메라가 천천히 물러나 둘 다·말풍선·이름표가 다 보이게 한다.
+  const pullOut = ended ? Math.min(1, Math.max(0, after - 0.15) / 0.6) : 0;
+  const zoom = 1 + (camZoom(right - left) - 1) * (1 - pullOut);
+  const ok = outcome.kind === "ok";
+
   return (
-    <div className="relative">
+    <div className={`relative overflow-hidden rounded-[20px] ${tense ? "pp-tense" : ""}`}>
       <Stage
-        left={pos.left}
-        right={pos.right}
-        leftMood={moodOf("left")}
-        rightMood={moodOf("right")}
-        leftName={game.n}
-        rightName={game.m}
+        left={side("left")}
+        right={side("right")}
         crumbs={crumbs}
-        measure={done && outcome.kind === "ok"}
-        bite={done && outcome.kind === "bite" ? outcome.at : null}
+        cam={{ at: (left + right) / 2, zoom: zoom }}
+        piece={ok && ended && after >= 0.2 ? outcome.leftMm : null}
+        sparkle={ok && ended && after > 0.3 && outcome.leftMm <= TENSE_GAP}
+        confetti={ok && ended && after > 0.3 && outcome.leftMm <= 5}
+        bite={!ok && ended ? (outcome.kind === "bite" ? outcome.at : null) : null}
         caption={`${game.n}·${game.m} 둘이 막대과자를 양쪽에서 먹는 중`}
       />
-      {t < COUNTDOWN && (
-        <p key={t < COUNTDOWN / 2 ? "a" : "b"} className="pp-display pp-pop pointer-events-none absolute inset-x-0 top-1 text-center text-[26px] text-[#5b3221]">
-          {t < COUNTDOWN / 2 ? "준비…" : "냠!"}
+      {counting && (
+        <p
+          key={real < COUNTDOWN * 0.6 ? "ready" : "go"}
+          className="pp-display pp-pop pointer-events-none absolute inset-x-0 top-2 text-center text-[30px] text-[#5b3221]"
+        >
+          {real < COUNTDOWN * 0.6 ? "준비~" : "냠!"}
+        </p>
+      )}
+      {tense && (
+        <p className="pp-display pp-beat pointer-events-none absolute inset-x-0 top-2 text-center text-[18px] text-[#e0577b]">
+          아슬아슬…
         </p>
       )}
     </div>
@@ -515,28 +581,12 @@ function shareText(outcome: Outcome) {
     : "🍫 빼빼로 게임 결과: 앙! 입술을 깨물어 버렸다 🩹 어떻게 된 건지 직접 봐 👀";
 }
 
-function ResultCard({
-  game,
-  outcome,
-  delay,
-  children,
-}: {
-  game: Answer;
-  outcome: Outcome;
-  delay: number;
-  children: React.ReactNode;
-}) {
-  const eatenL = cm(game.a);
-  const eatenR = cm(STICK_MM - game.b);
-  const greedy =
-    outcome.kind === "bite"
-      ? outcome.biter === "both"
-        ? "둘 다 욕심쟁이"
-        : `욕심쟁이는 ${outcome.biter === "left" ? game.n : game.m}님`
-      : null;
+function ResultCard({ game, outcome, children }: { game: Answer; outcome: Outcome; children: React.ReactNode }) {
+  const biter = outcome.kind === "bite" ? (outcome.biter === "left" ? game.n : game.m) : "";
+  const bitten = outcome.kind === "bite" ? (outcome.biter === "left" ? game.m : game.n) : "";
 
   return (
-    <div className="pp-result mt-4" style={{ animationDelay: `${delay + 0.7}s` }}>
+    <div className="pp-result mt-4">
       {outcome.kind === "ok" ? (
         <div className="text-center">
           <p className="text-[13px] opacity-60">남은 빼빼로</p>
@@ -550,14 +600,10 @@ function ResultCard({
       ) : (
         <div className="text-center">
           <p className="pp-display text-[28px] text-[#e0577b] break-keep">
-            {outcome.biter === "both"
-              ? "둘이 동시에 앙!"
-              : outcome.biter === "right"
-                ? `${game.m}님이 ${game.n}님 입술을 앙!`
-                : `${game.n}님이 ${game.m}님 입술을 앙!`}
+            {biter}님이 {bitten}님 입술을 앙!
           </p>
           <p className="mt-1 text-[14px] opacity-75 break-keep">
-            {greedy}! 반창고 붙여 줄게요 🩹 다음엔 조금만 덜 먹기
+            욕심쟁이는 {biter}님! {bitten}님한테 반창고 붙여 주기 🩹
           </p>
         </div>
       )}
@@ -565,12 +611,12 @@ function ResultCard({
         <div className="rounded-2xl bg-[#ffe3ea] px-3 py-2">
           <b>{game.n}</b>
           <br />
-          {eatenL}cm 먹기로 했어요
+          {cm(game.a)}cm 먹기로 했어요
         </div>
         <div className="rounded-2xl bg-[#dcf3ea] px-3 py-2">
           <b>{game.m}</b>
           <br />
-          {eatenR}cm 먹기로 했어요
+          {cm(STICK_MM - game.b)}cm 먹기로 했어요
         </div>
       </div>
       <div className="mt-4 grid gap-2">{children}</div>
@@ -586,6 +632,27 @@ function Step({ n, title }: { n: number; title: string }) {
       <span className="pp-step">{n}</span>
       {title}
     </p>
+  );
+}
+
+function CharacterPicker({ value, onChange }: { value: number; onChange: (i: number) => void }) {
+  return (
+    <div className="mt-3 grid grid-cols-4 gap-2" role="radiogroup" aria-label="캐릭터 고르기">
+      {CHARACTERS.map((c, i) => (
+        <button
+          key={c.name}
+          type="button"
+          role="radio"
+          aria-checked={value === i}
+          onClick={() => onChange(i)}
+          className={`pp-pick ${value === i ? "pp-pick-on" : ""}`}
+          style={{ "--tint": c.shirt } as React.CSSProperties}
+        >
+          <Portrait index={i} />
+          <span className="text-[12px] font-bold">{c.name}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -635,7 +702,7 @@ function Rules() {
         <li>내가 왼쪽 끝부터 어디까지 먹을지 몰래 고르고 링크를 보내요.</li>
         <li>링크를 받은 친구는 내 자리를 모른 채 오른쪽 끝부터 어디까지 먹을지 골라요.</li>
         <li>둘이 동시에 먹기 시작! 남은 막대가 짧을수록 호흡이 잘 맞는 거예요.</li>
-        <li>둘이 고른 자리가 겹치면… 상대 입술을 앙 깨물고 끝나요 🩹</li>
+        <li>둘이 고른 자리가 겹치면… 욕심낸 쪽이 상대 입술을 앙 깨물고 끝나요 🩹</li>
       </ol>
       <p className="mt-2 opacity-60 break-keep">서버에 아무것도 저장하지 않아요. 고른 자리는 링크 안에만 들어 있어요.</p>
     </details>

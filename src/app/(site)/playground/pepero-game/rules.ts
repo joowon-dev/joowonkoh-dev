@@ -25,11 +25,16 @@ export const clampMm = (mm: number) => Math.min(MAX_MM, Math.max(MIN_MM, Math.ro
 
 export const cm = (mm: number) => (mm / 10).toFixed(1);
 
+/** 고를 수 있는 캐릭터 수(Stage 의 CHARACTERS 와 같은 수). */
+export const CHARACTER_COUNT = 4;
+
 export interface Challenge {
   /** 먼저 한 사람이 왼쪽 끝부터 먹은 mm */
   a: number;
   /** 먼저 한 사람 이름 */
   n: string;
+  /** 먼저 한 사람 캐릭터 번호 */
+  ca: number;
 }
 
 export interface Answer extends Challenge {
@@ -37,10 +42,12 @@ export interface Answer extends Challenge {
   b: number;
   /** 받은 사람 이름 */
   m: string;
+  /** 받은 사람 캐릭터 번호 */
+  cb: number;
 }
 
-/** 누가 누구를 깨물었나. left = 먼저 한 사람. */
-export type Biter = "right" | "left" | "both";
+/** 깨문 사람. left = 먼저 한 사람. 「둘이 동시에」는 없다 — 늘 한 사람이 깨문다. */
+export type Biter = "right" | "left";
 
 export type Outcome =
   | { kind: "ok"; leftMm: number; tier: Tier }
@@ -55,7 +62,7 @@ export interface Tier {
 const TIERS: [maxMm: number, tier: Tier][] = [
   [5, { title: "전설의 빼빼로", line: "숨도 못 쉬었겠다… 이건 기네스에 올려야 해" }],
   [15, { title: "찰떡 호흡", line: "말 안 해도 통하는 사이. 눈빛만 봐도 알지?" }],
-  [30, { title: "두근두근", line: "조금만 더 용기 냈으면 전설이었는데!" }],
+  [30, { title: "조마조마", line: "조금만 더 용기 냈으면 전설이었는데!" }],
   [60, { title: "아직은 수줍", line: "서로 눈치만 보다가 끝났어요" }],
   [Infinity, { title: "낯가림 대폭발", line: "빼빼로가 아니라 거의 통째로 남았잖아…" }],
 ];
@@ -69,8 +76,11 @@ export const tierOf = (leftMm: number): Tier => TIERS.find(([max]) => leftMm <= 
 export function collision(a: number, b: number, speed = SPEED): { at: number; time: number; biter: Biter } | null {
   if (b > a) return null;
   const mid = STICK_MM / 2;
-  // 둘 다 가운데를 넘어 먹으려 했다 — 가운데서 둘이 동시에 콩.
-  if (a >= mid && b <= mid) return { at: mid, time: mid / speed, biter: "both" };
+  // 둘 다 가운데를 넘어 먹으려 했다 — 가운데서 만나고, 더 욕심낸 쪽이 깨문다.
+  // 똑같이 욕심냈으면 상대 자리를 넘어 들어온 나중 사람(오른쪽)이 깨문다.
+  if (a >= mid && b <= mid) {
+    return { at: mid, time: mid / speed, biter: a - mid > mid - b ? "left" : "right" };
+  }
   // 왼쪽이 가운데 전에 멈췄다 — 오른쪽이 계속 와서 왼쪽 입술을 깨문다.
   if (a < mid) return { at: a, time: (STICK_MM - a) / speed, biter: "right" };
   // 오른쪽이 가운데 전에 멈췄다 — 왼쪽이 계속 가서 오른쪽 입술을 깨문다.
@@ -129,8 +139,8 @@ const checksum = (bytes: Uint8Array) => bytes.reduce((sum, x, i) => (sum * 31 + 
 
 /** 도전장(a, n) 또는 결과(a, n, b, m)를 링크에 넣을 글자로. */
 export function encode(game: Challenge | Answer): string {
-  const parts = [1, game.a, game.n];
-  if ("b" in game) parts.push(game.b, game.m);
+  const parts = [2, game.a, game.n, game.ca];
+  if ("b" in game) parts.push(game.b, game.m, game.cb);
   const salt = Math.floor(Math.random() * 256);
   const text = new TextEncoder().encode(parts.join("|"));
   // 끝 한 바이트는 검산용 — 링크 끝이 잘리거나 손대면 알아챈다.
@@ -147,14 +157,15 @@ export function decode(code: string): Challenge | Answer | null {
     const bytes = plain.subarray(0, -1);
     if (checksum(bytes) !== plain[plain.length - 1]) return null;
     const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-    const [v, a, n, b, m, ...rest] = text.split("|");
-    if (v !== "1" || rest.length) return null;
+    const [v, a, n, ca, b, m, cb, ...rest] = text.split("|");
+    if (v !== "2" || rest.length) return null;
     const okMm = (s: string | undefined) => s !== undefined && /^\d{1,3}$/.test(s) && clampMm(+s) === +s;
-    if (!okMm(a) || !n) return null;
-    const challenge: Challenge = { a: +a, n: cleanName(n, "도전자") };
+    const okChar = (s: string | undefined) => s !== undefined && /^\d$/.test(s) && +s < CHARACTER_COUNT;
+    if (!okMm(a) || !n || !okChar(ca)) return null;
+    const challenge: Challenge = { a: +a, n: cleanName(n, "도전자"), ca: +ca };
     if (b === undefined) return challenge;
-    if (!okMm(b) || !m) return null;
-    return { ...challenge, b: +b, m: cleanName(m, "상대") };
+    if (!okMm(b) || !m || !okChar(cb)) return null;
+    return { ...challenge, b: +b, m: cleanName(m, "상대"), cb: +cb };
   } catch {
     return null;
   }

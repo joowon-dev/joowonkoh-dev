@@ -10,9 +10,11 @@ export interface Sound {
   bite(): void;
   /** 다 먹고 멈췄을 때 띵 */
   ding(): void;
+  /** 가까워졌을 때 두근(두 번 쿵쿵) */
+  heartbeat(): void;
 }
 
-const silent: Sound = { crunch() {}, bite() {}, ding() {} };
+const silent: Sound = { crunch() {}, bite() {}, ding() {}, heartbeat() {} };
 
 export function makeSound(enabled: boolean): Sound {
   if (!enabled || typeof window === "undefined") return silent;
@@ -68,6 +70,22 @@ export function makeSound(enabled: boolean): Sound {
       o.connect(g).connect(ctx.destination);
       o.start(t);
       o.stop(t + 0.25);
+    },
+    heartbeat() {
+      const t = ctx.currentTime;
+      [0, 0.17].forEach((d, i) => {
+        const o = ctx.createOscillator();
+        o.type = "sine";
+        o.frequency.setValueAtTime(i ? 58 : 66, t + d);
+        o.frequency.exponentialRampToValueAtTime(40, t + d + 0.12);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t + d);
+        g.gain.exponentialRampToValueAtTime(i ? 0.35 : 0.5, t + d + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.16);
+        o.connect(g).connect(ctx.destination);
+        o.start(t + d);
+        o.stop(t + d + 0.18);
+      });
     },
     ding() {
       const t = ctx.currentTime;
