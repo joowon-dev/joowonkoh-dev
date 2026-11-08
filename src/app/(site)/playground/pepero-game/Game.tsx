@@ -1,8 +1,8 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { CHARACTERS, type Expr, Portrait } from "./Character";
 import { BITE_STEP, camZoom, slowFactor, stepped, visibleGap } from "./motion";
 import {
   type Answer,
@@ -21,7 +21,13 @@ import {
   STICK_MM,
 } from "./rules";
 import { makeSound, type Sound } from "./sound";
-import Stage, { type Crumb, type Side, xOf } from "./Stage";
+import type { Crumb, Expr, Side } from "./Scene3D";
+
+/** 3D 무대는 브라우저에서만 — three.js 를 처음 화면에 안 싣고 따로 받는다. */
+const Stage = dynamic(() => import("./Scene3D"), {
+  ssr: false,
+  loading: () => <div className="pp-3d-loading w-full" style={{ aspectRatio: "500 / 290" }} aria-hidden />,
+});
 
 /* ───────────── 링크(#) 읽기 ───────────── */
 
@@ -124,14 +130,13 @@ export default function Game() {
 
 function Make({ onHandoff }: { onHandoff: (game: Challenge) => void }) {
   const [name, setName] = useState("");
-  const [ca, setCa] = useState(0);
   const [a, setA] = useState(64);
   const [link, setLink] = useState<string | null>(null);
   const [toast, say] = useToast();
 
-  const game = (): Challenge => ({ a, n: cleanName(name, "도전자"), ca });
-  const me = (expr: Expr): Side => ({ at: 0, char: ca, expr, name: cleanName(name, "나") });
-  const stranger: Side = { at: STICK_MM, char: "mystery", expr: "mystery", name: "두구두구" };
+  const game = (): Challenge => ({ a, n: cleanName(name, "도전자") });
+  const me = (expr: Expr): Side => ({ at: 0, expr, name: cleanName(name, "나") });
+  const stranger: Side = { at: STICK_MM, expr: "mystery", name: "두구두구" };
 
   if (link) {
     const text = `🍫 빼빼로 게임 도전장! ${game().n}님이 막대과자를 물고 기다려요. 어디까지 먹을지 골라 봐 — 너무 많이 먹으면 입술 깨문다?`;
@@ -184,7 +189,6 @@ function Make({ onHandoff }: { onHandoff: (game: Challenge) => void }) {
   return (
     <section className="pp-card">
       <Step n={1} title="내가 먼저 물게요" />
-      <CharacterPicker value={ca} onChange={setCa} />
       <NameField value={name} onChange={setName} placeholder="내 이름 (안 적으면 도전자)" />
       <div className="mt-3">
         <Stage
@@ -215,7 +219,6 @@ function Make({ onHandoff }: { onHandoff: (game: Challenge) => void }) {
 function AnswerView({ game, soundOn, covered }: { game: Challenge; soundOn: boolean; covered: boolean }) {
   const [cover, setCover] = useState(covered);
   const [name, setName] = useState("");
-  const [cb, setCb] = useState((game.ca + 1) % CHARACTERS.length);
   const [b, setB] = useState(86);
   const [play, setPlay] = useState<{ answer: Answer; sound: Sound; round: number } | null>(null);
   const [shown, setShown] = useState(false);
@@ -285,13 +288,12 @@ function AnswerView({ game, soundOn, covered }: { game: Challenge; soundOn: bool
       </p>
       <div className="mt-4">
         <Step n={2} title="나는 오른쪽에서 먹을게요" />
-        <CharacterPicker value={cb} onChange={setCb} />
         <NameField value={name} onChange={setName} placeholder="내 이름 (안 적으면 상대)" />
       </div>
       <div className="mt-3">
         <Stage
-          left={{ at: 0, char: game.ca, expr: "idle", name: game.n }}
-          right={{ at: STICK_MM, char: cb, expr: pickExpr(STICK_MM - b), name: cleanName(name, "나") }}
+          left={{ at: 0, expr: "idle", name: game.n }}
+          right={{ at: STICK_MM, expr: pickExpr(STICK_MM - b), name: cleanName(name, "나") }}
           pickRight={b}
           onPick={setB}
           caption="막대를 누르거나 끌어서 내가 어디까지 먹을지 고르세요"
@@ -305,7 +307,7 @@ function AnswerView({ game, soundOn, covered }: { game: Challenge; soundOn: bool
         type="button"
         className="pp-btn mt-5 w-full"
         onClick={() =>
-          setPlay({ answer: { ...game, b, m: cleanName(name, "상대"), cb }, sound: makeSound(soundOn), round: 0 })
+          setPlay({ answer: { ...game, b, m: cleanName(name, "상대") }, sound: makeSound(soundOn), round: 0 })
         }
       >
         냠냠 시작!
@@ -330,8 +332,8 @@ function Replay({ game, soundOn }: { game: Answer; soundOn: boolean }) {
         </p>
         <div className="mt-4">
           <Stage
-            left={{ at: 0, char: game.ca, expr: "idle", name: game.n }}
-            right={{ at: STICK_MM, char: game.cb, expr: "idle", name: game.m }}
+            left={{ at: 0, expr: "idle", name: game.n }}
+            right={{ at: STICK_MM, expr: "idle", name: game.m }}
           />
         </div>
         <button type="button" className="pp-btn mt-5" onClick={() => setPlay({ sound: makeSound(soundOn), round: 0 })}>
@@ -383,6 +385,7 @@ const AFTER = { ok: 1.3, bite: 1.6 };
 let crumbSeq = 0;
 
 interface LiveCrumb extends Crumb {
+  /** 태어난 실제 시각 — 0.8초 지나면 치운다 */
   born: number;
 }
 
@@ -449,17 +452,9 @@ function Bout({ game, sound, onDone }: { game: Answer; sound: Sound; onDone: () 
         sound.crunch(side === "left" ? -1 : 1);
         const c = (pos.left + pos.right) / 2;
         const h = visibleGap(gap) / 2;
-        const x = xOf(side === "left" ? c - h : c + h);
-        for (let i = 0; i < 3; i++) {
-          born.push({
-            id: crumbSeq++,
-            born: real,
-            x: x + (side === "left" ? -3 : 3),
-            dx: (side === "left" ? -1 : 1) * (4 + Math.random() * 16),
-            dy: 24 + Math.random() * 30,
-            r: 1.2 + Math.random() * 1.8,
-            dark: Math.random() < 0.6,
-          });
+        const at = side === "left" ? c - h : c + h;
+        for (let i = 0; i < 4; i++) {
+          born.push({ id: crumbSeq++, born: real, at, dir: side === "left" ? -1 : 1, seed: Math.random() * 1000 });
         }
       });
 
@@ -533,7 +528,6 @@ function Bout({ game, sound, onDone }: { game: Answer; sound: Sound; onDone: () 
 
   const side = (s: "left" | "right"): Side => ({
     at: s === "left" ? left : right,
-    char: s === "left" ? game.ca : game.cb,
     expr: exprOf(s),
     name: s === "left" ? game.n : game.m,
     bubble: bubbleOf(s),
@@ -632,27 +626,6 @@ function Step({ n, title }: { n: number; title: string }) {
       <span className="pp-step">{n}</span>
       {title}
     </p>
-  );
-}
-
-function CharacterPicker({ value, onChange }: { value: number; onChange: (i: number) => void }) {
-  return (
-    <div className="mt-3 grid grid-cols-4 gap-2" role="radiogroup" aria-label="캐릭터 고르기">
-      {CHARACTERS.map((c, i) => (
-        <button
-          key={c.name}
-          type="button"
-          role="radio"
-          aria-checked={value === i}
-          onClick={() => onChange(i)}
-          className={`pp-pick ${value === i ? "pp-pick-on" : ""}`}
-          style={{ "--tint": c.shirt } as React.CSSProperties}
-        >
-          <Portrait index={i} />
-          <span className="text-[12px] font-bold">{c.name}</span>
-        </button>
-      ))}
-    </div>
   );
 }
 

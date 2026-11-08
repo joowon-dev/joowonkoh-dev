@@ -19,6 +19,7 @@
   "dependencies": {
     "@iconify/react": "^6.0.2",
     "@mediapipe/tasks-vision": "^1.0.0",
+    "@react-three/fiber": "9.8.2",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.110.8",
     "gray-matter": "^4.0.3",
@@ -30,13 +31,15 @@
     "react-dom": "19.2.4",
     "rehype-pretty-code": "^0.14.3",
     "server-only": "^0.0.1",
-    "shiki": "^4.0.2"
+    "shiki": "^4.0.2",
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "0.186.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "tailwindcss": "^4",

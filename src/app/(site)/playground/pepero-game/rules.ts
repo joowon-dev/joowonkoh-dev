@@ -25,16 +25,11 @@ export const clampMm = (mm: number) => Math.min(MAX_MM, Math.max(MIN_MM, Math.ro
 
 export const cm = (mm: number) => (mm / 10).toFixed(1);
 
-/** 고를 수 있는 캐릭터 수(Stage 의 CHARACTERS 와 같은 수). */
-export const CHARACTER_COUNT = 4;
-
 export interface Challenge {
   /** 먼저 한 사람이 왼쪽 끝부터 먹은 mm */
   a: number;
   /** 먼저 한 사람 이름 */
   n: string;
-  /** 먼저 한 사람 캐릭터 번호 */
-  ca: number;
 }
 
 export interface Answer extends Challenge {
@@ -42,8 +37,6 @@ export interface Answer extends Challenge {
   b: number;
   /** 받은 사람 이름 */
   m: string;
-  /** 받은 사람 캐릭터 번호 */
-  cb: number;
 }
 
 /** 깨문 사람. left = 먼저 한 사람. 「둘이 동시에」는 없다 — 늘 한 사람이 깨문다. */
@@ -139,8 +132,8 @@ const checksum = (bytes: Uint8Array) => bytes.reduce((sum, x, i) => (sum * 31 + 
 
 /** 도전장(a, n) 또는 결과(a, n, b, m)를 링크에 넣을 글자로. */
 export function encode(game: Challenge | Answer): string {
-  const parts = [2, game.a, game.n, game.ca];
-  if ("b" in game) parts.push(game.b, game.m, game.cb);
+  const parts = [3, game.a, game.n];
+  if ("b" in game) parts.push(game.b, game.m);
   const salt = Math.floor(Math.random() * 256);
   const text = new TextEncoder().encode(parts.join("|"));
   // 끝 한 바이트는 검산용 — 링크 끝이 잘리거나 손대면 알아챈다.
@@ -157,15 +150,14 @@ export function decode(code: string): Challenge | Answer | null {
     const bytes = plain.subarray(0, -1);
     if (checksum(bytes) !== plain[plain.length - 1]) return null;
     const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-    const [v, a, n, ca, b, m, cb, ...rest] = text.split("|");
-    if (v !== "2" || rest.length) return null;
+    const [v, a, n, b, m, ...rest] = text.split("|");
+    if (v !== "3" || rest.length) return null;
     const okMm = (s: string | undefined) => s !== undefined && /^\d{1,3}$/.test(s) && clampMm(+s) === +s;
-    const okChar = (s: string | undefined) => s !== undefined && /^\d$/.test(s) && +s < CHARACTER_COUNT;
-    if (!okMm(a) || !n || !okChar(ca)) return null;
-    const challenge: Challenge = { a: +a, n: cleanName(n, "도전자"), ca: +ca };
+    if (!okMm(a) || !n) return null;
+    const challenge: Challenge = { a: +a, n: cleanName(n, "도전자") };
     if (b === undefined) return challenge;
-    if (!okMm(b) || !m || !okChar(cb)) return null;
-    return { ...challenge, b: +b, m: cleanName(m, "상대"), cb: +cb };
+    if (!okMm(b) || !m) return null;
+    return { ...challenge, b: +b, m: cleanName(m, "상대") };
   } catch {
     return null;
   }

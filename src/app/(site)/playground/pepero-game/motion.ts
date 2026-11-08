@@ -39,7 +39,7 @@ export function camZoom(gap: number): number {
 }
 
 /** 화면에서 두 입 사이가 이보다 가까워지지 않는다(mm) — 얼굴이 맞닿아 보이지 않게. */
-export const MIN_VISIBLE_GAP = 11;
+export const MIN_VISIBLE_GAP = 16;
 /** 이 거리부터 화면 속 틈을 천천히 줄여 MIN_VISIBLE_GAP 에 닿게 한다. */
 const EASE_FROM = 45;
 
