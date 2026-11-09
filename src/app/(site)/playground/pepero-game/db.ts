@@ -52,8 +52,17 @@ export async function fetchStats(): Promise<Stats | null> {
   }
 }
 
-/** 한 판 기록(같은 결과 링크는 한 번만 남는다)하고 그 판 기준 통계를 받는다 */
-export async function recordMatch(code: string, l: Turn, r: Turn, o: Outcome): Promise<Stats | null> {
+/**
+ * 한 판 기록(같은 결과 링크는 한 번만 남는다)하고 그 판 기준 통계를 받는다.
+ * challenge 는 친구가 도전장 링크로 한 판일 때 그 도전장 코드 — 보낸 사람이 자기 링크로 결과를 찾는 열쇠.
+ */
+export async function recordMatch(
+  code: string,
+  l: Turn,
+  r: Turn,
+  o: Outcome,
+  challenge: string | null = null,
+): Promise<Stats | null> {
   try {
     const { data, error } = await getSupabase().rpc("pepero_record", {
       p_code: code,
@@ -63,6 +72,7 @@ export async function recordMatch(code: string, l: Turn, r: Turn, o: Outcome): P
       p_right_mm: o.right,
       p_outcome: o.kind,
       p_rest_mm: o.kind === "ok" ? o.rest : null,
+      p_challenge: challenge,
     });
     return error ? null : parse(data);
   } catch {
@@ -74,4 +84,26 @@ export async function recordMatch(code: string, l: Turn, r: Turn, o: Outcome): P
 export function topPercent(s: Stats): number | null {
   if (s.better === null || s.ok < 3) return null;
   return Math.max(1, Math.ceil(((s.better + 1) / s.ok) * 100));
+}
+
+/** 도전장 하나에 붙은 판 — 결과 링크 코드로 다시 틀 수 있다 */
+export interface Entry {
+  code: string;
+  name: string;
+  at: string;
+}
+
+/** 내 도전장에 친구들이 한 판들(최근 것부터). 실패하면 null */
+export async function fetchChallenge(challenge: string): Promise<Entry[] | null> {
+  try {
+    const { data, error } = await getSupabase().rpc("pepero_challenge", { p_challenge: challenge });
+    if (error || !Array.isArray(data)) return null;
+    return data.map((e: { code?: unknown; name?: unknown; at?: unknown }) => ({
+      code: String(e.code ?? ""),
+      name: String(e.name ?? ""),
+      at: String(e.at ?? ""),
+    }));
+  } catch {
+    return null;
+  }
 }

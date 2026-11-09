@@ -786,6 +786,50 @@
   color: var(--pink);
 }
 
+.pp-mine {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+  max-height: 34vh;
+  overflow-y: auto;
+}
+
+.pp-mine button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(43, 26, 46, 0.06);
+  text-align: left;
+  font-size: 14px;
+}
+
+.pp-mine-name {
+  font-family: "Jua", system-ui, sans-serif;
+  font-size: 16px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp-mine-tag {
+  opacity: 0.8;
+}
+
+.pp-mine-win {
+  color: var(--pink);
+  opacity: 1;
+}
+
+.pp-mine-go {
+  font-family: "Jua", system-ui, sans-serif;
+  color: var(--pink);
+}
+
 .pp-sheet-text {
   font-size: 14.5px;
   line-height: 1.55;
