@@ -54,6 +54,7 @@ type Route =
   | { kind: "home" }
   | { kind: "make" }
   | { kind: "practice" }
+  | { kind: "mine" }
   | { kind: "challenge"; code: string; from: TurnT }
   | { kind: "result"; code: string; left: TurnT; right: TurnT }
   | { kind: "broken" };
@@ -63,6 +64,7 @@ function routeOf(hash: string): Route {
   if (!h) return { kind: "home" };
   if (h === "make") return { kind: "make" };
   if (h === "practice") return { kind: "practice" };
+  if (h === "mine") return { kind: "mine" };
   const c = /^c=([A-Za-z0-9_-]+)$/.exec(h);
   if (c) {
     const from = decodeChallenge(c[1]);
@@ -134,6 +136,28 @@ const addMine = (code: string) => {
   }
 };
 
+/**
+ * 이 브라우저에서 이미 끝낸 도전장 → 그 판의 결과 링크 코드.
+ * 한 번 하면 상대가 몇 cm 먹었는지 알게 되니, 같은 도전장은 한 번만 — 다시 열면 결과만 보여 준다.
+ */
+const PLAYED_KEY = "pp-played";
+const loadPlayed = (): Record<string, string> => {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(PLAYED_KEY) ?? "{}");
+    return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+};
+const markPlayed = (challenge: string, result: string) => {
+  try {
+    const all = Object.entries(loadPlayed()).filter(([c]) => c !== challenge).slice(-49);
+    localStorage.setItem(PLAYED_KEY, JSON.stringify(Object.fromEntries([...all, [challenge, result]])));
+  } catch {
+    /* 저장이 막혀 있으면 막을 방법이 없다 — 게임은 된다 */
+  }
+};
+
 /* ───────────── 맨 위 ───────────── */
 
 interface Audio {
@@ -171,13 +195,22 @@ export default function Game() {
       case "practice":
         body = <Practice audio={a} />;
         break;
-      case "challenge":
+      case "mine":
+        body = <MineList />;
+        break;
+      case "challenge": {
+        // 내가 만든 도전장 → 친구들 결과 / 이미 한 도전장 → 내 판 결과 / 처음 → 도전
+        const done = loadPlayed()[route.code];
+        const both = done ? decodeResult(done) : null;
         body = loadMine().includes(route.code) ? (
           <MyChallenge key={route.code} code={route.code} from={route.from} say={say} />
+        ) : both ? (
+          <ResultView key={route.code} left={both.left} right={both.right} audio={a} again say={say} />
         ) : (
           <Challenge key={route.code} code={route.code} from={route.from} audio={a} say={say} />
         );
         break;
+      }
       case "result":
         body = <ResultView key={route.code} left={route.left} right={route.right} audio={a} />;
         break;
@@ -285,7 +318,11 @@ function Home({ audio }: { audio: Audio }) {
           </button>
         </div>
         {mine.length > 0 && (
-          <button type="button" className="pp-btn pp-btn-ghost mt-2 w-full" onClick={() => go(`#c=${mine[0]}`)}>
+          <button
+            type="button"
+            className="pp-btn pp-btn-ghost mt-2 w-full"
+            onClick={() => go(mine.length === 1 ? `#c=${mine[0]}` : "#mine")}
+          >
             📬 내 도전장 결과 보기
           </button>
         )}
@@ -335,19 +372,18 @@ function Make({ audio, say }: { audio: Audio; say: (t: string) => void }) {
         me="left"
         names={{ left: name, right: "???" }}
         sound={audio.sound}
-        onDone={(t) => {
-          const turn = { name, ...t };
-          addMine(encodeChallenge(turn));
-          setMine(turn);
-        }}
+        onDone={(t) => setMine({ name, ...t })}
       />
     );
   }
 
   const eaten = eatenOf(mine);
   const send = async () => {
+    // 보낸 도전장만 「내 도전장」으로 기억한다(다시 정하기로 버린 건 빼고)
+    const code = encodeChallenge(mine);
+    addMine(code);
     const r = await shareLink(
-      linkTo(`c=${encodeChallenge(mine)}`),
+      linkTo(`c=${code}`),
       `🍫 ${name}의 막대과자 도전장! 나는 이미 얼마나 먹을지 정했어. 너는? 먼저 겁먹는 사람이 진다!`,
     );
     if (r === "copied") say("링크를 복사했어요! 친구에게 붙여 넣어 보내세요");
@@ -466,7 +502,13 @@ function Challenge({
         names={{ left: from.name, right: me }}
         sound={audio.sound}
         onDone={(t) => {
-          setMine({ name: me, ...t });
+          const turn = { name: me, ...t };
+          const result = encodeResult(from, turn);
+          // 결과를 보기 전에 잠근다 — 새로고침해도 다시 못 하고 이 판 결과만 보인다.
+          // 기록도 지금 남겨야 공개 장면 중에 나가도 도전자 화면에 뜬다.
+          markPlayed(code, result);
+          recordMatch(result, from, turn, judge(from, turn), code).then(setStats);
+          setMine(turn);
           setPhase("replay");
         }}
       />
@@ -491,7 +533,6 @@ function Challenge({
         onEnd={(o) => {
           setOutcome(o);
           setPhase("done");
-          recordMatch(encodeResult(from, mine), from, mine, o, code).then(setStats);
         }}
       />
       {phase === "done" && outcome && (
@@ -601,9 +642,63 @@ function MyChallenge({ code, from, say }: { code: string; from: TurnT; say: (t: 
   );
 }
 
+/* ───────────── 내 도전장 목록(여러 개 보냈을 때) ───────────── */
+
+function MineList() {
+  const [list] = useState(() =>
+    loadMine().flatMap((code) => {
+      const t = decodeChallenge(code);
+      return t ? [{ code, t }] : [];
+    }),
+  );
+  return (
+    <>
+      <Scene
+        left={{ at: 0, expr: "hold", name: list[0]?.t.name ?? "나", heat: 0.3 }}
+        right={{ at: STICK_MM, expr: "shadow", name: "친구들" }}
+        cam={{ at: STICK_MM / 2, span: 5.6, lift: 0.2 }}
+      />
+      <Sheet>
+        <p className="pp-display pp-sheet-title">내가 보낸 도전장</p>
+        {list.length ? (
+          <ul className="pp-mine">
+            {list.map(({ code, t }, i) => (
+              <li key={code}>
+                <button type="button" onClick={() => go(`#c=${code}`)}>
+                  <span className="pp-mine-name">{i === 0 ? "가장 최근 도전장" : `도전장 ${list.length - i}`}</span>
+                  <span className="pp-mine-tag">{cm(eatenOf(t))}cm 먹음</span>
+                  <span className="pp-mine-go">결과 ▶</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="pp-sheet-text">아직 보낸 도전장이 없어요.</p>
+        )}
+        <button type="button" className="pp-btn pp-btn-big mt-3 w-full" onClick={() => go("#make")}>
+          새 도전장 만들기 🔥
+        </button>
+      </Sheet>
+    </>
+  );
+}
+
 /* ───────────── 결과 링크 ───────────── */
 
-function ResultView({ left: l0, right: r0, audio }: { left: TurnT; right: TurnT; audio: Audio }) {
+function ResultView({
+  left: l0,
+  right: r0,
+  audio,
+  again = false,
+  say,
+}: {
+  left: TurnT;
+  right: TurnT;
+  audio: Audio;
+  /** 받은 사람이 이미 한 도전장을 다시 열었다 — 다시 하기 대신 내 판 결과 */
+  again?: boolean;
+  say?: (t: string) => void;
+}) {
   const [{ left, right }] = useState({ left: l0, right: r0 });
   const [phase, setPhase] = useState<"ready" | "replay" | "done">("ready");
   const [round, setRound] = useState(0);
@@ -620,13 +715,17 @@ function ResultView({ left: l0, right: r0, audio }: { left: TurnT; right: TurnT;
         />
         <div className="pp-speedlines pp-speedlines-soft" aria-hidden />
         <header className="pp-hero">
-          <p className="pp-display pp-hero-kicker">막대과자 대결 결과</p>
+          <p className="pp-display pp-hero-kicker">{again ? "이미 도전한 판이에요" : "막대과자 대결 결과"}</p>
           <h1 className="pp-display pp-hero-title pp-hero-title-sm">
             {left.name} <span className="pp-vs-inline">VS</span> {right.name}
           </h1>
         </header>
         <Sheet>
-          <p className="pp-sheet-text">둘 다 상대 기록을 모른 채 정했어요. 동시에 먹으면 어떻게 될까?</p>
+          <p className="pp-sheet-text">
+            {again
+              ? "도전장 하나에 한 번만 할 수 있어요. 내가 한 판을 다시 볼 수 있어요."
+              : "둘 다 상대 기록을 모른 채 정했어요. 동시에 먹으면 어떻게 될까?"}
+          </p>
           <button
             type="button"
             className="pp-btn pp-btn-big mt-3 w-full"
@@ -657,10 +756,27 @@ function ResultView({ left: l0, right: r0, audio }: { left: TurnT; right: TurnT;
         }}
       />
       {phase === "done" && outcome && (
-        <ResultPanel left={left} right={right} outcome={outcome} me={null} stats={stats}>
-          <button type="button" className="pp-btn pp-btn-big w-full" onClick={() => go("#make")}>
-            다시 붙자! 도전장 만들기 🔥
-          </button>
+        <ResultPanel left={left} right={right} outcome={outcome} me={again ? "right" : null} stats={stats}>
+          {again && say ? (
+            <button
+              type="button"
+              className="pp-btn pp-btn-big w-full"
+              onClick={async () => {
+                const r = await shareLink(
+                  linkTo(`r=${encodeResult(left, right)}`),
+                  `🍫 ${left.name} vs ${right.name} 막대과자 대결 결과 나왔어! 동시에 먹으면 어떻게 됐을지 보러 와`,
+                );
+                if (r === "copied") say("결과 링크를 복사했어요!");
+                if (r === "manual") say("복사가 막혀 있어요");
+              }}
+            >
+              {left.name}님에게 결과 보내기 📮
+            </button>
+          ) : (
+            <button type="button" className="pp-btn pp-btn-big w-full" onClick={() => go("#make")}>
+              다시 붙자! 도전장 만들기 🔥
+            </button>
+          )}
           <button
             type="button"
             className="pp-btn pp-btn-ghost mt-2 w-full"
