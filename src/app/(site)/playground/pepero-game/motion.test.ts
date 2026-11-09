@@ -15,8 +15,8 @@ describe("motion", () => {
     expect(slowFactor(0)).toBeCloseTo(0.25);
     expect(slowFactor(10)).toBeLessThan(slowFactor(30));
     expect(camZoom(150)).toBe(1);
-    expect(camZoom(2)).toBeGreaterThan(1.15);
-    expect(camZoom(2)).toBeLessThanOrEqual(1.2);
+    expect(camZoom(2)).toBeGreaterThan(1.25);
+    expect(camZoom(2)).toBeLessThanOrEqual(1.32);
   });
 
   it("화면 속 틈은 멀면 그대로, 0 이 돼도 얼굴이 닿지 않게 남는다", () => {

@@ -437,8 +437,8 @@ function Person({ side, x, s, toon }: { side: "left" | "right"; x: number; s: Si
           break;
         case "chew":
           y = Math.abs(Math.sin(t * (14 + h * 16))) * 0.04;
-          rz = -0.04 - h * 0.08; // 앞으로 숙이기
-          px = jit(0.012 + h * 0.05);
+          rz = -0.03; // 살짝 숙이기(더 숙이면 머리가 앞으로 나가 얼굴이 가까워 보인다)
+          px = jit(0.012 + h * 0.03);
           pz = jit(h * 0.04);
           break;
         case "hold":

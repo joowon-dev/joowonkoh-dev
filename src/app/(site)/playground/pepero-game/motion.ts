@@ -32,16 +32,16 @@ export function slowFactor(gap: number): number {
   return 0.25 + 0.75 * Math.max(0, gap / SLOW_FROM);
 }
 
-/** 카메라 배율 — 멀 때 1, 붙을수록 1.2까지(머리가 잘리지 않을 만큼만). */
+/** 카메라 배율 — 멀 때 1, 붙을수록 1.32까지(머리가 잘리지 않을 만큼만). */
 export function camZoom(gap: number): number {
   const t = 1 - Math.min(1, Math.max(0, gap) / 110);
-  return 1 + 0.2 * smooth(t);
+  return 1 + 0.32 * smooth(t);
 }
 
 /** 화면에서 두 입 사이가 이보다 가까워지지 않는다(mm) — 얼굴이 맞닿아 보이지 않게. */
-export const MIN_VISIBLE_GAP = 40;
+export const MIN_VISIBLE_GAP = 22;
 /** 이 거리부터 화면 속 틈을 천천히 줄여 MIN_VISIBLE_GAP 에 닿게 한다. */
-const EASE_FROM = 75;
+const EASE_FROM = 52;
 
 /**
  * 실제 틈(mm) → 화면에 그릴 틈. 멀 때는 그대로, 가까우면 부드럽게 눌러서
