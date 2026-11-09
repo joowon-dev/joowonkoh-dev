@@ -48,7 +48,7 @@ describe("판정", () => {
   });
 
   it("상대가 멈췄는데 계속 먹으면 이마를 들이받는다 — 들이받은 사람이 진다", () => {
-    const v = viewAt(inp(0, 2), inp(0, null), 6);
+    const v = viewAt(inp(0, 2), inp(0, null), 10);
     expect(v.outcome?.kind).toBe("bump");
     if (v.outcome?.kind !== "bump") return;
     expect(v.outcome.by).toBe("right");
@@ -100,13 +100,13 @@ describe("링크", () => {
   });
 
   it("따로 정한 두 차례를 겹쳐서 판정한다", () => {
-    const l = { name: "a", press: 0, release: 2 }; // 32mm
-    const r = { name: "b", press: 0, release: 3 }; // 54mm
-    expect(eatenOf(l)).toBeCloseTo(32);
+    const l = { name: "a", press: 0, release: 2 }; // 22.8mm
+    const r = { name: "b", press: 0, release: 3 }; // 37.8mm
+    expect(eatenOf(l)).toBeCloseTo(22.8);
     const o = judge(l, r);
     expect(o.kind).toBe("ok");
     expect(winnerOf(o)).toBe("right");
     // 오른쪽이 욕심내다 왼쪽이 멈춘 뒤에 만나면 오른쪽이 들이받는다
-    expect(judge(l, { name: "b", press: 0, release: 6 }).kind).toBe("bump");
+    expect(judge(l, { name: "b", press: 0, release: 8 }).kind).toBe("bump");
   });
 });

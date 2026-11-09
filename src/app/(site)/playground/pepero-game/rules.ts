@@ -31,8 +31,11 @@ export interface Input {
 
 export const freshInput = (): Input => ({ press: null, release: null, until: 0 });
 
-/** 시작부터 t 초 동안 쉬지 않고 먹었을 때 먹은 길이(mm). 속도 = 12 + 4t mm/s. */
-export const dist = (t: number) => (t <= 0 ? 0 : 12 * t + 2 * t * t);
+/**
+ * 시작부터 t 초 동안 쉬지 않고 먹었을 때 먹은 길이(mm). 속도 = 9 + 2.4t mm/s.
+ * 혼자 끝까지(14.8cm) 먹는 데 8초쯤 — 버티는 시간이 길어야 쫄깃하다.
+ */
+export const dist = (t: number) => (t <= 0 ? 0 : 9 * t + 1.2 * t * t);
 
 /** t 초에 이 사람이 먹은 길이(mm). 아직 안 뗐으면 지금도 먹고 있다고 본다. */
 export function eatenAt(i: Input, t: number): number {
