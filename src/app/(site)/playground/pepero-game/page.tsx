@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Game from "./Game";
 import "./pepero.css";
 
-const TITLE = "빼빼로 게임 — 링크로 주고받는 막대과자 치킨 게임";
+const TITLE = "막대과자 게임 — 링크로 주고받는 치킨 게임";
 const DESCRIPTION =
   "꾹 누르는 동안 막대과자를 먹고, 떼면 멈춰요. 얼마나 먹을지 정해 도전장 링크를 보내면 친구도 모른 채 정하고, 둘이 동시에 먹는 장면이 공개돼요. 더 많이 먹으면 이기지만 만나 버리면 입술을 앙!";
 
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     siteName: "Joowon Koh",
-    title: "🍫 빼빼로 도전장이 왔어요!",
+    title: "🍫 막대과자 도전장이 왔어요!",
     description: "얼마나 먹을지 정하고 링크로 붙자. 먼저 겁먹는 사람이 진다!",
     url: "https://joowonkoh.com/playground/pepero-game",
   },

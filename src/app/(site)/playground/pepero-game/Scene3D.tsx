@@ -8,7 +8,8 @@ import { cm, STICK_MM } from "./rules";
 
 /**
  * 막대과자를 사이에 둔 두 사람을 3D 로 그린다(three.js + react-three-fiber). 화면을 꽉 채운다.
- * 머리가 큰 2등신 둘 — 왼쪽은 도전장을 보낸 사람(갈색 단발·분홍 후드), 오른쪽은 받은 사람(검정 머리·민트 티).
+ * 머리가 큰 2등신 둘 — 왼쪽은 도전장을 보낸 사람(갈색 머리·새싹·귤색 후드), 오른쪽은 받은 사람(남색 머리·더듬이·민트 티).
+ * 성별 티가 나지 않게 둘 다 같은 바가지 머리·같은 몸이고, 색과 머리 위 장식으로만 구분한다.
  * 아직 정체를 모르는 상대는 그림자(shadow)로, 눈만 빛난다.
  *
  * 입·얼굴이 맞닿아 보이는 장면은 그리지 않는다. 화면 속 틈은 motion.visibleGap 이 늘 남겨 둔다.
@@ -84,15 +85,15 @@ const LOOK = {
   left: {
     skin: "#ffe0c9",
     hair: "#7a4a2c",
-    shirt: "#ff7fa3",
+    shirt: "#ffa53a",
     pants: "#4b3b6e",
     iris: "#6b3a1f",
-    label: "#ff6f96",
-    aura: "#ff5c8a",
+    label: "#f28a1e",
+    aura: "#ff9a2a",
   },
   right: {
     skin: "#ffe6d3",
-    hair: "#262230",
+    hair: "#2b3550",
     shirt: "#54c7a6",
     pants: "#34465a",
     iris: "#1e2b4a",
@@ -571,10 +572,10 @@ function Person({ side, x, s, toon }: { side: "left" | "right"; x: number; s: Si
         {!shadow && (
           <group position={[-0.05, 0, 0]}>
             <group ref={lipTop}>
-              <Toon toon={toon} color="#ff6f8f" outline={0.07} scale={[0.1, 0.06, 0.15]} geo={<sphereGeometry args={[1, 16, 12]} />} />
+              <Toon toon={toon} color="#e9806f" outline={0.07} scale={[0.1, 0.06, 0.15]} geo={<sphereGeometry args={[1, 16, 12]} />} />
             </group>
             <group ref={lipBot}>
-              <Toon toon={toon} color="#ff6f8f" outline={0.07} scale={[0.1, 0.06, 0.15]} geo={<sphereGeometry args={[1, 16, 12]} />} />
+              <Toon toon={toon} color="#e9806f" outline={0.07} scale={[0.1, 0.06, 0.15]} geo={<sphereGeometry args={[1, 16, 12]} />} />
             </group>
             {expr === "ouch" && (
               <PopIn delay={0.45}>
@@ -601,7 +602,7 @@ function Outfit({ side, near, toon }: { side: "left" | "right"; near: number; to
     return (
       <group>
         {/* 등 뒤 후드 */}
-        <Toon toon={toon} color="#ff9db8" position={[BODY_X - 0.42, -0.86, 0]} scale={[0.5, 0.32, 0.62]} geo={<sphereGeometry args={[1, 18, 12]} />} />
+        <Toon toon={toon} color="#ffc070" position={[BODY_X - 0.42, -0.86, 0]} scale={[0.5, 0.32, 0.62]} geo={<sphereGeometry args={[1, 18, 12]} />} />
         {/* 끈 두 가닥 */}
         {[0.16, -0.16].map((z) => (
           <Toon
@@ -615,7 +616,7 @@ function Outfit({ side, near, toon }: { side: "left" | "right"; near: number; to
           />
         ))}
         {/* 주머니 */}
-        <Toon toon={toon} color="#ff6a92" outline={0.03} position={[BODY_X + 0.42, -1.6, 0]} scale={[0.22, 0.2, 0.5]} geo={<sphereGeometry args={[1, 14, 10]} />} />
+        <Toon toon={toon} color="#f28a1e" outline={0.03} position={[BODY_X + 0.42, -1.6, 0]} scale={[0.22, 0.2, 0.5]} geo={<sphereGeometry args={[1, 14, 10]} />} />
       </group>
     );
   }
@@ -910,70 +911,51 @@ function ShadowEyes() {
 }
 
 function Hair({ side, color, toon, near }: { side: "left" | "right"; color: string; toon: THREE.Texture; near: number }) {
-  if (side === "left") {
-    // 갈색 단발 — 정수리 + 뒤로 내려온 단발 + 옆머리 + 앞머리, 빨간 하트 핀
-    return (
-      <group>
-        <Toon toon={toon} color={color} geo={<sphereGeometry args={[1.07, 40, 24, 0, Math.PI * 2, 0, 1.2]} />} />
-        <Toon toon={toon} color={color} geo={<sphereGeometry args={[1.1, 40, 28, -Math.PI / 2 - 0.45, Math.PI + 0.9, 0, 2.3]} />} />
-        {[1, -1].map((z) => (
-          <Toon key={z} toon={toon} color={color} position={[0.25, -0.35, z * 0.86]} scale={[0.36, 0.62, 0.22]} geo={<sphereGeometry args={[1, 16, 12]} />} />
-        ))}
-        {[0.42, 0, -0.42].map((z, i) => (
-          <Toon
-            key={z}
-            toon={toon}
-            color={color}
-            position={[0.66, 0.56 - Math.abs(z) * 0.12, z]}
-            rotation={[z * 0.6, 0, -0.55]}
-            scale={[0.26, 0.42 - i * 0.02, 0.36]}
-            geo={<sphereGeometry args={[1, 14, 10]} />}
-          />
-        ))}
-        <group position={[0.3, 0.92, near * 0.5]} rotation-x={near * -0.5}>
-          {[1, -1].map((k) => (
-            <Toon key={k} toon={toon} color="#ff3d6a" outline={0.08} position={[0, 0.04, k * 0.07]} geo={<sphereGeometry args={[0.09, 10, 8]} />} />
-          ))}
-          <Toon toon={toon} color="#ff3d6a" outline={0.08} position={[0, -0.06, 0]} rotation-x={Math.PI / 4} scale={[0.6, 1, 1]} geo={<boxGeometry args={[0.13, 0.13, 0.13]} />} />
-        </group>
-      </group>
-    );
-  }
-  // 검정 삐죽 머리 — 정수리 + 뒤통수 + 뾰족한 앞머리 + 더듬이 한 가닥
+  // 둘 다 같은 동글동글 바가지 머리(성별 티가 나지 않게). 색과 머리 위 장식으로만 구분한다.
   return (
     <group>
-      <Toon toon={toon} color={color} geo={<sphereGeometry args={[1.08, 40, 24, 0, Math.PI * 2, 0, 1.15]} />} />
-      <Toon toon={toon} color={color} geo={<sphereGeometry args={[1.09, 40, 24, -Math.PI / 2 + 0.35, Math.PI - 0.7, 0, 1.9]} />} />
-      {[0.5, 0.18, -0.16, -0.48].map((z, i) => (
+      <Toon toon={toon} color={color} geo={<sphereGeometry args={[1.08, 40, 24, 0, Math.PI * 2, 0, 1.25]} />} />
+      <Toon toon={toon} color={color} geo={<sphereGeometry args={[1.09, 40, 24, -Math.PI / 2 + 0.3, Math.PI - 0.6, 0, 1.95]} />} />
+      {/* 짧은 앞머리 — 동글동글 세 덩이 */}
+      {[0.4, 0, -0.4].map((z) => (
         <Toon
           key={z}
           toon={toon}
           color={color}
-          position={[0.66, 0.6 - (i % 2) * 0.05, z]}
-          rotation={[z * 0.4, 0, -2.05]}
-          scale={[0.17, 0.42, 0.2]}
-          geo={<coneGeometry args={[1, 1, 10]} />}
+          position={[0.7, 0.5 - Math.abs(z) * 0.1, z]}
+          rotation={[z * 0.6, 0, -0.6]}
+          scale={[0.24, 0.3, 0.36]}
+          geo={<sphereGeometry args={[1, 14, 10]} />}
         />
       ))}
-      {[-0.6, 0, 0.6].map((z) => (
+      {side === "left" ? (
+        // 새싹 두 잎
+        <group position={[0, 1.08, 0]}>
+          <Toon toon={toon} color="#6a8f3a" outline={0.06} position={[0, 0.12, 0]} geo={<cylinderGeometry args={[0.03, 0.03, 0.26, 6]} />} />
+          {[1, -1].map((k) => (
+            <Toon
+              key={k}
+              toon={toon}
+              color="#7fd35a"
+              outline={0.05}
+              position={[0, 0.28, k * 0.13 * near]}
+              rotation-x={k * 0.9}
+              scale={[0.07, 0.18, 0.11]}
+              geo={<sphereGeometry args={[1, 12, 8]} />}
+            />
+          ))}
+        </group>
+      ) : (
+        // 꼬불 더듬이 한 가닥
         <Toon
-          key={z}
           toon={toon}
           color={color}
-          position={[-0.62, 0.72, z]}
-          rotation={[z * 0.6, 0, 0.9]}
-          scale={[0.2, 0.42, 0.22]}
-          geo={<coneGeometry args={[1, 1, 10]} />}
+          position={[-0.05, 1.18, 0]}
+          rotation={[0, 0, 0.4]}
+          outline={0.08}
+          geo={<torusGeometry args={[0.2, 0.045, 8, 16, Math.PI * 1.3]} />}
         />
-      ))}
-      <Toon
-        toon={toon}
-        color={color}
-        position={[-0.05, 1.18, 0]}
-        rotation={[0, 0, 0.4]}
-        outline={0.08}
-        geo={<torusGeometry args={[0.2, 0.045, 8, 16, Math.PI * 1.3]} />}
-      />
+      )}
     </group>
   );
 }
@@ -1229,7 +1211,7 @@ function Confetti() {
         z: ((i * 53) % 30) / 10 - 1.5,
         delay: (i % 11) * 0.07,
         speed: 1.8 + (i % 5) * 0.3,
-        color: ["#ff7fa3", "#ffd34d", "#54c7a6", "#ffffff", "#9b7bff"][i % 5],
+        color: ["#ffa53a", "#ffd34d", "#54c7a6", "#ffffff", "#9b7bff"][i % 5],
       })),
     [],
   );

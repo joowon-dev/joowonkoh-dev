@@ -1,4 +1,4 @@
-/* 빼빼로 게임 페이지 전용. 이 페이지 밖에는 쓰지 않는다(이름에 pp- 를 붙였다). */
+/* 막대과자 게임 페이지 전용. 이 페이지 밖에는 쓰지 않는다(이름에 pp- 를 붙였다). */
 
 .pp-app {
   --ink: #2b1a2e;
@@ -467,7 +467,7 @@
 }
 
 .pp-duel-left {
-  background: #ff6f96;
+  background: #f28a1e;
 }
 
 .pp-duel-right {
@@ -539,7 +539,7 @@
   justify-content: center;
   padding-right: 10%;
   padding-bottom: 28vh;
-  background: linear-gradient(135deg, #ff6f96, #ff3d7a);
+  background: linear-gradient(135deg, #ffad4a, #f07a12);
   clip-path: polygon(0 0, 100% 0, 82% 100%, 0 100%);
   animation: pp-in-left 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both, pp-out 0.3s 1.55s ease-in both;
 }
@@ -855,7 +855,7 @@
 }
 
 .pp-bar-left .pp-bar-fill {
-  background: #ff6f96;
+  background: #f28a1e;
 }
 
 .pp-bar-right .pp-bar-fill {

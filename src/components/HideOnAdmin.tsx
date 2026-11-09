@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
  * - /admin: 어드민 셸
  * - /playground/chiikawa-talk: 먼작귀 통역기. 하늘이 화면을 꽉 채우는 전체 화면 놀이 페이지다.
  * - /playground/duo-decal: 듀오 데칼코마니. 애플 제품 페이지처럼 자체 내비를 쓴다.
- * - /playground/pepero-game: 빼빼로 게임. 링크로 받는 사람이 바로 게임만 보도록 꽉 채운다.
+ * - /playground/pepero-game: 막대과자 게임. 링크로 받는 사람이 바로 게임만 보도록 꽉 채운다.
  */
 const OWN_SHELL = ["/admin", "/playground/chiikawa-talk", "/playground/duo-decal", "/playground/pepero-game"];
 

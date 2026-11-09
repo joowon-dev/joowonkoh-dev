@@ -25,7 +25,7 @@ import { makeSound, type Sound } from "./sound";
 import Turn from "./Turn";
 
 /**
- * 빼빼로 게임 — 링크로 차례를 주고받는다.
+ * 막대과자 게임 — 링크로 차례를 주고받는다.
  * 1) 도전자가 꾹 눌러 얼마나 먹을지 정하고 링크를 보낸다(기록은 링크 속에 숨겨 둔다).
  * 2) 받은 사람도 상대 기록을 모른 채 정한다.
  * 3) 둘을 겹쳐서 동시에 먹는 장면을 공개한다. 결과 링크로 도전자에게 돌려줄 수 있다.
@@ -216,7 +216,7 @@ function Home({ audio }: { audio: Audio }) {
       <header className="pp-hero">
         <p className="pp-display pp-hero-kicker">먼저 겁먹는 사람이 진다!</p>
         <h1 className="pp-display pp-hero-title">
-          빼빼로
+          막대과자
           <br />
           치킨 게임
         </h1>
@@ -279,7 +279,7 @@ function Make({ audio, say }: { audio: Audio; say: (t: string) => void }) {
   const send = async () => {
     const r = await shareLink(
       linkTo(`c=${encodeChallenge(mine)}`),
-      `🍫 ${name}의 빼빼로 도전장! 나는 이미 얼마나 먹을지 정했어. 너는? 먼저 겁먹는 사람이 진다!`,
+      `🍫 ${name}의 막대과자 도전장! 나는 이미 얼마나 먹을지 정했어. 너는? 먼저 겁먹는 사람이 진다!`,
     );
     if (r === "copied") say("링크를 복사했어요! 친구에게 붙여 넣어 보내세요");
     if (r === "manual") say("복사가 막혀 있어요. 주소창 링크를 직접 보내 주세요");
@@ -350,7 +350,7 @@ function Challenge({ from: fromLink, audio, say }: { from: TurnT; audio: Audio; 
           <h1 className="pp-display pp-hero-title pp-hero-title-sm">
             {from.name}님이
             <br />
-            빼빼로 대결을 걸었어요!
+            막대과자 대결을 걸었어요!
           </h1>
         </header>
         <Sheet>
@@ -394,7 +394,7 @@ function Challenge({ from: fromLink, audio, say }: { from: TurnT; audio: Audio; 
   const sendBack = async () => {
     const r = await shareLink(
       linkTo(`r=${encodeResult(from, mine)}`),
-      `🍫 ${from.name} vs ${mine.name} 빼빼로 대결 결과 나왔어! 동시에 먹으면 어떻게 됐을지 보러 와`,
+      `🍫 ${from.name} vs ${mine.name} 막대과자 대결 결과 나왔어! 동시에 먹으면 어떻게 됐을지 보러 와`,
     );
     if (r === "copied") say("결과 링크를 복사했어요!");
     if (r === "manual") say("복사가 막혀 있어요");
@@ -443,7 +443,7 @@ function ResultView({ left: l0, right: r0, audio }: { left: TurnT; right: TurnT;
         />
         <div className="pp-speedlines pp-speedlines-soft" aria-hidden />
         <header className="pp-hero">
-          <p className="pp-display pp-hero-kicker">빼빼로 대결 결과</p>
+          <p className="pp-display pp-hero-kicker">막대과자 대결 결과</p>
           <h1 className="pp-display pp-hero-title pp-hero-title-sm">
             {left.name} <span className="pp-vs-inline">VS</span> {right.name}
           </h1>
