@@ -23,7 +23,8 @@ export type IconName =
   | "firework"
   | "shark"
   | "bubble"
-  | "duo";
+  | "duo"
+  | "stick";
 
 export interface Project {
   title: string;
@@ -44,6 +45,16 @@ export interface Project {
 }
 
 export const projects: Project[] = [
+  {
+    title: "막대과자 게임",
+    description: "얼마나 먹을지 몰래 정하고 링크로 붙는 막대과자 치킨 게임 🍫",
+    tags: ["Game", "3D"],
+    href: "/playground/pepero-game",
+    icon: "stick",
+    tile: ["#ffe6ec", "#ff9fb5"],
+    blurb:
+      "11월 11일에 맞춰 만든 둘이 하는 치킨 게임입니다. 화면을 꾹 누르는 동안 막대를 먹고 떼면 멈추는데, 갈수록 빨라집니다. 얼마나 먹을지 정해 도전장 링크를 보내면 친구도 내 기록을 모른 채 정하고, 둘을 겹쳐 동시에 먹는 장면을 VS 화면·슬로모션과 함께 공개합니다. 더 많이 먹은 사람이 이기지만 만나 버리면 이마를 쿵 박고, 아직 먹던 사람이 집니다. 기록은 링크 속에만 넣어 서버도 DB도 없고, 성별 티가 나지 않는 2등신 캐릭터 둘은 three.js(react-three-fiber)로 직접 빚었습니다.",
+  },
   {
     title: "듀오 데칼코마니",
     description: "사진을 올리고 접었다 펴면 반쪽이 반대쪽에 찍혀요 🦋",
