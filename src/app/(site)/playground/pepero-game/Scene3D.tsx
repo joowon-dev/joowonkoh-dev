@@ -65,6 +65,10 @@ export interface Cam {
   shake?: number;
   /** 아래에 패널이 있을 때 그림을 이만큼(화면 높이 비율) 위로 올린다 */
   lift?: number;
+  /** 화면 기울기(라디안) — 아슬아슬할 때 비스듬히 */
+  roll?: number;
+  /** 0~1: 화면이 확 다가오는 정도(시야각을 좁힌다) */
+  push?: number;
 }
 
 interface Props {
@@ -242,6 +246,7 @@ function World({
   const look = useRef<THREE.Vector3 | null>(null);
   const kick = useRef(0);
   const lift = useRef(0);
+  const roll = useRef(0);
   const prevBite = useRef<number | null>(null);
 
   useFrame((state, dt) => {
@@ -284,6 +289,14 @@ function World({
     );
     camera.lookAt(look.current);
     const cam3 = camera as THREE.PerspectiveCamera;
+    roll.current = THREE.MathUtils.lerp(roll.current, cam.roll ?? 0, Math.min(1, dt * 6));
+    if (Math.abs(roll.current) > 1e-4) camera.rotateZ(roll.current);
+    // 부딪는 순간 + push 만큼 시야를 좁혀 확 다가온 느낌
+    const wantFov = FOV * (1 - 0.22 * (cam.push ?? 0)) - kick.current * 7;
+    if (Math.abs(cam3.fov - wantFov) > 0.01) {
+      cam3.fov = THREE.MathUtils.lerp(cam3.fov, wantFov, Math.min(1, dt * 10));
+      cam3.updateProjectionMatrix();
+    }
     lift.current = THREE.MathUtils.lerp(
       lift.current,
       (cam.lift ?? 0) * (portrait ? 0.45 : 1),

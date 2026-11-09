@@ -58,6 +58,7 @@ interface Frame {
   stopR: number | null;
   crumbs: Crumb[];
   endAt: number;
+  beat: number;
 }
 
 export default function Replay({ left, right, sound, onEnd }: Props) {
@@ -72,6 +73,7 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
     stopR: null,
     crumbs: [],
     endAt: 0,
+    beat: 0,
   });
   const getSound = useRef(sound);
   const end = useRef(onEnd);
@@ -97,6 +99,8 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
     let crumbs: Crumb[] = [];
     let cid = 0;
     let vsBoom = false;
+    let beats = 0;
+    let whooshed = false;
 
     let raf = 0;
     const loop = () => {
@@ -111,6 +115,10 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
       if (clock >= VS) phase = "count";
       if (clock >= VS + COUNT) phase = "play";
 
+      if (!whooshed) {
+        whooshed = true;
+        snd.whoosh();
+      }
       if (!vsBoom && clock > 0.35) {
         vsBoom = true;
         snd.bonk();
@@ -196,10 +204,13 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
             { id: cid++, at: STICK_MM - R, dir: -1, seed: Math.random() },
           ];
         }
-        if (!outcome && anyMoving && gap < 50) {
-          const every = Math.max(240, 300 + gap * 10);
+        // 가까워질수록 긴장음이 높아지고 심장이 빨라진다
+        snd.tension(!outcome && anyMoving ? 0.15 + 0.85 * (1 - gap / STICK_MM) : 0);
+        if (!outcome && anyMoving && gap < 80) {
+          const every = Math.max(220, 260 + gap * 8);
           if (nowMs - lastBeat > every) {
             lastBeat = nowMs;
+            beats++;
             snd.heartbeat();
           }
         }
@@ -216,6 +227,7 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
         stopR,
         crumbs,
         endAt,
+        beat: beats,
       });
 
       if (outcome && !sent && clock - endAt > AFTER) {
@@ -224,7 +236,10 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
       }
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      getSound.current().tension(0);
+    };
   }, [left, right]);
 
   /* ── 그리기 ── */
@@ -351,11 +366,15 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
           span: (((rightAt - leftAt) * 0.04) / 2 + 3.0 + (o ? 1.4 : 0)) / zoom,
           shake: hot * 0.5 + danger * 0.6 + (hitstop ? 1 : 0),
           lift: o && f.clock - f.endAt > AFTER - 0.3 ? 0.15 : 0,
+          // 아슬아슬하면 화면이 이쪽저쪽 기울고, 확 다가온다
+          roll: danger * 0.12 * Math.sin(f.clock * 1.7) + (hitstop ? 0.06 : 0),
+          push: o ? 0 : hitstop ? 0.7 : danger * 0.5,
         }}
         caption={`${left.name}·${right.name} 동시에 냠냠 — 공개!`}
       />
       <div className="pp-speedlines" aria-hidden />
       <div className="pp-vignette" aria-hidden />
+      {f.beat > 0 && !o && <div key={f.beat} className="pp-beat" aria-hidden />}
       {(hitstop || meet !== null) && (
         <div
           className={`pp-flash ${hitstop ? "pp-flash-hold" : ""}`}

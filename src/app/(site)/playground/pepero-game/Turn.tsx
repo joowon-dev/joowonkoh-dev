@@ -31,6 +31,7 @@ interface Frame {
   release: number | null;
   ended: "stop" | "auto" | "none" | null;
   crumbs: Crumb[];
+  beat: number;
 }
 
 export default function Turn({ me, names, sound, onDone }: Props) {
@@ -42,6 +43,7 @@ export default function Turn({ me, names, sound, onDone }: Props) {
     release: null,
     ended: null,
     crumbs: [],
+    beat: 0,
   });
 
   const st = useRef({
@@ -56,6 +58,7 @@ export default function Turn({ me, names, sound, onDone }: Props) {
     lastBeep: 99,
     crumbs: [] as Crumb[],
     crumbId: 0,
+    beat: 0,
     sent: false,
   });
   const done = useRef(onDone);
@@ -133,6 +136,7 @@ export default function Turn({ me, names, sound, onDone }: Props) {
       if (!s.ended && s.press === null && now >= PRESS_WINDOW) s.ended = "none";
       if (s.ended && !s.endedAt) {
         s.endedAt = now;
+        snd.tension(0);
         if (s.ended === "none") snd.bonk();
         else snd.ding();
       }
@@ -145,12 +149,15 @@ export default function Turn({ me, names, sound, onDone }: Props) {
         const at = me === "left" ? eaten : STICK_MM - eaten;
         s.crumbs = [...s.crumbs.slice(-14), { id: s.crumbId++, at, dir: me === "left" ? 1 : -1, seed: Math.random() }];
       }
-      // 반 넘으면 두근두근, 갈수록 빨리
-      if (s.press !== null && s.release === null && eaten > 55) {
-        const gap = Math.max(260, 900 - (eaten - 55) * 7);
+      // 먹는 동안 긴장음이 점점 높아지고, 조금만 먹어도 두근두근 — 갈수록 빨리
+      const eatingNow = s.press !== null && s.release === null;
+      snd.tension(eatingNow ? 0.15 + 0.85 * (eaten / AUTO_STOP) : 0);
+      if (eatingNow && eaten > 18) {
+        const gap = Math.max(230, 820 - (eaten - 18) * 6.5);
         const t = performance.now();
         if (t - s.lastBeat > gap) {
           s.lastBeat = t;
+          s.beat++;
           snd.heartbeat();
         }
       }
@@ -163,6 +170,7 @@ export default function Turn({ me, names, sound, onDone }: Props) {
         release: s.release,
         ended: s.ended,
         crumbs: s.crumbs,
+        beat: s.beat,
       });
 
       if (s.ended && now - s.endedAt > AFTER && !s.sent) {
@@ -174,6 +182,7 @@ export default function Turn({ me, names, sound, onDone }: Props) {
 
     return () => {
       cancelAnimationFrame(raf);
+      getSound.current().tension(0);
       surface?.removeEventListener("pointerdown", pd);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
@@ -188,8 +197,9 @@ export default function Turn({ me, names, sound, onDone }: Props) {
   const shown = stepped(f.eaten, f.release !== null ? f.eaten : Infinity);
   const gapShown = visibleGap(STICK_MM - shown);
   const mine = STICK_MM - gapShown; // 내 입이 막대 끝에서 들어간 거리(화면)
-  const heat = eating ? Math.min(1, 0.25 + f.now / 4.5) : 0;
-  const danger = Math.min(1, Math.max(0, (f.eaten - 60) / 80));
+  const progress = Math.min(1, f.eaten / AUTO_STOP);
+  const heat = eating ? Math.min(1, 0.35 + progress * 0.9) : 0;
+  const danger = Math.min(1, Math.max(0, (f.eaten - 35) / 70));
   const myExpr: Expr = f.ended === "none" ? "lose" : eating ? "chew" : f.release !== null ? "hold" : "ready";
   const leftAt = me === "left" ? mine : 0;
   const rightAt = me === "left" ? STICK_MM : STICK_MM - mine;
@@ -201,7 +211,9 @@ export default function Turn({ me, names, sound, onDone }: Props) {
 
   const bubble = f.ended === "auto" ? "더는 못 가!" : f.ended === "stop" ? "여기까지!" : f.ended === "none" ? "무서워…" : null;
   const me3 = { expr: myExpr, name: myName, heat, bubble };
-  const op = { expr: "shadow" as Expr, name: opName, heat: 0 };
+  // 그림자 상대가 내가 먹을수록 슬금슬금 몸을 들이민다(보이는 건 그냥 연출)
+  const creep = f.ended ? 0 : progress * (0.55 + 0.15 * Math.sin(f.now * 5));
+  const op = { expr: "shadow" as Expr, name: opName, heat: 0, lunge: creep };
 
   const stopWord = f.ended === "none" ? "포기…" : f.ended === "auto" ? "끝까지!" : "STOP!";
 
@@ -216,16 +228,27 @@ export default function Turn({ me, names, sound, onDone }: Props) {
         left={{ at: leftAt, ...(left ? me3 : op) }}
         right={{ at: rightAt, ...(left ? op : me3) }}
         crumbs={f.crumbs}
-        cam={{ at: (leftAt + rightAt) / 2, span: ((rightAt - leftAt) * 0.04) / 2 + 2.9, shake: heat * 0.6 + danger * 0.4 }}
+        cam={{
+          // 먹을수록 카메라가 내 입 쪽으로 파고들고, 아슬아슬하면 비스듬히 기운다
+          at: (leftAt + rightAt) / 2 + (left ? -1 : 1) * progress * 12,
+          span: (((rightAt - leftAt) * 0.04) / 2 + 2.9) * (1 - 0.25 * progress),
+          shake: heat * 0.7 + danger * 0.7,
+          push: eating ? progress * 0.6 : 0,
+          roll: (left ? 1 : -1) * danger * 0.1 + (eating ? Math.sin(f.now * 2.2) * 0.02 * progress : 0),
+        }}
         caption={`${myName} 차례 — 꾹 누르는 동안 막대과자를 먹어요`}
       />
       <div className="pp-speedlines" aria-hidden />
       <div className="pp-vignette" aria-hidden />
+      {f.beat > 0 && !f.ended && <div key={f.beat} className="pp-beat" aria-hidden />}
 
       {/* 위: 먹은 길이 + 위험 */}
       <div className="pp-hud-top">
         <p className="pp-display pp-hud-chip">{myName}의 차례 · 상대 기록은 비밀</p>
-        <p className={`pp-display pp-meter ${eating ? "pp-meter-hot" : ""}`}>
+        <p
+          className={`pp-display pp-meter ${eating ? "pp-meter-hot" : ""} ${danger > 0.5 && eating ? "pp-meter-red" : ""}`}
+          style={{ fontSize: `calc(clamp(64px, 19vmin, 128px) * ${1 + progress * 0.45})` }}
+        >
           {cm(f.eaten)}
           <small>cm</small>
         </p>

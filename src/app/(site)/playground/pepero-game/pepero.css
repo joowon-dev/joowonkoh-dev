@@ -195,6 +195,34 @@
   animation: pp-throb 0.5s ease-in-out infinite;
 }
 
+/* 심장이 뛸 때마다 테두리가 붉게 쿵 */
+.pp-beat {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 calc(40px + var(--danger, 0) * 120px) calc(4px + var(--danger, 0) * 30px)
+    rgba(255, 30, 70, calc(0.35 + var(--danger, 0) * 0.5));
+  animation: pp-beat 0.38s ease-out both;
+}
+
+@keyframes pp-beat {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.pp-meter-red {
+  color: #ff3b5c;
+  text-shadow: 0 5px 0 var(--ink), 0 0 24px rgba(255, 59, 92, 0.8);
+}
+
 @keyframes pp-throb {
   50% {
     filter: brightness(1.4);
@@ -901,5 +929,8 @@
   .pp-btn-big,
   .pp-qmark {
     animation: none;
+  }
+  .pp-beat {
+    display: none;
   }
 }

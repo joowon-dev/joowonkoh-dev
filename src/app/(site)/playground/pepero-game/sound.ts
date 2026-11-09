@@ -18,9 +18,13 @@ export interface Sound {
   bonk(): void;
   /** 상대가 멈췄을 때 톡 */
   tick(): void;
+  /** 조여 오는 긴장음. 0 이면 꺼지고, 1 에 가까울수록 높고 크게 */
+  tension(level: number): void;
+  /** 휙 — 화면이 확 들어올 때 */
+  whoosh(): void;
 }
 
-const silent: Sound = { crunch() {}, bite() {}, ding() {}, heartbeat() {}, beep() {}, bonk() {}, tick() {} };
+const silent: Sound = { crunch() {}, bite() {}, ding() {}, heartbeat() {}, beep() {}, bonk() {}, tick() {}, tension() {}, whoosh() {} };
 
 export function makeSound(enabled: boolean): Sound {
   if (!enabled || typeof window === "undefined") return silent;
@@ -50,7 +54,72 @@ export function makeSound(enabled: boolean): Sound {
     return p;
   };
 
+  // 낮게 쿵 울리는 바닥 소리(부딪힘·깨묾에 깔아 준다)
+  const boom = (gain: number) => {
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator();
+    o.type = "sine";
+    o.frequency.setValueAtTime(110, t);
+    o.frequency.exponentialRampToValueAtTime(32, t + 0.5);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+    o.connect(g).connect(ctx.destination);
+    o.start(t);
+    o.stop(t + 0.65);
+  };
+
+  // 긴장음: 톱니 두 개를 살짝 어긋나게 + 저역 필터. 켜 두고 세기·높이만 바꾼다
+  let drone: { a: OscillatorNode; b: OscillatorNode; f: BiquadFilterNode; g: GainNode } | null = null;
+  const whooshBuf = noise(0.5);
+
   return {
+    tension(level) {
+      const t = ctx.currentTime;
+      if (level <= 0.001) {
+        if (drone) drone.g.gain.setTargetAtTime(0, t, 0.08);
+        return;
+      }
+      if (!drone) {
+        const a = ctx.createOscillator();
+        const b = ctx.createOscillator();
+        a.type = "sawtooth";
+        b.type = "sawtooth";
+        const f = ctx.createBiquadFilter();
+        f.type = "lowpass";
+        f.Q.value = 6;
+        const g = ctx.createGain();
+        g.gain.value = 0;
+        a.connect(f);
+        b.connect(f);
+        f.connect(g).connect(ctx.destination);
+        a.start();
+        b.start();
+        drone = { a, b, f, g };
+      }
+      const k = Math.min(1, level);
+      const base = 55 * 2 ** (k * 1.6); // 위로 거의 한 옥타브 반
+      drone.a.frequency.setTargetAtTime(base, t, 0.05);
+      drone.b.frequency.setTargetAtTime(base * 1.012 + k * 3, t, 0.05);
+      drone.f.frequency.setTargetAtTime(220 + k * 1600, t, 0.05);
+      drone.g.gain.setTargetAtTime(0.025 + k * 0.09, t, 0.05);
+    },
+    whoosh() {
+      const t = ctx.currentTime;
+      const src = ctx.createBufferSource();
+      src.buffer = whooshBuf;
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.Q.value = 0.8;
+      bp.frequency.setValueAtTime(300, t);
+      bp.frequency.exponentialRampToValueAtTime(3500, t + 0.35);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.6, t + 0.12);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+      src.connect(bp).connect(g).connect(ctx.destination);
+      src.start(t);
+    },
     crunch(pan) {
       const src = ctx.createBufferSource();
       src.buffer = crunchBuf;
@@ -76,6 +145,7 @@ export function makeSound(enabled: boolean): Sound {
       o.connect(g).connect(ctx.destination);
       o.start(t);
       o.stop(t + 0.25);
+      boom(0.7);
     },
     heartbeat() {
       const t = ctx.currentTime;
@@ -86,7 +156,7 @@ export function makeSound(enabled: boolean): Sound {
         o.frequency.exponentialRampToValueAtTime(40, t + d + 0.12);
         const g = ctx.createGain();
         g.gain.setValueAtTime(0.0001, t + d);
-        g.gain.exponentialRampToValueAtTime(i ? 0.35 : 0.5, t + d + 0.015);
+        g.gain.exponentialRampToValueAtTime(i ? 0.5 : 0.75, t + d + 0.015);
         g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.16);
         o.connect(g).connect(ctx.destination);
         o.start(t + d);
@@ -123,6 +193,7 @@ export function makeSound(enabled: boolean): Sound {
       src.playbackRate.value = 0.4;
       src.connect(ctx.destination);
       src.start(t);
+      boom(0.8);
     },
     tick() {
       const t = ctx.currentTime;
