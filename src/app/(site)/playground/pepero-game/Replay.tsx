@@ -38,7 +38,8 @@ interface Props {
 
 /** t 초까지 드러난 입력 — 아직 안 뗀 사람은 먹는 중으로 본다 */
 function revealAt(turn: Turn, t: number): Input {
-  if (turn.press === null) return { press: null, release: null, until: Infinity };
+  if (turn.press === null)
+    return { press: null, release: null, until: Infinity };
   return {
     press: turn.press <= t ? turn.press : null,
     release: turn.release !== null && turn.release <= t ? turn.release : null,
@@ -131,7 +132,9 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
         }
         const peek = viewAt(revealAt(left, sim), revealAt(right, sim), sim);
         const gap = STICK_MM - peek.left - peek.right;
-        const anyMoving = movingAt(revealAt(left, sim), sim + 1e-6) || movingAt(revealAt(right, sim), sim + 1e-6);
+        const anyMoving =
+          movingAt(revealAt(left, sim), sim + 1e-6) ||
+          movingAt(revealAt(right, sim), sim + 1e-6);
         if (!outcome) {
           if (hit > 0) hit -= dt;
           else sim += dt * (anyMoving ? slowFactor(gap) : 1);
@@ -141,11 +144,21 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
         R = v.right;
 
         // 멈춘 순간
-        if (stopL === null && left.release !== null && left.press !== null && sim >= left.release) {
+        if (
+          stopL === null &&
+          left.release !== null &&
+          left.press !== null &&
+          sim >= left.release
+        ) {
           stopL = clock;
           snd.tick();
         }
-        if (stopR === null && right.release !== null && right.press !== null && sim >= right.release) {
+        if (
+          stopR === null &&
+          right.release !== null &&
+          right.press !== null &&
+          sim >= right.release
+        ) {
           stopR = clock;
           snd.tick();
         }
@@ -170,12 +183,18 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
         if (kl > biteL) {
           biteL = kl;
           snd.crunch(-0.6);
-          crumbs = [...crumbs.slice(-18), { id: cid++, at: L, dir: 1, seed: Math.random() }];
+          crumbs = [
+            ...crumbs.slice(-18),
+            { id: cid++, at: L, dir: 1, seed: Math.random() },
+          ];
         }
         if (kr > biteR) {
           biteR = kr;
           snd.crunch(0.6);
-          crumbs = [...crumbs.slice(-18), { id: cid++, at: STICK_MM - R, dir: -1, seed: Math.random() }];
+          crumbs = [
+            ...crumbs.slice(-18),
+            { id: cid++, at: STICK_MM - R, dir: -1, seed: Math.random() },
+          ];
         }
         if (!outcome && anyMoving && gap < 50) {
           const every = Math.max(240, 300 + gap * 10);
@@ -186,7 +205,18 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
         }
       }
 
-      setF({ phase: outcome ? "end" : phase, clock, sim, left: L, right: R, outcome, stopL, stopR, crumbs, endAt });
+      setF({
+        phase: outcome ? "end" : phase,
+        clock,
+        sim,
+        left: L,
+        right: R,
+        outcome,
+        stopL,
+        stopR,
+        crumbs,
+        endAt,
+      });
 
       if (outcome && !sent && clock - endAt > AFTER) {
         sent = true;
@@ -205,7 +235,21 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
   const eR = stepped(f.right, finalR);
   const gap = STICK_MM - eL - eR;
   // 부딪힌 뒤에는 둘이 뒤로 물러난다 — 얼굴이 가까워 보이지 않게
-  const recoil = o && o.kind !== "ok" ? Math.min(1, (f.clock - f.endAt) / 0.25) * 30 : 0;
+  // 이마 쿵: 부딪힌 순간 둘이 앞으로 쏠려 이마가 닿았다가(0.3초) 튕겨 나간다. 깨물기는 바로 물러난다.
+  const since = o ? f.clock - f.endAt : 0;
+  const lunge =
+    o?.kind === "bonk"
+      ? since < 0.08
+        ? since / 0.08
+        : since < 0.32
+          ? 1
+          : Math.max(0, 1 - (since - 0.32) / 0.2)
+      : 0;
+  const backFrom = o?.kind === "bonk" ? 0.32 : 0;
+  const recoil =
+    o && o.kind !== "ok"
+      ? Math.min(1, Math.max(0, since - backFrom) / 0.25) * 30
+      : 0;
   const vis = visibleGap(gap) + recoil;
   const push = Math.max(0, vis - gap);
   const share = eL + eR > 0 ? eL / (eL + eR) : 0.5;
@@ -214,12 +258,24 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
 
   const realGap = STICK_MM - f.left - f.right;
   const playing = f.phase === "play";
-  const movingL = playing && left.press !== null && f.sim > left.press && (left.release === null || f.sim < left.release);
-  const movingR = playing && right.press !== null && f.sim > right.press && (right.release === null || f.sim < right.release);
+  const movingL =
+    playing &&
+    left.press !== null &&
+    f.sim > left.press &&
+    (left.release === null || f.sim < left.release);
+  const movingR =
+    playing &&
+    right.press !== null &&
+    f.sim > right.press &&
+    (right.release === null || f.sim < right.release);
   const heat = (m: boolean) => (m ? Math.min(1, 0.25 + f.sim / 4.5) : 0);
   const close = realGap < 30;
 
-  const exprOf = (side: SideKey, moving: boolean, otherMoving: boolean): Expr => {
+  const exprOf = (
+    side: SideKey,
+    moving: boolean,
+    otherMoving: boolean,
+  ): Expr => {
     if (o) {
       if (o.kind === "bonk") return "dizzy";
       if (o.kind === "bite") return o.biter === side ? "oops" : "ouch";
@@ -241,23 +297,50 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
       return o.winner === side ? "내가 더 먹었다!" : "으앙…";
     }
     if (stop !== null && f.clock - stop < STOP_BUBBLE) return "멈춤!";
-    if (playing && (side === "left" ? left : right).press === null && f.sim > 0.6) return "무서워서 못 먹겠어…";
+    if (
+      playing &&
+      (side === "left" ? left : right).press === null &&
+      f.sim > 0.6
+    )
+      return "무서워서 못 먹겠어…";
     return null;
   };
 
   const zoom = o ? 1 : camZoom(gap);
-  const hitstop = !o && playing && viewAt(revealAt(left, f.sim), revealAt(right, f.sim), f.sim).outcome?.kind !== undefined;
+  const hitstop =
+    !o &&
+    playing &&
+    viewAt(revealAt(left, f.sim), revealAt(right, f.sim), f.sim).outcome
+      ?.kind !== undefined;
   const meet = o && o.kind !== "ok" ? o.at : null;
-  const danger = playing && !o ? Math.min(1, Math.max(0, (40 - realGap) / 40)) : 0;
+  const danger =
+    playing && !o ? Math.min(1, Math.max(0, (40 - realGap) / 40)) : 0;
   const hot = Math.max(heat(movingL), heat(movingR));
 
   const count = Math.ceil((VS + COUNT - f.clock) / (COUNT / 3));
 
   return (
-    <div className="pp-surface absolute inset-0" style={{ ["--heat" as string]: hot, ["--danger" as string]: danger }}>
+    <div
+      className="pp-surface absolute inset-0"
+      style={{ ["--heat" as string]: hot, ["--danger" as string]: danger }}
+    >
       <Scene
-        left={{ at: leftAt, expr: exprOf("left", movingL, movingR), name: left.name, heat: heat(movingL), bubble: bubbleOf("left", f.stopL) }}
-        right={{ at: rightAt, expr: exprOf("right", movingR, movingL), name: right.name, heat: heat(movingR), bubble: bubbleOf("right", f.stopR) }}
+        left={{
+          at: leftAt,
+          expr: exprOf("left", movingL, movingR),
+          name: left.name,
+          heat: heat(movingL),
+          bubble: bubbleOf("left", f.stopL),
+          lunge,
+        }}
+        right={{
+          at: rightAt,
+          expr: exprOf("right", movingR, movingL),
+          name: right.name,
+          heat: heat(movingR),
+          bubble: bubbleOf("right", f.stopR),
+          lunge,
+        }}
         crumbs={f.crumbs}
         bite={meet}
         burst={o?.kind === "bonk" ? "쿵!" : "앙!"}
@@ -273,7 +356,12 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
       />
       <div className="pp-speedlines" aria-hidden />
       <div className="pp-vignette" aria-hidden />
-      {(hitstop || meet !== null) && <div className={`pp-flash ${hitstop ? "pp-flash-hold" : ""}`} aria-hidden />}
+      {(hitstop || meet !== null) && (
+        <div
+          className={`pp-flash ${hitstop ? "pp-flash-hold" : ""}`}
+          aria-hidden
+        />
+      )}
 
       {/* 위: 두 사람이 먹은 길이 */}
       {f.phase !== "vs" && (
@@ -285,8 +373,14 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
               <small>cm</small>
             </span>
           </div>
-          <div className={`pp-display pp-duel-gap ${close && !o ? "pp-duel-gap-hot" : ""}`}>
-            {o ? (o.kind === "ok" ? `남은 ${cm(o.rest)}cm` : "0cm") : `${cm(Math.max(0, realGap))}cm`}
+          <div
+            className={`pp-display pp-duel-gap ${close && !o ? "pp-duel-gap-hot" : ""}`}
+          >
+            {o
+              ? o.kind === "ok"
+                ? `남은 ${cm(o.rest)}cm`
+                : "0cm"
+              : `${cm(Math.max(0, realGap))}cm`}
           </div>
           <div className="pp-duel-side pp-duel-right">
             <span className="pp-display pp-duel-name">{right.name}</span>

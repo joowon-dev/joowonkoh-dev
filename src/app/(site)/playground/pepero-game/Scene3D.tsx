@@ -45,6 +45,8 @@ export interface Side {
   bubble?: string | null;
   /** 얼마나 달아올랐나(0~1) — 떨림·땀·기운 */
   heat?: number;
+  /** 이마 쿵 — 발끝을 축으로 앞으로 쏠리며 고개를 숙여 이마끼리 닿는다(0~1) */
+  lunge?: number;
 }
 
 export interface Crumb {
@@ -113,11 +115,26 @@ const LOOK = {
 
 /* ───────────── 겉: 캔버스 + 글자 ───────────── */
 
-type Tag = "nameL" | "nameR" | "bubbleL" | "bubbleR" | "piece" | "bite" | "qmark" | "half";
+type Tag =
+  | "nameL"
+  | "nameR"
+  | "bubbleL"
+  | "bubbleR"
+  | "piece"
+  | "bite"
+  | "qmark"
+  | "half";
 type Anchors = Record<Tag, [number, number, number] | null>;
 
 export default function Scene3D(props: Props) {
-  const { left, right, piece = null, bite = null, caption, half = false } = props;
+  const {
+    left,
+    right,
+    piece = null,
+    bite = null,
+    caption,
+    half = false,
+  } = props;
   const tags = useRef<Partial<Record<Tag, HTMLDivElement | null>>>({});
 
   const xl = worldX(left.at);
@@ -131,7 +148,11 @@ export default function Scene3D(props: Props) {
     bubbleR: right.bubble ? [xr + 0.95, 1.75, 0] : null,
     piece: piece !== null ? [(xl + xr) / 2, 2.0, 0] : null,
     bite: bite !== null ? [worldX(bite), 0.35, 0] : null,
-    qmark: shadowR ? [xr + 0.95, 1.85, 0] : shadowL ? [xl - 0.95, 1.85, 0] : null,
+    qmark: shadowR
+      ? [xr + 0.95, 1.85, 0]
+      : shadowL
+        ? [xl - 0.95, 1.85, 0]
+        : null,
     half: half ? [worldX(STICK_MM / 2), -0.42, 0] : null,
   };
 
@@ -143,7 +164,10 @@ export default function Scene3D(props: Props) {
     <div
       className="pp-3d absolute inset-0 select-none"
       role="img"
-      aria-label={caption ?? `${left.name}·${right.name} 둘이 막대과자를 양쪽에서 물고 있어요`}
+      aria-label={
+        caption ??
+        `${left.name}·${right.name} 둘이 막대과자를 양쪽에서 물고 있어요`
+      }
     >
       <Canvas
         className="!absolute inset-0"
@@ -156,12 +180,18 @@ export default function Scene3D(props: Props) {
       </Canvas>
 
       <div ref={tag("nameL")} className="pp-tag">
-        <span className="pp-name pp-display" style={{ background: shadowL ? LOOK.shadow.label : LOOK.left.label }}>
+        <span
+          className="pp-name pp-display"
+          style={{ background: shadowL ? LOOK.shadow.label : LOOK.left.label }}
+        >
           {left.name}
         </span>
       </div>
       <div ref={tag("nameR")} className="pp-tag">
-        <span className="pp-name pp-display" style={{ background: shadowR ? LOOK.shadow.label : LOOK.right.label }}>
+        <span
+          className="pp-name pp-display"
+          style={{ background: shadowR ? LOOK.shadow.label : LOOK.right.label }}
+        >
           {right.name}
         </span>
       </div>
@@ -241,10 +271,15 @@ function World({
     const yaw = (portrait ? 0.7 : 0.12) + Math.sin(t * 0.3) * 0.04;
     const tanV = Math.tan(((FOV / 2) * Math.PI) / 180);
     const tanH = tanV * aspect;
-    const halfW = cam.span * (0.32 + 0.68 * Math.cos(yaw)) * (portrait ? 0.9 : 1);
+    const halfW =
+      cam.span * (0.32 + 0.68 * Math.cos(yaw)) * (portrait ? 0.9 : 1);
     const d = Math.max(halfW / tanH, 3.0 / tanV) + 1.5;
     const focus = worldX(cam.at);
-    const wantPos = new THREE.Vector3(focus + Math.sin(yaw) * d, 0.55 + d * 0.045, Math.cos(yaw) * d);
+    const wantPos = new THREE.Vector3(
+      focus + Math.sin(yaw) * d,
+      0.55 + d * 0.045,
+      Math.cos(yaw) * d,
+    );
     const wantLook = new THREE.Vector3(focus, -0.35, 0);
     if (!pos.current || !look.current) {
       pos.current = wantPos.clone();
@@ -260,8 +295,20 @@ function World({
     );
     camera.lookAt(look.current);
     const cam3 = camera as THREE.PerspectiveCamera;
-    lift.current = THREE.MathUtils.lerp(lift.current, (cam.lift ?? 0) * (portrait ? 0.45 : 1), Math.min(1, dt * 4));
-    if (lift.current > 0.002) cam3.setViewOffset(size.width, size.height, 0, lift.current * size.height, size.width, size.height);
+    lift.current = THREE.MathUtils.lerp(
+      lift.current,
+      (cam.lift ?? 0) * (portrait ? 0.45 : 1),
+      Math.min(1, dt * 4),
+    );
+    if (lift.current > 0.002)
+      cam3.setViewOffset(
+        size.width,
+        size.height,
+        0,
+        lift.current * size.height,
+        size.width,
+        size.height,
+      );
     else if (cam3.view) cam3.clearViewOffset();
 
     // 3D 자리 → 화면 px 로 글자 옮기기
@@ -282,8 +329,16 @@ function World({
     <>
       <ambientLight intensity={0.75} />
       <directionalLight position={[2, 7, 9]} intensity={1.7} />
-      <directionalLight position={[-9, 3, -5]} intensity={1.1} color={LOOK.left.aura} />
-      <directionalLight position={[9, 3, -5]} intensity={1.1} color={LOOK.right.aura} />
+      <directionalLight
+        position={[-9, 3, -5]}
+        intensity={1.1}
+        color={LOOK.left.aura}
+      />
+      <directionalLight
+        position={[9, 3, -5]}
+        intensity={1.1}
+        color={LOOK.right.aura}
+      />
 
       <Stage toon={toon} />
 
@@ -298,7 +353,9 @@ function World({
       {crumbs.map((c) => (
         <CrumbMesh key={c.id} c={c} />
       ))}
-      {piece !== null && <FlyingPiece x={(xl + xr) / 2} mm={piece} toon={toon} />}
+      {piece !== null && (
+        <FlyingPiece x={(xl + xr) / 2} mm={piece} toon={toon} />
+      )}
       {bite !== null && <Impact x={worldX(bite)} />}
       {confetti && <Confetti />}
     </>
@@ -308,7 +365,13 @@ function World({
 /** 3단 명암 — 만화처럼 딱 끊어지는 그늘 */
 function useToonGradient() {
   return useMemo(() => {
-    const tex = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 200, 200, 200, 255, 255, 255, 255, 255]), 3, 1);
+    const tex = new THREE.DataTexture(
+      new Uint8Array([
+        120, 120, 120, 255, 200, 200, 200, 255, 255, 255, 255, 255,
+      ]),
+      3,
+      1,
+    );
     tex.minFilter = THREE.NearestFilter;
     tex.magFilter = THREE.NearestFilter;
     tex.needsUpdate = true;
@@ -322,14 +385,21 @@ function Stage({ toon }: { toon: THREE.Texture }) {
   useFrame((state) => {
     ring.current?.children.forEach((m, i) => {
       const on = Math.floor(state.clock.elapsedTime * 4 + i) % 3 === 0;
-      ((m as THREE.Mesh).material as THREE.MeshBasicMaterial).color.set(on ? "#fff3a8" : "#ffb36b");
+      ((m as THREE.Mesh).material as THREE.MeshBasicMaterial).color.set(
+        on ? "#fff3a8" : "#ffb36b",
+      );
     });
   });
   const bulbs = 26;
   return (
     <group position={[0, FLOOR - 0.22, 0]}>
       <group scale={[1, 1, 0.42]}>
-        <Toon toon={toon} color="#6a3f8f" outline={0.012} geo={<cylinderGeometry args={[6.4, 6.6, 0.44, 64]} />} />
+        <Toon
+          toon={toon}
+          color="#6a3f8f"
+          outline={0.012}
+          geo={<cylinderGeometry args={[6.4, 6.6, 0.44, 64]} />}
+        />
         <mesh position={[0, 0.225, 0]} rotation-x={-Math.PI / 2}>
           <ringGeometry args={[5.0, 5.35, 64]} />
           <meshBasicMaterial color="#ff8fc0" />
@@ -343,7 +413,10 @@ function Stage({ toon }: { toon: THREE.Texture }) {
         {Array.from({ length: bulbs }, (_, i) => {
           const a = (i / bulbs) * Math.PI * 2;
           return (
-            <mesh key={i} position={[Math.cos(a) * 6.5, 0, Math.sin(a) * 6.5 * 0.42]}>
+            <mesh
+              key={i}
+              position={[Math.cos(a) * 6.5, 0, Math.sin(a) * 6.5 * 0.42]}
+            >
               <sphereGeometry args={[0.06, 8, 6]} />
               <meshBasicMaterial color="#ffb36b" />
             </mesh>
@@ -356,7 +429,10 @@ function Stage({ toon }: { toon: THREE.Texture }) {
 
 /* ───────────── 사람 ───────────── */
 
-const OUTLINE = new THREE.MeshBasicMaterial({ color: "#2b1a2e", side: THREE.BackSide });
+const OUTLINE = new THREE.MeshBasicMaterial({
+  color: "#2b1a2e",
+  side: THREE.BackSide,
+});
 
 function Toon({
   geo,
@@ -403,8 +479,20 @@ const ARM: Record<Expr, [number, number]> = {
 /** 머리 가운데(입에서) — 입은 얼굴 앞 아래쪽에 있다 */
 const HEAD: [number, number, number] = [-0.92, 0.37, 0];
 const BODY_X = -1.08;
+/** 이마 쿵 때 앞으로 쏠리는 최대 각도(라디안) */
+const LUNGE = 0.13;
 
-function Person({ side, x, s, toon }: { side: "left" | "right"; x: number; s: Side; toon: THREE.Texture }) {
+function Person({
+  side,
+  x,
+  s,
+  toon,
+}: {
+  side: "left" | "right";
+  x: number;
+  s: Side;
+  toon: THREE.Texture;
+}) {
   const { expr } = s;
   const shadow = expr === "shadow";
   const look = shadow ? LOOK.shadow : LOOK[side];
@@ -416,12 +504,17 @@ function Person({ side, x, s, toon }: { side: "left" | "right"; x: number; s: Si
   const cheeks = useRef<THREE.Group>(null);
   const since = useRef({ expr, t: 0 });
   const heat = useRef(0);
+  const lean = useRef<THREE.Group>(null);
 
   useFrame((state, dt) => {
     const t = state.clock.elapsedTime;
     if (since.current.expr !== expr) since.current = { expr, t };
     const age = t - since.current.t;
-    heat.current = THREE.MathUtils.lerp(heat.current, s.heat ?? 0, Math.min(1, dt * 6));
+    heat.current = THREE.MathUtils.lerp(
+      heat.current,
+      s.heat ?? 0,
+      Math.min(1, dt * 6),
+    );
     const h = heat.current;
     const jit = (amp: number) => (Math.random() - 0.5) * amp;
 
@@ -475,22 +568,54 @@ function Person({ side, x, s, toon }: { side: "left" | "right"; x: number; s: Si
           y = Math.sin(t * 2.4 + (side === "left" ? 0 : 1.3)) * 0.02;
       }
       root.current.position.set(px, y, pz);
-      root.current.rotation.z = THREE.MathUtils.lerp(root.current.rotation.z, rz, Math.min(1, dt * 10));
+      root.current.rotation.z = THREE.MathUtils.lerp(
+        root.current.rotation.z,
+        rz,
+        Math.min(1, dt * 10),
+      );
     }
 
+    if (lean.current) lean.current.rotation.z = -LUNGE * (s.lunge ?? 0);
     if (head.current) {
       const chew = expr === "chew" ? Math.sin(t * (16 + h * 18)) * 0.035 : 0;
       head.current.position.set(HEAD[0], HEAD[1] + chew, HEAD[2]);
       const tilt =
-        expr === "win" ? 0.15 : expr === "lose" ? -0.28 : expr === "dizzy" ? Math.sin(t * 3.2 + 1) * 0.15 : 0;
-      head.current.rotation.z = THREE.MathUtils.lerp(head.current.rotation.z, tilt, Math.min(1, dt * 10));
+        expr === "win"
+          ? 0.15
+          : expr === "lose"
+            ? -0.28
+            : expr === "dizzy"
+              ? Math.sin(t * 3.2 + 1) * 0.15
+              : 0;
+      const lunge = s.lunge ?? 0;
+      // 쿵 할 때는 고개를 푹 숙여 이마(앞머리)가 먼저 나가게 — 입은 아래로 물러난다
+      head.current.rotation.z =
+        lunge > 0
+          ? tilt - 0.4 * lunge
+          : THREE.MathUtils.lerp(
+              head.current.rotation.z,
+              tilt,
+              Math.min(1, dt * 10),
+            );
     }
-    const open = expr === "chew" ? (Math.sin(t * (16 + h * 18)) + 1) * 0.035 : 0;
+    const open =
+      expr === "chew" ? (Math.sin(t * (16 + h * 18)) + 1) * 0.035 : 0;
     if (lipTop.current) lipTop.current.position.y = 0.075 + open;
     if (lipBot.current) lipBot.current.position.y = -0.075 - open;
     if (cheeks.current) {
-      const puff = expr === "hold" ? 1.45 + Math.sin(t * 20) * 0.04 : expr === "chew" ? 1.15 : 1;
-      cheeks.current.scale.setScalar(THREE.MathUtils.lerp(cheeks.current.scale.x, puff, Math.min(1, dt * 12)));
+      const puff =
+        expr === "hold"
+          ? 1.45 + Math.sin(t * 20) * 0.04
+          : expr === "chew"
+            ? 1.15
+            : 1;
+      cheeks.current.scale.setScalar(
+        THREE.MathUtils.lerp(
+          cheeks.current.scale.x,
+          puff,
+          Math.min(1, dt * 12),
+        ),
+      );
     }
 
     const [fz, fx] = ARM[expr];
@@ -499,14 +624,23 @@ function Person({ side, x, s, toon }: { side: "left" | "right"; x: number; s: Si
       let z = fz;
       let xx = fx * (i === 0 ? 1 : -1);
       if (expr === "win") z += Math.sin(t * 13 + i * Math.PI) * 0.15;
-      if (expr === "chew") z += Math.sin(t * (10 + h * 10) + i * Math.PI) * 0.25; // 주먹 붕붕
+      if (expr === "chew")
+        z += Math.sin(t * (10 + h * 10) + i * Math.PI) * 0.25; // 주먹 붕붕
       if (expr === "ready") z += Math.sin(t * 9 + i) * 0.08;
       if ((expr === "ouch" || expr === "oops") && i === 1) {
         z = 0.4;
         xx = 0;
       }
-      a.rotation.z = THREE.MathUtils.lerp(a.rotation.z, z, Math.min(1, dt * 14));
-      a.rotation.x = THREE.MathUtils.lerp(a.rotation.x, xx, Math.min(1, dt * 14));
+      a.rotation.z = THREE.MathUtils.lerp(
+        a.rotation.z,
+        z,
+        Math.min(1, dt * 14),
+      );
+      a.rotation.x = THREE.MathUtils.lerp(
+        a.rotation.x,
+        xx,
+        Math.min(1, dt * 14),
+      );
     });
   });
 
@@ -517,92 +651,141 @@ function Person({ side, x, s, toon }: { side: "left" | "right"; x: number; s: Si
 
   return (
     <group position={[x, 0, 0]} rotation-y={turn}>
-      <group ref={root}>
-        {(s.heat ?? 0) > 0.05 && !shadow && <Aura color={look.aura} heat={s.heat ?? 0} />}
+      {/* 발끝을 축으로 앞으로 쏠리기(이마 쿵) */}
+      <group ref={lean} position={[BODY_X, FLOOR, 0]}>
+        <group position={[-BODY_X, -FLOOR, 0]}>
+          <group ref={root}>
+            {(s.heat ?? 0) > 0.05 && !shadow && (
+              <Aura color={look.aura} heat={s.heat ?? 0} />
+            )}
 
-        {/* 다리 + 신발 */}
-        {[1, -1].map((z) => (
-          <group key={z} position={[BODY_X, -1.95, z * 0.24]}>
-            <Toon toon={toon} color={look.pants} geo={<capsuleGeometry args={[0.16, 0.22, 6, 12]} />} />
-            <Toon
-              toon={toon}
-              color={shadow ? look.pants : "#ffffff"}
-              position={[0.08, -0.24, 0]}
-              scale={[1.35, 0.7, 1]}
-              geo={<sphereGeometry args={[0.17, 14, 10]} />}
-            />
-          </group>
-        ))}
+            {/* 다리 + 신발 */}
+            {[1, -1].map((z) => (
+              <group key={z} position={[BODY_X, -1.95, z * 0.24]}>
+                <Toon
+                  toon={toon}
+                  color={look.pants}
+                  geo={<capsuleGeometry args={[0.16, 0.22, 6, 12]} />}
+                />
+                <Toon
+                  toon={toon}
+                  color={shadow ? look.pants : "#ffffff"}
+                  position={[0.08, -0.24, 0]}
+                  scale={[1.35, 0.7, 1]}
+                  geo={<sphereGeometry args={[0.17, 14, 10]} />}
+                />
+              </group>
+            ))}
 
-        {/* 몸 */}
-        <Toon
-          toon={toon}
-          color={look.shirt}
-          position={[BODY_X, -1.32, 0]}
-          scale={[0.95, 1, 0.98]}
-          geo={<capsuleGeometry args={[0.56, 0.32, 10, 24]} />}
-        />
-        {!shadow && <Outfit side={side} near={near} toon={toon} />}
-
-        {/* 팔 — 어깨를 축으로 돈다 */}
-        {[near, -near].map((z, i) => (
-          <group
-            key={z}
-            ref={(el) => {
-              arms.current[i] = el;
-            }}
-            position={[BODY_X + 0.06, -0.98, z * 0.6]}
-          >
+            {/* 몸 */}
             <Toon
               toon={toon}
               color={look.shirt}
-              outline={0.02}
-              position={[0, -0.22, 0]}
-              geo={<capsuleGeometry args={[0.14, 0.26, 6, 12]} />}
+              position={[BODY_X, -1.32, 0]}
+              scale={[0.95, 1, 0.98]}
+              geo={<capsuleGeometry args={[0.56, 0.32, 10, 24]} />}
             />
-            <Toon toon={toon} color={look.skin} position={[0, -0.5, 0]} geo={<sphereGeometry args={[0.17, 16, 12]} />} />
-          </group>
-        ))}
+            {!shadow && <Outfit side={side} near={near} toon={toon} />}
 
-        <group ref={head} position={HEAD}>
-          <Head side={side} look={look} expr={expr} toon={toon} cheeks={cheeks} near={near} />
-        </group>
-
-        {/* 입술 — 막대 끝을 문다 */}
-        {!shadow && (
-          <group position={[-0.05, 0, 0]}>
-            <group ref={lipTop}>
-              <Toon toon={toon} color="#e9806f" outline={0.07} scale={[0.1, 0.06, 0.15]} geo={<sphereGeometry args={[1, 16, 12]} />} />
-            </group>
-            <group ref={lipBot}>
-              <Toon toon={toon} color="#e9806f" outline={0.07} scale={[0.1, 0.06, 0.15]} geo={<sphereGeometry args={[1, 16, 12]} />} />
-            </group>
-            {expr === "ouch" && (
-              <PopIn delay={0.45}>
+            {/* 팔 — 어깨를 축으로 돈다 */}
+            {[near, -near].map((z, i) => (
+              <group
+                key={z}
+                ref={(el) => {
+                  arms.current[i] = el;
+                }}
+                position={[BODY_X + 0.06, -0.98, z * 0.6]}
+              >
                 <Toon
                   toon={toon}
-                  color="#f6d7a7"
-                  position={[0.03, -0.03, 0]}
-                  rotation={[0, 0, -0.35]}
-                  outline={0.05}
-                  geo={<boxGeometry args={[0.13, 0.4, 0.32]} />}
+                  color={look.shirt}
+                  outline={0.02}
+                  position={[0, -0.22, 0]}
+                  geo={<capsuleGeometry args={[0.14, 0.26, 6, 12]} />}
                 />
-              </PopIn>
+                <Toon
+                  toon={toon}
+                  color={look.skin}
+                  position={[0, -0.5, 0]}
+                  geo={<sphereGeometry args={[0.17, 16, 12]} />}
+                />
+              </group>
+            ))}
+
+            <group ref={head} position={HEAD}>
+              <Head
+                side={side}
+                look={look}
+                expr={expr}
+                toon={toon}
+                cheeks={cheeks}
+                near={near}
+              />
+            </group>
+
+            {/* 입술 — 막대 끝을 문다 */}
+            {!shadow && expr !== "dizzy" && (
+              <group position={[-0.05, 0, 0]}>
+                <group ref={lipTop}>
+                  <Toon
+                    toon={toon}
+                    color="#e9806f"
+                    outline={0.07}
+                    scale={[0.1, 0.06, 0.15]}
+                    geo={<sphereGeometry args={[1, 16, 12]} />}
+                  />
+                </group>
+                <group ref={lipBot}>
+                  <Toon
+                    toon={toon}
+                    color="#e9806f"
+                    outline={0.07}
+                    scale={[0.1, 0.06, 0.15]}
+                    geo={<sphereGeometry args={[1, 16, 12]} />}
+                  />
+                </group>
+                {expr === "ouch" && (
+                  <PopIn delay={0.45}>
+                    <Toon
+                      toon={toon}
+                      color="#f6d7a7"
+                      position={[0.03, -0.03, 0]}
+                      rotation={[0, 0, -0.35]}
+                      outline={0.05}
+                      geo={<boxGeometry args={[0.13, 0.4, 0.32]} />}
+                    />
+                  </PopIn>
+                )}
+              </group>
             )}
           </group>
-        )}
+        </group>
       </group>
     </group>
   );
 }
 
 /** 옷 장식 — 왼쪽은 후드 끈·모자, 오른쪽은 깃·별 배지 */
-function Outfit({ side, near, toon }: { side: "left" | "right"; near: number; toon: THREE.Texture }) {
+function Outfit({
+  side,
+  near,
+  toon,
+}: {
+  side: "left" | "right";
+  near: number;
+  toon: THREE.Texture;
+}) {
   if (side === "left") {
     return (
       <group>
         {/* 등 뒤 후드 */}
-        <Toon toon={toon} color="#ffc070" position={[BODY_X - 0.42, -0.86, 0]} scale={[0.5, 0.32, 0.62]} geo={<sphereGeometry args={[1, 18, 12]} />} />
+        <Toon
+          toon={toon}
+          color="#ffc070"
+          position={[BODY_X - 0.42, -0.86, 0]}
+          scale={[0.5, 0.32, 0.62]}
+          geo={<sphereGeometry args={[1, 18, 12]} />}
+        />
         {/* 끈 두 가닥 */}
         {[0.16, -0.16].map((z) => (
           <Toon
@@ -616,7 +799,14 @@ function Outfit({ side, near, toon }: { side: "left" | "right"; near: number; to
           />
         ))}
         {/* 주머니 */}
-        <Toon toon={toon} color="#f28a1e" outline={0.03} position={[BODY_X + 0.42, -1.6, 0]} scale={[0.22, 0.2, 0.5]} geo={<sphereGeometry args={[1, 14, 10]} />} />
+        <Toon
+          toon={toon}
+          color="#f28a1e"
+          outline={0.03}
+          position={[BODY_X + 0.42, -1.6, 0]}
+          scale={[0.22, 0.2, 0.5]}
+          geo={<sphereGeometry args={[1, 14, 10]} />}
+        />
       </group>
     );
   }
@@ -626,7 +816,11 @@ function Outfit({ side, near, toon }: { side: "left" | "right"; near: number; to
         <torusGeometry args={[0.36, 0.06, 8, 24]} />
         <meshToonMaterial color="#ffffff" gradientMap={toon} />
       </mesh>
-      <mesh position={[BODY_X + 0.5, -1.18, near * 0.22]} rotation={[0, Math.PI / 2 - near * 0.4, 0]} scale={0.14}>
+      <mesh
+        position={[BODY_X + 0.5, -1.18, near * 0.22]}
+        rotation={[0, Math.PI / 2 - near * 0.4, 0]}
+        scale={0.14}
+      >
         <octahedronGeometry args={[1, 0]} />
         <meshBasicMaterial color="#ffd34d" />
       </mesh>
@@ -645,7 +839,9 @@ function Aura({ color, heat }: { color: string; heat: number }) {
       const a = i * 2.39996;
       const r = 0.75 + 0.15 * Math.sin(i * 7.1);
       m.position.set(Math.cos(a) * r, -0.9 + k * 2.6, Math.sin(a) * r);
-      m.scale.setScalar(i / bits < heat ? 0.09 * Math.sin(k * Math.PI) + 0.0001 : 0.0001);
+      m.scale.setScalar(
+        i / bits < heat ? 0.09 * Math.sin(k * Math.PI) + 0.0001 : 0.0001,
+      );
       m.rotation.set(t * 3 + i, t * 2, 0);
     });
   });
@@ -654,7 +850,13 @@ function Aura({ color, heat }: { color: string; heat: number }) {
       {Array.from({ length: bits }, (_, i) => (
         <mesh key={i}>
           <octahedronGeometry args={[1, 0]} />
-          <meshBasicMaterial color={i % 3 ? color : "#fff3a8"} transparent opacity={0.9} depthWrite={false} blending={THREE.AdditiveBlending} />
+          <meshBasicMaterial
+            color={i % 3 ? color : "#fff3a8"}
+            transparent
+            opacity={0.9}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
         </mesh>
       ))}
     </group>
@@ -667,9 +869,20 @@ const INK = "#2b1a2e";
 const ink = <meshBasicMaterial color={INK} />;
 
 /** 머리 겉면 한 자리에, 바깥(법선)을 로컬 x 로 보게 붙인다 */
-function OnFace({ dir, r = 0.99, children }: { dir: [number, number, number]; r?: number; children: React.ReactNode }) {
+function OnFace({
+  dir,
+  r = 0.99,
+  children,
+}: {
+  dir: [number, number, number];
+  r?: number;
+  children: React.ReactNode;
+}) {
   const n = new THREE.Vector3(...dir).normalize();
-  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 0, 0), n);
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(1, 0, 0),
+    n,
+  );
   return (
     <group position={n.clone().multiplyScalar(r).toArray()} quaternion={q}>
       {children}
@@ -695,10 +908,22 @@ function Head({
   const shadow = expr === "shadow";
   return (
     <group>
-      <Toon toon={toon} color={look.skin} scale={[1, 0.94, 1]} geo={<sphereGeometry args={[1, 40, 28]} />} />
+      <Toon
+        toon={toon}
+        color={look.skin}
+        scale={[1, 0.94, 1]}
+        geo={<sphereGeometry args={[1, 40, 28]} />}
+      />
       {/* 귀 */}
       {[1, -1].map((z) => (
-        <Toon key={z} toon={toon} color={look.skin} position={[-0.12, -0.05, z * 0.97]} scale={[0.14, 0.2, 0.1]} geo={<sphereGeometry args={[1, 12, 10]} />} />
+        <Toon
+          key={z}
+          toon={toon}
+          color={look.skin}
+          position={[-0.12, -0.05, z * 0.97]}
+          scale={[0.14, 0.2, 0.1]}
+          geo={<sphereGeometry args={[1, 12, 10]} />}
+        />
       ))}
       <Hair side={side} color={look.hair} toon={toon} near={near} />
 
@@ -711,7 +936,11 @@ function Head({
               <OnFace key={z} dir={[0.62, -0.32, z * 0.72]} r={0.97}>
                 <mesh scale={[0.06, 0.13, 0.2]}>
                   <sphereGeometry args={[1, 14, 10]} />
-                  <meshBasicMaterial color="#ff7f9c" transparent opacity={expr === "ouch" || expr === "hold" ? 0.95 : 0.6} />
+                  <meshBasicMaterial
+                    color="#ff7f9c"
+                    transparent
+                    opacity={expr === "ouch" || expr === "hold" ? 0.95 : 0.6}
+                  />
                 </mesh>
               </OnFace>
             ))}
@@ -726,10 +955,22 @@ function Head({
               <Brow expr={expr} z={z} />
             </OnFace>
           ))}
-          {(expr === "nervous" || expr === "oops" || expr === "hold") && <Sweat />}
+          {(expr === "nervous" || expr === "oops" || expr === "hold") && (
+            <Sweat />
+          )}
           {expr === "chew" && <SweatFly />}
           {(expr === "ouch" || expr === "lose") && <Tears />}
-          {expr === "dizzy" && <Stars />}
+          {expr === "dizzy" && (
+            <>
+              <Stars />
+              <OnFace dir={[0.93, -0.36, 0]} r={0.99}>
+                <mesh scale={[0.04, 0.07, 0.09]}>
+                  <sphereGeometry args={[1, 12, 10]} />
+                  {ink}
+                </mesh>
+              </OnFace>
+            </>
+          )}
           {expr === "win" && <Sparkles />}
         </>
       )}
@@ -742,10 +983,16 @@ function Eye({ expr, iris, z }: { expr: Expr; iris: string; z: number }) {
   const pupil = useRef<THREE.Group>(null);
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    if (blink.current) blink.current.scale.y = (expr === "idle" || expr === "ready") && t % 3.1 < 0.1 ? 0.12 : 1;
+    if (blink.current)
+      blink.current.scale.y =
+        (expr === "idle" || expr === "ready") && t % 3.1 < 0.1 ? 0.12 : 1;
     if (pupil.current) {
       const shake = expr === "nervous" ? 0.025 : 0;
-      pupil.current.position.set(0.012, (Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+      pupil.current.position.set(
+        0.012,
+        (Math.random() - 0.5) * shake,
+        (Math.random() - 0.5) * shake,
+      );
     }
   });
 
@@ -799,7 +1046,9 @@ function Eye({ expr, iris, z }: { expr: Expr; iris: string; z: number }) {
         <group>
           {line(0.16, Math.PI / 2, 0.06)}
           <mesh position={[0.01, -0.04, 0]} scale={[0.05, 0.1, 0.1]}>
-            <sphereGeometry args={[1, 10, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]} />
+            <sphereGeometry
+              args={[1, 10, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]}
+            />
             {ink}
           </mesh>
         </group>
@@ -809,14 +1058,21 @@ function Eye({ expr, iris, z }: { expr: Expr; iris: string; z: number }) {
       return (
         <group>
           <mesh scale={[0.05, 0.17, 0.15]}>
-            <sphereGeometry args={[1, 18, 12, 0, Math.PI * 2, 0.55, Math.PI - 0.55]} />
+            <sphereGeometry
+              args={[1, 18, 12, 0, Math.PI * 2, 0.55, Math.PI - 0.55]}
+            />
             <meshBasicMaterial color="#fff" side={THREE.DoubleSide} />
           </mesh>
           <mesh position={[0.015, -0.02, 0]} scale={[0.05, 0.13, 0.11]}>
-            <sphereGeometry args={[1, 16, 12, 0, Math.PI * 2, 0.75, Math.PI - 0.75]} />
+            <sphereGeometry
+              args={[1, 16, 12, 0, Math.PI * 2, 0.75, Math.PI - 0.75]}
+            />
             <meshBasicMaterial color={iris} side={THREE.DoubleSide} />
           </mesh>
-          <mesh position={[0.03, 0.12, 0]} rotation-x={(z > 0 ? -1 : 1) * 0.2 + Math.PI / 2}>
+          <mesh
+            position={[0.03, 0.12, 0]}
+            rotation-x={(z > 0 ? -1 : 1) * 0.2 + Math.PI / 2}
+          >
             <capsuleGeometry args={[0.035, 0.3, 4, 8]} />
             {ink}
           </mesh>
@@ -876,7 +1132,8 @@ function Eye({ expr, iris, z }: { expr: Expr; iris: string; z: number }) {
 function Brow({ expr, z }: { expr: Expr; z: number }) {
   // 로컬: y 위, z 옆(얼굴 바깥쪽이 z 부호). rotation-x 로 눈썹을 기울인다.
   const angry = expr === "chew" || expr === "ready";
-  const worried = expr === "nervous" || expr === "oops" || expr === "lose" || expr === "hold";
+  const worried =
+    expr === "nervous" || expr === "oops" || expr === "lose" || expr === "hold";
   const tilt = angry ? -0.45 : worried ? 0.45 : expr === "ouch" ? 0.3 : 0;
   const lift = worried ? 0.05 : angry ? -0.04 : expr === "win" ? 0.06 : 0;
   if (expr === "chew") return null; // 먹을 땐 눈 위 굵은 선이 눈썹 몫
@@ -910,12 +1167,34 @@ function ShadowEyes() {
   );
 }
 
-function Hair({ side, color, toon, near }: { side: "left" | "right"; color: string; toon: THREE.Texture; near: number }) {
+function Hair({
+  side,
+  color,
+  toon,
+  near,
+}: {
+  side: "left" | "right";
+  color: string;
+  toon: THREE.Texture;
+  near: number;
+}) {
   // 둘 다 같은 동글동글 바가지 머리(성별 티가 나지 않게). 색과 머리 위 장식으로만 구분한다.
   return (
     <group>
-      <Toon toon={toon} color={color} geo={<sphereGeometry args={[1.08, 40, 24, 0, Math.PI * 2, 0, 1.25]} />} />
-      <Toon toon={toon} color={color} geo={<sphereGeometry args={[1.09, 40, 24, -Math.PI / 2 + 0.3, Math.PI - 0.6, 0, 1.95]} />} />
+      <Toon
+        toon={toon}
+        color={color}
+        geo={<sphereGeometry args={[1.08, 40, 24, 0, Math.PI * 2, 0, 1.25]} />}
+      />
+      <Toon
+        toon={toon}
+        color={color}
+        geo={
+          <sphereGeometry
+            args={[1.09, 40, 24, -Math.PI / 2 + 0.3, Math.PI - 0.6, 0, 1.95]}
+          />
+        }
+      />
       {/* 짧은 앞머리 — 동글동글 세 덩이 */}
       {[0.4, 0, -0.4].map((z) => (
         <Toon
@@ -931,7 +1210,13 @@ function Hair({ side, color, toon, near }: { side: "left" | "right"; color: stri
       {side === "left" ? (
         // 새싹 두 잎
         <group position={[0, 1.08, 0]}>
-          <Toon toon={toon} color="#6a8f3a" outline={0.06} position={[0, 0.12, 0]} geo={<cylinderGeometry args={[0.03, 0.03, 0.26, 6]} />} />
+          <Toon
+            toon={toon}
+            color="#6a8f3a"
+            outline={0.06}
+            position={[0, 0.12, 0]}
+            geo={<cylinderGeometry args={[0.03, 0.03, 0.26, 6]} />}
+          />
           {[1, -1].map((k) => (
             <Toon
               key={k}
@@ -987,7 +1272,11 @@ function SweatFly() {
   useFrame((state) => {
     ref.current?.children.forEach((m, i) => {
       const k = (state.clock.elapsedTime * 1.8 + i * 0.33) % 1;
-      m.position.set(-0.6 - k * 1.1, 0.9 + k * 0.5 - k * k * 1.2, (i - 1) * 0.6);
+      m.position.set(
+        -0.6 - k * 1.1,
+        0.9 + k * 0.5 - k * k * 1.2,
+        (i - 1) * 0.6,
+      );
       m.scale.setScalar(k > 0.85 ? 0.0001 : 0.08);
     });
   });
@@ -1032,7 +1321,15 @@ function Stars() {
     <group position={[0, 1.3, 0]}>
       <group ref={ref}>
         {[0, 1, 2, 3].map((i) => (
-          <mesh key={i} position={[Math.cos((i * Math.PI) / 2) * 0.8, 0, Math.sin((i * Math.PI) / 2) * 0.8]} scale={0.15}>
+          <mesh
+            key={i}
+            position={[
+              Math.cos((i * Math.PI) / 2) * 0.8,
+              0,
+              Math.sin((i * Math.PI) / 2) * 0.8,
+            ]}
+            scale={0.15}
+          >
             <octahedronGeometry args={[1, 0]} />
             <meshToonMaterial color="#ffd34d" />
           </mesh>
@@ -1071,13 +1368,22 @@ function Sparkles() {
 }
 
 /** 처음 나타날 때 톡 커지며 등장 */
-function PopIn({ delay = 0, children }: { delay?: number; children: React.ReactNode }) {
+function PopIn({
+  delay = 0,
+  children,
+}: {
+  delay?: number;
+  children: React.ReactNode;
+}) {
   const ref = useRef<THREE.Group>(null);
   const born = useRef<number | null>(null);
   useFrame((state) => {
     if (!ref.current) return;
     if (born.current === null) born.current = state.clock.elapsedTime;
-    const k = Math.min(1, Math.max(0, (state.clock.elapsedTime - born.current - delay) / 0.25));
+    const k = Math.min(
+      1,
+      Math.max(0, (state.clock.elapsedTime - born.current - delay) / 0.25),
+    );
     const back = 1 + 2.2 * (k - 1) ** 3 + 1.2 * (k - 1) ** 2;
     ref.current.scale.setScalar(Math.max(0.0001, back));
   });
@@ -1092,7 +1398,15 @@ function PopIn({ delay = 0, children }: { delay?: number; children: React.ReactN
 
 const HANDLE = 18;
 
-function Stick({ from, to, toon }: { from: number; to: number; toon: THREE.Texture }) {
+function Stick({
+  from,
+  to,
+  toon,
+}: {
+  from: number;
+  to: number;
+  toon: THREE.Texture;
+}) {
   const a = worldX(from);
   const b = worldX(to);
   const c = Math.max(a, worldX(HANDLE));
@@ -1142,7 +1456,8 @@ function Impact({ x }: { x: number }) {
     ref.current.children.forEach((m, i) => {
       const kk = Math.max(0, k - i * 0.08);
       m.scale.setScalar(0.2 + kk * 5);
-      ((m as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.9 - kk * 1.6);
+      ((m as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity =
+        Math.max(0, 0.9 - kk * 1.6);
     });
   });
   return (
@@ -1150,7 +1465,12 @@ function Impact({ x }: { x: number }) {
       {[0, 1].map((i) => (
         <mesh key={i}>
           <ringGeometry args={[0.8, 1, 40]} />
-          <meshBasicMaterial color={i ? "#ffffff" : "#ffd34d"} transparent depthWrite={false} side={THREE.DoubleSide} />
+          <meshBasicMaterial
+            color={i ? "#ffffff" : "#ffd34d"}
+            transparent
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
         </mesh>
       ))}
     </group>
@@ -1182,7 +1502,15 @@ function CrumbMesh({ c }: { c: Crumb }) {
 }
 
 /** 똑 부러진 남은 조각이 빙글빙글 돌며 튀어 오른다 */
-function FlyingPiece({ x, mm, toon }: { x: number; mm: number; toon: THREE.Texture }) {
+function FlyingPiece({
+  x,
+  mm,
+  toon,
+}: {
+  x: number;
+  mm: number;
+  toon: THREE.Texture;
+}) {
   const ref = useRef<THREE.Group>(null);
   const born = useRef<number | null>(null);
   useFrame((state) => {
@@ -1191,11 +1519,22 @@ function FlyingPiece({ x, mm, toon }: { x: number; mm: number; toon: THREE.Textu
     const k = Math.min(1, (state.clock.elapsedTime - born.current) / 0.7);
     const ease = 1 - (1 - k) ** 3;
     ref.current.position.set(x, ease * 1.4 + Math.sin(k * Math.PI) * 0.25, 0);
-    ref.current.rotation.set(0, state.clock.elapsedTime * 1.5, ease * Math.PI * 4 + Math.PI / 2);
+    ref.current.rotation.set(
+      0,
+      state.clock.elapsedTime * 1.5,
+      ease * Math.PI * 4 + Math.PI / 2,
+    );
   });
   return (
     <group ref={ref}>
-      <Toon toon={toon} color="#5b3221" outline={0.08} geo={<cylinderGeometry args={[0.11, 0.11, Math.max(0.12, mm * U), 16]} />} />
+      <Toon
+        toon={toon}
+        color="#5b3221"
+        outline={0.08}
+        geo={
+          <cylinderGeometry args={[0.11, 0.11, Math.max(0.12, mm * U), 16]} />
+        }
+      />
     </group>
   );
 }
