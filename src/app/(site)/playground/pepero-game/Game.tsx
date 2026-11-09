@@ -1,24 +1,35 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
+import { type ReactNode, useCallback, useRef, useState, useSyncExternalStore } from "react";
 
-import Arena, { Stage } from "./Arena";
-import { type Bot, makeBot } from "./bot";
-import { useRoom } from "./net";
+import { botTurn } from "./bot";
+import Replay from "./Replay";
 import {
   cleanName,
   cm,
-  COUNTDOWN,
-  isRoomCode,
+  decodeChallenge,
+  decodeResult,
+  eatenOf,
+  encodeChallenge,
+  encodeResult,
   NAME_MAX,
-  newRoomCode,
-  other,
   type Outcome,
   type SideKey,
   STICK_MM,
+  type Turn as TurnT,
   winnerOf,
 } from "./rules";
+import { Scene } from "./scene";
 import { makeSound, type Sound } from "./sound";
+import Turn from "./Turn";
+
+/**
+ * 빼빼로 게임 — 링크로 차례를 주고받는다.
+ * 1) 도전자가 꾹 눌러 얼마나 먹을지 정하고 링크를 보낸다(기록은 링크 속에 숨겨 둔다).
+ * 2) 받은 사람도 상대 기록을 모른 채 정한다.
+ * 3) 둘을 겹쳐서 동시에 먹는 장면을 공개한다. 결과 링크로 도전자에게 돌려줄 수 있다.
+ */
 
 /* ───────────── 링크(#) ───────────── */
 
@@ -35,21 +46,35 @@ function go(hash: string) {
     history.pushState(null, "", window.location.pathname + window.location.search);
     window.dispatchEvent(new HashChangeEvent("hashchange"));
   }
-  window.scrollTo({ top: 0 });
 }
 
-type Route = { kind: "home" } | { kind: "practice" } | { kind: "room"; code: string } | { kind: "broken" };
+type Route =
+  | { kind: "home" }
+  | { kind: "make" }
+  | { kind: "practice" }
+  | { kind: "challenge"; code: string; from: TurnT }
+  | { kind: "result"; code: string; left: TurnT; right: TurnT }
+  | { kind: "broken" };
 
 function routeOf(hash: string): Route {
   const h = hash.replace(/^#/, "");
   if (!h) return { kind: "home" };
+  if (h === "make") return { kind: "make" };
   if (h === "practice") return { kind: "practice" };
-  const m = /^room=([A-Za-z0-9]+)$/.exec(h);
-  if (m && isRoomCode(m[1].toUpperCase())) return { kind: "room", code: m[1].toUpperCase() };
+  const c = /^c=([A-Za-z0-9_-]+)$/.exec(h);
+  if (c) {
+    const from = decodeChallenge(c[1]);
+    return from ? { kind: "challenge", code: c[1], from } : { kind: "broken" };
+  }
+  const r = /^r=([A-Za-z0-9_-]+)$/.exec(h);
+  if (r) {
+    const both = decodeResult(r[1]);
+    return both ? { kind: "result", code: r[1], ...both } : { kind: "broken" };
+  }
   return { kind: "broken" };
 }
 
-const roomLink = (code: string) => `${window.location.origin}${window.location.pathname}#room=${code}`;
+const linkTo = (hash: string) => `${window.location.origin}${window.location.pathname}#${hash}`;
 
 async function copy(text: string): Promise<boolean> {
   try {
@@ -60,7 +85,7 @@ async function copy(text: string): Promise<boolean> {
   }
 }
 
-/** 휴대폰이면 공유 시트, 안 되면 복사. 둘 다 막히면 manual. */
+/** 휴대폰이면 공유 시트, 안 되면 복사 */
 async function shareLink(url: string, text: string): Promise<"shared" | "copied" | "cancel" | "manual"> {
   if (typeof navigator.share === "function") {
     try {
@@ -91,527 +116,541 @@ const saveName = (n: string) => {
 
 /* ───────────── 맨 위 ───────────── */
 
+interface Audio {
+  unlock: () => void;
+  sound: () => Sound;
+}
+
 export default function Game() {
   const hydrated = useSyncExternalStore(noop, () => true, () => false);
   const hash = useSyncExternalStore(subscribeHash, () => window.location.hash, () => "");
   const [soundOn, setSoundOn] = useState(true);
-  /** 방금 내가 만든 방 — 입장 화면 없이 바로 들어간다 */
-  const [created, setCreated] = useState<string | null>(null);
+  const [toast, say] = useToast();
 
   // 소리는 누르기 안에서만 만들 수 있다. 버튼 핸들러가 unlock() 을 부르고, 게임은 sound() 로 꺼내 쓴다.
   const audio = useRef<{ on: boolean; s: Sound } | null>(null);
-  const unlock = useCallback(
-    (on = soundOn) => {
-      if (!audio.current || audio.current.on !== on) audio.current = { on, s: makeSound(on) };
-    },
-    [soundOn],
-  );
-  const sound = useCallback(() => audio.current?.s ?? makeSound(false), []);
+  const unlockWith = useCallback((on: boolean) => {
+    if (!audio.current || audio.current.on !== on) audio.current = { on, s: makeSound(on) };
+  }, []);
+  const a: Audio = {
+    unlock: () => unlockWith(soundOn),
+    sound: () => audio.current?.s ?? makeSound(false),
+  };
 
   const route = routeOf(hash);
 
-  return (
-    <div className="mx-auto w-full max-w-[560px] px-4">
-      <div className="mb-3 flex justify-end">
-        <button
-          type="button"
-          className="pp-chip"
-          onClick={() => {
-            setSoundOn(!soundOn);
-            unlock(!soundOn);
-          }}
-          aria-pressed={soundOn}
-        >
-          {soundOn ? "🔊 소리 켬" : "🔇 소리 끔"}
-        </button>
-      </div>
+  let body: ReactNode = null;
+  if (hydrated) {
+    switch (route.kind) {
+      case "home":
+        body = <Home audio={a} />;
+        break;
+      case "make":
+        body = <Make audio={a} say={say} />;
+        break;
+      case "practice":
+        body = <Practice audio={a} />;
+        break;
+      case "challenge":
+        body = <Challenge key={route.code} from={route.from} audio={a} say={say} />;
+        break;
+      case "result":
+        body = <ResultView key={route.code} left={route.left} right={route.right} audio={a} />;
+        break;
+      default:
+        body = (
+          <Sheet>
+            <p className="pp-display pp-sheet-title">앗, 링크가 이상해요 🍫💥</p>
+            <p className="pp-sheet-text">링크 끝이 잘렸을 수도 있어요. 다시 받아 보세요.</p>
+            <button type="button" className="pp-btn mt-4 w-full" onClick={() => go("")}>
+              처음으로
+            </button>
+          </Sheet>
+        );
+    }
+  }
 
-      {!hydrated ? (
-        <div className="pp-card h-[380px] animate-pulse" aria-hidden />
-      ) : route.kind === "home" ? (
-        <Home
-          onRoom={() => {
-            unlock();
-            const code = newRoomCode();
-            setCreated(code);
-            go(`#room=${code}`);
-          }}
-          onPractice={() => {
-            unlock();
-            go("#practice");
-          }}
-        />
-      ) : route.kind === "practice" ? (
-        <Practice key="practice" unlock={unlock} sound={sound} />
-      ) : route.kind === "room" ? (
-        <Room key={route.code} code={route.code} entered={created === route.code} unlock={unlock} sound={sound} />
-      ) : (
-        <div className="pp-card text-center">
-          <p className="pp-display text-[22px]">앗, 방 주소가 이상해요 🍫💥</p>
-          <p className="mt-2 text-[14px] opacity-70 break-keep">링크 끝이 잘렸을 수도 있어요. 다시 받아 보세요.</p>
-          <button type="button" className="pp-btn mt-5" onClick={() => go("")}>
+  return (
+    <div className="pp-app">
+      {body}
+      <div className="pp-topbar">
+        <Link href="/playground" className="pp-chip pp-display">
+          ← 놀이터
+        </Link>
+        {route.kind !== "home" && (
+          <button type="button" className="pp-chip pp-display" onClick={() => go("")}>
             처음으로
           </button>
-        </div>
-      )}
+        )}
+        <button
+          type="button"
+          className="pp-chip pp-display ml-auto"
+          onClick={() => {
+            setSoundOn(!soundOn);
+            unlockWith(!soundOn);
+          }}
+          aria-pressed={soundOn}
+          aria-label={soundOn ? "소리 끄기" : "소리 켜기"}
+        >
+          {soundOn ? "🔊" : "🔇"}
+        </button>
+      </div>
+      <Toast text={toast} />
     </div>
   );
 }
 
 /* ───────────── 처음 화면 ───────────── */
 
-function Home({ onRoom, onPractice }: { onRoom: () => void; onPractice: () => void }) {
+function Home({ audio }: { audio: Audio }) {
   const [name, setName] = useState(loadName);
+  const [rules, setRules] = useState(false);
   return (
-    <section className="pp-card">
-      <div>
-        <Stage left={{ at: 0, expr: "idle", name: cleanName(name, "나") }} right={{ at: STICK_MM, expr: "mystery", name: "친구" }} />
-      </div>
-      <p className="pp-display mt-4 text-center text-[22px] break-keep">먼저 겁먹는 사람이 진다!</p>
-      <p className="mt-1 text-center text-[14px] opacity-70 break-keep">
-        둘이 동시에 버튼을 꾹 누르면 양쪽에서 냠냠 먹기 시작해요. 손을 떼면 멈춰요.
-        <br />더 많이 먹은 사람이 이기지만, 상대가 멈췄는데 계속 먹으면… 입술을 앙!
-      </p>
-      <NameField value={name} onChange={setName} />
-      <button
-        type="button"
-        className="pp-btn mt-4 w-full"
-        onClick={() => {
-          saveName(name);
-          onRoom();
+    <>
+      <Scene
+        left={{ at: 0, expr: "ready", name: cleanName(name, "나"), heat: 0.35 }}
+        right={{ at: STICK_MM, expr: "ready", name: "친구", heat: 0.35 }}
+        cam={{ at: STICK_MM / 2, span: 5.6, lift: 0.16 }}
+      />
+      <div className="pp-speedlines pp-speedlines-soft" aria-hidden />
+      <header className="pp-hero">
+        <p className="pp-display pp-hero-kicker">먼저 겁먹는 사람이 진다!</p>
+        <h1 className="pp-display pp-hero-title">
+          빼빼로
+          <br />
+          치킨 게임
+        </h1>
+      </header>
+      <Sheet>
+        <NameField value={name} onChange={setName} />
+        <button
+          type="button"
+          className="pp-btn pp-btn-big mt-3 w-full"
+          onClick={() => {
+            saveName(name);
+            audio.unlock();
+            go("#make");
+          }}
+        >
+          도전장 만들기 🔥
+        </button>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            className="pp-btn pp-btn-ghost w-full"
+            onClick={() => {
+              saveName(name);
+              audio.unlock();
+              go("#practice");
+            }}
+          >
+            컴퓨터랑 연습
+          </button>
+          <button type="button" className="pp-btn pp-btn-ghost w-full" onClick={() => setRules(!rules)}>
+            {rules ? "규칙 닫기" : "어떻게 해요?"}
+          </button>
+        </div>
+        {rules && <Rules />}
+      </Sheet>
+    </>
+  );
+}
+
+/* ───────────── 도전장 만들기 ───────────── */
+
+function Make({ audio, say }: { audio: Audio; say: (t: string) => void }) {
+  const [name] = useState(() => cleanName(loadName(), "도전자"));
+  const [round, setRound] = useState(0);
+  const [mine, setMine] = useState<TurnT | null>(null);
+
+  if (!mine) {
+    return (
+      <Turn
+        key={round}
+        me="left"
+        names={{ left: name, right: "???" }}
+        sound={audio.sound}
+        onDone={(t) => setMine({ name, ...t })}
+      />
+    );
+  }
+
+  const eaten = eatenOf(mine);
+  const send = async () => {
+    const r = await shareLink(
+      linkTo(`c=${encodeChallenge(mine)}`),
+      `🍫 ${name}의 빼빼로 도전장! 나는 이미 얼마나 먹을지 정했어. 너는? 먼저 겁먹는 사람이 진다!`,
+    );
+    if (r === "copied") say("링크를 복사했어요! 친구에게 붙여 넣어 보내세요");
+    if (r === "manual") say("복사가 막혀 있어요. 주소창 링크를 직접 보내 주세요");
+  };
+
+  return (
+    <>
+      <Scene
+        left={{ at: eaten, expr: "hold", name, bubble: eaten > 0 ? "두근두근" : "…" }}
+        right={{ at: STICK_MM, expr: "shadow", name: "누구?" }}
+        cam={{ at: (eaten + STICK_MM) / 2, span: ((STICK_MM - eaten) * 0.04) / 2 + 3, lift: 0.18 }}
+      />
+      <Sheet>
+        <p className="pp-display pp-sheet-kicker">도전장 완성!</p>
+        <p className="pp-display pp-sheet-title">
+          {eaten > 0 ? (
+            <>
+              <span className="pp-pink">{cm(eaten)}cm</span> 먹고 멈췄어요
+            </>
+          ) : (
+            "하나도 안 먹었어요…"
+          )}
+        </p>
+        <p className="pp-sheet-text">
+          친구는 내 기록을 모른 채 정해요. 친구가 끝내면 <b>둘이 동시에 먹는 장면</b>이 공개돼요!
+        </p>
+        <button type="button" className="pp-btn pp-btn-big mt-3 w-full" onClick={send}>
+          친구에게 도전장 보내기 📮
+        </button>
+        <button
+          type="button"
+          className="pp-btn pp-btn-ghost mt-2 w-full"
+          onClick={() => {
+            audio.unlock();
+            setMine(null);
+            setRound(round + 1);
+          }}
+        >
+          다시 정하기
+        </button>
+      </Sheet>
+    </>
+  );
+}
+
+/* ───────────── 도전장 받기 ───────────── */
+
+function Challenge({ from: fromLink, audio, say }: { from: TurnT; audio: Audio; say: (t: string) => void }) {
+  // 링크에서 읽은 값은 그릴 때마다 새 객체라, 처음 것을 붙잡아 둔다(다시 틀기 방지).
+  const [from] = useState(fromLink);
+  const [name, setName] = useState(loadName);
+  const [phase, setPhase] = useState<"intro" | "turn" | "replay" | "done">("intro");
+  const [mine, setMine] = useState<TurnT | null>(null);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const me = cleanName(name, "나");
+
+  if (phase === "intro") {
+    return (
+      <>
+        <Scene
+          left={{ at: 0, expr: "ready", name: from.name, heat: 0.5, bubble: "덤벼!" }}
+          right={{ at: STICK_MM, expr: "shadow", name: me }}
+          cam={{ at: STICK_MM / 2, span: 5.6, lift: 0.16 }}
+        />
+        <div className="pp-speedlines pp-speedlines-soft" aria-hidden />
+        <header className="pp-hero">
+          <p className="pp-display pp-hero-kicker">📮 도전장 도착</p>
+          <h1 className="pp-display pp-hero-title pp-hero-title-sm">
+            {from.name}님이
+            <br />
+            빼빼로 대결을 걸었어요!
+          </h1>
+        </header>
+        <Sheet>
+          <p className="pp-sheet-text">
+            {from.name}님은 이미 얼마나 먹을지 정했어요. <b>몇 cm인지는 비밀!</b>
+            <br />
+            꾹 누르는 동안 먹고, 떼면 멈춰요. 더 많이 먹으면 이기지만, 둘이 합쳐 15cm를 넘으면… 아직 먹던 사람이
+            입술을 <b>앙!</b>
+          </p>
+          <NameField value={name} onChange={setName} />
+          <button
+            type="button"
+            className="pp-btn pp-btn-big mt-3 w-full"
+            onClick={() => {
+              saveName(name);
+              audio.unlock();
+              setPhase("turn");
+            }}
+          >
+            도전 받기 🔥
+          </button>
+        </Sheet>
+      </>
+    );
+  }
+
+  if (phase === "turn" || !mine) {
+    return (
+      <Turn
+        me="right"
+        names={{ left: from.name, right: me }}
+        sound={audio.sound}
+        onDone={(t) => {
+          setMine({ name: me, ...t });
+          setPhase("replay");
         }}
-      >
-        친구랑 대결하기 ⚔️
-      </button>
-      <button
-        type="button"
-        className="pp-btn pp-btn-ghost mt-2 w-full"
-        onClick={() => {
-          saveName(name);
-          onPractice();
+      />
+    );
+  }
+
+  const sendBack = async () => {
+    const r = await shareLink(
+      linkTo(`r=${encodeResult(from, mine)}`),
+      `🍫 ${from.name} vs ${mine.name} 빼빼로 대결 결과 나왔어! 동시에 먹으면 어떻게 됐을지 보러 와`,
+    );
+    if (r === "copied") say("결과 링크를 복사했어요!");
+    if (r === "manual") say("복사가 막혀 있어요");
+  };
+
+  return (
+    <>
+      <Replay
+        left={from}
+        right={mine}
+        sound={audio.sound}
+        onEnd={(o) => {
+          setOutcome(o);
+          setPhase("done");
         }}
-      >
-        혼자 연습하기 (컴퓨터랑)
-      </button>
-      <Rules />
-    </section>
+      />
+      {phase === "done" && outcome && (
+        <ResultPanel left={from} right={mine} outcome={outcome} me="right">
+          <button type="button" className="pp-btn pp-btn-big w-full" onClick={sendBack}>
+            {from.name}님에게 결과 보내기 📮
+          </button>
+          <button type="button" className="pp-btn pp-btn-ghost mt-2 w-full" onClick={() => go("#make")}>
+            나도 도전장 만들기
+          </button>
+        </ResultPanel>
+      )}
+    </>
+  );
+}
+
+/* ───────────── 결과 링크 ───────────── */
+
+function ResultView({ left: l0, right: r0, audio }: { left: TurnT; right: TurnT; audio: Audio }) {
+  const [{ left, right }] = useState({ left: l0, right: r0 });
+  const [phase, setPhase] = useState<"ready" | "replay" | "done">("ready");
+  const [round, setRound] = useState(0);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+
+  if (phase === "ready") {
+    return (
+      <>
+        <Scene
+          left={{ at: 0, expr: "ready", name: left.name, heat: 0.4 }}
+          right={{ at: STICK_MM, expr: "ready", name: right.name, heat: 0.4 }}
+          cam={{ at: STICK_MM / 2, span: 5.6, lift: 0.16 }}
+        />
+        <div className="pp-speedlines pp-speedlines-soft" aria-hidden />
+        <header className="pp-hero">
+          <p className="pp-display pp-hero-kicker">빼빼로 대결 결과</p>
+          <h1 className="pp-display pp-hero-title pp-hero-title-sm">
+            {left.name} <span className="pp-vs-inline">VS</span> {right.name}
+          </h1>
+        </header>
+        <Sheet>
+          <p className="pp-sheet-text">둘 다 상대 기록을 모른 채 정했어요. 동시에 먹으면 어떻게 될까?</p>
+          <button
+            type="button"
+            className="pp-btn pp-btn-big mt-3 w-full"
+            onClick={() => {
+              audio.unlock();
+              setPhase("replay");
+            }}
+          >
+            결과 공개 ▶
+          </button>
+        </Sheet>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Replay
+        key={round}
+        left={left}
+        right={right}
+        sound={audio.sound}
+        onEnd={(o) => {
+          setOutcome(o);
+          setPhase("done");
+        }}
+      />
+      {phase === "done" && outcome && (
+        <ResultPanel left={left} right={right} outcome={outcome} me={null}>
+          <button type="button" className="pp-btn pp-btn-big w-full" onClick={() => go("#make")}>
+            다시 붙자! 도전장 만들기 🔥
+          </button>
+          <button
+            type="button"
+            className="pp-btn pp-btn-ghost mt-2 w-full"
+            onClick={() => {
+              audio.unlock();
+              setOutcome(null);
+              setPhase("replay");
+              setRound(round + 1);
+            }}
+          >
+            다시 보기
+          </button>
+        </ResultPanel>
+      )}
+    </>
   );
 }
 
 /* ───────────── 혼자 연습 ───────────── */
 
-function Practice({ unlock, sound }: { unlock: () => void; sound: () => Sound }) {
+function Practice({ audio }: { audio: Audio }) {
   const [name] = useState(() => cleanName(loadName(), "나"));
-  const [bout, setBout] = useState<{ startAt: number; bot: Bot; id: number } | null>(null);
-  const [result, setResult] = useState<Outcome | null>(null);
-  const [tally, setTally] = useState({ me: 0, cpu: 0 });
-  const names = { left: name, right: "컴퓨터" };
+  const [round, setRound] = useState(0);
+  const [mine, setMine] = useState<TurnT | null>(null);
+  const [bot, setBot] = useState<TurnT>(() => botTurn());
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [tally, setTally] = useState({ me: 0, bot: 0 });
 
-  const start = () => {
-    unlock();
-    setResult(null);
-    setBout((b) => ({ startAt: performance.now() + COUNTDOWN * 1000, bot: makeBot(), id: (b?.id ?? 0) + 1 }));
-  };
-
-  const getOpp = useCallback(
-    (mine: Parameters<Bot>[0], now: number) => (bout ? bout.bot(mine, now) : mine),
-    [bout],
-  );
-  const onEnd = useCallback((o: Outcome) => {
-    setResult(o);
-    const w = winnerOf(o);
-    setTally((t) => ({ me: t.me + (w === "left" ? 1 : 0), cpu: t.cpu + (w === "right" ? 1 : 0) }));
-  }, []);
+  if (!mine) {
+    return (
+      <Turn
+        key={round}
+        me="left"
+        names={{ left: name, right: bot.name }}
+        sound={audio.sound}
+        onDone={(t) => setMine({ name, ...t })}
+      />
+    );
+  }
 
   return (
-    <section className="pp-card">
-      <Score names={names} me="left" tally={{ left: tally.me, right: tally.cpu }} />
-      {!bout ? (
-        <>
-          <Stage left={{ at: 0, expr: "idle", name: `${name} (나)` }} right={{ at: STICK_MM, expr: "idle", name: "컴퓨터" }} />
-          <p className="mt-3 text-center text-[14px] opacity-75 break-keep">
-            컴퓨터는 판마다 성격이 달라요. 욕심쟁이일 때도, 겁쟁이일 때도 있어요.
-          </p>
-          <button type="button" className="pp-btn mt-4 w-full" onClick={start}>
-            시작! 🍫
+    <>
+      <Replay
+        key={round}
+        left={mine}
+        right={bot}
+        sound={audio.sound}
+        onEnd={(o) => {
+          setOutcome(o);
+          const w = winnerOf(o);
+          setTally((t) => ({ me: t.me + (w === "left" ? 1 : 0), bot: t.bot + (w === "right" ? 1 : 0) }));
+        }}
+      />
+      {outcome && (
+        <ResultPanel left={mine} right={bot} outcome={outcome} me="left" score={`${tally.me} : ${tally.bot}`}>
+          <button
+            type="button"
+            className="pp-btn pp-btn-big w-full"
+            onClick={() => {
+              audio.unlock();
+              setOutcome(null);
+              setMine(null);
+              setBot(botTurn());
+              setRound(round + 1);
+            }}
+          >
+            한 판 더!
           </button>
-        </>
-      ) : (
-        <>
-          <Arena
-            key={bout.id}
-            me="left"
-            names={names}
-            startAt={bout.startAt}
-            getOpp={getOpp}
-            onEnd={onEnd}
-            sound={sound}
-          />
-          {result && (
-            <ResultCard outcome={result} me="left" names={names}>
-              <button type="button" className="pp-btn" onClick={start}>
-                한 판 더!
-              </button>
-              <button type="button" className="pp-btn pp-btn-ghost" onClick={() => go("")}>
-                친구랑 대결하러 가기
-              </button>
-            </ResultCard>
-          )}
-        </>
+          <button type="button" className="pp-btn pp-btn-ghost mt-2 w-full" onClick={() => go("#make")}>
+            친구한테 도전장 보내기
+          </button>
+        </ResultPanel>
       )}
-    </section>
+    </>
   );
 }
 
-/* ───────────── 친구랑 대결 방 ───────────── */
+/* ───────────── 결과 패널 ───────────── */
 
-function Room({
-  code,
-  entered,
-  unlock,
-  sound,
-}: {
-  code: string;
-  entered: boolean;
-  unlock: () => void;
-  sound: () => Sound;
-}) {
-  const [name, setName] = useState(loadName);
-  const [joined, setJoined] = useState(entered);
-
-  if (!joined) {
-    return (
-      <section className="pp-card">
-        <p className="pp-display text-center text-[24px] break-keep">빼빼로 대결 초대장이 왔어요 📮</p>
-        <p className="mt-1 text-center text-[14px] opacity-70 break-keep">
-          들어가면 친구와 동시에 시작해요. 버튼을 꾹 누르는 동안 먹고, 떼면 멈춰요.
-        </p>
-        <div className="mt-4">
-          <Stage left={{ at: 0, expr: "mystery", name: "친구" }} right={{ at: STICK_MM, expr: "idle", name: cleanName(name, "나") }} />
-        </div>
-        <NameField value={name} onChange={setName} />
-        <button
-          type="button"
-          className="pp-btn mt-4 w-full"
-          onClick={() => {
-            unlock();
-            saveName(name);
-            setJoined(true);
-          }}
-        >
-          입장하기
-        </button>
-        <Rules />
-      </section>
-    );
-  }
-  return <RoomLive code={code} name={cleanName(name, "나")} unlock={unlock} sound={sound} />;
-}
-
-interface Played {
-  round: number;
-  outcome: Outcome;
-  /** 그 판의 왼쪽·오른쪽 사람 id */
-  ids: [string, string];
-}
-
-function RoomLive({ code, name, unlock, sound }: { code: string; name: string; unlock: () => void; sound: () => Sound }) {
-  const room = useRoom(code, name);
-  const { status, left, right, side, go: start, ready, unready, sendInput, inputOf, me } = room;
-  const [played, setPlayed] = useState<Played[]>([]);
-  const [toast, say] = useToast();
-
-  const round = start?.round ?? null;
-  const both = !!left && !!right;
-  const finished = round !== null && played.some((p) => p.round === round);
-  const playing = both && round !== null && !finished && (side === "left" || side === "right");
-
-  // 판이 시작되면 내 「준비」 표를 내린다
-  useEffect(() => {
-    if (round !== null) unready();
-  }, [round, unready]);
-
-  const mySide: SideKey = side === "right" ? "right" : "left";
-  const opp = mySide === "left" ? right : left;
-  const iAmReady = (side === "left" ? left : right)?.ready ? true : false;
-  const oppReady = !!opp?.ready;
-
-  const getOpp = useCallback(
-    () => (round === null ? { press: null, release: null, until: 0 } : inputOf(round, other(mySide))),
-    [inputOf, round, mySide],
-  );
-  const onMine = useCallback(
-    (m: Parameters<typeof sendInput>[2]) => {
-      if (round !== null) sendInput(round, mySide, m);
-    },
-    [round, mySide, sendInput],
-  );
-  const onEnd = useCallback(
-    (o: Outcome) => {
-      if (round === null || !left || !right) return;
-      setPlayed((p) => (p.some((x) => x.round === round) ? p : [...p, { round, outcome: o, ids: [left.id, right.id] }]));
-    },
-    [round, left, right],
-  );
-
-  if (status === "error") {
-    return (
-      <section className="pp-card text-center">
-        <p className="pp-display text-[22px]">연결이 안 돼요 📡</p>
-        <p className="mt-2 text-[14px] opacity-70 break-keep">인터넷 연결을 확인하고 다시 들어와 주세요.</p>
-        <button type="button" className="pp-btn mt-5" onClick={() => window.location.reload()}>
-          다시 연결
-        </button>
-      </section>
-    );
-  }
-  if (side === "watch") {
-    return (
-      <section className="pp-card text-center">
-        <p className="pp-display text-[22px]">이 방은 꽉 찼어요 🙈</p>
-        <p className="mt-2 text-[14px] opacity-70 break-keep">빼빼로 게임은 둘이서만 할 수 있어요.</p>
-        <button type="button" className="pp-btn mt-5" onClick={() => go("")}>
-          내 방 만들기
-        </button>
-      </section>
-    );
-  }
-
-  const names: Record<SideKey, string> = { left: left?.name ?? "…", right: right?.name ?? "친구" };
-  // 지금 상대와 둔 판만 센다
-  const vs = played.filter((p) => left && right && p.ids[0] === left.id && p.ids[1] === right.id);
-  const tally = {
-    left: vs.filter((p) => winnerOf(p.outcome) === "left").length,
-    right: vs.filter((p) => winnerOf(p.outcome) === "right").length,
-  };
-  const last = finished ? played.find((p) => p.round === round) : null;
-
-  const invite = async () => {
-    const r = await shareLink(
-      roomLink(code),
-      `🍫 빼빼로 게임 한 판 할래? 버튼 꾹 누르는 동안 먹고 떼면 멈춰. 먼저 겁먹는 사람이 지는 거야!`,
-    );
-    if (r === "copied") say("초대 링크를 복사했어요. DM·카톡에 붙여 넣으세요!");
-    if (r === "manual") say("아래 주소를 꾹 눌러 복사해 주세요");
-  };
-
-  // 대결 중이거나, 방금 끝난 판(마지막 장면을 그대로 두고 아래에 결과)
-  if (both && start && round !== null && (playing || last) && (side === "left" || side === "right")) {
-    return (
-      <section className="pp-card">
-        <Score names={names} me={mySide} tally={tally} />
-        <Arena
-          key={start.round}
-          me={mySide}
-          names={names}
-          startAt={start.startAt}
-          getOpp={getOpp}
-          onMine={onMine}
-          onEnd={onEnd}
-          sound={sound}
-        />
-        {last && (
-          <ResultCard outcome={last.outcome} me={mySide} names={names}>
-            <ReadyButton
-              mine={iAmReady}
-              theirs={oppReady}
-              oppName={opp?.name ?? "친구"}
-              onReady={() => {
-                unlock();
-                ready();
-              }}
-              label="한 판 더!"
-            />
-          </ResultCard>
-        )}
-      </section>
-    );
-  }
-
-  return (
-    <section className="pp-card">
-      {both && <Score names={names} me={mySide} tally={tally} />}
-
-          <Stage
-            left={{ at: 0, expr: left ? (left.ready ? "proud" : "idle") : "mystery", name: left ? (left.id === me ? `${left.name} (나)` : left.name) : "…" }}
-            right={
-              right
-                ? { at: STICK_MM, expr: right.ready ? "proud" : "idle", name: right.id === me ? `${right.name} (나)` : right.name }
-                : { at: STICK_MM, expr: "mystery", name: "친구 기다리는 중" }
-            }
-          />
-          {status === "connecting" ? (
-            <p className="pp-display mt-4 text-center text-[18px] opacity-70">방에 들어가는 중…</p>
-          ) : !both ? (
-            <div className="mt-4">
-              <p className="pp-display text-center text-[20px] break-keep">친구를 불러 주세요 📮</p>
-              <p className="mt-1 text-center text-[13.5px] opacity-70 break-keep">
-                링크를 받은 친구가 들어오면 둘이 준비를 누르고 바로 시작해요. 이 화면은 켜 두세요!
-              </p>
-              <label className="mt-3 block">
-                <span className="sr-only">초대 링크</span>
-                <input readOnly value={roomLink(code)} className="pp-input text-[13px]" onFocus={(e) => e.currentTarget.select()} />
-              </label>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <button type="button" className="pp-btn" onClick={invite}>
-                  초대 링크 보내기
-                </button>
-                <button
-                  type="button"
-                  className="pp-btn pp-btn-ghost"
-                  onClick={async () => say((await copy(roomLink(code))) ? "링크를 복사했어요!" : "주소를 꾹 눌러 복사해 주세요")}
-                >
-                  링크만 복사
-                </button>
-              </div>
-              <p className="pp-waiting mt-4 text-center text-[13px] opacity-60">친구 기다리는 중</p>
-            </div>
-          ) : (
-            <div className="mt-4">
-              <p className="pp-display text-center text-[20px] break-keep">
-                {names.left} vs {names.right}
-              </p>
-              <p className="mt-1 text-center text-[13.5px] opacity-70 break-keep">
-                둘 다 준비를 누르면 3초 뒤 시작! 카운트다운 동안 미리 꾹 누르고 있어도 돼요.
-              </p>
-              <ReadyButton
-                mine={iAmReady}
-                theirs={oppReady}
-                oppName={opp?.name ?? "친구"}
-                onReady={() => {
-                  unlock();
-                  ready();
-                }}
-                label="준비!"
-              />
-            </div>
-          )}
-      {both && <Rules />}
-      <Toast text={toast} />
-    </section>
-  );
-}
-
-function ReadyButton({
-  mine,
-  theirs,
-  oppName,
-  onReady,
-  label,
-}: {
-  mine: boolean;
-  theirs: boolean;
-  oppName: string;
-  onReady: () => void;
-  label: string;
-}) {
-  return (
-    <div className="mt-4 grid gap-2">
-      <button type="button" className={`pp-btn w-full ${mine ? "pp-btn-wait" : ""}`} disabled={mine} onClick={onReady}>
-        {mine ? `${oppName}님 기다리는 중…` : label}
-      </button>
-      <p className="text-center text-[13px] opacity-70">
-        {theirs ? `✅ ${oppName}님은 준비 완료!` : `${oppName}님은 아직 준비 전`}
-      </p>
-    </div>
-  );
-}
-
-/* ───────────── 결과 ───────────── */
-
-function Score({ names, me, tally }: { names: Record<SideKey, string>; me: SideKey; tally: Record<SideKey, number> }) {
-  return (
-    <div className="pp-score pp-display mb-3">
-      <span className="truncate text-right">{names.left}{me === "left" ? " (나)" : ""}</span>
-      <b>
-        {tally.left} : {tally.right}
-      </b>
-      <span className="truncate">{names.right}{me === "right" ? " (나)" : ""}</span>
-    </div>
-  );
-}
-
-function ResultCard({
-  outcome,
+function ResultPanel({
+  left,
+  right,
+  outcome: o,
   me,
-  names,
+  score,
   children,
 }: {
+  left: TurnT;
+  right: TurnT;
   outcome: Outcome;
-  me: SideKey;
-  names: Record<SideKey, string>;
-  children: React.ReactNode;
+  me: SideKey | null;
+  score?: string;
+  children: ReactNode;
 }) {
-  const w = winnerOf(outcome);
-  const head = w === null ? (outcome.kind === "bonk" ? "둘 다 패배 💥" : "무승부!") : w === me ? "이겼다! 🏆" : "졌다… 😵";
-
-  let line: React.ReactNode;
-  if (outcome.kind === "bite") {
-    const biter = names[outcome.biter];
-    const bitten = names[other(outcome.biter)];
-    line = (
-      <>
-        <p className="pp-display text-[22px] text-[#e0577b] break-keep">
-          {biter}님이 {bitten}님 입술을 앙!
-        </p>
-        <p className="mt-1 text-[14px] opacity-75 break-keep">상대가 멈췄는데 계속 먹으면 반칙패예요. {bitten}님한테 반창고 🩹</p>
-      </>
-    );
-  } else if (outcome.kind === "bonk") {
-    line = (
-      <>
-        <p className="pp-display text-[22px] text-[#e0577b] break-keep">둘 다 끝까지 버티다 이마를 쿵!</p>
-        <p className="mt-1 text-[14px] opacity-75 break-keep">아무도 안 멈추면 둘 다 져요. 누군가는 겁을 먹어야…</p>
-      </>
-    );
+  const w = winnerOf(o);
+  const nameOf = (s: SideKey) => (s === "left" ? left.name : right.name);
+  let head: string;
+  let tone: "win" | "lose" | "draw";
+  if (o.kind === "bonk") {
+    head = "둘 다 패배 💥";
+    tone = "lose";
+  } else if (!w) {
+    head = "무승부!";
+    tone = "draw";
+  } else if (me) {
+    head = w === me ? "이겼다! 🏆" : "졌다… 😵";
+    tone = w === me ? "win" : "lose";
   } else {
-    line = (
-      <>
-        <p className="text-[13px] opacity-60">남은 빼빼로</p>
-        <p className="pp-display text-[52px] leading-none text-[#5b3221]">
-          {cm(outcome.rest)}
-          <span className="text-[22px]">cm</span>
-        </p>
-        <p className="pp-display mt-2 text-[20px] text-[#e0577b]">{outcome.tier.title}</p>
-        <p className="mt-1 text-[13.5px] opacity-75 break-keep">{outcome.tier.line}</p>
-      </>
-    );
+    head = `${nameOf(w)} 승리! 🏆`;
+    tone = "win";
   }
 
+  const line =
+    o.kind === "bite"
+      ? `${nameOf(o.biter)}님이 욕심내다 ${nameOf(o.biter === "left" ? "right" : "left")}님 입술을 앙! 깨문 사람이 져요.`
+      : o.kind === "bonk"
+        ? "둘 다 끝까지 안 멈추다 이마를 쿵! 둘 다 졌어요."
+        : `${o.tier.title} — ${o.tier.line}`;
+
   return (
-    <div className="pp-result mt-4">
-      <div className="text-center">
-        <p className={`pp-display pp-pop text-[34px] ${w === me ? "text-[#e0577b]" : "text-[#5b3221]"}`}>{head}</p>
-        <div className="mt-2">{line}</div>
+    <Sheet className="pp-result">
+      {score && <p className="pp-display pp-score">나 {score} 컴퓨터</p>}
+      <p className={`pp-display pp-result-head pp-result-${tone}`}>{head}</p>
+      <div className="pp-result-bars">
+        <ResultBar name={left.name} mm={o.left} side="left" win={w === "left"} />
+        <ResultBar name={right.name} mm={o.right} side="right" win={w === "right"} />
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2 text-center text-[13px]">
-        {(["left", "right"] as const).map((s) => (
-          <div key={s} className={`pp-eat pp-eat-${s}`}>
-            <b className="block truncate">
-              {names[s]}
-              {s === me ? " (나)" : ""}
-            </b>
-            <span className="pp-display text-[20px]">{cm(outcome[s])}</span>cm 먹음
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 grid gap-2">{children}</div>
+      <p className="pp-sheet-text mt-2">{line}</p>
+      <div className="mt-3">{children}</div>
+    </Sheet>
+  );
+}
+
+function ResultBar({ name, mm, side, win }: { name: string; mm: number; side: SideKey; win: boolean }) {
+  return (
+    <div className={`pp-bar pp-bar-${side}`}>
+      <span className="pp-display pp-bar-name">
+        {win && "👑 "}
+        {name}
+      </span>
+      <span className="pp-bar-track">
+        <span className="pp-bar-fill" style={{ width: `${Math.min(100, (mm / STICK_MM) * 100)}%` }} />
+      </span>
+      <span className="pp-display pp-bar-cm">{cm(mm)}cm</span>
     </div>
   );
 }
 
-/* ───────────── 작은 조각들 ───────────── */
+/* ───────────── 조각들 ───────────── */
+
+function Sheet({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <div className="pp-sheet-wrap">
+      <section className={`pp-sheet ${className}`}>{children}</section>
+    </div>
+  );
+}
 
 function NameField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <label className="mt-4 block">
-      <span className="sr-only">내 이름</span>
+    <label className="block">
+      <span className="pp-display pp-label">내 이름</span>
       <input
-        className="pp-input text-center"
+        className="pp-input"
         value={value}
         maxLength={NAME_MAX * 2}
-        placeholder="내 이름 (안 적으면 「나」)"
-        onChange={(e) => onChange([...e.target.value].slice(0, NAME_MAX).join(""))}
+        placeholder="이름(최대 8글자)"
+        onChange={(e) => onChange(e.target.value)}
+        enterKeyHint="done"
       />
     </label>
   );
@@ -619,32 +658,38 @@ function NameField({ value, onChange }: { value: string; onChange: (v: string) =
 
 function Rules() {
   return (
-    <details className="pp-rules mt-5 text-[13.5px]">
-      <summary className="cursor-pointer font-bold">어떻게 하는 거예요?</summary>
-      <ol className="mt-2 list-decimal space-y-1 pl-5 opacity-80 break-keep">
-        <li>「3·2·1·냠!」 하면 버튼을 꾹 누르는 동안 막대를 먹어요. 갈수록 빨라져요.</li>
-        <li>손을 떼면 그 자리에서 멈춰요. 그 판에선 다시 못 먹어요.</li>
-        <li>둘 다 멈추면 더 많이 먹은 사람이 이겨요.</li>
-        <li>상대가 멈췄는데 계속 먹으면 입술을 앙 — 깨문 사람이 져요 🩹</li>
-        <li>둘 다 끝까지 안 멈추면 이마를 쿵 — 둘 다 져요 💥</li>
-      </ol>
-      <p className="mt-2 opacity-60 break-keep">대결 중 누른·뗀 시각만 실시간으로 오가고, 아무것도 저장하지 않아요.</p>
-    </details>
+    <ol className="pp-rules">
+      <li>
+        <b>꾹 누르는 동안</b> 막대과자를 먹어요. 갈수록 빨라지고, <b>손을 떼면 멈춰요.</b>
+      </li>
+      <li>
+        도전장 링크를 보내면 친구도 <b>내 기록을 모른 채</b> 정해요.
+      </li>
+      <li>
+        둘을 겹쳐 <b>동시에 먹는 장면</b>이 공개돼요. 더 많이 먹은 사람이 이겨요.
+      </li>
+      <li>
+        만나 버리면? 아직 먹고 있던 사람이 멈춘 사람 입술을 <b>앙!</b> — 깨문 사람이 져요. 둘 다 먹고 있었으면
+        이마를 <b>쿵!</b> 둘 다 패배.
+      </li>
+    </ol>
   );
 }
 
 function useToast(): [string | null, (text: string) => void] {
   const [text, setText] = useState<string | null>(null);
-  const say = (next: string) => {
+  const timer = useRef(0);
+  const say = useCallback((next: string) => {
     setText(next);
-    window.setTimeout(() => setText((cur) => (cur === next ? null : cur)), 2600);
-  };
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setText(null), 2400);
+  }, []);
   return [text, say];
 }
 
 function Toast({ text }: { text: string | null }) {
   return (
-    <p aria-live="polite" className={`pp-toast ${text ? "pp-toast-on" : ""}`}>
+    <p aria-live="polite" className={`pp-toast pp-display ${text ? "pp-toast-on" : ""}`}>
       {text}
     </p>
   );

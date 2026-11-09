@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  decodeChallenge,
+  decodeResult,
   dist,
+  eatenOf,
+  encodeChallenge,
+  encodeResult,
+  judge,
   eatenAt,
   type Input,
-  isRoomCode,
   meetAt,
-  newRoomCode,
   PRESS_WINDOW,
   STICK_MM,
   viewAt,
@@ -79,9 +83,30 @@ describe("판정", () => {
   });
 });
 
-describe("방 번호", () => {
-  it("만든 번호는 늘 올바른 꼴", () => {
-    for (let i = 0; i < 50; i++) expect(isRoomCode(newRoomCode())).toBe(true);
-    expect(isRoomCode("ABC10O")).toBe(false);
+describe("링크", () => {
+  it("도전장·결과 코드는 되돌리면 같고, 주소만 봐서는 기록이 안 보인다", () => {
+    const a = { name: "주원🍫", press: 0.25, release: 3.1 };
+    const b = { name: "친구", press: null, release: null };
+    const c = encodeChallenge(a);
+    expect(c).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(c).not.toContain("3100");
+    expect(decodeChallenge(c)).toEqual(a);
+    expect(decodeResult(encodeResult(a, b))).toEqual({ left: a, right: b });
+  });
+
+  it("망가진 코드는 null", () => {
+    expect(decodeChallenge("abc")).toBeNull();
+    expect(decodeResult(encodeChallenge({ name: "a", press: 0, release: 1 }))).toBeNull();
+  });
+
+  it("따로 정한 두 차례를 겹쳐서 판정한다", () => {
+    const l = { name: "a", press: 0, release: 2 }; // 32mm
+    const r = { name: "b", press: 0, release: 3 }; // 54mm
+    expect(eatenOf(l)).toBeCloseTo(32);
+    const o = judge(l, r);
+    expect(o.kind).toBe("ok");
+    expect(winnerOf(o)).toBe("right");
+    // 오른쪽이 욕심내다 왼쪽이 멈춘 뒤에 만나면 오른쪽이 깨문다
+    expect(judge(l, { name: "b", press: 0, release: 6 }).kind).toBe("bite");
   });
 });

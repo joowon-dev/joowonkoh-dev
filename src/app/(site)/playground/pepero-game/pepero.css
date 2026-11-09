@@ -1,13 +1,24 @@
 /* 빼빼로 게임 페이지 전용. 이 페이지 밖에는 쓰지 않는다(이름에 pp- 를 붙였다). */
 
-.pp-page {
-  color: #4a2f27;
+.pp-app {
+  --ink: #2b1a2e;
+  --pink: #ff5c8a;
+  --mint: #2fd1a4;
+  --gold: #ffd84d;
+  --cream: #fff7ef;
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", system-ui, sans-serif;
-  /* 딸기우유색 바탕에 비스듬한 줄무늬 — 과자 상자 느낌만 살짝. */
+  /* 밤 무대 — 위에서 떨어지는 조명 두 줄기 */
   background:
-    radial-gradient(60% 40% at 50% 0%, rgba(255, 255, 255, 0.9), transparent 70%),
-    repeating-linear-gradient(-35deg, transparent 0 34px, rgba(255, 143, 171, 0.09) 34px 52px),
-    linear-gradient(180deg, #fff4ec 0%, #ffe6ec 100%);
+    radial-gradient(42% 60% at 28% -8%, rgba(255, 120, 170, 0.45), transparent 70%),
+    radial-gradient(42% 60% at 72% -8%, rgba(80, 230, 190, 0.35), transparent 70%),
+    radial-gradient(80% 55% at 50% 100%, rgba(255, 92, 138, 0.45), transparent 70%),
+    linear-gradient(180deg, #1c0f33 0%, #3a1650 55%, #5a1d5e 100%);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .pp-display {
@@ -16,153 +27,869 @@
   letter-spacing: -0.01em;
 }
 
-.pp-card {
-  position: relative;
-  background: #fffaf5;
-  border: 3px solid #4a2f27;
-  border-radius: 28px;
-  padding: 20px 16px;
-  box-shadow: 0 6px 0 #4a2f27;
+.pp-impact {
+  font-family: "Black Han Sans", "Jua", system-ui, sans-serif;
 }
 
-@media (min-width: 480px) {
-  .pp-card {
-    padding: 24px 22px;
+/* ───── 위 막대 ───── */
+
+.pp-topbar {
+  position: absolute;
+  z-index: 50;
+  top: max(10px, env(safe-area-inset-top));
+  left: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.pp-topbar > * {
+  pointer-events: auto;
+}
+
+.pp-chip {
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: rgba(255, 247, 239, 0.92);
+  padding: 4px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 2px 0 var(--ink);
+}
+
+/* ───── 3D 위 글자 ───── */
+
+.pp-3d {
+  z-index: 0;
+}
+
+.pp-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.pp-tag > * {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+
+.pp-name {
+  color: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 1px 12px 2px;
+  font-size: 15px;
+  box-shadow: 0 2px 0 var(--ink);
+}
+
+.pp-bubble {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 17px;
+  box-shadow: 0 3px 0 var(--ink);
+  animation: pp-pop 0.28s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.pp-half {
+  color: var(--gold);
+  font-size: 12px;
+  text-shadow: 0 1px 0 var(--ink);
+  opacity: 0.9;
+}
+
+.pp-piece {
+  background: #5b3221;
+  color: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 2px 12px;
+  font-size: 16px;
+  animation: pp-pop 0.4s 0.3s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.pp-burst {
+  font-family: "Black Han Sans", "Jua", system-ui, sans-serif;
+  font-size: clamp(64px, 16vmin, 120px);
+  color: #fff;
+  -webkit-text-stroke: 4px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 6px 0 var(--pink);
+  animation: pp-burst 0.5s cubic-bezier(0.3, 1.8, 0.5, 1) both;
+}
+
+.pp-qmark {
+  font-size: 54px;
+  color: #d9c8ff;
+  text-shadow: 0 0 18px rgba(170, 140, 255, 0.9);
+  animation: pp-float 1.6s ease-in-out infinite;
+}
+
+@keyframes pp-pop {
+  from {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
   }
 }
 
-.pp-step {
-  display: inline-grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: #5b3221;
-  color: #fff6ec;
+@keyframes pp-burst {
+  from {
+    transform: translate(-50%, -50%) scale(3) rotate(-12deg);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1) rotate(-6deg);
+    opacity: 1;
+  }
+}
+
+@keyframes pp-float {
+  50% {
+    transform: translate(-50%, -62%);
+  }
+}
+
+/* ───── 연출: 집중선·테두리·번쩍 ───── */
+
+.pp-speedlines {
+  position: absolute;
+  z-index: 1;
+  inset: -25%;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0deg 4deg,
+    rgba(255, 255, 255, 0.5) 4deg 4.6deg,
+    transparent 4.6deg 9deg
+  );
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 30%, #000 68%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 30%, #000 68%);
+  opacity: calc(var(--heat, 0) * 0.85);
+  animation: pp-lines 0.14s steps(2) infinite;
+  transition: opacity 0.2s;
+}
+
+.pp-speedlines-soft {
+  opacity: 0.18;
+  animation-duration: 0.6s;
+}
+
+@keyframes pp-lines {
+  50% {
+    transform: rotate(2deg) scale(1.03);
+  }
+}
+
+.pp-vignette {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(255, 30, 70, 0.75) 100%);
+  opacity: var(--danger, 0);
+  animation: pp-throb 0.5s ease-in-out infinite;
+}
+
+@keyframes pp-throb {
+  50% {
+    filter: brightness(1.4);
+  }
+}
+
+.pp-flash {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+  background: #fff;
+  animation: pp-flash 0.45s ease-out both;
+}
+
+.pp-flash-hold {
+  background: rgba(255, 255, 255, 0.25);
+  animation: none;
+  backdrop-filter: grayscale(1) contrast(1.4);
+  -webkit-backdrop-filter: grayscale(1) contrast(1.4);
+}
+
+@keyframes pp-flash {
+  from {
+    opacity: 0.95;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ───── 내 차례·공개 화면 ───── */
+
+.pp-surface {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+}
+
+.pp-hud-top {
+  position: absolute;
+  z-index: 4;
+  top: calc(max(10px, env(safe-area-inset-top)) + 40px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.pp-hud-chip {
+  color: #fff;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.pp-meter {
+  font-family: "Black Han Sans", "Jua", system-ui, sans-serif;
+  font-size: clamp(64px, 19vmin, 128px);
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 3px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 5px 0 var(--pink);
+  font-variant-numeric: tabular-nums;
+}
+
+.pp-meter small {
+  font-size: 0.38em;
+  margin-left: 4px;
+}
+
+.pp-meter-hot {
+  color: var(--gold);
+  animation: pp-jitter 0.08s steps(2) infinite;
+}
+
+@keyframes pp-jitter {
+  50% {
+    transform: translate(1.5px, -1px) rotate(-0.6deg);
+  }
+}
+
+.pp-warn {
+  margin-top: 6px;
+  max-width: 30ch;
+  color: #fff;
   font-size: 16px;
+  background: rgba(43, 26, 46, 0.55);
+  border-radius: 999px;
+  padding: 4px 14px;
+  word-break: keep-all;
+}
+
+.pp-warn-hot {
+  background: #ff2d55;
+  animation: pp-jitter 0.1s steps(2) infinite;
+}
+
+.pp-center {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.pp-center-low {
+  align-items: end;
+  padding-bottom: 22vh;
+}
+
+.pp-count,
+.pp-title-pop,
+.pp-stamp {
+  font-family: "Black Han Sans", "Jua", system-ui, sans-serif;
+  color: #fff;
+  -webkit-text-stroke: 5px var(--ink);
+  paint-order: stroke fill;
+}
+
+.pp-count {
+  font-size: clamp(120px, 34vmin, 240px);
+  text-shadow: 0 8px 0 var(--pink);
+  animation: pp-count 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.pp-count-go {
+  color: var(--gold);
+  text-shadow: 0 8px 0 var(--pink);
+}
+
+.pp-title-pop {
+  font-size: clamp(56px, 14vmin, 110px);
+  text-shadow: 0 6px 0 var(--mint);
+  animation: pp-count 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.pp-stamp {
+  font-size: clamp(72px, 20vmin, 150px);
+  color: var(--gold);
+  text-shadow: 0 7px 0 #ff2d55;
+  animation: pp-stamp 0.35s cubic-bezier(0.3, 1.8, 0.5, 1) both;
+}
+
+@keyframes pp-count {
+  from {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pp-stamp {
+  from {
+    transform: scale(3) rotate(-25deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(-8deg);
+    opacity: 1;
+  }
+}
+
+.pp-slowmo {
+  font-family: "Black Han Sans", "Jua", system-ui, sans-serif;
+  font-size: 28px;
+  letter-spacing: 0.3em;
+  color: #fff;
+  opacity: 0.75;
+  animation: pp-throb 0.6s infinite;
+}
+
+.pp-hud-bottom {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.pp-hold {
+  width: min(100%, 420px);
+  min-height: 74px;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--pink);
+  color: #fff;
+  font-size: 22px;
+  box-shadow: 0 7px 0 var(--ink);
+  transition:
+    transform 0.08s,
+    box-shadow 0.08s,
+    background 0.2s;
+}
+
+.pp-hold-on {
+  transform: translateY(5px) scale(0.98);
+  box-shadow: 0 2px 0 var(--ink);
+  background: #ff2d6a;
+  animation: pp-jitter 0.09s steps(2) infinite;
+}
+
+.pp-hold-urgent {
+  animation: pp-urgent 0.5s ease-in-out infinite;
+  background: #ff9f1c;
+}
+
+.pp-hold-off {
+  background: var(--cream);
+  color: var(--ink);
+}
+
+@keyframes pp-urgent {
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.pp-hud-sub {
+  color: #fff;
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+/* 공개 화면 위 점수판 */
+.pp-hud-duel {
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.pp-duel-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+  max-width: 180px;
+  border: 2.5px solid var(--ink);
+  border-radius: 18px;
+  padding: 4px 8px 6px;
+  color: #fff;
+  box-shadow: 0 4px 0 var(--ink);
+}
+
+.pp-duel-left {
+  background: #ff6f96;
+}
+
+.pp-duel-right {
+  background: #2fae8a;
+}
+
+.pp-duel-name {
+  font-size: 14px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp-duel-cm {
+  font-family: "Black Han Sans", "Jua", system-ui, sans-serif;
+  font-size: clamp(30px, 8vmin, 46px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+}
+
+.pp-duel-cm small {
+  font-size: 0.45em;
+}
+
+.pp-duel-gap {
+  align-self: center;
+  background: var(--cream);
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.pp-duel-gap-hot {
+  background: #ff2d55;
+  color: #fff;
+  animation: pp-jitter 0.1s steps(2) infinite;
+}
+
+/* VS 화면 */
+.pp-vs {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.pp-vs-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 62%;
+  display: flex;
+  align-items: center;
+  border-block: 0;
+  color: #fff;
+  font-size: clamp(40px, 12vmin, 96px);
+  -webkit-text-stroke: 3px var(--ink);
+  paint-order: stroke fill;
+}
+
+.pp-vs-left {
+  left: -6%;
+  justify-content: center;
+  padding-right: 10%;
+  padding-bottom: 28vh;
+  background: linear-gradient(135deg, #ff6f96, #ff3d7a);
+  clip-path: polygon(0 0, 100% 0, 82% 100%, 0 100%);
+  animation: pp-in-left 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both, pp-out 0.3s 1.55s ease-in both;
+}
+
+.pp-vs-right {
+  right: -6%;
+  justify-content: center;
+  padding-left: 10%;
+  padding-top: 28vh;
+  background: linear-gradient(135deg, #3fe0b4, #1fa985);
+  clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
+  animation: pp-in-right 0.35s 0.08s cubic-bezier(0.2, 1.4, 0.4, 1) both, pp-out 0.3s 1.55s ease-in both;
+}
+
+.pp-vs-mark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Black Han Sans", "Jua", system-ui, sans-serif;
+  font-size: clamp(100px, 30vmin, 220px);
+  color: var(--gold);
+  -webkit-text-stroke: 6px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 8px 0 var(--ink);
+  animation: pp-vs-slam 0.4s 0.3s cubic-bezier(0.3, 1.8, 0.5, 1) both, pp-out 0.3s 1.55s ease-in both;
+}
+
+.pp-vs-sub {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12vh;
+  text-align: center;
+  color: #fff;
+  font-size: 18px;
+  text-shadow: 0 2px 0 var(--ink);
+  animation: pp-out 0.3s 1.55s ease-in both;
+}
+
+@keyframes pp-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes pp-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pp-vs-slam {
+  from {
+    transform: scale(4) rotate(-20deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(-6deg);
+    opacity: 1;
+  }
+}
+
+@keyframes pp-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* ───── 처음 화면 제목 ───── */
+
+.pp-hero {
+  position: absolute;
+  z-index: 4;
+  top: calc(max(10px, env(safe-area-inset-top)) + 46px);
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.pp-hero-kicker {
+  display: inline-block;
+  background: var(--gold);
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 2px 14px;
+  font-size: 16px;
+  box-shadow: 0 3px 0 var(--ink);
+  transform: rotate(-2deg);
+}
+
+.pp-hero-title {
+  margin-top: 8px;
+  font-family: "Black Han Sans", "Jua", system-ui, sans-serif;
+  font-size: clamp(52px, 13vmin, 96px);
+  line-height: 0.98;
+  color: #fff;
+  -webkit-text-stroke: 4px var(--ink);
+  paint-order: stroke fill;
+  text-shadow:
+    0 6px 0 var(--pink),
+    0 12px 0 var(--ink);
+  transform: rotate(-3deg);
+  animation: pp-count 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  word-break: keep-all;
+}
+
+.pp-hero-title-sm {
+  font-size: clamp(34px, 8vmin, 60px);
+  line-height: 1.12;
+}
+
+.pp-vs-inline {
+  color: var(--gold);
+}
+
+/* ───── 아래 패널 ───── */
+
+.pp-sheet-wrap {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 12px max(12px, env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.pp-sheet {
+  pointer-events: auto;
+  width: min(100%, 440px);
+  max-height: 72dvh;
+  overflow-y: auto;
+  background: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 26px;
+  padding: 16px 16px 14px;
+  box-shadow: 0 6px 0 var(--ink);
+  animation: pp-rise 0.35s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes pp-rise {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+.pp-sheet-kicker {
+  color: var(--pink);
+  font-size: 16px;
+}
+
+.pp-sheet-title {
+  font-size: 26px;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+
+.pp-sheet-text {
+  font-size: 14.5px;
+  line-height: 1.55;
+  opacity: 0.85;
+  word-break: keep-all;
+}
+
+.pp-pink {
+  color: var(--pink);
+}
+
+.pp-label {
+  display: block;
+  font-size: 14px;
+  margin: 2px 0 4px;
 }
 
 .pp-input {
   width: 100%;
-  border: 2.5px solid #4a2f27;
-  border-radius: 16px;
+  border: 2.5px solid var(--ink);
+  border-radius: 14px;
   background: #fff;
-  padding: 10px 14px;
+  padding: 9px 14px;
   font-size: 16px; /* 16px 밑이면 iOS 가 확대해 버린다 */
   outline: none;
 }
 
 .pp-input:focus {
-  border-color: #e0577b;
-  box-shadow: 0 0 0 3px rgba(224, 87, 123, 0.2);
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px rgba(255, 92, 138, 0.25);
 }
 
 .pp-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 50px;
-  padding: 0 20px;
-  border: 3px solid #4a2f27;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 3px solid var(--ink);
   border-radius: 999px;
-  background: #e0577b;
+  background: var(--pink);
   color: #fff;
   font-family: "Jua", "Apple SD Gothic Neo", system-ui, sans-serif;
-  font-size: 18px;
-  box-shadow: 0 4px 0 #4a2f27;
-  transition: transform 0.08s, box-shadow 0.08s;
-  -webkit-tap-highlight-color: transparent;
+  font-size: 17px;
+  box-shadow: 0 4px 0 var(--ink);
+  transition:
+    transform 0.08s,
+    box-shadow 0.08s;
 }
 
 .pp-btn:active {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 #4a2f27;
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.pp-btn-big {
+  min-height: 60px;
+  font-size: 21px;
+  background: linear-gradient(180deg, #ff7aa0, #ff3d7a);
+  animation: pp-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes pp-glow {
+  50% {
+    box-shadow:
+      0 4px 0 var(--ink),
+      0 0 22px rgba(255, 92, 138, 0.8);
+  }
 }
 
 .pp-btn-ghost {
   background: #fff;
-  color: #4a2f27;
-  font-size: 16px;
+  color: var(--ink);
+  font-size: 15px;
 }
 
-.pp-chip {
-  border: 2px solid #4a2f27;
-  border-radius: 999px;
-  background: #fffaf5;
-  padding: 4px 12px;
-  font-size: 13px;
-  font-weight: 700;
+.pp-rules {
+  margin-top: 12px;
+  padding-left: 20px;
+  list-style: decimal;
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: keep-all;
 }
 
-/* 슬라이더 — 막대과자 모양 */
-.pp-range {
-  appearance: none;
-  -webkit-appearance: none;
-  height: 34px;
-  background: transparent;
+.pp-rules li + li {
+  margin-top: 4px;
 }
 
-.pp-range::-webkit-slider-runnable-track {
-  height: 12px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #e8b46c 0 10%, #5b3221 10% 100%);
-  border: 2px solid #4a2f27;
-}
-
-.pp-range::-moz-range-track {
-  height: 12px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #e8b46c 0 10%, #5b3221 10% 100%);
-  border: 2px solid #4a2f27;
-}
-
-.pp-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 30px;
-  height: 30px;
-  margin-top: -11px;
-  border-radius: 50%;
-  background: #fff;
-  border: 3px solid #e0577b;
-  box-shadow: 0 2px 0 #4a2f27;
-}
-
-.pp-range::-moz-range-thumb {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #fff;
-  border: 3px solid #e0577b;
-}
-
-.pp-rules summary {
-  list-style: none;
+/* 결과 */
+.pp-score {
   text-align: center;
-  opacity: 0.75;
+  font-size: 14px;
+  opacity: 0.7;
 }
 
-.pp-rules summary::-webkit-details-marker {
-  display: none;
+.pp-result-head {
+  text-align: center;
+  font-family: "Black Han Sans", "Jua", system-ui, sans-serif;
+  font-size: 40px;
+  line-height: 1.1;
+  animation: pp-count 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.pp-result-win {
+  color: var(--pink);
+}
+
+.pp-result-lose {
+  color: #6b4f8f;
+}
+
+.pp-result-draw {
+  color: #c98a00;
+}
+
+.pp-result-bars {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.pp-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 6.5em) 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.pp-bar-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp-bar-track {
+  height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.pp-bar-fill {
+  display: block;
+  height: 100%;
+  animation: pp-fill 0.7s 0.15s cubic-bezier(0.2, 1, 0.3, 1) both;
+  transform-origin: left;
+}
+
+.pp-bar-left .pp-bar-fill {
+  background: #ff6f96;
+}
+
+.pp-bar-right .pp-bar-fill {
+  background: #2fae8a;
+}
+
+@keyframes pp-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.pp-bar-cm {
+  font-variant-numeric: tabular-nums;
 }
 
 /* 알림 */
 .pp-toast {
-  position: fixed;
+  position: absolute;
+  z-index: 60;
   left: 50%;
-  bottom: 24px;
-  z-index: 50;
-  max-width: calc(100vw - 32px);
-  transform: translate(-50%, 20px);
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: #4a2f27;
-  color: #fff6ec;
-  font-size: 14px;
+  top: calc(max(10px, env(safe-area-inset-top)) + 48px);
+  transform: translate(-50%, -12px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s, transform 0.2s;
-  text-align: center;
-  word-break: keep-all;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 15px;
+  white-space: nowrap;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
 }
 
 .pp-toast-on {
@@ -170,639 +897,16 @@
   transform: translate(-50%, 0);
 }
 
-/* 캐릭터 고르기 */
-.pp-pick {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 2px 6px;
-  border: 2.5px solid #e9dcd0;
-  border-radius: 18px;
-  background: #fff;
-  transition: transform 0.15s, border-color 0.15s, background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.pp-pick svg {
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--tint) 22%, #fff);
-}
-.pp-pick-on {
-  border-color: #4a2f27;
-  background: color-mix(in srgb, var(--tint) 18%, #fff);
-  transform: translateY(-3px);
-  box-shadow: 0 3px 0 #4a2f27;
-}
-
-/* ── 3D 무대 위 글자 ── */
-.pp-3d-loading {
-  border-radius: 20px;
-  background: radial-gradient(60% 40% at 50% 80%, #fbe7dc, transparent 70%);
-  animation: pp-breathe 1.2s ease-in-out infinite;
-}
-.pp-3d .pp-tag {
-  position: absolute;
-  left: 0;
-  top: 0;
-  pointer-events: none;
-  visibility: hidden;
-  will-change: transform;
-}
-.pp-3d .pp-tag > * {
-  display: inline-block;
-  translate: -50% -50%;
-  white-space: nowrap;
-}
-.pp-name {
-  padding: 2px 11px;
-  border: 2px solid;
-  border-radius: 999px;
-  background: #fffaf3;
-  font-size: 12.5px;
-  font-weight: 700;
-}
-.pp-3d .pp-tag > .pp-bubble {
-  position: relative;
-  translate: -50% -100%;
-  padding: 3px 12px;
-  border: 2px solid #4a2f27;
-  border-radius: 999px;
-  background: #fff;
-  font-size: 15px;
-  animation: pp-pop 0.35s cubic-bezier(0.3, 1.6, 0.6, 1) both;
-}
-.pp-bubble::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -7px;
-  width: 10px;
-  height: 10px;
-  translate: -50% 0;
-  rotate: 45deg;
-  background: #fff;
-  border-right: 2px solid #4a2f27;
-  border-bottom: 2px solid #4a2f27;
-}
-.pp-picklabel {
-  padding: 3px 12px;
-  border-radius: 999px;
-  color: #fff;
-  font-size: 14px;
-}
-.pp-drop-in {
-  animation: pp-drop 0.45s cubic-bezier(0.3, 1.6, 0.6, 1) 0.45s both;
-}
-.pp-burst {
-  display: grid !important;
-  place-items: center;
-  width: 92px;
-  height: 70px;
-  background: #ff5f7e;
-  color: #fff;
-  font-size: 26px;
-  clip-path: polygon(50% 0, 60% 26%, 88% 8%, 76% 38%, 100% 50%, 76% 62%, 88% 92%, 60% 74%, 50% 100%, 40% 74%, 12% 92%, 24% 62%, 0 50%, 24% 38%, 12% 8%, 40% 26%);
-  text-shadow: 0 2px 0 #4a2f27;
-  animation: pp-pop 0.35s cubic-bezier(0.3, 1.8, 0.6, 1) both;
-}
-.pp-flash-dom {
-  background: #fff;
-  border-radius: 20px;
-  animation: pp-flash 0.3s ease-out both;
-}
-.pp-qmark {
-  color: #a99a8c;
-  font-size: 34px;
-  animation: pp-float 1.6s ease-in-out infinite alternate;
-}
-
-/* ── 움직임 ── */
-
-/* 가만히 있어도 숨 쉰다 */
-.pp-breathe {
-  animation: pp-breathe 2.6s ease-in-out infinite;
-}
-@keyframes pp-breathe {
-  50% {
-    transform: translateY(-1.2px);
-  }
-}
-
-/* 팔은 표정이 바뀔 때 부드럽게 */
-.pp-arm {
-  transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
-}
-
-/* 오물거리는 볼 */
-.pp-cheek {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pp-cheek 0.18s ease-in-out infinite alternate;
-}
-@keyframes pp-cheek {
-  to {
-    transform: scale(1.25, 1.12);
-  }
-}
-
-/* 땀방울이 주르륵 */
-.pp-sweat {
-  animation: pp-sweat 1s ease-in infinite;
-}
-@keyframes pp-sweat {
-  0% {
-    transform: translateY(-2px);
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(9px);
-    opacity: 0;
-  }
-}
-
-/* 긴장한 눈동자가 떨린다 */
-.pp-jitter {
-  animation: pp-jitter 0.18s steps(2) infinite;
-}
-@keyframes pp-jitter {
-  50% {
-    transform: translateX(-0.8px);
-  }
-}
-
-/* 포니테일 살랑 */
-.pp-sway {
-  animation: pp-sway 1.4s ease-in-out infinite alternate;
-}
-@keyframes pp-sway {
-  from {
-    transform: rotate(-6deg);
-  }
-  to {
-    transform: rotate(8deg);
-  }
-}
-
-/* 머리 위를 도는 별 */
-.pp-orbit {
-  animation: pp-orbit 1.1s linear infinite;
-}
-@keyframes pp-orbit {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 깨물렸다 — 펄쩍 */
-.pp-hop {
-  animation: pp-hop 0.55s cubic-bezier(0.3, 0, 0.4, 1) both;
-}
-@keyframes pp-hop {
-  0% {
-    transform: translateY(0);
-  }
-  35% {
-    transform: translateY(-14px) rotate(-4deg);
-  }
-  70% {
-    transform: translateY(2px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-.pp-bandage {
-  animation: pp-pop 0.35s cubic-bezier(0.3, 1.6, 0.6, 1) 0.5s both;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.pp-float {
-  animation: pp-float 1.6s ease-in-out infinite alternate;
-}
-@keyframes pp-float {
-  to {
-    transform: translateY(-5px);
-  }
-}
-
-/* 똑 부러진 조각이 빙글 돌며 튀어 오른다 */
-.pp-fly {
-  animation: pp-fly 0.7s cubic-bezier(0.2, 0.9, 0.4, 1) both;
-}
-@keyframes pp-fly {
-  0% {
-    transform: translateY(0) rotate(0);
-  }
-  55% {
-    transform: translateY(-62px) rotate(300deg);
-  }
-  100% {
-    transform: translateY(-50px) rotate(360deg);
-  }
-}
-
-/* 남은 길이 자가 위에서 툭 */
-.pp-drop {
-  animation: pp-drop 0.45s cubic-bezier(0.3, 1.6, 0.6, 1) both;
-}
-@keyframes pp-drop {
-  from {
-    transform: translateY(-24px) scale(0.6);
-    opacity: 0;
-  }
-}
-
-.pp-twinkle {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pp-twinkle 0.9s ease-in-out infinite;
-}
-@keyframes pp-twinkle {
-  0% {
-    transform: scale(0) rotate(0);
-  }
-  50% {
-    transform: scale(1.1) rotate(45deg);
-  }
-  100% {
-    transform: scale(0) rotate(90deg);
-  }
-}
-
-.pp-confetti {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pp-confetti 1.6s cubic-bezier(0.3, 0.2, 0.6, 1) both;
-}
-@keyframes pp-confetti {
-  from {
-    transform: translateY(0) rotate(0);
-  }
-  to {
-    transform: translateY(240px) rotate(540deg);
-  }
-}
-
-/* 깨무는 순간 번쩍 */
-.pp-flash {
-  animation: pp-flash 0.3s ease-out both;
-}
-@keyframes pp-flash {
-  from {
-    opacity: 0.85;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-/* 가까워지면 테두리가 분홍으로 두근 */
-.pp-tense {
-  animation: pp-tense 0.62s ease-in-out infinite;
-}
-@keyframes pp-tense {
-  0%,
-  100% {
-    box-shadow: inset 0 0 0 0 rgba(255, 111, 145, 0);
-  }
-  20% {
-    box-shadow: inset 0 0 36px 4px rgba(255, 111, 145, 0.35);
-  }
-}
-.pp-beat {
-  animation: pp-beat 0.62s ease-in-out infinite;
-}
-@keyframes pp-beat {
-  20% {
-    transform: scale(1.12);
-  }
-}
-
-
-/* 먹는 동안 입술이 오물오물 */
-.pp-chomp-top {
-  animation: pp-chomp-top 0.16s ease-in-out infinite alternate;
-}
-.pp-chomp-bottom {
-  animation: pp-chomp-bottom 0.16s ease-in-out infinite alternate;
-}
-@keyframes pp-chomp-top {
-  to {
-    transform: translateY(-2.5px);
-  }
-}
-@keyframes pp-chomp-bottom {
-  to {
-    transform: translateY(2.5px);
-  }
-}
-
-/* 먹는 동안 머리가 콩콩 */
-.pp-bob {
-  animation: pp-bob 0.32s ease-in-out infinite alternate;
-}
-@keyframes pp-bob {
-  to {
-    transform: translateY(-1.5px);
-  }
-}
-
-.pp-blink {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pp-blink 3.6s infinite;
-}
-@keyframes pp-blink {
-  0%,
-  94%,
-  100% {
-    transform: scaleY(1);
-  }
-  97% {
-    transform: scaleY(0.1);
-  }
-}
-
-.pp-crumb {
-  animation: pp-crumb 0.8s cubic-bezier(0.3, 0, 0.7, 1) forwards;
-}
-@keyframes pp-crumb {
-  0% {
-    transform: translate(0, 0);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--dx), var(--dy));
-    opacity: 0;
-  }
-}
-
-.pp-tear {
-  animation: pp-tear 1.2s ease-in infinite;
-}
-@keyframes pp-tear {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-}
-
-.pp-pop {
-  animation: pp-pop 0.35s cubic-bezier(0.3, 1.6, 0.6, 1) both;
-}
-@keyframes pp-pop {
-  from {
-    transform: scale(0.2);
-    opacity: 0;
-  }
-}
-
-.pp-shake {
-  animation: pp-shake 0.4s ease-in-out;
-}
-@keyframes pp-shake {
-  20% {
-    transform: translateX(-6px);
-  }
-  40% {
-    transform: translateX(5px);
-  }
-  60% {
-    transform: translateX(-4px);
-  }
-  80% {
-    transform: translateX(2px);
-  }
-}
-
-/* 결과 카드는 먹는 장면이 끝난 뒤에 올라온다. */
-.pp-result {
-  animation: pp-rise 0.45s cubic-bezier(0.2, 1.2, 0.5, 1) both;
-}
-@keyframes pp-rise {
-  from {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .pp-chomp-top,
-  .pp-chomp-bottom,
-  .pp-bob,
-  .pp-blink,
-  .pp-shake,
-  .pp-tear,
-  .pp-breathe,
-  .pp-cheek,
-  .pp-sway,
-  .pp-jitter,
-  .pp-tense,
-  .pp-beat {
-    animation: none;
-  }
-}
-
-/* ───────────── 실시간 대결 ───────────── */
-
-.pp-arena {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
-/* 가까워질수록 화면 가장자리가 빨갛게 조여 온다 */
-.pp-vignette {
-  background: radial-gradient(ellipse at center, transparent 45%, rgba(224, 40, 80, 0.55) 100%);
-  transition: opacity 0.1s linear;
-}
-
-/* 3·2·1·냠! */
-.pp-count {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 96px;
-  color: #fff;
-  -webkit-text-stroke: 4px #4a2f27;
-  paint-order: stroke fill;
-  text-shadow: 0 6px 0 #4a2f27;
-  animation: pp-count 1s cubic-bezier(0.2, 1.4, 0.5, 1) both;
-}
-.pp-count-go {
-  color: #ff6f91;
-  font-size: 84px;
-  animation-duration: 0.6s;
-}
-@keyframes pp-count {
-  0% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-  25% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0.85);
-    opacity: 0;
-  }
-}
-
-/* 남은 길이 */
-.pp-gap {
-  position: absolute;
-  left: 50%;
-  top: 10px;
-  transform: translateX(-50%);
-  padding: 2px 14px;
-  border: 2.5px solid #4a2f27;
-  border-radius: 999px;
-  background: #fffaf5;
-  font-size: 18px;
-  white-space: nowrap;
-}
-.pp-gap-hot {
-  background: #ff6f91;
-  color: #fff;
-  animation: pp-beat 0.45s ease-in-out infinite;
-}
-
-/* 먹은 길이 칸 */
-.pp-eat {
-  position: relative;
-  border-radius: 16px;
-  padding: 6px 10px;
-  border: 2px solid transparent;
-}
-.pp-eat-left {
-  background: #ffe3ea;
-}
-.pp-eat-right {
-  background: #dcf3ea;
-}
-.pp-eat-me {
-  border-color: #4a2f27;
-}
-.pp-stopchip {
-  position: absolute;
-  top: -9px;
-  right: 6px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: #4a2f27;
-  color: #fff;
-  font-size: 11px;
-  animation: pp-pop 0.3s cubic-bezier(0.3, 1.6, 0.6, 1) both;
-}
-
-/* 꾹 누르는 큰 버튼 */
-.pp-hold {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  min-height: 96px;
-  border: 3px solid #4a2f27;
-  border-radius: 28px;
-  background: #5b3221;
-  color: #fff6ec;
-  font-size: 22px;
-  box-shadow: 0 7px 0 #4a2f27;
-  transition: transform 0.06s, box-shadow 0.06s, background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-.pp-hold-on {
-  transform: translateY(6px);
-  box-shadow: 0 1px 0 #4a2f27;
-  background: #e0577b;
-  animation: pp-munch 0.18s ease-in-out infinite alternate;
-}
-@keyframes pp-munch {
-  to {
-    background: #ea6b8c;
-  }
-}
-.pp-hold-off {
-  background: #d9cfc6;
-  color: #6b5a52;
-  box-shadow: 0 3px 0 #4a2f27;
-}
-.pp-hold-urgent {
-  animation: pp-shake 0.4s ease-in-out infinite;
-}
-
-/* 점수판 */
-.pp-score {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 10px;
-  font-size: 16px;
-}
-.pp-score b {
-  padding: 2px 14px;
-  border-radius: 999px;
-  background: #4a2f27;
-  color: #fff6ec;
-  font-weight: 400;
-  font-size: 20px;
-}
-
-.pp-btn:disabled {
-  cursor: default;
-}
-.pp-btn-wait {
-  background: #fff;
-  color: #4a2f27;
-  font-size: 16px;
-}
-
-.pp-waiting::after {
-  content: "";
-  animation: pp-dots 1.2s steps(4) infinite;
-}
-@keyframes pp-dots {
-  0% {
-    content: "";
-  }
-  25% {
-    content: ".";
-  }
-  50% {
-    content: "..";
-  }
-  75% {
-    content: "...";
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pp-count,
-  .pp-gap-hot,
+  .pp-speedlines,
+  .pp-vignette,
+  .pp-meter-hot,
+  .pp-warn-hot,
   .pp-hold-on,
-  .pp-hold-urgent {
+  .pp-hold-urgent,
+  .pp-duel-gap-hot,
+  .pp-btn-big,
+  .pp-qmark {
     animation: none;
   }
 }

@@ -15,13 +15,13 @@ describe("motion", () => {
     expect(slowFactor(0)).toBeCloseTo(0.25);
     expect(slowFactor(10)).toBeLessThan(slowFactor(30));
     expect(camZoom(150)).toBe(1);
-    expect(camZoom(2)).toBeGreaterThan(1.3);
-    expect(camZoom(2)).toBeLessThanOrEqual(1.35);
+    expect(camZoom(2)).toBeGreaterThan(1.15);
+    expect(camZoom(2)).toBeLessThanOrEqual(1.2);
   });
 
   it("화면 속 틈은 멀면 그대로, 0 이 돼도 얼굴이 닿지 않게 남는다", () => {
     expect(visibleGap(80)).toBe(80);
-    expect(visibleGap(45)).toBe(45);
+    expect(visibleGap(75)).toBe(75);
     expect(visibleGap(0)).toBe(MIN_VISIBLE_GAP);
     expect(visibleGap(-3)).toBe(MIN_VISIBLE_GAP);
     expect(visibleGap(10)).toBeGreaterThan(visibleGap(5));

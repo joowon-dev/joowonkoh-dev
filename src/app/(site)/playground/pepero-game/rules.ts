@@ -1,13 +1,14 @@
 /**
- * 실시간 빼빼로 게임의 규칙 — 화면·네트워크와 따로, 두 사람이 「언제 누르고 언제 뗐나」만으로 판정한다.
+ * 빼빼로 게임의 규칙 — 화면과 따로, 두 사람이 「언제 누르고 언제 뗐나」만으로 판정한다.
+ * 두 사람은 따로따로(링크로 차례를 주고받으며) 정하고, 결과는 둘을 같은 「냠!」에 겹쳐서 낸다.
  *
- * - 둘 다 버튼을 꾹 누르고 있는 동안 막대를 먹는다. 손을 떼면 그 자리에서 멈추고, 그 판에서는 다시 못 먹는다.
+ * - 버튼을 꾹 누르고 있는 동안 막대를 먹는다. 손을 떼면 그 자리에서 멈추고, 그 판에서는 다시 못 먹는다.
  * - 먹는 속도는 시간이 갈수록 빨라진다(누른 순간이 아니라 「시작!」부터 잰 시간 기준이라 둘에게 같다).
  * - 두 입이 만나는 순간: 한쪽만 먹고 있었으면 그 사람이 상대 입술을 깨물고 진다.
  *   둘 다 먹고 있었으면 이마를 「쿵」 — 둘 다 진다.
  * - 둘 다 멈추면 더 많이 먹은 사람이 이긴다. 남은 길이가 짧을수록 둘의 호흡 등급이 높다.
  *
- * 두 사람 화면이 같은 입력(누른 시각·뗀 시각)만 받으면 똑같은 결과를 낸다 — 서버가 판정할 필요가 없다.
+ * 같은 입력(누른 시각·뗀 시각)이면 어디서 다시 틀어도 똑같은 결과가 나온다 — 서버가 필요 없다.
  */
 
 export const STICK_MM = 150;
@@ -136,8 +137,96 @@ export function viewAt(l: Input, r: Input, now: number): View {
   return { t: now, left, right, outcome: null, pending: false };
 }
 
-/** 막대 위 한 자리(mm)로 — 무대에서 누른 자리를 고를 때 */
-export const clampMm = (mm: number) => Math.round(Math.min(STICK_MM - 1, Math.max(1, mm)));
+/** press 초에 누르기 시작해 mm 만큼 먹으려면 언제 떼야 하나 */
+export function timeToEat(press: number, mm: number) {
+  let lo = press;
+  let hi = press + 30;
+  for (let k = 0; k < 40; k++) {
+    const mid = (lo + hi) / 2;
+    if (dist(mid) - dist(press) >= mm) hi = mid;
+    else lo = mid;
+  }
+  return hi;
+}
+
+/** 혼자 하는 차례에서 이만큼 먹으면 상대 입술 바로 앞이라 저절로 멈춘다(mm) */
+export const AUTO_STOP = STICK_MM - 2;
+
+/* ───────────── 차례(한 사람이 정한 것) 와 링크 ───────────── */
+
+/** 한 사람의 차례 — 이름과 「냠!」부터 잰 누른·뗀 시각(초). 안 눌렀으면 둘 다 null. */
+export interface Turn {
+  name: string;
+  press: number | null;
+  release: number | null;
+}
+
+export const toInput = (t: Turn): Input => ({
+  press: t.press,
+  release: t.press === null ? null : (t.release ?? t.press),
+  until: Infinity,
+});
+
+export const eatenOf = (t: Turn) => (t.press === null ? 0 : eatenAt(toInput(t), Infinity));
+
+/** 링크 속 내용은 받는 사람이 주소만 보고 상대 기록을 알아채지 못하게 살짝 뒤섞는다(보안용 아님). */
+const KEY = [0x50, 0x65, 0x70, 0x65, 0x72, 0x6f, 0x21, 0x37, 0x11];
+
+function pack(obj: unknown): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let bin = "";
+  bytes.forEach((b, i) => {
+    bin += String.fromCharCode(b ^ KEY[i % KEY.length] ^ (i * 31) % 256);
+  });
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function unpack(code: string): unknown {
+  try {
+    const bin = atob(code.replace(/-/g, "+").replace(/_/g, "/"));
+    const bytes = Uint8Array.from(bin, (c, i) => c.charCodeAt(0) ^ KEY[i % KEY.length] ^ (i * 31) % 256);
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    return null;
+  }
+}
+
+type TurnRow = [string, number, number];
+const row = (t: Turn): TurnRow => [
+  t.name,
+  t.press === null ? -1 : Math.round(t.press * 1000),
+  t.press === null ? -1 : Math.round((t.release ?? t.press) * 1000),
+];
+
+function fromRow(x: unknown, fallback: string): Turn | null {
+  if (!Array.isArray(x) || x.length !== 3) return null;
+  const [n, p, r] = x;
+  if (typeof n !== "string" || typeof p !== "number" || typeof r !== "number") return null;
+  const name = cleanName(n, fallback);
+  if (p === -1) return { name, press: null, release: null };
+  if (!Number.isFinite(p) || !Number.isFinite(r) || p < 0 || p > PRESS_WINDOW * 1000 || r < p || r > 30000) return null;
+  return { name, press: p / 1000, release: r / 1000 };
+}
+
+/** 도전장 링크 속 코드 */
+export const encodeChallenge = (t: Turn) => pack({ v: 1, a: row(t) });
+export function decodeChallenge(code: string): Turn | null {
+  const o = unpack(code) as { v?: number; a?: unknown } | null;
+  return o && o.v === 1 ? fromRow(o.a, "도전자") : null;
+}
+
+/** 결과(둘 다 정한 것) 링크 속 코드 */
+export const encodeResult = (l: Turn, r: Turn) => pack({ v: 1, a: row(l), b: row(r) });
+export function decodeResult(code: string): { left: Turn; right: Turn } | null {
+  const o = unpack(code) as { v?: number; a?: unknown; b?: unknown } | null;
+  if (!o || o.v !== 1) return null;
+  const left = fromRow(o.a, "도전자");
+  const right = fromRow(o.b, "친구");
+  return left && right ? { left, right } : null;
+}
+
+/** 두 차례로 낸 최종 결과 */
+export const judge = (l: Turn, r: Turn): Outcome => viewAt(toInput(l), toInput(r), 60).outcome!;
 
 /** mm → "3.4" (cm, 소수 한 자리) */
 export const cm = (mm: number) => (Math.max(0, mm) / 10).toFixed(1);
@@ -146,10 +235,3 @@ export function cleanName(raw: string, fallback: string) {
   const s = [...raw.replace(/\s+/g, " ").trim()].slice(0, NAME_MAX).join("");
   return s || fallback;
 }
-
-/** 방 번호 — 헷갈리는 글자(0/O, 1/I/L) 뺀 6글자 */
-const ROOM_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-export function newRoomCode(rand: () => number = Math.random) {
-  return Array.from({ length: 6 }, () => ROOM_CHARS[Math.floor(rand() * ROOM_CHARS.length)]).join("");
-}
-export const isRoomCode = (s: string) => /^[2-9A-HJKMNP-Z]{6}$/.test(s);
