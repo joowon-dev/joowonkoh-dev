@@ -47,11 +47,11 @@ describe("판정", () => {
     expect(winnerOf(v.outcome)).toBe("left");
   });
 
-  it("상대가 멈췄는데 계속 먹으면 깨문다 — 깨문 사람이 진다", () => {
+  it("상대가 멈췄는데 계속 먹으면 이마를 들이받는다 — 들이받은 사람이 진다", () => {
     const v = viewAt(inp(0, 2), inp(0, null), 6);
-    expect(v.outcome?.kind).toBe("bite");
-    if (v.outcome?.kind !== "bite") return;
-    expect(v.outcome.biter).toBe("right");
+    expect(v.outcome?.kind).toBe("bump");
+    if (v.outcome?.kind !== "bump") return;
+    expect(v.outcome.by).toBe("right");
     expect(v.outcome.left + v.outcome.right).toBeCloseTo(STICK_MM);
     expect(winnerOf(v.outcome)).toBe("left");
   });
@@ -71,8 +71,8 @@ describe("판정", () => {
 
   it("상대가 만나기 전에 뗀 게 늦게 도착해도 결과는 같다", () => {
     const late = viewAt(inp(0, null, 8), inp(0, 2, 8), 8);
-    expect(late.outcome?.kind).toBe("bite");
-    if (late.outcome?.kind === "bite") expect(late.outcome.biter).toBe("left");
+    expect(late.outcome?.kind).toBe("bump");
+    if (late.outcome?.kind === "bump") expect(late.outcome.by).toBe("left");
   });
 
   it("아무도 안 누르면 시간 지나 0cm 로 끝", () => {
@@ -106,7 +106,7 @@ describe("링크", () => {
     const o = judge(l, r);
     expect(o.kind).toBe("ok");
     expect(winnerOf(o)).toBe("right");
-    // 오른쪽이 욕심내다 왼쪽이 멈춘 뒤에 만나면 오른쪽이 깨문다
-    expect(judge(l, { name: "b", press: 0, release: 6 }).kind).toBe("bite");
+    // 오른쪽이 욕심내다 왼쪽이 멈춘 뒤에 만나면 오른쪽이 들이받는다
+    expect(judge(l, { name: "b", press: 0, release: 6 }).kind).toBe("bump");
   });
 });

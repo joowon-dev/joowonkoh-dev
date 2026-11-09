@@ -13,7 +13,7 @@ import { cm, STICK_MM } from "./rules";
  * 아직 정체를 모르는 상대는 그림자(shadow)로, 눈만 빛난다.
  *
  * 입·얼굴이 맞닿아 보이는 장면은 그리지 않는다. 화면 속 틈은 motion.visibleGap 이 늘 남겨 둔다.
- * 이름표·말풍선·「앙!」 같은 글자는 3D 위에 얹은 HTML 이다(3D 자리를 화면 좌표로 바꿔 옮긴다).
+ * 이름표·말풍선·「쿵!」 같은 글자는 3D 위에 얹은 HTML 이다(3D 자리를 화면 좌표로 바꿔 옮긴다).
  */
 
 /* ───────────── 자리 ───────────── */
@@ -32,8 +32,8 @@ export type Expr =
   | "nervous" // 다가온다!
   | "win"
   | "lose"
-  | "ouch" // 깨물렸다
-  | "oops" // 깨물었다
+  | "ouch" // 들이받혔다
+  | "oops" // 들이받았다
   | "dizzy" // 이마 쿵
   | "shadow"; // 정체 모를 상대
 
@@ -74,7 +74,7 @@ export interface Cam {
 interface Props {
   left: Side;
   right: Side;
-  /** 막대를 그리나(깨물거나 다 먹으면 안 그린다) */
+  /** 막대를 그리나(부딪히거나 다 먹으면 안 그린다) */
   stick?: boolean;
   piece?: number | null;
   bite?: number | null;
@@ -211,7 +211,7 @@ export default function Scene3D(props: Props) {
       )}
       {bite !== null && (
         <div ref={tag("bite")} className="pp-tag">
-          <span className="pp-burst pp-display">{props.burst ?? "앙!"}</span>
+          <span className="pp-burst pp-display">{props.burst ?? "쿵!"}</span>
         </div>
       )}
       {(shadowL || shadowR) && (
@@ -254,7 +254,7 @@ function World({
     const { camera, size } = state;
     const aspect = size.width / Math.max(1, size.height);
 
-    // 깨물거나 부딪는 순간 한 번 크게 흔든다
+    // 부딪는 순간 한 번 크게 흔든다
     if (bite !== null && prevBite.current === null) kick.current = 1;
     prevBite.current = bite;
     kick.current = Math.max(0, kick.current - dt * 1.6);

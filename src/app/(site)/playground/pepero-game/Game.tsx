@@ -357,8 +357,8 @@ function Challenge({ from: fromLink, audio, say }: { from: TurnT; audio: Audio; 
           <p className="pp-sheet-text">
             {from.name}님은 이미 얼마나 먹을지 정했어요. <b>몇 cm인지는 비밀!</b>
             <br />
-            꾹 누르는 동안 먹고, 떼면 멈춰요. 더 많이 먹으면 이기지만, 둘이 합쳐 15cm를 넘으면… 아직 먹던 사람이
-            입술을 <b>앙!</b>
+            꾹 누르는 동안 먹고, 떼면 멈춰요. 더 많이 먹으면 이기지만, 둘이 합쳐 15cm를 넘으면… 이마를{" "}
+            <b>쿵!</b>
           </p>
           <NameField value={name} onChange={setName} />
           <button
@@ -595,8 +595,8 @@ function ResultPanel({
   }
 
   const line =
-    o.kind === "bite"
-      ? `${nameOf(o.biter)}님이 욕심내다 ${nameOf(o.biter === "left" ? "right" : "left")}님 입술을 앙! 깨문 사람이 져요.`
+    o.kind === "bump"
+      ? `${nameOf(o.by)}님이 욕심내다 ${nameOf(o.by === "left" ? "right" : "left")}님 이마를 쿵! 들이받은 사람이 져요.`
       : o.kind === "bonk"
         ? "둘 다 끝까지 안 멈추다 이마를 쿵! 둘 다 졌어요."
         : `${o.tier.title} — ${o.tier.line}`;
@@ -669,8 +669,8 @@ function Rules() {
         둘을 겹쳐 <b>동시에 먹는 장면</b>이 공개돼요. 더 많이 먹은 사람이 이겨요.
       </li>
       <li>
-        만나 버리면? 아직 먹고 있던 사람이 멈춘 사람 입술을 <b>앙!</b> — 깨문 사람이 져요. 둘 다 먹고 있었으면
-        이마를 <b>쿵!</b> 둘 다 패배.
+        만나 버리면 이마를 <b>쿵!</b> 아직 먹고 있던 사람이 멈춘 사람을 들이받은 거라 그 사람이 져요. 둘 다
+        먹고 있었으면 둘 다 패배.
       </li>
     </ol>
   );

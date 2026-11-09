@@ -20,7 +20,7 @@ import type { Sound } from "./sound";
 
 /**
  * 공개 — 따로 정한 두 사람을 같은 「냠!」에 겹쳐서 동시에 먹는 장면으로 틀어 준다.
- * VS 화면 → 3·2·1 → 둘이 동시에 냠냠. 가까워지면 슬로모션, 만나면 멈춤 화면(히트스톱) 뒤 「앙!」·「쿵!」.
+ * VS 화면 → 3·2·1 → 둘이 동시에 냠냠. 가까워지면 슬로모션, 만나면 멈춤 화면(히트스톱) 뒤 이마 「쿵!」.
  */
 
 const VS = 1.9; // VS 화면(초)
@@ -179,9 +179,8 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
           } else if (hit <= 0) {
             outcome = v.outcome;
             endAt = clock;
-            if (outcome.kind === "bite") snd.bite();
-            else if (outcome.kind === "bonk") snd.bonk();
-            else snd.ding();
+            if (outcome.kind === "ok") snd.ding();
+            else snd.bonk();
           }
         }
 
@@ -250,17 +249,18 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
   const eR = stepped(f.right, finalR);
   const gap = STICK_MM - eL - eR;
   // 부딪힌 뒤에는 둘이 뒤로 물러난다 — 얼굴이 가까워 보이지 않게
-  // 이마 쿵: 부딪힌 순간 둘이 앞으로 쏠려 이마가 닿았다가(0.3초) 튕겨 나간다. 깨물기는 바로 물러난다.
+  // 이마 쿵: 부딪힌 순간 둘이 앞으로 쏠려 이마가 닿았다가(0.3초) 튕겨 나간다.
   const since = o ? f.clock - f.endAt : 0;
+  const crash = o !== null && o.kind !== "ok";
   const lunge =
-    o?.kind === "bonk"
+    crash
       ? since < 0.08
         ? since / 0.08
         : since < 0.32
           ? 1
           : Math.max(0, 1 - (since - 0.32) / 0.2)
       : 0;
-  const backFrom = o?.kind === "bonk" ? 0.32 : 0;
+  const backFrom = crash ? 0.32 : 0;
   const recoil =
     o && o.kind !== "ok"
       ? Math.min(1, Math.max(0, since - backFrom) / 0.25) * 30
@@ -293,7 +293,8 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
   ): Expr => {
     if (o) {
       if (o.kind === "bonk") return "dizzy";
-      if (o.kind === "bite") return o.biter === side ? "oops" : "ouch";
+      // 이마가 닿아 있는 동안은 둘 다 어질어질(입은 안 그린다), 물러난 뒤에 표정
+      if (o.kind === "bump") return since < 0.52 ? "dizzy" : o.by === side ? "oops" : "ouch";
       if (o.winner === "tie") return "idle";
       return o.winner === side ? "win" : "lose";
     }
@@ -307,7 +308,7 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
   const bubbleOf = (side: SideKey, stop: number | null): string | null => {
     if (o) {
       if (o.kind === "bonk") return "아이고…";
-      if (o.kind === "bite") return o.biter === side ? "미안…!" : "아야!";
+      if (o.kind === "bump") return o.by === side ? "미안…!" : "아야!";
       if (o.winner === "tie") return "비겼다!";
       return o.winner === side ? "내가 더 먹었다!" : "으앙…";
     }
@@ -358,7 +359,7 @@ export default function Replay({ left, right, sound, onEnd }: Props) {
         }}
         crumbs={f.crumbs}
         bite={meet}
-        burst={o?.kind === "bonk" ? "쿵!" : "앙!"}
+        burst="쿵!"
         piece={o?.kind === "ok" ? o.rest : null}
         confetti={o?.kind === "ok" && o.rest <= 15}
         cam={{

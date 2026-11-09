@@ -4,8 +4,8 @@
  *
  * - 버튼을 꾹 누르고 있는 동안 막대를 먹는다. 손을 떼면 그 자리에서 멈추고, 그 판에서는 다시 못 먹는다.
  * - 먹는 속도는 시간이 갈수록 빨라진다(누른 순간이 아니라 「시작!」부터 잰 시간 기준이라 둘에게 같다).
- * - 두 입이 만나는 순간: 한쪽만 먹고 있었으면 그 사람이 상대 입술을 깨물고 진다.
- *   둘 다 먹고 있었으면 이마를 「쿵」 — 둘 다 진다.
+ * - 두 사람이 만나면 이마를 「쿵」. 한쪽만 먹고 있었으면 들이받은 그 사람이 진다.
+ *   둘 다 먹고 있었으면 둘 다 진다.
  * - 둘 다 멈추면 더 많이 먹은 사람이 이긴다. 남은 길이가 짧을수록 둘의 호흡 등급이 높다.
  *
  * 같은 입력(누른 시각·뗀 시각)이면 어디서 다시 틀어도 똑같은 결과가 나온다 — 서버가 필요 없다.
@@ -82,12 +82,12 @@ export const tierOf = (restMm: number) => TIERS.find((t) => restMm <= t.max) ?? 
 
 export type Outcome =
   | { kind: "ok"; left: number; right: number; rest: number; winner: SideKey | "tie"; tier: Tier }
-  | { kind: "bite"; at: number; left: number; right: number; biter: SideKey }
+  | { kind: "bump"; at: number; left: number; right: number; by: SideKey }
   | { kind: "bonk"; at: number; left: number; right: number };
 
 /** 이긴 사람(없으면 null) */
 export function winnerOf(o: Outcome): SideKey | null {
-  if (o.kind === "bite") return other(o.biter);
+  if (o.kind === "bump") return other(o.by);
   if (o.kind === "ok" && o.winner !== "tie") return o.winner;
   return null;
 }
@@ -115,7 +115,7 @@ export function viewAt(l: Input, r: Input, now: number): View {
     const outcome: Outcome =
       ml && mr
         ? { kind: "bonk", at: left, left, right }
-        : { kind: "bite", at: left, left, right, biter: ml ? "left" : "right" };
+        : { kind: "bump", at: left, left, right, by: ml ? "left" : "right" };
     return { t: tc, left, right, outcome, pending: false };
   }
 
@@ -149,7 +149,7 @@ export function timeToEat(press: number, mm: number) {
   return hi;
 }
 
-/** 혼자 하는 차례에서 이만큼 먹으면 상대 입술 바로 앞이라 저절로 멈춘다(mm) */
+/** 혼자 하는 차례에서 이만큼 먹으면 상대 바로 앞이라 저절로 멈춘다(mm) */
 export const AUTO_STOP = STICK_MM - 2;
 
 /* ───────────── 차례(한 사람이 정한 것) 와 링크 ───────────── */

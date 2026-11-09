@@ -254,8 +254,8 @@ export default function Turn({ me, names, sound, onDone }: Props) {
         </p>
         <p className={`pp-display pp-warn ${danger > 0.4 ? "pp-warn-hot" : ""}`}>
           {f.eaten < 1
-            ? "많이 먹을수록 이기지만, 둘이 합쳐 15cm 넘으면 입술을 앙!"
-            : `${opName}님이 ${cm(STICK_MM - f.eaten)}cm 넘게 먹으면… 앙!`}
+            ? "많이 먹을수록 이기지만, 둘이 합쳐 15cm 넘으면 이마를 쿵!"
+            : `${opName}님이 ${cm(STICK_MM - f.eaten)}cm 넘게 먹으면… 쿵!`}
         </p>
       </div>
 

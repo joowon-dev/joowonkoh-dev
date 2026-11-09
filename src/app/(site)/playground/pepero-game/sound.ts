@@ -1,13 +1,11 @@
 /**
- * 바삭 소리·앙 소리. 파일 없이 Web Audio 로 그때그때 만든다.
+ * 바삭 소리·쿵 소리. 파일 없이 Web Audio 로 그때그때 만든다.
  * 브라우저는 누르기(클릭) 안에서 만든 AudioContext 만 소리를 내 주므로
  * `makeSound()` 는 반드시 버튼 핸들러 안에서 부른다.
  */
 export interface Sound {
   /** 과자 씹는 소리. pan: -1(왼쪽) ~ 1(오른쪽) */
   crunch(pan: number): void;
-  /** 입술 깨무는 소리 */
-  bite(): void;
   /** 다 먹고 멈췄을 때 띵 */
   ding(): void;
   /** 가까워졌을 때 두근(두 번 쿵쿵) */
@@ -24,7 +22,7 @@ export interface Sound {
   whoosh(): void;
 }
 
-const silent: Sound = { crunch() {}, bite() {}, ding() {}, heartbeat() {}, beep() {}, bonk() {}, tick() {}, tension() {}, whoosh() {} };
+const silent: Sound = { crunch() {}, ding() {}, heartbeat() {}, beep() {}, bonk() {}, tick() {}, tension() {}, whoosh() {} };
 
 export function makeSound(enabled: boolean): Sound {
   if (!enabled || typeof window === "undefined") return silent;
@@ -132,20 +130,6 @@ export function makeSound(enabled: boolean): Sound {
       g.gain.value = 0.35;
       src.connect(bp).connect(g).connect(out(pan * 0.7));
       src.start();
-    },
-    bite() {
-      const t = ctx.currentTime;
-      const o = ctx.createOscillator();
-      o.type = "square";
-      o.frequency.setValueAtTime(260, t);
-      o.frequency.exponentialRampToValueAtTime(70, t + 0.18);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.25, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-      o.connect(g).connect(ctx.destination);
-      o.start(t);
-      o.stop(t + 0.25);
-      boom(0.7);
     },
     heartbeat() {
       const t = ctx.currentTime;
