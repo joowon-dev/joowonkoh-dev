@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { type ReactNode, useCallback, useRef, useState, useSyncExternalStore } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { botTurn } from "./bot";
+import { fetchStats, recordMatch, type Stats, topPercent } from "./db";
 import Replay from "./Replay";
 import {
   cleanName,
@@ -205,6 +206,15 @@ export default function Game() {
 function Home({ audio }: { audio: Audio }) {
   const [name, setName] = useState(loadName);
   const [rules, setRules] = useState(false);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [hall, setHall] = useState(false);
+  useEffect(() => {
+    let live = true;
+    fetchStats().then((s) => live && setStats(s));
+    return () => {
+      live = false;
+    };
+  }, []);
   return (
     <>
       <Scene
@@ -251,6 +261,32 @@ function Home({ audio }: { audio: Audio }) {
           </button>
         </div>
         {rules && <Rules />}
+        {stats && stats.total > 0 && (
+          <div className="pp-stats">
+            <p>
+              지금까지 <b>{stats.total.toLocaleString()}판</b> · 오늘 <b>{stats.today.toLocaleString()}판</b> · 이마 쿵{" "}
+              <b>{stats.bonk.toLocaleString()}번</b>
+            </p>
+            {stats.top.length > 0 && (
+              <button type="button" className="pp-stats-toggle" onClick={() => setHall(!hall)}>
+                {hall ? "닫기" : "🏆 찰떡 호흡 TOP 5"}
+              </button>
+            )}
+            {hall && (
+              <ol className="pp-hall">
+                {stats.top.map((t, i) => (
+                  <li key={i}>
+                    <span className="pp-hall-rank">{i + 1}</span>
+                    <span className="pp-hall-names">
+                      {t.l} · {t.r}
+                    </span>
+                    <span className="pp-hall-rest">{cm(t.rest)}cm 남김</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        )}
       </Sheet>
     </>
   );
@@ -334,6 +370,7 @@ function Challenge({ from: fromLink, audio, say }: { from: TurnT; audio: Audio; 
   const [phase, setPhase] = useState<"intro" | "turn" | "replay" | "done">("intro");
   const [mine, setMine] = useState<TurnT | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
   const me = cleanName(name, "나");
 
   if (phase === "intro") {
@@ -409,10 +446,11 @@ function Challenge({ from: fromLink, audio, say }: { from: TurnT; audio: Audio; 
         onEnd={(o) => {
           setOutcome(o);
           setPhase("done");
+          recordMatch(encodeResult(from, mine), from, mine, o).then(setStats);
         }}
       />
       {phase === "done" && outcome && (
-        <ResultPanel left={from} right={mine} outcome={outcome} me="right">
+        <ResultPanel left={from} right={mine} outcome={outcome} me="right" stats={stats}>
           <button type="button" className="pp-btn pp-btn-big w-full" onClick={sendBack}>
             {from.name}님에게 결과 보내기 📮
           </button>
@@ -432,6 +470,7 @@ function ResultView({ left: l0, right: r0, audio }: { left: TurnT; right: TurnT;
   const [phase, setPhase] = useState<"ready" | "replay" | "done">("ready");
   const [round, setRound] = useState(0);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
 
   if (phase === "ready") {
     return (
@@ -475,10 +514,12 @@ function ResultView({ left: l0, right: r0, audio }: { left: TurnT; right: TurnT;
         onEnd={(o) => {
           setOutcome(o);
           setPhase("done");
+          // 받은 사람이 이미 기록했으면 같은 판이라 한 번만 남는다
+          if (!stats) recordMatch(encodeResult(left, right), left, right, o).then(setStats);
         }}
       />
       {phase === "done" && outcome && (
-        <ResultPanel left={left} right={right} outcome={outcome} me={null}>
+        <ResultPanel left={left} right={right} outcome={outcome} me={null} stats={stats}>
           <button type="button" className="pp-btn pp-btn-big w-full" onClick={() => go("#make")}>
             다시 붙자! 도전장 만들기 🔥
           </button>
@@ -567,6 +608,7 @@ function ResultPanel({
   outcome: o,
   me,
   score,
+  stats = null,
   children,
 }: {
   left: TurnT;
@@ -574,6 +616,7 @@ function ResultPanel({
   outcome: Outcome;
   me: SideKey | null;
   score?: string;
+  stats?: Stats | null;
   children: ReactNode;
 }) {
   const w = winnerOf(o);
@@ -610,9 +653,22 @@ function ResultPanel({
         <ResultBar name={right.name} mm={o.right} side="right" win={w === "right"} />
       </div>
       <p className="pp-sheet-text mt-2">{line}</p>
+      {stats && <RankLine stats={stats} outcome={o} />}
       <div className="mt-3">{children}</div>
     </Sheet>
   );
+}
+
+/** 지금까지 쌓인 판과 견줘 이 판이 어디쯤인지 */
+function RankLine({ stats, outcome }: { stats: Stats; outcome: Outcome }) {
+  const pct = outcome.kind === "ok" ? topPercent(stats) : null;
+  const text =
+    outcome.kind === "ok"
+      ? pct !== null
+        ? `지금까지 끝까지 간 ${stats.ok.toLocaleString()}판 중 상위 ${pct}%의 호흡!`
+        : `끝까지 간 ${stats.ok.toLocaleString()}번째 판이에요`
+      : `지금까지 ${stats.total.toLocaleString()}판 중 ${stats.bonk.toLocaleString()}판이 이마 쿵으로 끝났어요`;
+  return <p className="pp-display pp-rank mt-2">{text}</p>;
 }
 
 function ResultBar({ name, mm, side, win }: { name: string; mm: number; side: SideKey; win: boolean }) {
