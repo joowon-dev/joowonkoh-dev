@@ -215,7 +215,6 @@ export default function Turn({ me, names, sound, onDone }: Props) {
       <Scene
         left={{ at: leftAt, ...(left ? me3 : op) }}
         right={{ at: rightAt, ...(left ? op : me3) }}
-        half
         crumbs={f.crumbs}
         cam={{ at: (leftAt + rightAt) / 2, span: ((rightAt - leftAt) * 0.04) / 2 + 2.9, shake: heat * 0.6 + danger * 0.4 }}
         caption={`${myName} 차례 — 꾹 누르는 동안 막대과자를 먹어요`}

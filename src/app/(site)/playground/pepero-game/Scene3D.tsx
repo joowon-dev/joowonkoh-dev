@@ -72,8 +72,6 @@ interface Props {
   right: Side;
   /** 막대를 그리나(깨물거나 다 먹으면 안 그린다) */
   stick?: boolean;
-  /** 막대 한가운데 표시 */
-  half?: boolean;
   piece?: number | null;
   bite?: number | null;
   burst?: string;
@@ -122,8 +120,7 @@ type Tag =
   | "bubbleR"
   | "piece"
   | "bite"
-  | "qmark"
-  | "half";
+  | "qmark";
 type Anchors = Record<Tag, [number, number, number] | null>;
 
 export default function Scene3D(props: Props) {
@@ -133,7 +130,6 @@ export default function Scene3D(props: Props) {
     piece = null,
     bite = null,
     caption,
-    half = false,
   } = props;
   const tags = useRef<Partial<Record<Tag, HTMLDivElement | null>>>({});
 
@@ -153,7 +149,6 @@ export default function Scene3D(props: Props) {
       : shadowL
         ? [xl - 0.95, 1.85, 0]
         : null,
-    half: half ? [worldX(STICK_MM / 2), -0.42, 0] : null,
   };
 
   const tag = (k: Tag) => (el: HTMLDivElement | null) => {
@@ -205,11 +200,6 @@ export default function Scene3D(props: Props) {
           <span className="pp-bubble pp-display">{right.bubble}</span>
         </div>
       )}
-      {half && (
-        <div ref={tag("half")} className="pp-tag">
-          <span className="pp-half pp-display">절반</span>
-        </div>
-      )}
       {piece !== null && (
         <div ref={tag("piece")} className="pp-tag">
           <span className="pp-piece pp-display">남은 {cm(piece)}cm</span>
@@ -235,7 +225,6 @@ function World({
   left,
   right,
   stick = true,
-  half = false,
   piece = null,
   bite = null,
   confetti = false,
@@ -348,7 +337,6 @@ function World({
       {stick && right.at - left.at > 0 && bite === null && piece === null && (
         <Stick from={left.at} to={right.at} toon={toon} />
       )}
-      {half && stick && <HalfMark />}
 
       {crumbs.map((c) => (
         <CrumbMesh key={c.id} c={c} />
@@ -1433,15 +1421,6 @@ function Stick({
         />
       )}
     </group>
-  );
-}
-
-function HalfMark() {
-  return (
-    <mesh position={[worldX(STICK_MM / 2), 0, 0]} rotation-y={Math.PI / 2}>
-      <torusGeometry args={[0.17, 0.03, 8, 24]} />
-      <meshBasicMaterial color="#ffe066" />
-    </mesh>
   );
 }
 

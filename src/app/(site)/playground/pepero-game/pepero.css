@@ -99,13 +99,6 @@
   animation: pp-pop 0.28s cubic-bezier(0.3, 1.6, 0.5, 1) both;
 }
 
-.pp-half {
-  color: var(--gold);
-  font-size: 12px;
-  text-shadow: 0 1px 0 var(--ink);
-  opacity: 0.9;
-}
-
 .pp-piece {
   background: #5b3221;
   color: #fff;
