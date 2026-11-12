@@ -7,7 +7,7 @@
  *
  * 맥 파일은 **이 맥에서 공증한 것**이라야 한다(paste-gun 의 `./mac/notarize.sh`).
  * CI 가 만든 맥 산출물은 임시 서명이라 Gatekeeper 가 막는다. 윈도우 파일은 CI 릴리스에서:
- *   gh release download v1.0.0 -R joowon-dev/paste-gun -p 'PasteGun-win*'
+ *   gh release download v<버전> -R joowon-dev/paste-gun -p 'PasteGun-win*'
  */
 
 export type Build = { href: string; size: string };
@@ -24,9 +24,20 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
-    version: "1.0.0",
+    version: "1.0.1",
     date: "2026-11-12",
     latest: true,
+    notes: [
+      "윈도우: 무기고에 마우스를 올리면 무기고가 사라지던 것을 고쳤습니다. 버튼도 이제 눌립니다.",
+      "윈도우: 크롬·엣지·VS Code 같은 앱에서도 총이 마우스가 아니라 글자 커서 자리로 날아와 쏩니다.",
+    ],
+    mac: { href: "/downloads/PasteGun-mac.dmg", size: "1.4MB" },
+    windows: { href: "/downloads/PasteGun-win-Setup.exe", size: "2.5MB" },
+    windowsZip: { href: "/downloads/PasteGun-win-x64.zip", size: "710KB" },
+  },
+  {
+    version: "1.0.0",
+    date: "2026-11-12",
     notes: [
       "복사한 글자가 총알이 됩니다. ⌘V(윈도우는 Ctrl+V)를 누르면 총이 글자 커서로 날아와 한 글자씩 쏴서 붙여넣습니다.",
       "총은 네 자루 — 권총, 기관총, 샷건, 저격총. 총마다 쏘는 빠르기와 한 번에 나가는 양이 다릅니다.",
@@ -34,9 +45,9 @@ export const RELEASES: Release[] = [
       "자주 쓰는 글은 탄창으로 저장해 두고, 단축키는 무기고에서 바꿉니다.",
       "새 버전이 나오면 메뉴가 알려 주고, 제거도 메뉴에서 한 번에 됩니다.",
     ],
-    mac: { href: "/downloads/PasteGun-mac.dmg", size: "1.4MB" },
-    windows: { href: "/downloads/PasteGun-win-Setup.exe", size: "2.5MB" },
-    windowsZip: { href: "/downloads/PasteGun-win-x64.zip", size: "710KB" },
+    mac: { href: "/downloads/paste-gun/v1.0.0/PasteGun-mac.dmg", size: "1.4MB" },
+    windows: { href: "/downloads/paste-gun/v1.0.0/PasteGun-win-Setup.exe", size: "2.5MB" },
+    windowsZip: { href: "/downloads/paste-gun/v1.0.0/PasteGun-win-x64.zip", size: "710KB" },
   },
 ];
 
