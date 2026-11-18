@@ -114,12 +114,24 @@ export function detectLang(languages: readonly string[], fallback: string | null
 }
 
 /**
+ * 이 페이지가 열릴 때 브라우저 언어를 따라갈지.
+ *
+ * 한국어 주소는 언어를 모르는 사람이 들어오는 기본 주소라 늘 따라간다. 다른 언어 주소로 직접 들어온 사람은
+ * 그 언어를 고른 것으로 본다 — 초대 페이지만 빼고. 앱은 초대 링크에 **보내는 사람**의 언어를 넣는다
+ * (`/yourmealmymeal/ja/join?code=…`) — 카톡·LINE·WhatsApp 미리보기는 스크립트를 돌리지 않아 주소의 언어가
+ * 곧 미리보기 언어라서다. 그래도 열어 보는 건 받는 사람이니 열 때는 받는 사람 언어로 다시 고른다.
+ * 언어 고르기는 페이지를 새로 받지 않고 옮기므로 이 스크립트가 다시 돌지 않고, 고른 값이 저장돼 있어 새로 고쳐도 그대로다.
+ */
+export function followsBrowser(lang: Lang, sub: Sub): boolean {
+  return lang === "ko" || sub === "/join";
+}
+
+/**
  * 페이지 맨 앞에 심는 한 줄짜리 스크립트. React 가 붙기 전에 돌아 깜빡임을 줄인다.
  *
  * - `?lang=xx` 가 있으면 그 언어로 간다(어느 언어 페이지에서든). 값은 주소에 남겨 둔다 —
  *   지우면 한국어 주소에 닿은 뒤 브라우저 언어를 보고 다시 튕겨 나간다.
- * - 한국어 주소에서만 브라우저 언어(또는 언어 고르기에서 고른 값)를 본다. 다른 언어 주소로
- *   직접 들어온 사람은 그 언어를 고른 것으로 본다.
+ * - 브라우저 언어(또는 언어 고르기에서 고른 값)는 `followsBrowser` 인 페이지에서만 본다.
  * - 검색 로봇은 보내지 않는다: 구글 로봇은 영어 브라우저라 보내면 한국어 페이지가 색인에서 사라진다.
  * - 주소 뒤의 `?code=…` 와 `#…` 는 그대로 따라간다. 초대코드가 사라지지 않게.
  */
@@ -129,7 +141,7 @@ var detect=${detectLang.toString()};
 var cur=${JSON.stringify(lang)},langs=${JSON.stringify(LANGS)};
 var forced=new URLSearchParams(location.search).get("lang");
 var to=forced?detect([forced],null):null;
-if(!to&&cur==="ko"){
+if(!to&&${JSON.stringify(followsBrowser(lang, sub))}){
 if(/bot|crawl|spider|slurp|lighthouse|facebookexternalhit|kakaotalk-scrap|yeti/i.test(navigator.userAgent))return;
 var saved=null;try{saved=localStorage.getItem(${JSON.stringify(STORAGE_KEY)})}catch(e){}
 to=saved&&langs.indexOf(saved)>=0?saved:detect(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"ko"]);

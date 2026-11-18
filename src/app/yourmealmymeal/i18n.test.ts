@@ -81,8 +81,20 @@ describe("redirectScript", () => {
     expect(run({ languages: ["ko-KR"], search: "?lang=xx" })).toBeNull();
   });
 
-  it("다른 언어 주소로 직접 들어오면 브라우저 언어로 다시 보내지 않는다", () => {
-    expect(run({ lang: "en", sub: "/join", languages: ["ko-KR"], search: "?code=AB2K9M" })).toBeNull();
+  it("다른 언어 주소로 직접 들어오면 브라우저 언어로 다시 보내지 않는다 — 초대 페이지 말고는", () => {
+    expect(run({ lang: "en", languages: ["ko-KR"] })).toBeNull();
+    expect(run({ lang: "ja", sub: "/privacy", languages: ["en-US"] })).toBeNull();
+  });
+
+  it("앱이 보낸 사람 언어로 만든 초대 링크는 받는 사람 언어로 다시 연다", () => {
+    expect(run({ lang: "ja", sub: "/join", languages: ["en-US"], search: "?code=AB2K9M" })).toBe("/yourmealmymeal/en/join?code=AB2K9M");
+    expect(run({ lang: "zh-hant", sub: "/join", languages: ["ko-KR"], search: "?code=AB2K9M" })).toBe("/yourmealmymeal/join?code=AB2K9M");
+    // 받는 사람도 같은 말이면 그대로.
+    expect(run({ lang: "ja", sub: "/join", languages: ["ja-JP"], search: "?code=AB2K9M" })).toBeNull();
+    // 언어 고르기에서 고른 값이 먼저다 — 고른 뒤 새로 고쳐도 튕기지 않는다.
+    expect(run({ lang: "th", sub: "/join", languages: ["en-US"], saved: "th", search: "?code=AB2K9M" })).toBeNull();
+    // 미리보기 수집기는 보내지 않는다.
+    expect(run({ lang: "ja", sub: "/join", languages: ["en-US"], ua: "WhatsApp/2.23 facebookexternalhit/1.1" })).toBeNull();
   });
 
   it("직접 고른 언어가 브라우저 언어보다 먼저다", () => {
