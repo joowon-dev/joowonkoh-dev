@@ -79,6 +79,22 @@ export function pickSpot(taken, rng) {
   return best || { x: CX, y: (HANG.top + HANG.bottom) / 2 }
 }
 
+/** 트리의 크기(기준 판에 곱하는 배율). 별을 끌어서 이 사이에서 정한다. */
+export const SCALE = { min: 0.3, max: 1.6 }
+
+/** 배율을 쓸 수 있는 범위로 맞추고 소수 둘째 자리까지만 남긴다. 숫자가 아니면 1. */
+export function clampScale(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return 1
+  return Math.round(Math.min(SCALE.max, Math.max(SCALE.min, n)) * 100) / 100
+}
+
+/** 예전 설정의 세 가지 크기 → 배율. */
+export const OLD_SIZES = { s: 0.8, m: 1, l: 1.3 }
+
+/** 방울을 누를 수 있는 동그라미의 가장 작은 반지름(화면 px). 트리가 아주 작아도 손이 닿게. */
+export const MIN_TOUCH = 8
+
 /** 꼭대기 별과 기둥. 그림도 이 숫자로 그린다. */
 export const STAR = { x: CX, y: 64, r: 24 }
 export const TRUNK = { x: CX - 17, y: 462, w: 34, h: 50 }

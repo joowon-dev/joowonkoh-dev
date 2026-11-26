@@ -1,7 +1,7 @@
 // 무대 — 트리를 그리고, 엔진이 낸 「일어난 일」을 방울의 상태(class)와 움직임으로 옮긴다.
 // 움직임은 전부 transform·opacity 다. 규칙은 모른다. 가만히 있을 때 도는 것은 꼬마전구의 깜빡임뿐이다.
 
-import { BOARD, CX, FLOOR, BALL, STAR, TIERS, TRUNK, bodyBands, halfWidthAt, tierPath } from '../game/tree.js'
+import { BOARD, CX, FLOOR, BALL, MIN_TOUCH, STAR, TIERS, TRUNK, bodyBands, halfWidthAt, tierPath } from '../game/tree.js'
 import { KINDS, keyOf } from '../game/engine.js'
 import { fall } from '../game/fall.js'
 
@@ -94,7 +94,7 @@ function treeSvg() {
     <ellipse cx="${CX - 40}" cy="${FLOOR + 3}" rx="84" ry="10" fill="#eef4fb"/>
     <g id="leaves">${tiers}${garlands}</g>
     <circle cx="${STAR.x}" cy="${STAR.y}" r="44" fill="url(#halo)"/>
-    <polygon points="${starPoints(STAR.x, STAR.y, STAR.r, 10.5)}" fill="url(#gold)" stroke="#fff8d0" stroke-width="1.2" stroke-linejoin="round"/>
+    <polygon id="star" points="${starPoints(STAR.x, STAR.y, STAR.r, 10.5)}" fill="url(#gold)" stroke="#fff8d0" stroke-width="1.2" stroke-linejoin="round"/>
   </svg>`
 }
 
@@ -212,24 +212,35 @@ export function createView(root, { rng }) {
     setTimeout(() => ring.remove(), 600)
   }
 
-  function showTag(win, kind, text, forSeconds = 0) {
+  /**
+   * 이름표를 한 점 위에 띄운다. 트리가 작아져도 글씨는 그대로 읽히게 판의 배율을 되돌려 그린다.
+   * pid 가 있으면 그 앱의 아이콘을 붙인다.
+   */
+  function showTagAt(spot, reach, text, pid = 0, forSeconds = 0) {
     clearTimeout(tagTimer)
-    const spot = win.spots[kind]
     const icon = tag.querySelector('img')
-    if (win.pid) {
+    if (pid) {
       icon.hidden = false
       icon.onerror = () => { icon.hidden = true }
-      const src = `/icon/${win.pid}`
+      const src = `/icon/${pid}`
       if (icon.getAttribute('src') !== src) icon.setAttribute('src', src)
     } else {
       icon.hidden = true
     }
     tag.querySelector('span').textContent = text
-    // 방울 위에 띄우고, 판 밖으로 나가지 않게 가운데로 당긴다.
-    tag.style.left = `${Math.min(BOARD.w - 96, Math.max(96, spot.x))}px`
-    tag.style.top = `${spot.y - 38}px`
+    // 판 밖으로 나가지 않게 가운데로 당긴다. 이름표의 폭은 화면 px 이라 판의 좌표로는 배율만큼 넓다.
+    const half = Math.min(BOARD.w / 2, 96 / place.scale)
+    tag.style.left = `${Math.min(BOARD.w - half, Math.max(half, spot.x))}px`
+    // 위에 띄울 자리가 없으면(트리가 작거나 맨 위의 것이면) 아래에 띄운다.
+    const below = (spot.y - reach) * place.scale < 34
+    tag.classList.toggle('below', below)
+    tag.style.top = `${below ? spot.y + reach : spot.y - reach}px`
     tag.classList.add('show')
     if (forSeconds) tagTimer = setTimeout(hideTag, forSeconds * 1000)
+  }
+
+  function showTag(win, kind, text, forSeconds = 0) {
+    showTagAt(win.spots[kind], BALL + 8, text, win.pid, forSeconds)
   }
 
   function hideTag() {
@@ -294,6 +305,7 @@ export function createView(root, { rng }) {
     setLayout(next) {
       place = next
       board.style.transform = `translate(${next.x}px, ${next.y}px) scale(${next.scale})`
+      board.style.setProperty('--inv', String(1 / next.scale))
     },
 
     /** 트리를 옮겨 놓았다 — 내려놓은 자리에서 잎이 떨리고 방울이 흔들리다 선다. */
@@ -310,6 +322,22 @@ export function createView(root, { rng }) {
       }))
     },
 
+    /** 크기를 정하는 손잡이 — 꼭대기 별(화면 px). 잡고 끌면 트리가 자라고 줄어든다. */
+    grip() {
+      return {
+        x: place.x + STAR.x * place.scale,
+        y: place.y + STAR.y * place.scale,
+        r: Math.max((STAR.r + 4) * place.scale, MIN_TOUCH + 2),
+      }
+    },
+
+    /** 마우스가 별 위에 있다(또는 별을 끄는 중이다). */
+    setGrip(on) {
+      board.classList.toggle('grip', !!on)
+      if (on) showTagAt(STAR, STAR.r + 10, '별을 끌면 크기가 바뀌어요')
+      else if (!hovered) hideTag()
+    },
+
     setTwinkle(on) { board.classList.toggle('twinkle', !!on) },
     setHidden(on) { board.classList.toggle('hidden', !!on) },
 
@@ -323,7 +351,7 @@ export function createView(root, { rng }) {
             key: keyOf(win.id, kind),
             x: place.x + spot.x * place.scale,
             y: place.y + spot.y * place.scale,
-            r: (BALL + 4) * place.scale,
+            r: Math.max((BALL + 4) * place.scale, MIN_TOUCH),
           })
         }
       }

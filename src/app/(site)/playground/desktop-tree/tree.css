@@ -81,6 +81,10 @@
   70% { transform: rotate(-.5deg); } 100% { transform: rotate(0); }
 }
 
+/* 별은 크기를 정하는 손잡이다. 마우스를 올리면 커진다. */
+#star { transform-box: fill-box; transform-origin: 50% 50%; transition: transform .18s cubic-bezier(.3, 1.6, .5, 1); }
+#board.grip #star { transform: scale(1.22) rotate(8deg); }
+
 /* 꼬마전구. 가만히 있을 때 움직이는 것은 이것뿐이다 — 그래서 싸야 한다.
    세 무리가 번갈아, **부드럽게가 아니라 계단으로** 밝기를 바꾼다: 1초에 서너 번만 화면이 다시 합쳐진다.
    (부드럽게 바꾸면 초당 60번 합쳐지고, 그 값은 웹뷰가 아니라 윈도우 서버가 낸다.) */
@@ -180,9 +184,13 @@
   position: absolute; z-index: 9; display: flex; align-items: center; gap: 5px; white-space: nowrap;
   padding: 4px 10px 4px 5px; border-radius: 999px; background: rgba(22, 22, 26, .86); color: #fff;
   font-size: 12px; font-weight: 600; letter-spacing: -.01em; box-shadow: 0 3px 10px rgba(0, 0, 0, .35);
-  transform: translate(-50%, -100%) scale(.9); opacity: 0; transition: opacity .14s, transform .14s; pointer-events: none;
+  /* 판이 줄어든 만큼 되돌려 그린다(--inv = 1/배율) — 트리가 작아도 글씨는 같은 크기다. */
+  transform-origin: 50% 100%; transform: translate(-50%, -100%) scale(calc(var(--inv, 1) * .9));
+  opacity: 0; transition: opacity .14s, transform .14s; pointer-events: none;
 }
-#tag.show { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+#tag.show { opacity: 1; transform: translate(-50%, -100%) scale(var(--inv, 1)); }
+#tag.below { transform-origin: 50% 0; transform: translate(-50%, 0) scale(calc(var(--inv, 1) * .9)); }
+#tag.below.show { transform: translate(-50%, 0) scale(var(--inv, 1)); }
 #tag img { width: 18px; height: 18px; }
 #tag img[hidden] { display: none; }
 #tag img[hidden] + span { padding-left: 5px; }
