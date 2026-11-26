@@ -24,9 +24,21 @@ export type Release = {
 
 export const RELEASES: Release[] = [
   {
+    version: "1.1.0",
+    date: "2026-11-26",
+    latest: true,
+    notes: [
+      "꼭대기 별을 잡고 끌면 트리의 크기가 바뀝니다. 아래로 끌면 작아지고 위로 끌면 커집니다(30%~160%).",
+      "훨씬 작게 줄일 수 있습니다. 메뉴의 크기도 다섯 단계로 늘렸습니다.",
+      "트리가 아주 작아도 방울이 눌리고, 이름표 글씨는 같은 크기로 나옵니다.",
+    ],
+    mac: { href: "/downloads/DesktopTree-mac.dmg", size: "860KB" },
+    windows: { href: "/downloads/DesktopTree-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/DesktopTree-win-x64.zip", size: "645KB" },
+  },
+  {
     version: "1.0.0",
     date: "2026-11-25",
-    latest: true,
     notes: [
       "떠 있는 창마다 빨강·노랑·초록 방울이 크리스마스 트리에 달립니다.",
       "빨강을 누르면 그 창이 닫히고 방울이 떨어집니다. 노랑은 접고, 초록은 화면에 꽉 차게 키웁니다.",
@@ -34,9 +46,9 @@ export const RELEASES: Release[] = [
       "트리는 잡고 끌어서 옮깁니다. 크기는 메뉴에서 바꿉니다.",
       "새 버전이 나오면 메뉴가 알려 주고, 제거도 메뉴에서 한 번에 됩니다.",
     ],
-    mac: { href: "/downloads/DesktopTree-mac.dmg", size: "861KB" },
-    windows: { href: "/downloads/DesktopTree-win-Setup.exe", size: "2.4MB" },
-    windowsZip: { href: "/downloads/DesktopTree-win-x64.zip", size: "642KB" },
+    mac: { href: "/downloads/desktop-tree/v1.0.0/DesktopTree-mac.dmg", size: "861KB" },
+    windows: { href: "/downloads/desktop-tree/v1.0.0/DesktopTree-win-Setup.exe", size: "2.4MB" },
+    windowsZip: { href: "/downloads/desktop-tree/v1.0.0/DesktopTree-win-x64.zip", size: "642KB" },
   },
 ];
 
