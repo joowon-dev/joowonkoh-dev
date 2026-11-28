@@ -121,7 +121,7 @@ const es: Copy = {
     title: "Política de privacidad de Tu comida, mi comida",
     description:
       "Información sobre los datos que trata “Tu comida, mi comida”, la app para iOS y Android, quién puede ver tus fotos y registros de comidas, y cómo eliminar tu cuenta.",
-    updatedAt: "6 de noviembre de 2026",
+    updatedAt: "28 de noviembre de 2026",
     sections: [
       {
         h: "1. Resumen",
@@ -171,6 +171,7 @@ const es: Copy = {
           {
             p: "La App no accede a tu ubicación precisa, contactos, registro de llamadas, información de salud ni información de pago.",
           },
+          { p: "El pago de la suscripción «Quitar anuncios» lo gestiona el App Store de Apple o Google Play. La Aplicación no recibe tu número de tarjeta ni otros datos del medio de pago; si estás suscrito solo se comprueba en tu dispositivo a través de la tienda y no se guarda en los servidores del operador." },
         ],
       },
       {
@@ -213,6 +214,7 @@ const es: Copy = {
               "**Cloudflare R2**: almacenamiento de fotos de comidas y de perfil. Se guardan de forma privada en la región de Asia-Pacífico y, tras comprobar que tienes permiso para verlas, se entregan mediante una dirección válida solo por una hora.",
               "**Expo**: envío de notificaciones. En iOS pasan por Apple APNs y en Android por Google FCM. Se transmiten el texto de la notificación y el token del dispositivo.",
               "**Apple / Google**: inicio de sesión. Recibimos tu dirección de correo electrónico.",
+              "**Apple App Store / Google Play**: pago y gestión de la suscripción «Quitar anuncios». Los datos de pago los trata cada tienda y no se transmiten a la Aplicación.",
               "**Google AdMob**: anuncios nativos, intersticiales y con recompensa. Se transmiten el identificador publicitario, información de impresiones y clics de anuncios, e información del dispositivo.",
               "**Google Analytics for Firebase**: estadísticas de uso. Se transmiten la información de uso de la App, el ID de instancia de la app e información del dispositivo.",
               "**Cloudflare Workers y Durable Objects**: pantalla del Comedor compartido y conexión en tiempo real. Tratan tu nombre visible, asiento, movimientos y saludos mientras estás en una sala, y las direcciones de las fotos que decidiste mostrar, y los borran al salir de la sala. Para corregir errores, se conserva parte de los registros de solicitudes durante unos días.",
@@ -285,7 +287,7 @@ const es: Copy = {
     title: "Términos de servicio de Tu comida, mi comida",
     description:
       "Las condiciones de uso de Tu comida, mi comida, la app para compartir fotos de tus comidas con la gente de tus grupos, el alcance de las responsabilidades y los datos del responsable del servicio.",
-    updatedAt: "6 de noviembre de 2026",
+    updatedAt: "28 de noviembre de 2026",
     sections: [
       {
         h: "Artículo 1 (Objeto)",
@@ -303,6 +305,7 @@ const es: Copy = {
               "El Servicio permite a los usuarios registrar fotos de sus comidas y compartir fotos, reacciones y comentarios con las personas de su mismo grupo.",
               "El Servicio incluye funciones como crear grupos e invitar a otras personas, notificaciones y toques, el calendario de comidas y los collages, los widgets de la pantalla de inicio y el Comedor compartido (un espacio en tiempo real donde la gente se sienta a comer junta).",
               "El Servicio es gratuito y muestra anuncios en sus pantallas.",
+              "Puedes elegir una suscripción de pago que elimina los anuncios («Quitar anuncios»). Sus condiciones se establecen en el Artículo 11.",
             ],
           },
         ],
@@ -367,6 +370,7 @@ const es: Copy = {
             ol: [
               "Para mantener el Servicio, el Responsable muestra anuncios nativos, anuncios intersticiales y anuncios con recompensa a través de Google AdMob.",
               "Las transacciones de productos o servicios que aparecen en los anuncios se realizan entre el usuario y el anunciante, y el Responsable no se hace responsable de su contenido.",
+              "Mientras uses la suscripción de pago del Artículo 11, no se muestran anuncios nativos ni intersticiales, y las ventajas que normalmente se obtienen viendo un anuncio bonificado se ofrecen sin anuncio.",
             ],
           },
         ],
@@ -401,6 +405,21 @@ const es: Copy = {
             ol: [
               "Si surge una disputa relacionada con el uso del Servicio, el Responsable y el usuario procurarán resolverla de buena fe mediante el diálogo.",
               "Si no se llega a un acuerdo, podrá presentarse una demanda ante el tribunal competente según la Ley de Procedimiento Civil de la República de Corea. Estos términos se rigen por las leyes de la República de Corea.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artículo 11 (Suscripción de pago)",
+        blocks: [
+          {
+            ol: [
+              "«Quitar anuncios» es una suscripción de pago que se renueva automáticamente cada mes. Mientras estés suscrito, no se muestran anuncios en las pantallas del Servicio. El precio se indica en la pantalla de compra y puede variar según el país y la tienda.",
+              "El pago se realiza a través del App Store de Apple o de Google Play, y la suscripción queda vinculada a la cuenta de la tienda con la que se pagó (cuenta de Apple o cuenta de Google). En otro dispositivo con la misma cuenta de la tienda puedes seguir usándola con «Restaurar compra», pero no se traslada entre iOS y Android.",
+              "Si no cancelas al menos 24 horas antes de que termine el periodo en curso, la suscripción se renueva automáticamente por el mismo periodo y se te cobra el precio de la suscripción vigente en ese momento. Puedes cancelar en cualquier momento desde la gestión de suscripciones del App Store o de Google Play; tras cancelar, puedes seguir usándola hasta que termine el periodo ya pagado.",
+              "Eliminar tu cuenta en el Servicio o desinstalar la aplicación no cancela la suscripción. Para dejarla, debes cancelarla tú mismo en la gestión de suscripciones de la tienda.",
+              "Los reembolsos se rigen por la política de reembolsos de la tienda con la que pagaste y se solicitan a través de ella. Cuando la legislación aplicable te reconozca un derecho de desistimiento u otros similares, este Artículo no los limita.",
+              "Si cambia el precio o el contenido de la suscripción, se te avisará con antelación conforme al procedimiento que establezca la tienda.",
             ],
           },
         ],

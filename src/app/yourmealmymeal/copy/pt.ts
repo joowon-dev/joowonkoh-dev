@@ -127,7 +127,7 @@ const pt: Copy = {
     title: "Política de privacidade – Seu prato, meu prato",
     description:
       "Informações sobre os dados tratados pelo “Seu prato, meu prato”, app para iOS e Android, quem pode ver suas fotos e registros de refeições e como excluir sua conta.",
-    updatedAt: "6 de novembro de 2026",
+    updatedAt: "28 de novembro de 2026",
     sections: [
       {
         h: "1. Visão geral",
@@ -177,6 +177,7 @@ const pt: Copy = {
           {
             p: "O App não acessa sua localização exata, contatos, registro de chamadas, informações de saúde nem informações de pagamento.",
           },
+          { p: "O pagamento da assinatura “Remover anúncios” é processado pela App Store da Apple ou pelo Google Play. O App não recebe o número do seu cartão nem outros dados do meio de pagamento; se você é assinante é verificado apenas no seu aparelho, por meio da loja, e não é armazenado nos servidores do operador." },
         ],
       },
       {
@@ -219,6 +220,7 @@ const pt: Copy = {
               "**Cloudflare R2**: armazenamento das fotos das refeições e de perfil. Ficam guardadas de forma privada na região Ásia-Pacífico e, depois de verificar que você tem permissão para vê-las, são entregues por um endereço válido por apenas uma hora.",
               "**Expo**: entrega de notificações. No iOS passam pelo Apple APNs e no Android pelo Google FCM. São transmitidos o texto da notificação e o token do dispositivo.",
               "**Apple / Google**: login. Recebemos seu endereço de e-mail.",
+              "**Apple App Store / Google Play**: pagamento e gerenciamento da assinatura “Remover anúncios”. Os dados de pagamento são tratados por cada loja e não são repassados ao App.",
               "**Google AdMob**: anúncios nativos, intersticiais e premiados. São transmitidos o identificador de publicidade, informações de exibição e cliques em anúncios e informações do dispositivo.",
               "**Google Analytics for Firebase**: estatísticas de uso. São transmitidos as informações de uso do App, o ID da instância do app e informações do dispositivo.",
               "**Cloudflare Workers e Durable Objects**: tela do Refeitório compartilhado e conexão em tempo real. Tratam seu nome de exibição, lugar, movimentos e saudações enquanto você está em uma sala, e os endereços das fotos que você decidiu mostrar, e os apagam quando você sai da sala. Para corrigir erros, parte dos registros de solicitações é guardada por alguns dias.",
@@ -291,7 +293,7 @@ const pt: Copy = {
     title: "Termos de uso – Seu prato, meu prato",
     description:
       "Condições de uso, limites de responsabilidade e informações do responsável pelo “Seu prato, meu prato”, app para compartilhar fotos das refeições com as pessoas do seu grupo.",
-    updatedAt: "6 de novembro de 2026",
+    updatedAt: "28 de novembro de 2026",
     sections: [
       {
         h: "Artigo 1 (Objetivo)",
@@ -309,6 +311,7 @@ const pt: Copy = {
               "O Serviço permite que você registre fotos das suas refeições e compartilhe fotos, reações e comentários com as pessoas que pertencem aos mesmos grupos que você.",
               "O Serviço inclui funções como criar grupos e convidar pessoas, notificações e cutucadas, calendário de registros e colagens, widget da tela inicial e o Refeitório compartilhado (um espaço em tempo real onde as pessoas se sentam e comem juntas).",
               "O Serviço é gratuito, e são exibidos anúncios nas telas do Serviço.",
+              "Você pode escolher uma assinatura paga que remove os anúncios (“Remover anúncios”). As condições estão no Artigo 11.",
             ],
           },
         ],
@@ -373,6 +376,7 @@ const pt: Copy = {
             ol: [
               "Para manter o Serviço, o Operador exibe anúncios nativos, intersticiais e premiados por meio do Google AdMob.",
               "As transações de produtos ou serviços anunciados ocorrem entre você e o anunciante, e o Operador não se responsabiliza pelo conteúdo dos anúncios.",
+              "Enquanto você usar a assinatura paga do Artigo 11, anúncios nativos e intersticiais não são exibidos, e os benefícios normalmente obtidos ao assistir a um anúncio premiado são oferecidos sem anúncio.",
             ],
           },
         ],
@@ -407,6 +411,21 @@ const pt: Copy = {
             ol: [
               "Se surgir uma disputa relacionada ao uso do Serviço, o Operador e o usuário buscarão resolvê-la por meio de negociação de boa-fé.",
               "Se não houver acordo, a ação poderá ser proposta no tribunal competente segundo o Código de Processo Civil da Coreia do Sul. Estes termos são regidos pelas leis da República da Coreia.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artigo 11 (Assinatura paga)",
+        blocks: [
+          {
+            ol: [
+              "“Remover anúncios” é uma assinatura paga renovada automaticamente todo mês. Enquanto você for assinante, não são exibidos anúncios nas telas do Serviço. O preço aparece na tela de compra e pode variar conforme o país e a loja.",
+              "O pagamento é feito pela App Store da Apple ou pelo Google Play, e a assinatura fica vinculada à conta da loja usada para pagar (Conta Apple ou conta do Google). Em outro aparelho com a mesma conta da loja você pode continuar usando com “Restaurar compra”, mas ela não é transferida entre iOS e Android.",
+              "Se você não cancelar até 24 horas antes do fim do período em curso, a assinatura é renovada automaticamente pelo mesmo período e é cobrado o preço da assinatura vigente naquele momento. Você pode cancelar a qualquer momento no gerenciamento de assinaturas da App Store ou do Google Play; depois de cancelar, pode continuar usando até o fim do período já pago.",
+              "Excluir sua conta no Serviço ou desinstalar o app não cancela a assinatura. Para encerrá-la, você mesmo precisa cancelá-la no gerenciamento de assinaturas da loja.",
+              "Os reembolsos seguem a política de reembolso da loja pela qual você pagou e são solicitados por meio dela. Quando a legislação aplicável garantir a você direito de arrependimento ou direitos semelhantes, este Artigo não os limita.",
+              "Se o preço ou o conteúdo da assinatura mudar, você será avisado com antecedência conforme o procedimento definido pela loja.",
             ],
           },
         ],
