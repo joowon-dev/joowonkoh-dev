@@ -118,7 +118,7 @@ const de: Copy = {
     title: "Datenschutzerklärung – Dein Essen, mein Essen",
     description:
       "Welche Daten die iOS- und Android-App „Dein Essen, mein Essen“ verarbeitet, wer deine Fotos und Mahlzeiteneinträge sehen kann und wie du dein Konto löschst.",
-    updatedAt: "6. November 2026",
+    updatedAt: "28. November 2026",
     sections: [
       {
         h: "1. Überblick",
@@ -166,6 +166,7 @@ const de: Copy = {
             ],
           },
           { p: "Die App greift nicht auf genaue Standortdaten, Kontakte, Anrufliste, Gesundheitsdaten oder Zahlungsdaten zu." },
+          { p: "Die Zahlung für das Abo „Werbung entfernen“ wird vom Apple App Store oder von Google Play abgewickelt. Die App erhält weder deine Kartennummer noch andere Angaben zum Zahlungsmittel; ob du abonniert hast, wird nur auf deinem Gerät über den Store geprüft und nicht auf den Servern des Betreibers gespeichert." },
         ],
       },
       {
@@ -208,6 +209,7 @@ const de: Copy = {
               "**Cloudflare R2** – Speicherung von Mahlzeiten- und Profilfotos. Die Fotos werden privat in der Region Asien-Pazifik gespeichert und erst nach Prüfung der Berechtigung über Adressen ausgeliefert, die nur eine Stunde gültig sind.",
               "**Expo** – Zustellung von Benachrichtigungen, unter iOS über Apple APNs, unter Android über Google FCM. Übermittelt werden der Benachrichtigungstext und der Geräte-Token.",
               "**Apple / Google** – Anmeldung. Wir erhalten deine E-Mail-Adresse.",
+              "**Apple App Store / Google Play** – Zahlung und Verwaltung des Abos „Werbung entfernen“. Zahlungsdaten werden vom jeweiligen Store verarbeitet und nicht an die App weitergegeben.",
               "**Google AdMob** – Native Werbung, Vollbildwerbung und Werbung mit Belohnung. Übermittelt werden Werbe-ID, Daten zu Werbeeinblendungen und -klicks sowie Gerätedaten.",
               "**Google Analytics for Firebase** – Nutzungsstatistiken. Übermittelt werden App-Nutzungsdaten, App-Instanz-ID und Gerätedaten.",
               "**Cloudflare Workers und Durable Objects** – Bildschirm der Gemeinsamen Kantine und Echtzeitverbindung. Verarbeitet werden Anzeigename, Platz, Bewegungen und Grüße, solange du in einem Raum bist, sowie die Adressen der Fotos, die du zeigen möchtest; sie werden gelöscht, wenn du den Raum verlässt. Zur Fehlerbehebung wird ein Teil der Anfrageprotokolle einige Tage aufbewahrt.",
@@ -278,7 +280,7 @@ const de: Copy = {
     title: "Nutzungsbedingungen – Dein Essen, mein Essen",
     description:
       "Die Nutzungsbedingungen von „Dein Essen, mein Essen“, der App zum Teilen von Mahlzeitenfotos mit den Personen in deinen Gruppen, sowie der Umfang der Haftung und Angaben zum Betreiber.",
-    updatedAt: "6. November 2026",
+    updatedAt: "28. November 2026",
     sections: [
       {
         h: "Artikel 1 (Zweck)",
@@ -296,6 +298,7 @@ const de: Copy = {
               "Mit dem Dienst können Nutzer Fotos ihrer Mahlzeiten festhalten und Fotos, Reaktionen und Kommentare mit Personen in derselben Gruppe teilen.",
               "Zum Dienst gehören Funktionen wie das Erstellen von Gruppen und Einladen von Personen, Benachrichtigungen und Stupser, der Mahlzeitenkalender und Collagen, Widgets für den Home-Bildschirm sowie die Gemeinsame Kantine (ein Echtzeit-Raum, in dem man sich zusammensetzt und isst).",
               "Der Dienst ist kostenlos; auf seinen Bildschirmen wird Werbung angezeigt.",
+              "Du kannst ein kostenpflichtiges Abo wählen, das die Werbung entfernt („Werbung entfernen“). Die Bedingungen dafür stehen in Artikel 11.",
             ],
           },
         ],
@@ -360,6 +363,7 @@ const de: Copy = {
             ol: [
               "Für den Betrieb des Dienstes zeigt der Betreiber über Google AdMob native Werbung, Vollbildwerbung und Werbung mit Belohnung an.",
               "Geschäfte über Waren oder Dienstleistungen aus der Werbung kommen zwischen dem Nutzer und dem Werbetreibenden zustande; der Betreiber übernimmt für deren Inhalt keine Verantwortung.",
+              "Solange du das kostenpflichtige Abo nach Artikel 11 nutzt, werden keine nativen Anzeigen und keine Vollbildanzeigen gezeigt, und die Vorteile, die sonst durch das Ansehen einer Anzeige mit Belohnung erworben werden, gibt es ohne Anzeige.",
             ],
           },
         ],
@@ -394,6 +398,21 @@ const de: Copy = {
             ol: [
               "Entsteht im Zusammenhang mit der Nutzung des Dienstes ein Streit, bemühen sich Betreiber und Nutzer, ihn in redlicher Absprache beizulegen.",
               "Kommt keine Einigung zustande, kann Klage bei dem nach der koreanischen Zivilprozessordnung zuständigen Gericht erhoben werden. Diese Bedingungen unterliegen dem Recht der Republik Korea.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Artikel 11 (Kostenpflichtiges Abo)",
+        blocks: [
+          {
+            ol: [
+              "„Werbung entfernen“ ist ein kostenpflichtiges Abo, das sich monatlich automatisch verlängert. Solange du abonniert hast, wird auf den Bildschirmen des Dienstes keine Werbung gezeigt. Der Preis wird auf dem Kaufbildschirm angezeigt und kann je nach Land und Store abweichen.",
+              "Die Zahlung erfolgt über den Apple App Store oder Google Play, und das Abo ist an das Store-Konto gebunden, mit dem bezahlt wurde (Apple Account oder Google-Konto). Auf einem anderen Gerät mit demselben Store-Konto kannst du es über „Kauf wiederherstellen“ weiter nutzen; zwischen iOS und Android wird es nicht übertragen.",
+              "Wenn du nicht spätestens 24 Stunden vor Ablauf des laufenden Zeitraums kündigst, verlängert sich das Abo automatisch um denselben Zeitraum, und es wird der dann geltende Abopreis berechnet. Kündigen kannst du jederzeit in der Aboverwaltung des App Store oder von Google Play; nach der Kündigung kannst du das Abo bis zum Ende des bereits bezahlten Zeitraums weiter nutzen.",
+              "Wenn du dein Konto im Dienst löschst oder die App entfernst, wird das Abo nicht automatisch gekündigt. Um es zu beenden, musst du es selbst in der Aboverwaltung des Stores kündigen.",
+              "Erstattungen richten sich nach den Erstattungsrichtlinien des Stores, über den bezahlt wurde, und werden über diesen Store beantragt. Soweit das anwendbare Recht dir ein Widerrufsrecht oder ähnliche Rechte gibt, werden diese durch diesen Artikel nicht eingeschränkt.",
+              "Wenn sich der Preis oder der Inhalt des Abos ändert, wirst du nach dem vom Store festgelegten Verfahren vorab informiert.",
             ],
           },
         ],

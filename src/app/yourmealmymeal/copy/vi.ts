@@ -113,7 +113,7 @@ const vi: Copy = {
     title: "Chính sách quyền riêng tư của Cơm bạn, cơm mình",
     description:
       "Hướng dẫn về thông tin mà ứng dụng “Cơm bạn, cơm mình” trên iOS và Android xử lý, ai có thể xem ảnh và ghi chép bữa ăn, và cách xóa tài khoản.",
-    updatedAt: "Ngày 6 tháng 11 năm 2026",
+    updatedAt: "Ngày 28 tháng 11 năm 2026",
     sections: [
       {
         h: "1. Tổng quan",
@@ -163,6 +163,7 @@ const vi: Copy = {
           {
             p: "Ứng dụng không truy cập vị trí chính xác, danh bạ, lịch sử cuộc gọi, thông tin sức khỏe hay thông tin thanh toán.",
           },
+          { p: "Việc thanh toán cho gói đăng ký “Gỡ quảng cáo” do Apple App Store hoặc Google Play xử lý. Ứng dụng không nhận số thẻ hay thông tin phương thức thanh toán nào khác; việc bạn có đang đăng ký hay không chỉ được kiểm tra trên thiết bị của bạn thông qua cửa hàng và không được lưu trên máy chủ của bên vận hành." },
         ],
       },
       {
@@ -205,6 +206,7 @@ const vi: Copy = {
               "**Cloudflare R2** — Lưu ảnh bữa ăn và ảnh đại diện. Được lưu riêng tư tại khu vực châu Á – Thái Bình Dương, và sau khi xác nhận quyền xem, ảnh được cung cấp qua địa chỉ chỉ có hiệu lực trong một giờ.",
               "**Expo** — Gửi thông báo. iOS đi qua Apple APNs, Android đi qua Google FCM. Nội dung thông báo và mã thiết bị được chuyển đi.",
               "**Apple / Google** — Đăng nhập. Nhận địa chỉ email.",
+              "**Apple App Store / Google Play** — thanh toán và quản lý gói đăng ký “Gỡ quảng cáo”. Thông tin thanh toán do từng cửa hàng xử lý và không được chuyển cho Ứng dụng.",
               "**Google AdMob** — Quảng cáo gốc (native), quảng cáo toàn màn hình và quảng cáo có thưởng. Mã định danh quảng cáo, thông tin hiển thị và nhấp quảng cáo, thông tin thiết bị được chuyển đi.",
               "**Google Analytics for Firebase** — Thống kê sử dụng. Thông tin sử dụng ứng dụng, ID phiên bản ứng dụng, thông tin thiết bị được chuyển đi.",
               "**Cloudflare Workers và Durable Objects** — Màn hình Quán ăn cùng nhau và kết nối thời gian thực. Xử lý tên hiển thị, chỗ ngồi, chuyển động, lời chào trong lúc bạn ở trong phòng, cùng địa chỉ ảnh mà bạn đã chọn cho xem, và xóa khi bạn rời phòng. Một phần nhật ký yêu cầu được lưu vài ngày để sửa lỗi.",
@@ -277,7 +279,7 @@ const vi: Copy = {
     title: "Điều khoản sử dụng của Cơm bạn, cơm mình",
     description:
       "Hướng dẫn về điều kiện sử dụng, phạm vi trách nhiệm và thông tin đơn vị vận hành của “Cơm bạn, cơm mình”, ứng dụng chia sẻ ảnh bữa ăn với những người trong nhóm.",
-    updatedAt: "Ngày 6 tháng 11 năm 2026",
+    updatedAt: "Ngày 28 tháng 11 năm 2026",
     sections: [
       {
         h: "Điều 1 (Mục đích)",
@@ -295,6 +297,7 @@ const vi: Copy = {
               "Dịch vụ cung cấp tính năng để người dùng ghi lại ảnh bữa ăn và chia sẻ ảnh, cảm xúc, bình luận với những người cùng nhóm.",
               "Dịch vụ bao gồm các tính năng như tạo nhóm và mời, thông báo và Chọc, lịch ghi chép và ảnh ghép, tiện ích màn hình chính, Quán ăn cùng nhau (không gian thời gian thực để cùng ngồi ăn).",
               "Dịch vụ được cung cấp miễn phí, và quảng cáo được hiển thị trên màn hình Dịch vụ.",
+              "Bạn có thể chọn gói đăng ký trả phí để gỡ quảng cáo (“Gỡ quảng cáo”). Điều kiện của gói này được quy định tại Điều 11.",
             ],
           },
         ],
@@ -359,6 +362,7 @@ const vi: Copy = {
             ol: [
               "Để vận hành Dịch vụ, Đơn vị vận hành hiển thị quảng cáo gốc (native), quảng cáo toàn màn hình và quảng cáo có thưởng thông qua Google AdMob.",
               "Giao dịch hàng hóa, dịch vụ trong quảng cáo diễn ra giữa người dùng và nhà quảng cáo, và Đơn vị vận hành không chịu trách nhiệm về nội dung đó.",
+              "Trong thời gian bạn dùng gói đăng ký trả phí tại Điều 11, quảng cáo gốc và quảng cáo toàn màn hình không được hiển thị, và các quyền lợi thường nhận được khi xem quảng cáo có thưởng sẽ được cung cấp mà không cần xem quảng cáo.",
             ],
           },
         ],
@@ -393,6 +397,21 @@ const vi: Copy = {
             ol: [
               "Khi phát sinh tranh chấp liên quan đến việc sử dụng Dịch vụ, Đơn vị vận hành và người dùng sẽ thiện chí thương lượng để giải quyết.",
               "Nếu thương lượng không thành, có thể khởi kiện tại tòa án có thẩm quyền theo Luật Tố tụng Dân sự của Hàn Quốc. Điều khoản này tuân theo pháp luật Đại Hàn Dân Quốc.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Điều 11 (Gói đăng ký trả phí)",
+        blocks: [
+          {
+            ol: [
+              "“Gỡ quảng cáo” là gói đăng ký trả phí tự động gia hạn hằng tháng. Trong thời gian đăng ký, quảng cáo không hiển thị trên các màn hình của Dịch vụ. Giá được hiển thị trên màn hình mua và có thể khác nhau tùy quốc gia và cửa hàng ứng dụng.",
+              "Việc thanh toán được thực hiện qua Apple App Store hoặc Google Play, và gói đăng ký gắn với tài khoản cửa hàng đã dùng để thanh toán (Tài khoản Apple hoặc tài khoản Google). Trên thiết bị khác dùng cùng tài khoản cửa hàng, bạn có thể tiếp tục dùng bằng “Khôi phục giao dịch mua”, nhưng gói không được chuyển giữa iOS và Android.",
+              "Nếu bạn không hủy ít nhất 24 giờ trước khi kỳ hiện tại kết thúc, gói đăng ký sẽ tự động gia hạn với cùng thời hạn và bạn bị tính giá đăng ký tại thời điểm đó. Bạn có thể hủy bất cứ lúc nào trong phần quản lý gói đăng ký của App Store hoặc Google Play; sau khi hủy, bạn vẫn dùng được đến hết kỳ đã thanh toán.",
+              "Xóa tài khoản trong Dịch vụ hoặc gỡ ứng dụng không tự động hủy gói đăng ký. Để dừng, bạn phải tự hủy trong phần quản lý gói đăng ký của cửa hàng.",
+              "Việc hoàn tiền tuân theo chính sách hoàn tiền của cửa hàng mà bạn đã thanh toán và được yêu cầu thông qua cửa hàng đó. Trường hợp pháp luật hiện hành trao cho bạn quyền rút lại giao dịch hoặc các quyền tương tự, Điều này không hạn chế các quyền đó.",
+              "Khi giá hoặc nội dung của gói đăng ký thay đổi, bạn sẽ được thông báo trước theo thủ tục do cửa hàng quy định.",
             ],
           },
         ],

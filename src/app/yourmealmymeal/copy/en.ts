@@ -118,7 +118,7 @@ const en: Copy = {
     title: "Your Meal, My Meal Privacy Policy",
     description:
       "What information the iOS and Android app “Your Meal, My Meal” handles, who can see your photos and meal records, and how to delete your account.",
-    updatedAt: "November 6, 2026",
+    updatedAt: "November 28, 2026",
     sections: [
       {
         h: "1. Overview",
@@ -166,6 +166,7 @@ const en: Copy = {
             ],
           },
           { p: "The App does not access precise location, contacts, call history, health information or payment information." },
+          { p: "Payment for the “Remove Ads” subscription is handled by the Apple App Store or Google Play. The App does not receive your card number or other payment method details; whether you are subscribed is only checked on your device through the store and is not stored on the operator’s servers." },
         ],
       },
       {
@@ -208,6 +209,7 @@ const en: Copy = {
               "**Cloudflare R2** — Storage for meal photos and profile photos. Stored privately in the Asia-Pacific region, and served through addresses valid for one hour only after confirming the viewer is allowed to see them.",
               "**Expo** — Notification delivery, via Apple APNs on iOS and Google FCM on Android. The notification text and device token are passed on.",
               "**Apple / Google** — Sign-in. We receive your email address.",
+              "**Apple App Store / Google Play** — payment and management of the “Remove Ads” subscription. Payment information is handled by each store and is not passed to the App.",
               "**Google AdMob** — Native ads, full-screen ads and rewarded ads. The advertising identifier, ad impression and click information, and device information are passed on.",
               "**Google Analytics for Firebase** — Usage statistics. App usage information, app instance ID and device information are passed on.",
               "**Cloudflare Workers and Durable Objects** — The Eat-Together Diner screen and real-time connection. They process your display name, seat, movements and greetings while you are in a room, and the addresses of photos you chose to show, and delete them when you leave the room. Parts of the request logs are kept for a few days to fix errors.",
@@ -278,7 +280,7 @@ const en: Copy = {
     title: "Your Meal, My Meal Terms of Service",
     description:
       "The terms of use for Your Meal, My Meal, the app for sharing meal photos with the people in your groups, along with the scope of responsibility and operator information.",
-    updatedAt: "November 6, 2026",
+    updatedAt: "November 28, 2026",
     sections: [
       {
         h: "Article 1 (Purpose)",
@@ -296,6 +298,7 @@ const en: Copy = {
               "The Service lets users log photos of their meals and share photos, reactions and comments with people in the same group.",
               "The Service includes features such as creating groups and inviting people, notifications and Nudges, the meal calendar and collages, home screen widgets, and the Eat-Together Diner (a real-time space where people sit and eat together).",
               "The Service is provided free of charge, and ads are shown on its screens.",
+              "You may choose a paid subscription that removes ads (“Remove Ads”). Its terms are set out in Article 11.",
             ],
           },
         ],
@@ -360,6 +363,7 @@ const en: Copy = {
             ol: [
               "To operate the Service, the Operator shows native ads, full-screen ads and rewarded ads through Google AdMob.",
               "Any transaction for products or services in an ad takes place between the user and the advertiser, and the Operator is not responsible for it.",
+              "While you use the paid subscription in Article 11, native and interstitial ads are not shown, and the benefits otherwise earned by watching a rewarded ad are provided without an ad.",
             ],
           },
         ],
@@ -394,6 +398,21 @@ const en: Copy = {
             ol: [
               "If a dispute arises in connection with use of the Service, the Operator and the user will resolve it through good-faith discussion.",
               "If no agreement is reached, either party may file a suit with the competent court under the Civil Procedure Act of the Republic of Korea. These Terms are governed by the laws of the Republic of Korea.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 11 (Paid subscription)",
+        blocks: [
+          {
+            ol: [
+              "“Remove Ads” is a paid subscription that renews automatically every month. While you are subscribed, ads are not shown on the Service’s screens. The price is shown on the purchase screen and may differ by country and store.",
+              "Payment is made through the Apple App Store or Google Play, and the subscription is tied to the store account used to pay (your Apple Account or Google account). On another device using the same store account you can continue it with “Restore purchase”, but it does not carry over between iOS and Android.",
+              "Unless you cancel at least 24 hours before the end of the current period, the subscription renews automatically for the same period and you are charged the subscription price at that time. You can cancel at any time in the subscription settings of the App Store or Google Play; after cancelling, you can keep using it until the end of the period already paid for.",
+              "Deleting your account in the Service or removing the app does not cancel the subscription. To stop it, you must cancel it yourself in the store’s subscription settings.",
+              "Refunds follow the refund policy of the store you paid through and are requested through that store. Where applicable law gives you a right of withdrawal or similar rights, this Article does not limit them.",
+              "If the price or the content of the subscription changes, you will be notified in advance through the procedure set by the store.",
             ],
           },
         ],

@@ -118,7 +118,7 @@ const fr: Copy = {
     title: "Politique de confidentialité de Ton repas, mon repas",
     description:
       "Les informations traitées par « Ton repas, mon repas », l’appli iOS et Android, qui peut voir tes photos et tes repas, et comment supprimer ton compte.",
-    updatedAt: "6 novembre 2026",
+    updatedAt: "28 novembre 2026",
     sections: [
       {
         h: "1. Présentation",
@@ -166,6 +166,7 @@ const fr: Copy = {
             ],
           },
           { p: "L’Application n’accède pas à votre position précise, à vos contacts, à votre historique d’appels, à vos données de santé ni à vos informations de paiement." },
+          { p: "Le paiement de l’abonnement « Supprimer les pubs » est traité par l’App Store d’Apple ou Google Play. L’Application ne reçoit ni votre numéro de carte ni aucune autre information de moyen de paiement ; le fait que vous soyez abonné est seulement vérifié sur votre appareil auprès de la boutique et n’est pas enregistré sur les serveurs de l’exploitant." },
         ],
       },
       {
@@ -208,6 +209,7 @@ const fr: Copy = {
               "**Cloudflare R2** — Stockage des photos de repas et des photos de profil. Elles sont conservées de façon privée dans la région Asie-Pacifique et ne sont servies, après vérification du droit d’accès, que via des adresses valides pendant une heure.",
               "**Expo** — Envoi des notifications, via Apple APNs sur iOS et Google FCM sur Android. Le texte de la notification et le jeton de l’appareil sont transmis.",
               "**Apple / Google** — Connexion. Nous recevons votre adresse e-mail.",
+              "**Apple App Store / Google Play** — paiement et gestion de l’abonnement « Supprimer les pubs ». Les informations de paiement sont traitées par chaque boutique et ne sont pas transmises à l’Application.",
               "**Google AdMob** — Publicités natives, publicités plein écran et publicités avec récompense. L’identifiant publicitaire, les données d’affichage et de clic des publicités et les informations sur l’appareil sont transmis.",
               "**Google Analytics for Firebase** — Statistiques d’utilisation. Les données d’utilisation de l’Application, l’ID d’instance de l’application et les informations sur l’appareil sont transmis.",
               "**Cloudflare Workers et Durable Objects** — Écran de la Cantine partagée et connexion en temps réel. Ils traitent votre nom affiché, votre place, vos mouvements et vos salutations pendant que vous êtes dans une salle, ainsi que les adresses des photos que vous avez choisi de montrer, et les suppriment quand vous quittez la salle. Une partie des journaux de requêtes est conservée quelques jours pour corriger les erreurs.",
@@ -278,7 +280,7 @@ const fr: Copy = {
     title: "Conditions d’utilisation de Ton repas, mon repas",
     description:
       "Les conditions d’utilisation de Ton repas, mon repas, l’application pour partager des photos de repas avec les personnes de vos groupes, l’étendue des responsabilités et les informations sur l’exploitant.",
-    updatedAt: "6 novembre 2026",
+    updatedAt: "28 novembre 2026",
     sections: [
       {
         h: "Article 1 (Objet)",
@@ -296,6 +298,7 @@ const fr: Copy = {
               "Le Service permet aux utilisateurs d’enregistrer des photos de leurs repas et de partager photos, réactions et commentaires avec les personnes d’un même groupe.",
               "Le Service comprend notamment la création de groupes et les invitations, les notifications et les Coucou, le calendrier des repas et les collages, les widgets de l’écran d’accueil, ainsi que la Cantine partagée (un espace en temps réel où l’on s’assoit pour manger ensemble).",
               "Le Service est gratuit, et des publicités s’affichent sur ses écrans.",
+              "Vous pouvez choisir un abonnement payant qui supprime les publicités (« Supprimer les pubs »). Ses conditions figurent à l’article 11.",
             ],
           },
         ],
@@ -360,6 +363,7 @@ const fr: Copy = {
             ol: [
               "Pour faire fonctionner le Service, l’Exploitant affiche des publicités natives, des publicités plein écran et des publicités avec récompense via Google AdMob.",
               "Les transactions portant sur les produits ou services présentés dans les publicités ont lieu entre l’utilisateur et l’annonceur, et l’Exploitant n’est pas responsable de leur contenu.",
+              "Tant que vous utilisez l’abonnement payant de l’article 11, les publicités natives et interstitielles ne sont pas affichées, et les avantages normalement obtenus en regardant une publicité avec récompense sont fournis sans publicité.",
             ],
           },
         ],
@@ -394,6 +398,21 @@ const fr: Copy = {
             ol: [
               "En cas de litige lié à l’utilisation du Service, l’Exploitant et l’utilisateur s’efforcent de le régler de bonne foi par la discussion.",
               "À défaut d’accord, une action peut être portée devant le tribunal compétent selon le Code de procédure civile de la République de Corée. Les présentes conditions sont régies par le droit de la République de Corée.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Article 11 (Abonnement payant)",
+        blocks: [
+          {
+            ol: [
+              "« Supprimer les pubs » est un abonnement payant renouvelé automatiquement chaque mois. Tant que vous êtes abonné, aucune publicité n’est affichée sur les écrans du Service. Le prix est indiqué sur l’écran d’achat et peut varier selon le pays et la boutique.",
+              "Le paiement s’effectue via l’App Store d’Apple ou Google Play, et l’abonnement est lié au compte de la boutique utilisé pour payer (compte Apple ou compte Google). Sur un autre appareil utilisant le même compte, vous pouvez le retrouver avec « Restaurer l’achat », mais il n’est pas transférable entre iOS et Android.",
+              "Sauf résiliation au moins 24 heures avant la fin de la période en cours, l’abonnement est renouvelé automatiquement pour la même durée et le prix de l’abonnement alors en vigueur vous est facturé. Vous pouvez résilier à tout moment dans la gestion des abonnements de l’App Store ou de Google Play ; après résiliation, vous continuez d’en bénéficier jusqu’à la fin de la période déjà payée.",
+              "Supprimer votre compte dans le Service ou désinstaller l’application ne résilie pas l’abonnement. Pour y mettre fin, vous devez le résilier vous-même dans la gestion des abonnements de la boutique.",
+              "Les remboursements suivent la politique de remboursement de la boutique par laquelle vous avez payé et se demandent auprès de celle-ci. Lorsque la loi applicable vous accorde un droit de rétractation ou des droits similaires, le présent article ne les limite pas.",
+              "En cas de modification du prix ou du contenu de l’abonnement, vous en êtes informé à l’avance selon la procédure prévue par la boutique.",
             ],
           },
         ],

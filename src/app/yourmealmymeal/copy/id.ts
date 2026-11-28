@@ -127,7 +127,7 @@ const id: Copy = {
     title: "Kebijakan Privasi Makananmu, Makananku",
     description:
       "Penjelasan tentang informasi yang diproses oleh aplikasi iOS & Android “Makananmu, Makananku”, siapa yang bisa melihat foto dan catatan makanmu, serta cara menghapus akun.",
-    updatedAt: "6 November 2026",
+    updatedAt: "28 November 2026",
     sections: [
       {
         h: "1. Ringkasan",
@@ -177,6 +177,7 @@ const id: Copy = {
           {
             p: "Aplikasi tidak mengakses lokasi akurat, kontak, riwayat panggilan, informasi kesehatan, maupun informasi pembayaran.",
           },
+          { p: "Pembayaran langganan “Hapus iklan” diproses oleh Apple App Store atau Google Play. Aplikasi tidak menerima nomor kartu atau informasi metode pembayaran lainnya; apakah kamu sedang berlangganan hanya diperiksa di perangkatmu melalui toko dan tidak disimpan di server pengelola." },
         ],
       },
       {
@@ -219,6 +220,7 @@ const id: Copy = {
               "**Cloudflare R2** — penyimpanan foto makanan dan foto profil. Disimpan secara privat di wilayah Asia-Pasifik, dan setelah hak aksesmu diperiksa, foto dikirim melalui alamat yang hanya berlaku selama satu jam.",
               "**Expo** — pengiriman notifikasi. Di iOS melalui Apple APNs, di Android melalui Google FCM. Teks notifikasi dan token perangkat ikut dikirimkan.",
               "**Apple / Google** — login. Kami menerima alamat emailmu.",
+              "**Apple App Store / Google Play** — pembayaran dan pengelolaan langganan “Hapus iklan”. Informasi pembayaran diproses oleh masing-masing toko dan tidak diteruskan ke Aplikasi.",
               "**Google AdMob** — iklan native, iklan interstisial, dan iklan berhadiah. Pengenal iklan, informasi tayangan dan klik iklan, serta informasi perangkat dikirimkan.",
               "**Google Analytics for Firebase** — statistik penggunaan. Informasi penggunaan Aplikasi, ID instance aplikasi, dan informasi perangkat dikirimkan.",
               "**Cloudflare Workers dan Durable Objects** — layar Kantin Makan Bareng dan koneksi real-time. Memproses nama tampilan, kursi, gerakan, dan sapaan selama kamu berada di ruangan, serta alamat foto yang kamu pilih untuk ditunjukkan, lalu menghapusnya saat kamu keluar dari ruangan. Sebagian catatan permintaan disimpan selama beberapa hari untuk memperbaiki error.",
@@ -291,7 +293,7 @@ const id: Copy = {
     title: "Ketentuan Layanan Makananmu, Makananku",
     description:
       "Penjelasan tentang syarat penggunaan, batas tanggung jawab, dan informasi operator “Makananmu, Makananku”, aplikasi untuk berbagi foto makanan dengan orang-orang di grupmu.",
-    updatedAt: "6 November 2026",
+    updatedAt: "28 November 2026",
     sections: [
       {
         h: "Pasal 1 (Tujuan)",
@@ -309,6 +311,7 @@ const id: Copy = {
               "Layanan menyediakan fitur bagi pengguna untuk mencatat foto makanan dan berbagi foto, reaksi, serta komentar dengan orang-orang di grup yang sama.",
               "Layanan mencakup fitur seperti membuat grup dan mengundang anggota, notifikasi dan colek, kalender catatan dan kolase, widget layar utama, serta Kantin Makan Bareng (ruang real-time untuk duduk dan makan bersama).",
               "Layanan disediakan secara gratis, dan iklan ditampilkan di layar Layanan.",
+              "Kamu dapat memilih langganan berbayar yang menghapus iklan (“Hapus iklan”). Ketentuannya diatur dalam Pasal 11.",
             ],
           },
         ],
@@ -373,6 +376,7 @@ const id: Copy = {
             ol: [
               "Untuk menjalankan Layanan, Operator menampilkan iklan native, iklan interstisial, dan iklan berhadiah melalui Google AdMob.",
               "Transaksi atas produk atau layanan dalam iklan terjadi antara pengguna dan pengiklan, dan Operator tidak bertanggung jawab atas isinya.",
+              "Selama kamu memakai langganan berbayar dalam Pasal 11, iklan native dan iklan layar penuh tidak ditampilkan, dan manfaat yang biasanya didapat dengan menonton iklan berhadiah diberikan tanpa iklan.",
             ],
           },
         ],
@@ -407,6 +411,21 @@ const id: Copy = {
             ol: [
               "Jika timbul sengketa terkait penggunaan Layanan, Operator dan pengguna akan menyelesaikannya melalui musyawarah dengan itikad baik.",
               "Jika musyawarah tidak mencapai kesepakatan, gugatan dapat diajukan ke pengadilan yang berwenang menurut Undang-Undang Hukum Acara Perdata Korea. Ketentuan ini tunduk pada hukum Republik Korea.",
+            ],
+          },
+        ],
+      },
+      {
+        h: "Pasal 11 (Langganan Berbayar)",
+        blocks: [
+          {
+            ol: [
+              "“Hapus iklan” adalah langganan berbayar yang diperpanjang otomatis setiap bulan. Selama berlangganan, iklan tidak ditampilkan di layar Layanan. Harga ditampilkan di layar pembelian dan dapat berbeda menurut negara dan toko aplikasi.",
+              "Pembayaran dilakukan melalui Apple App Store atau Google Play, dan langganan terikat pada akun toko yang dipakai untuk membayar (Akun Apple atau akun Google). Di perangkat lain dengan akun toko yang sama kamu dapat melanjutkannya dengan “Pulihkan pembelian”, tetapi langganan tidak berpindah antara iOS dan Android.",
+              "Jika tidak dibatalkan paling lambat 24 jam sebelum periode berjalan berakhir, langganan diperpanjang otomatis untuk periode yang sama dan kamu dikenai harga langganan yang berlaku saat itu. Kamu dapat membatalkan kapan saja di pengelolaan langganan App Store atau Google Play; setelah dibatalkan, kamu tetap dapat memakainya sampai periode yang sudah dibayar berakhir.",
+              "Menghapus akun di Layanan atau menghapus aplikasi tidak membatalkan langganan. Untuk berhenti, kamu harus membatalkannya sendiri di pengelolaan langganan toko.",
+              "Pengembalian dana mengikuti kebijakan pengembalian dana toko tempat kamu membayar dan diajukan melalui toko tersebut. Jika hukum yang berlaku memberimu hak pembatalan atau hak serupa, Pasal ini tidak membatasinya.",
+              "Jika harga atau isi langganan berubah, kamu akan diberi tahu sebelumnya sesuai prosedur yang ditetapkan toko.",
             ],
           },
         ],
