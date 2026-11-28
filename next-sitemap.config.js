@@ -64,6 +64,7 @@ module.exports = {
     "/playground/chiikawa-talk",
     "/playground/paste-gun",
     "/playground/desktop-tree",
+    "/playground/desktop-cupid",
   ],
   robotsTxtOptions: {
     policies: [{ userAgent: "*", allow: "/", disallow: ["/admin"] }],
